@@ -175,9 +175,7 @@ describe('executeAiOperations — addBlueprint', () => {
 
   it('strips parentId when parent is missing or not a container', () => {
     const card = makeCard({
-      nodes: [
-        { id: 'p1', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-      ],
+      nodes: [{ id: 'p1', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
     });
     setCard(card);
     const node: CardNode = {
@@ -199,9 +197,7 @@ describe('executeAiOperations — addBlueprint', () => {
 
   it('keeps parentId when parent exists and is a container', () => {
     const card = makeCard({
-      nodes: [
-        { id: 'p1', type: 'container', position: { x: 0, y: 0 }, width: 200, height: 100, data: {} } as any,
-      ],
+      nodes: [{ id: 'p1', type: 'container', position: { x: 0, y: 0 }, width: 200, height: 100, data: {} } as any],
     });
     setCard(card);
     const node: CardNode = {
@@ -374,9 +370,11 @@ describe('executeAiOperations — addEdge', () => {
   });
 
   it('skips when target node missing', () => {
-    setCard(makeCard({
-      nodes: [{ id: 's', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
-    }));
+    setCard(
+      makeCard({
+        nodes: [{ id: 's', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
+      }),
+    );
     const { dispatch } = makeDispatch();
     const op: AiCanvasOp = {
       op: 'addEdge',
@@ -387,12 +385,14 @@ describe('executeAiOperations — addEdge', () => {
   });
 
   it('dispatches addEdgeToCard with generated id and resolved endpoints', () => {
-    setCard(makeCard({
-      nodes: [
-        { id: 's', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-        { id: 't', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-      ],
-    }));
+    setCard(
+      makeCard({
+        nodes: [
+          { id: 's', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
+          { id: 't', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
+        ],
+      }),
+    );
     const { dispatch, calls } = makeDispatch();
     const op: AiCanvasOp = {
       op: 'addEdge',
@@ -493,9 +493,11 @@ describe('executeAiOperations — reparentNode', () => {
   });
 
   it('null parentId clears parent and dispatches updateCardNodeParent', () => {
-    setCard(makeCard({
-      nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
-    }));
+    setCard(
+      makeCard({
+        nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
+      }),
+    );
     const { dispatch, calls } = makeDispatch();
     const op: AiCanvasOp = { op: 'reparentNode', nodeId: 'n', parentId: null };
     executeAiOperations(dispatch as any, [op]);
@@ -504,32 +506,32 @@ describe('executeAiOperations — reparentNode', () => {
   });
 
   it('skip verdict is recorded as skipped op', () => {
-    setCard(makeCard({
-      nodes: [
-        { id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-        { id: 'p', type: 'container', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-      ],
-    }));
+    setCard(
+      makeCard({
+        nodes: [
+          { id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
+          { id: 'p', type: 'container', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
+        ],
+      }),
+    );
     mocks.validateReparent.mockReturnValueOnce({ kind: 'skip', reason: 'cycle' } as any);
     const { dispatch } = makeDispatch();
-    const out = executeAiOperations(dispatch as any, [
-      { op: 'reparentNode', nodeId: 'n', parentId: 'p' },
-    ]);
+    const out = executeAiOperations(dispatch as any, [{ op: 'reparentNode', nodeId: 'n', parentId: 'p' }]);
     expect(out.result.skippedOps[0].reason).toBe('cycle');
   });
 
   it('ok verdict dispatches updateCardNodeParent + updateCardNodePosition', () => {
-    setCard(makeCard({
-      nodes: [
-        { id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 100, height: 60, data: {} } as any,
-        { id: 'p', type: 'container', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
-      ],
-    }));
+    setCard(
+      makeCard({
+        nodes: [
+          { id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 100, height: 60, data: {} } as any,
+          { id: 'p', type: 'container', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any,
+        ],
+      }),
+    );
     mocks.validateReparent.mockReturnValueOnce({ kind: 'ok', resolvedParentId: 'p' });
     const { dispatch, calls } = makeDispatch();
-    executeAiOperations(dispatch as any, [
-      { op: 'reparentNode', nodeId: 'n', parentId: 'p' },
-    ]);
+    executeAiOperations(dispatch as any, [{ op: 'reparentNode', nodeId: 'n', parentId: 'p' }]);
     expect(calls.find((c) => c.type === 'cards/updateCardNodeParent')).toBeDefined();
     expect(calls.find((c) => c.type === 'cards/updateCardNodePosition')).toBeDefined();
   });
@@ -563,18 +565,14 @@ describe('executeAiOperations — edge mutations', () => {
   it('updateEdgeData skips when missing', () => {
     setCard(makeCard());
     const { dispatch } = makeDispatch();
-    const out = executeAiOperations(dispatch as any, [
-      { op: 'updateEdgeData', edgeId: 'x', data: {} },
-    ]);
+    const out = executeAiOperations(dispatch as any, [{ op: 'updateEdgeData', edgeId: 'x', data: {} }]);
     expect(out.result.skippedOps[0].reason).toContain('Edge not found');
   });
 
   it('updateEdgeData dispatches updateCardEdgeData', () => {
     setCard(withEdge());
     const { dispatch, calls } = makeDispatch();
-    executeAiOperations(dispatch as any, [
-      { op: 'updateEdgeData', edgeId: 'e1', data: { foo: 1 } },
-    ]);
+    executeAiOperations(dispatch as any, [{ op: 'updateEdgeData', edgeId: 'e1', data: { foo: 1 } }]);
     expect(calls.find((c) => c.type === 'cards/updateCardEdgeData')).toBeDefined();
   });
 });
@@ -605,17 +603,17 @@ describe('executeAiOperations — unknown op', () => {
 
 describe('executeAiOperations — exception in switch arm', () => {
   it('records error message as skipped op', () => {
-    setCard(makeCard({
-      nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
-    }));
+    setCard(
+      makeCard({
+        nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
+      }),
+    );
     const { dispatch } = makeDispatch();
     // Make dispatch throw on first action — exception should be captured by per-op try/catch
     dispatch.mockImplementationOnce(() => {
       throw new Error('boom');
     });
-    const out = executeAiOperations(dispatch as any, [
-      { op: 'updateNodeData', nodeId: 'n', data: { foo: 1 } },
-    ]);
+    const out = executeAiOperations(dispatch as any, [{ op: 'updateNodeData', nodeId: 'n', data: { foo: 1 } }]);
     expect(out.result.skippedOps[0].reason).toContain('Execution error: boom');
   });
 });
@@ -688,9 +686,11 @@ describe('executeAiOperations — post-execution', () => {
   });
 
   it('does not trigger post-loop autoOrganize when no structural ops', () => {
-    setCard(makeCard({
-      nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
-    }));
+    setCard(
+      makeCard({
+        nodes: [{ id: 'n', type: 'block', position: { x: 0, y: 0 }, width: 0, height: 0, data: {} } as any],
+      }),
+    );
     const { dispatch, calls } = makeDispatch();
     executeAiOperations(dispatch as any, [{ op: 'updateNodeData', nodeId: 'n', data: { x: 1 } }]);
     const organizes = calls.filter((c) => c.type === 'cards/autoOrganizeCard');

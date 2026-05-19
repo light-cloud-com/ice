@@ -22,7 +22,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import { T } from '../data/themes';
 
 const PALETTE_KEYS = [

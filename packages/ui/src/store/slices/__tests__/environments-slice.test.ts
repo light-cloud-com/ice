@@ -65,10 +65,7 @@ describe('environments-slice', () => {
       // callsite could pin a deleted env into activeEnvId and
       // downstream selectors would resolve to undefined. Now we gate
       // on existence.
-      const s = environmentsReducer(
-        init(),
-        setActiveEnvironment({ projectId: 'p-1', envId: 'never-fetched' }),
-      );
+      const s = environmentsReducer(init(), setActiveEnvironment({ projectId: 'p-1', envId: 'never-fetched' }));
       expect(s.activeEnvId['p-1']).toBeUndefined();
     });
 
@@ -91,11 +88,10 @@ describe('environments-slice', () => {
       // Drive a fulfilled compare to populate the pending pair, then clear.
       let s = environmentsReducer(
         init(),
-        compareEnvironments.fulfilled(
-          { diff: diff(), sourceEnvId: 'env-a', targetEnvId: 'env-b' },
-          'r-1',
-          { sourceEnvId: 'env-a', targetEnvId: 'env-b' },
-        ),
+        compareEnvironments.fulfilled({ diff: diff(), sourceEnvId: 'env-a', targetEnvId: 'env-b' }, 'r-1', {
+          sourceEnvId: 'env-a',
+          targetEnvId: 'env-b',
+        }),
       );
       expect(s.pendingDiff).not.toBeNull();
       expect(s.pendingPromote).not.toBeNull();
@@ -115,7 +111,10 @@ describe('environments-slice', () => {
       const s = environmentsReducer(
         init(),
         fetchEnvironments.fulfilled(
-          { projectId: 'p-1', environments: [env({ id: 'env-prod', type: 'production' }), env({ id: 'env-stg', type: 'staging' })] },
+          {
+            projectId: 'p-1',
+            environments: [env({ id: 'env-prod', type: 'production' }), env({ id: 'env-stg', type: 'staging' })],
+          },
           'r-1',
           'p-1',
         ),
@@ -133,10 +132,7 @@ describe('environments-slice', () => {
         fetchEnvironments.fulfilled(
           {
             projectId: 'p-1',
-            environments: [
-              env({ id: 'env-prod', type: 'production' }),
-              env({ id: 'env-stg', type: 'staging' }),
-            ],
+            environments: [env({ id: 'env-prod', type: 'production' }), env({ id: 'env-stg', type: 'staging' })],
           },
           'r-1',
           'p-1',
@@ -150,10 +146,7 @@ describe('environments-slice', () => {
         fetchEnvironments.fulfilled(
           {
             projectId: 'p-1',
-            environments: [
-              env({ id: 'env-prod', type: 'production' }),
-              env({ id: 'env-stg', type: 'staging' }),
-            ],
+            environments: [env({ id: 'env-prod', type: 'production' }), env({ id: 'env-stg', type: 'staging' })],
           },
           'r-2',
           'p-1',
@@ -193,11 +186,11 @@ describe('environments-slice', () => {
       );
       s = environmentsReducer(
         s,
-        createEnvironment.fulfilled(
-          { projectId: 'p-1', environment: env({ id: 'env-stg', type: 'staging' }) },
-          'r-2',
-          { projectId: 'p-1', name: 'staging', type: 'staging' },
-        ),
+        createEnvironment.fulfilled({ projectId: 'p-1', environment: env({ id: 'env-stg', type: 'staging' }) }, 'r-2', {
+          projectId: 'p-1',
+          name: 'staging',
+          type: 'staging',
+        }),
       );
       expect(s.byProject['p-1']).toHaveLength(2);
     });
@@ -205,11 +198,11 @@ describe('environments-slice', () => {
     it('creates the bucket for a previously-unknown project', () => {
       const s = environmentsReducer(
         init(),
-        createEnvironment.fulfilled(
-          { projectId: 'p-new', environment: env({ id: 'env-new' }) },
-          'r-1',
-          { projectId: 'p-new', name: 'env-new', type: 'production' },
-        ),
+        createEnvironment.fulfilled({ projectId: 'p-new', environment: env({ id: 'env-new' }) }, 'r-1', {
+          projectId: 'p-new',
+          name: 'env-new',
+          type: 'production',
+        }),
       );
       expect(s.byProject['p-new']).toHaveLength(1);
     });
@@ -222,10 +215,7 @@ describe('environments-slice', () => {
         fetchEnvironments.fulfilled(
           {
             projectId: 'p-1',
-            environments: [
-              env({ id: 'env-prod', type: 'production' }),
-              env({ id: 'env-stg', type: 'staging' }),
-            ],
+            environments: [env({ id: 'env-prod', type: 'production' }), env({ id: 'env-stg', type: 'staging' })],
           },
           'r-1',
           'p-1',
@@ -237,11 +227,10 @@ describe('environments-slice', () => {
       let s = seeded();
       s = environmentsReducer(
         s,
-        deleteEnvironment.fulfilled(
-          { envId: 'env-stg', projectId: 'p-1' },
-          'r-2',
-          { envId: 'env-stg', projectId: 'p-1' },
-        ),
+        deleteEnvironment.fulfilled({ envId: 'env-stg', projectId: 'p-1' }, 'r-2', {
+          envId: 'env-stg',
+          projectId: 'p-1',
+        }),
       );
       expect(s.byProject['p-1']).toHaveLength(1);
       expect(s.byProject['p-1'][0].id).toBe('env-prod');
@@ -252,11 +241,10 @@ describe('environments-slice', () => {
       s = environmentsReducer(s, setActiveEnvironment({ projectId: 'p-1', envId: 'env-stg' }));
       s = environmentsReducer(
         s,
-        deleteEnvironment.fulfilled(
-          { envId: 'env-stg', projectId: 'p-1' },
-          'r-2',
-          { envId: 'env-stg', projectId: 'p-1' },
-        ),
+        deleteEnvironment.fulfilled({ envId: 'env-stg', projectId: 'p-1' }, 'r-2', {
+          envId: 'env-stg',
+          projectId: 'p-1',
+        }),
       );
       expect(s.activeEnvId['p-1']).toBe('env-prod');
     });
@@ -274,11 +262,10 @@ describe('environments-slice', () => {
       s = environmentsReducer(s, setActiveEnvironment({ projectId: 'p-1', envId: 'env-stg' }));
       s = environmentsReducer(
         s,
-        deleteEnvironment.fulfilled(
-          { envId: 'env-stg', projectId: 'p-1' },
-          'r-2',
-          { envId: 'env-stg', projectId: 'p-1' },
-        ),
+        deleteEnvironment.fulfilled({ envId: 'env-stg', projectId: 'p-1' }, 'r-2', {
+          envId: 'env-stg',
+          projectId: 'p-1',
+        }),
       );
       expect(s.activeEnvId['p-1']).toBe('');
     });
@@ -286,11 +273,10 @@ describe('environments-slice', () => {
     it('is a no-op when project bucket does not exist', () => {
       const s = environmentsReducer(
         init(),
-        deleteEnvironment.fulfilled(
-          { envId: 'env-x', projectId: 'p-unknown' },
-          'r-1',
-          { envId: 'env-x', projectId: 'p-unknown' },
-        ),
+        deleteEnvironment.fulfilled({ envId: 'env-x', projectId: 'p-unknown' }, 'r-1', {
+          envId: 'env-x',
+          projectId: 'p-unknown',
+        }),
       );
       expect(s.byProject).toEqual({});
     });
@@ -300,11 +286,10 @@ describe('environments-slice', () => {
       s = environmentsReducer(s, setActiveEnvironment({ projectId: 'p-1', envId: 'env-prod' }));
       s = environmentsReducer(
         s,
-        deleteEnvironment.fulfilled(
-          { envId: 'env-stg', projectId: 'p-1' },
-          'r-2',
-          { envId: 'env-stg', projectId: 'p-1' },
-        ),
+        deleteEnvironment.fulfilled({ envId: 'env-stg', projectId: 'p-1' }, 'r-2', {
+          envId: 'env-stg',
+          projectId: 'p-1',
+        }),
       );
       expect(s.activeEnvId['p-1']).toBe('env-prod');
     });
@@ -341,7 +326,11 @@ describe('environments-slice', () => {
         dispatched.push(a);
         return a;
       };
-      const result = await thunkAction(dispatch as never, () => stateWith(env({ id: 'env-prod', is_protected: true })) as never, fakeApi);
+      const result = await thunkAction(
+        dispatch as never,
+        () => stateWith(env({ id: 'env-prod', is_protected: true })) as never,
+        fakeApi,
+      );
       expect(callDispatched).toEqual([]);
       expect((result as any).type).toMatch(/rejected/);
       expect((result as any).payload).toBe('Cannot delete a protected environment');
@@ -382,19 +371,15 @@ describe('environments-slice', () => {
     it('renames in place', () => {
       let s = environmentsReducer(
         init(),
-        fetchEnvironments.fulfilled(
-          { projectId: 'p-1', environments: [env({ id: 'env-1' })] },
-          'r-1',
-          'p-1',
-        ),
+        fetchEnvironments.fulfilled({ projectId: 'p-1', environments: [env({ id: 'env-1' })] }, 'r-1', 'p-1'),
       );
       s = environmentsReducer(
         s,
-        renameEnvironment.fulfilled(
-          { envId: 'env-1', projectId: 'p-1', name: 'renamed' },
-          'r-2',
-          { envId: 'env-1', projectId: 'p-1', name: 'renamed' },
-        ),
+        renameEnvironment.fulfilled({ envId: 'env-1', projectId: 'p-1', name: 'renamed' }, 'r-2', {
+          envId: 'env-1',
+          projectId: 'p-1',
+          name: 'renamed',
+        }),
       );
       expect(s.byProject['p-1'][0].name).toBe('renamed');
     });
@@ -410,11 +395,11 @@ describe('environments-slice', () => {
       );
       s = environmentsReducer(
         s,
-        renameEnvironment.fulfilled(
-          { envId: 'env-ghost', projectId: 'p-1', name: 'never' },
-          'r-2',
-          { envId: 'env-ghost', projectId: 'p-1', name: 'never' },
-        ),
+        renameEnvironment.fulfilled({ envId: 'env-ghost', projectId: 'p-1', name: 'never' }, 'r-2', {
+          envId: 'env-ghost',
+          projectId: 'p-1',
+          name: 'never',
+        }),
       );
       expect(s.byProject['p-1'][0].name).toBe('original');
     });
@@ -422,11 +407,11 @@ describe('environments-slice', () => {
     it('is a no-op when project bucket does not exist', () => {
       const s = environmentsReducer(
         init(),
-        renameEnvironment.fulfilled(
-          { envId: 'env-1', projectId: 'p-ghost', name: 'never' },
-          'r-1',
-          { envId: 'env-1', projectId: 'p-ghost', name: 'never' },
-        ),
+        renameEnvironment.fulfilled({ envId: 'env-1', projectId: 'p-ghost', name: 'never' }, 'r-1', {
+          envId: 'env-1',
+          projectId: 'p-ghost',
+          name: 'never',
+        }),
       );
       expect(s.byProject).toEqual({});
     });
@@ -437,11 +422,10 @@ describe('environments-slice', () => {
       const d = diff();
       const s = environmentsReducer(
         init(),
-        compareEnvironments.fulfilled(
-          { diff: d, sourceEnvId: 'env-a', targetEnvId: 'env-b' },
-          'r-1',
-          { sourceEnvId: 'env-a', targetEnvId: 'env-b' },
-        ),
+        compareEnvironments.fulfilled({ diff: d, sourceEnvId: 'env-a', targetEnvId: 'env-b' }, 'r-1', {
+          sourceEnvId: 'env-a',
+          targetEnvId: 'env-b',
+        }),
       );
       expect(s.pendingDiff).toBe(d);
       expect(s.pendingPromote).toEqual({ sourceEnvId: 'env-a', targetEnvId: 'env-b' });
@@ -460,16 +444,12 @@ describe('environments-slice', () => {
     it('clears promoting + diff + pending pair on fulfilled', () => {
       let s = environmentsReducer(
         init(),
-        compareEnvironments.fulfilled(
-          { diff: diff(), sourceEnvId: 'a', targetEnvId: 'b' },
-          'r-1',
-          { sourceEnvId: 'a', targetEnvId: 'b' },
-        ),
+        compareEnvironments.fulfilled({ diff: diff(), sourceEnvId: 'a', targetEnvId: 'b' }, 'r-1', {
+          sourceEnvId: 'a',
+          targetEnvId: 'b',
+        }),
       );
-      s = environmentsReducer(
-        s,
-        promoteEnvironment.pending('r-2', { sourceEnvId: 'a', targetEnvId: 'b' }),
-      );
+      s = environmentsReducer(s, promoteEnvironment.pending('r-2', { sourceEnvId: 'a', targetEnvId: 'b' }));
       s = environmentsReducer(
         s,
         promoteEnvironment.fulfilled(undefined as any, 'r-2', { sourceEnvId: 'a', targetEnvId: 'b' }),
@@ -482,20 +462,13 @@ describe('environments-slice', () => {
     it('clears promoting on rejected without disturbing pending diff', () => {
       let s = environmentsReducer(
         init(),
-        compareEnvironments.fulfilled(
-          { diff: diff(), sourceEnvId: 'a', targetEnvId: 'b' },
-          'r-1',
-          { sourceEnvId: 'a', targetEnvId: 'b' },
-        ),
+        compareEnvironments.fulfilled({ diff: diff(), sourceEnvId: 'a', targetEnvId: 'b' }, 'r-1', {
+          sourceEnvId: 'a',
+          targetEnvId: 'b',
+        }),
       );
-      s = environmentsReducer(
-        s,
-        promoteEnvironment.pending('r-2', { sourceEnvId: 'a', targetEnvId: 'b' }),
-      );
-      s = environmentsReducer(
-        s,
-        promoteEnvironment.rejected(null, 'r-2', { sourceEnvId: 'a', targetEnvId: 'b' }),
-      );
+      s = environmentsReducer(s, promoteEnvironment.pending('r-2', { sourceEnvId: 'a', targetEnvId: 'b' }));
+      s = environmentsReducer(s, promoteEnvironment.rejected(null, 'r-2', { sourceEnvId: 'a', targetEnvId: 'b' }));
       expect(s.promoting).toBe(false);
       // Pending diff is preserved so the user can retry the promote.
       expect(s.pendingDiff).not.toBeNull();

@@ -30,10 +30,9 @@
  *      shows URLs, domains, and status immediately.
  */
 
+import { mapStatusToOverlay, overlayToWireStatus } from '@ice/types';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { DeployEvent } from '@ice/types';
-import { mapStatusToOverlay, overlayToWireStatus } from '@ice/types';
 import { getApi } from '../../../shared/api/api-adapter';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
@@ -45,11 +44,8 @@ import {
   setDeployedResources,
   startDeploying,
 } from '../../../store/slices/deploy-slice';
-import type {
-  DeployNodeProgressEvent,
-  DeployNodeStatusEvent,
-} from '@ice/types';
 import type { AppDispatch, RootState } from '../../../store';
+import type { DeployEvent, DeployNodeProgressEvent, DeployNodeStatusEvent } from '@ice/types';
 
 /**
  * Re-exported from `@ice/types` (rf-0c dedup). Historically the
@@ -76,11 +72,7 @@ export { mapStatusToOverlay as mapWireStatusToOverlay, overlayToWireStatus };
  * `graph-id-vs-canvas-id-translation-is-service-layer-job`), so it goes
  * straight into `updateCardNodeData` without further translation.
  */
-export function applyDeployEvent(
-  dispatch: AppDispatch,
-  event: DeployEvent | null | undefined,
-  cardId?: string,
-): void {
+export function applyDeployEvent(dispatch: AppDispatch, event: DeployEvent | null | undefined, cardId?: string): void {
   if (!event) return;
   switch (event.type) {
     case 'node_status': {
@@ -166,8 +158,7 @@ export function applyDeployEvent(
       if (event.requirement === 'managed-cert-issuance') {
         const details = (event.details ?? {}) as Record<string, unknown>;
         const detailStatus = typeof details.managed_status === 'string' ? details.managed_status : undefined;
-        const finalStatus =
-          event.status === 'satisfied' ? 'ACTIVE' : detailStatus || 'PROVISIONING';
+        const finalStatus = event.status === 'satisfied' ? 'ACTIVE' : detailStatus || 'PROVISIONING';
         dispatch(
           updateCardNodeData({
             nodeId: event.node_id,
@@ -266,7 +257,6 @@ export function useDeploySubscription(cardId: string | undefined): void {
                 ['success', 'partial', 'failed', 'cancelled'].includes(d?.status),
             );
           if (hasTerminal) {
-            // eslint-disable-next-line no-console
             console.log('[deploy-subscription] dropping stale snapshot — DB has terminal row', { cardId });
             return;
           }

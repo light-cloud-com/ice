@@ -19,6 +19,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { create_mutable_graph, type MutableGraph } from '../../mutable-graph';
 import {
   GraphValidator,
   ValidationContext,
@@ -27,7 +28,6 @@ import {
   type Validator,
   type ValidationIssue,
 } from '../base-validator';
-import { create_mutable_graph, type MutableGraph } from '../../mutable-graph';
 
 function fresh_graph(): MutableGraph {
   return create_mutable_graph('test');
@@ -101,11 +101,7 @@ describe('GraphValidator.register / unregister / get / list', () => {
 describe('GraphValidator.validate — issue routing', () => {
   it('routes severity:error issues into result.errors', () => {
     const v = create_graph_validator();
-    v.register(
-      make_validator('e', [
-        { severity: 'error', code: 'X', message: 'boom' },
-      ]),
-    );
+    v.register(make_validator('e', [{ severity: 'error', code: 'X', message: 'boom' }]));
     const r = v.validate(fresh_graph());
     expect(r.valid).toBe(false);
     expect(r.errors).toHaveLength(1);
@@ -116,11 +112,7 @@ describe('GraphValidator.validate — issue routing', () => {
 
   it('routes severity:warning issues into result.warnings', () => {
     const v = create_graph_validator();
-    v.register(
-      make_validator('w', [
-        { severity: 'warning', code: 'W', message: 'ok' },
-      ]),
-    );
+    v.register(make_validator('w', [{ severity: 'warning', code: 'W', message: 'ok' }]));
     const r = v.validate(fresh_graph());
     expect(r.warnings).toHaveLength(1);
     expect(r.warnings[0]!.code).toBe('W');
@@ -129,11 +121,7 @@ describe('GraphValidator.validate — issue routing', () => {
   it('routes severity:info issues into result.info via the info() branch', () => {
     // Hits line 274 (the `else { context.info(...) }` arm).
     const v = create_graph_validator();
-    v.register(
-      make_validator('i', [
-        { severity: 'info', code: 'I', message: 'fyi' },
-      ]),
-    );
+    v.register(make_validator('i', [{ severity: 'info', code: 'I', message: 'fyi' }]));
     const r = v.validate(fresh_graph());
     expect(r.info).toHaveLength(1);
     expect(r.info[0]!.code).toBe('I');
@@ -396,8 +384,7 @@ describe('ValidationContext', () => {
 
 describe('create_validator', () => {
   it('returns a Validator with the supplied name / description and validate fn', () => {
-    const fn = (_g: MutableGraph) =>
-      [{ severity: 'info', code: 'X', message: 'msg' }] satisfies ValidationIssue[];
+    const fn = (_g: MutableGraph) => [{ severity: 'info', code: 'X', message: 'msg' }] satisfies ValidationIssue[];
     const v = create_validator('my-validator', 'a description', fn);
     expect(v.name).toBe('my-validator');
     expect(v.description).toBe('a description');
@@ -406,11 +393,7 @@ describe('create_validator', () => {
 
   it('the validator returned by create_validator works in a GraphValidator', () => {
     const v = create_graph_validator();
-    v.register(
-      create_validator('e', 'd', () => [
-        { severity: 'error', code: 'E', message: 'm' },
-      ]),
-    );
+    v.register(create_validator('e', 'd', () => [{ severity: 'error', code: 'E', message: 'm' }]));
     const r = v.validate(fresh_graph());
     expect(r.errors).toHaveLength(1);
     expect(r.errors[0]!.code).toBe('E');

@@ -9,8 +9,8 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry';
 import { createDeployer } from './deployer-factory';
+import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry';
 
 /**
  * Phase 7 — real drift detection.

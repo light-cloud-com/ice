@@ -13,9 +13,9 @@
  * by both access patterns.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks (must be hoisted before the router import) ──────────────────
@@ -60,14 +60,12 @@ vi.mock('@ice/shared', () => ({
     req.organisationId = currentOrgId;
     next();
   },
-  requireProjectAccess:
-    (_role: string) =>
-    (_req: any, res: any, next: any) => {
-      if (currentAuth === 'no-project-access') {
-        return res.status(403).json({ message: 'Insufficient project permissions' });
-      }
-      next();
-    },
+  requireProjectAccess: (_role: string) => (_req: any, res: any, next: any) => {
+    if (currentAuth === 'no-project-access') {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  },
 }));
 
 // ── Test harness ──────────────────────────────────────────────────────
@@ -107,7 +105,7 @@ async function post(path: string, body: unknown, headers?: Record<string, string
     body: JSON.stringify(body),
   });
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -220,9 +218,7 @@ describe('POST /api/project-members/add', () => {
 
   it('falls back to "A team member" when inviter has no name', async () => {
     addProjectMemberMock.mockResolvedValue(undefined);
-    userFindUniqueMock
-      .mockResolvedValueOnce({ email: 'invitee@example.com' })
-      .mockResolvedValueOnce({ name: null });
+    userFindUniqueMock.mockResolvedValueOnce({ email: 'invitee@example.com' }).mockResolvedValueOnce({ name: null });
     projectFindUniqueMock.mockResolvedValue({ name: 'Project X' });
 
     await post('/api/project-members/add', {
@@ -230,23 +226,17 @@ describe('POST /api/project-members/add', () => {
       userId: 'u-target',
     });
 
-    expect(sendProjectInviteEmailMock).toHaveBeenCalledWith(
-      expect.objectContaining({ inviterName: 'A team member' }),
-    );
+    expect(sendProjectInviteEmailMock).toHaveBeenCalledWith(expect.objectContaining({ inviterName: 'A team member' }));
   });
 
   it('falls back to "A team member" when the inviter user record is missing', async () => {
     addProjectMemberMock.mockResolvedValue(undefined);
-    userFindUniqueMock
-      .mockResolvedValueOnce({ email: 'invitee@example.com' })
-      .mockResolvedValueOnce(null); // inviter missing
+    userFindUniqueMock.mockResolvedValueOnce({ email: 'invitee@example.com' }).mockResolvedValueOnce(null); // inviter missing
     projectFindUniqueMock.mockResolvedValue({ name: 'Project X' });
 
     await post('/api/project-members/add', { projectId: 'p1', userId: 'u-target' });
 
-    expect(sendProjectInviteEmailMock).toHaveBeenCalledWith(
-      expect.objectContaining({ inviterName: 'A team member' }),
-    );
+    expect(sendProjectInviteEmailMock).toHaveBeenCalledWith(expect.objectContaining({ inviterName: 'A team member' }));
   });
 
   it('skips email notification when target user does not exist', async () => {

@@ -153,7 +153,6 @@ describe('StorageService — clients-not-initialized branch', () => {
     class WeirdInitStorage extends StorageService {
       // @ts-expect-error overriding private
       private async init_client(): Promise<void> {
-        // eslint-disable-next-line no-throw-literal
         throw 'plain-string-from-init';
       }
     }
@@ -180,7 +179,6 @@ describe('StorageService — clients-not-initialized branch', () => {
     (globalThis as any).Function = function (...args: any[]): any {
       if (args.length === 2 && args[0] === 'moduleName' && args[1] === 'return import(moduleName)') {
         return async (_: string) => {
-          // eslint-disable-next-line no-throw-literal
           throw 'plain-string-non-error';
         };
       }

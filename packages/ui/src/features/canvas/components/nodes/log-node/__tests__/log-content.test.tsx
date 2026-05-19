@@ -42,10 +42,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -62,12 +59,12 @@ const mkLog = (i: number): LogEntry => ({
   message: `m${i}`,
 });
 
-const renderLC = (
-  props: Partial<React.ComponentProps<typeof LogContent>> = {},
-): React.ReactElement => {
-  const Inner = (LogContent as unknown as {
-    type: (p: React.ComponentProps<typeof LogContent>) => React.ReactElement;
-  }).type;
+const renderLC = (props: Partial<React.ComponentProps<typeof LogContent>> = {}): React.ReactElement => {
+  const Inner = (
+    LogContent as unknown as {
+      type: (p: React.ComponentProps<typeof LogContent>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof LogContent> = {
     logAreaHeight: 100,
     visibleLogs: [],

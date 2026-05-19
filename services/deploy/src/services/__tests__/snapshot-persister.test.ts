@@ -35,8 +35,8 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-import { installSnapshotPersister, flushSnapshotNow } from '../snapshot-persister';
 import * as deployLocks from '../deploy-locks';
+import { installSnapshotPersister, flushSnapshotNow } from '../snapshot-persister';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

@@ -124,11 +124,7 @@ describe('useComputingFlows — dispatch ordering', () => {
     });
     mount();
     const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
-    expect(types).toEqual([
-      'cards/deleteCardEdge',
-      'cards/updateCardEdgeData',
-      'cards/updateCardNodeData',
-    ]);
+    expect(types).toEqual(['cards/deleteCardEdge', 'cards/updateCardEdgeData', 'cards/updateCardNodeData']);
   });
 
   it('dispatches deleteCardEdge with the edgeId only', () => {
@@ -181,7 +177,9 @@ describe('useComputingFlows — dispatch ordering', () => {
 describe('useComputingFlows — payload shapes', () => {
   it('maps nodes to {id,type,parentId,data}', () => {
     mocks.selectActiveCard.mockReturnValue({
-      nodes: [{ id: 'n1', type: 'block', parentId: 'p1', data: { x: 1 }, position: { x: 0, y: 0 }, width: 0, height: 0 }],
+      nodes: [
+        { id: 'n1', type: 'block', parentId: 'p1', data: { x: 1 }, position: { x: 0, y: 0 }, width: 0, height: 0 },
+      ],
       edges: [],
     });
     mocks.diffPatches.mockReturnValue({

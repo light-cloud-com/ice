@@ -31,10 +31,7 @@ import type {
  * other way for clarity ("a → b" = "b depends on a"), so we'll pass
  * `edges_from_to` which is "from must finish before to."
  */
-function build_graph(
-  resources: Array<{ name: string; type: string }>,
-  edges_from_to: Array<[string, string]>,
-): Graph {
+function build_graph(resources: Array<{ name: string; type: string }>, edges_from_to: Array<[string, string]>): Graph {
   const nodes_map = new Map<NodeId, Node>();
   const edges_map = new Map<EdgeId, Edge>();
   const now = new Date().toISOString();
@@ -94,7 +91,11 @@ function build_graph(
 }
 
 /** Build a `ResourceChange` for a name+type. */
-function build_change(name: string, type: string, change_type: 'create' | 'update' | 'delete' = 'create'): ResourceChange {
+function build_change(
+  name: string,
+  type: string,
+  change_type: 'create' | 'update' | 'delete' = 'create',
+): ResourceChange {
   return {
     id: `${type}:${name}`,
     name,
@@ -129,9 +130,11 @@ interface MockTiming {
   settled_at?: number;
 }
 
-function make_mock_deployer(
-  behaviors: Record<string, MockBehavior> = {},
-): { deployer: ProviderDeployer; timings: MockTiming[]; calls: Array<{ method: string; name: string; type: string }> } {
+function make_mock_deployer(behaviors: Record<string, MockBehavior> = {}): {
+  deployer: ProviderDeployer;
+  timings: MockTiming[];
+  calls: Array<{ method: string; name: string; type: string }>;
+} {
   const timings: MockTiming[] = [];
   const calls: Array<{ method: string; name: string; type: string }> = [];
 
@@ -214,7 +217,11 @@ function capture_events(): {
   };
 }
 
-function status_for(events: CapturedEvents, node_id: string, status: NodeStatusEvent['status']): NodeStatusEvent | undefined {
+function status_for(
+  events: CapturedEvents,
+  node_id: string,
+  status: NodeStatusEvent['status'],
+): NodeStatusEvent | undefined {
   return events.status.find((e) => e.node_id === node_id && e.status === status);
 }
 
@@ -579,9 +586,7 @@ describe('ParallelChangeScheduler', () => {
 
     // Custom deployer that calls on_progress with `step` events.
     const captured_progress: NodeProgressEvent[] = [];
-    let captured_on_progress:
-      | ((resource: string, action: string, status: string, extra?: any) => void)
-      | undefined;
+    let captured_on_progress: ((resource: string, action: string, status: string, extra?: any) => void) | undefined;
     const deployer: ProviderDeployer = {
       provider: 'gcp',
       initialize: async (opts) => {
@@ -642,9 +647,7 @@ describe('ParallelChangeScheduler', () => {
       type: 'gcp.storage.bucket',
     }));
     const graph = build_graph(resources, []);
-    const { deployer } = make_mock_deployer(
-      Object.fromEntries(resources.map((r) => [r.name, { delay_ms: 30 }])),
-    );
+    const { deployer } = make_mock_deployer(Object.fromEntries(resources.map((r) => [r.name, { delay_ms: 30 }])));
     const cap = capture_events();
     const start = Date.now();
     await run_parallel_apply({

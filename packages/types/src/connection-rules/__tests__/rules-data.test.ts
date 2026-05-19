@@ -14,8 +14,8 @@
  * + port lookups land in their dedicated sections of the prompt.
  */
 
-import { describe, expect, it } from 'vitest';
 import { CATEGORY_COLORS, DEFAULT_ENV_VARS, DEFAULT_PORTS } from '@ice/constants';
+import { describe, expect, it } from 'vitest';
 import { CONNECTION_RULES, generateAiConnectionPrompt } from '../rules-data';
 
 describe('CONNECTION_RULES — structural invariants', () => {

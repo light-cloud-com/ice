@@ -73,9 +73,7 @@ describe('createAuditEntry', () => {
       { id: 'n1', iceType: 'Database', label: 'pg' },
       { id: 'n2', iceType: 'Compute', label: 'web' },
     ]);
-    expect(entry.canvasBefore.edges).toEqual([
-      { source: 'n1', target: 'n2', relationship: 'connects-to' },
-    ]);
+    expect(entry.canvasBefore.edges).toEqual([{ source: 'n1', target: 'n2', relationship: 'connects-to' }]);
   });
 
   it('falls back to top-level iceType and label when data wrapper is absent', () => {

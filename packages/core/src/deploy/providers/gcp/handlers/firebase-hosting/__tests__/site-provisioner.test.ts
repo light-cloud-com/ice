@@ -290,13 +290,11 @@ describe('firebase-hosting/site-provisioner', () => {
       // an empty body from a stray endpoint redirect would silently
       // be returned as a "site" with no name field, breaking
       // downstream `site.data.name` reads.
-      mocks.restRequest
-        .mockResolvedValueOnce({ status: 200, ok: true, data: {} })
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          data: { name: 'projects/test-project/sites/edge-site' },
-        });
+      mocks.restRequest.mockResolvedValueOnce({ status: 200, ok: true, data: {} }).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        data: { name: 'projects/test-project/sites/edge-site' },
+      });
 
       const out = await ensureHostingSite(makeCtx(), 'edge-site');
       expect(out.ok).toBe(true);
@@ -305,13 +303,11 @@ describe('firebase-hosting/site-provisioner', () => {
     });
 
     it('returns the POST data on a successful 200 create', async () => {
-      mocks.restRequest
-        .mockResolvedValueOnce({ status: 404, ok: true, data: {} })
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          data: { name: 'projects/test-project/sites/fresh', _created: true },
-        });
+      mocks.restRequest.mockResolvedValueOnce({ status: 404, ok: true, data: {} }).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        data: { name: 'projects/test-project/sites/fresh', _created: true },
+      });
 
       const out = await ensureHostingSite(makeCtx(), 'fresh');
       expect(out).toEqual({
@@ -366,13 +362,11 @@ describe('firebase-hosting/site-provisioner', () => {
     it('returns ok:false with the error message when POST fails with a non-409 error', async () => {
       // POST with a real failure (e.g. 403, 500). The wrapper extracts
       // `res.data?.error?.message`.
-      mocks.restRequest
-        .mockResolvedValueOnce({ status: 404, ok: true, data: {} })
-        .mockResolvedValueOnce({
-          status: 403,
-          ok: false,
-          data: { error: { message: 'Permission denied on hosting.sites.create' } },
-        });
+      mocks.restRequest.mockResolvedValueOnce({ status: 404, ok: true, data: {} }).mockResolvedValueOnce({
+        status: 403,
+        ok: false,
+        data: { error: { message: 'Permission denied on hosting.sites.create' } },
+      });
 
       const out = await ensureHostingSite(makeCtx(), 'denied');
       expect(out).toEqual({ ok: false, error: 'Permission denied on hosting.sites.create' });
@@ -382,13 +376,11 @@ describe('firebase-hosting/site-provisioner', () => {
       // The error-message-extraction chain on the failure path is
       // `res.data?.error?.message || JSON.stringify(res.data)` — pin
       // the fallback so a future schema change doesn't drop it.
-      mocks.restRequest
-        .mockResolvedValueOnce({ status: 404, ok: true, data: {} })
-        .mockResolvedValueOnce({
-          status: 500,
-          ok: false,
-          data: { unexpected: 'blob' },
-        });
+      mocks.restRequest.mockResolvedValueOnce({ status: 404, ok: true, data: {} }).mockResolvedValueOnce({
+        status: 500,
+        ok: false,
+        data: { unexpected: 'blob' },
+      });
 
       const out = await ensureHostingSite(makeCtx(), 'oops');
       expect(out.ok).toBe(false);

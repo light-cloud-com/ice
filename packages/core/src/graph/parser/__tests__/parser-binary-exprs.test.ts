@@ -97,13 +97,7 @@ describe('parse_conditional', () => {
 
   it('builds a ConditionalExpression for `cond ? then : else`', () => {
     const s = make_parser_state(
-      eof(
-        tk('BOOLEAN', 'true', true),
-        tk('QUESTION', '?'),
-        num(1),
-        tk('COLON', ':'),
-        num(2),
-      ),
+      eof(tk('BOOLEAN', 'true', true), tk('QUESTION', '?'), num(1), tk('COLON', ':'), num(2)),
     );
     const expr = parse_conditional(s) as ConditionalExpression;
     expect(expr.kind).toBe('ConditionalExpression');
@@ -138,9 +132,7 @@ describe('parse_conditional', () => {
   });
 
   it('emits an error when the COLON is missing', () => {
-    const s = make_parser_state(
-      eof(id('a'), tk('QUESTION', '?'), id('b'), id('c')),
-    );
+    const s = make_parser_state(eof(id('a'), tk('QUESTION', '?'), id('b'), id('c')));
     parse_conditional(s);
     // ps_consume mismatch on COLON.
     expect(s.errors.some((e) => e.message.includes("Expected ':'"))).toBe(true);
@@ -155,9 +147,7 @@ describe('parse_or', () => {
   });
 
   it('folds left for `a || b || c` → ((a || b) || c)', () => {
-    const s = make_parser_state(
-      eof(id('a'), tk('OR', '||'), id('b'), tk('OR', '||'), id('c')),
-    );
+    const s = make_parser_state(eof(id('a'), tk('OR', '||'), id('b'), tk('OR', '||'), id('c')));
     const expr = parse_or(s) as BinaryExpression;
     expect(expr.kind).toBe('BinaryExpression');
     expect(expr.operator).toBe('||');
@@ -179,9 +169,7 @@ describe('parse_and', () => {
   });
 
   it('folds left for `a && b && c` with operator `&&`', () => {
-    const s = make_parser_state(
-      eof(id('a'), tk('AND', '&&'), id('b'), tk('AND', '&&'), id('c')),
-    );
+    const s = make_parser_state(eof(id('a'), tk('AND', '&&'), id('b'), tk('AND', '&&'), id('c')));
     const expr = parse_and(s) as BinaryExpression;
     expect(expr.operator).toBe('&&');
     expect((expr.left as BinaryExpression).operator).toBe('&&');
@@ -190,9 +178,7 @@ describe('parse_and', () => {
 
 describe('parse_equality (RISK #5)', () => {
   it('pins the operator string to `==` when EQUALS_EQUALS matched', () => {
-    const s = make_parser_state(
-      eof(num(1), tk('EQUALS_EQUALS', '=='), num(2)),
-    );
+    const s = make_parser_state(eof(num(1), tk('EQUALS_EQUALS', '=='), num(2)));
     const expr = parse_equality(s) as BinaryExpression;
     expect(expr.kind).toBe('BinaryExpression');
     // RISK #5: must be exactly the string '==' — the ternary returns
@@ -201,9 +187,7 @@ describe('parse_equality (RISK #5)', () => {
   });
 
   it('pins the operator string to `!=` when NOT_EQUALS matched', () => {
-    const s = make_parser_state(
-      eof(num(1), tk('NOT_EQUALS', '!='), num(2)),
-    );
+    const s = make_parser_state(eof(num(1), tk('NOT_EQUALS', '!='), num(2)));
     const expr = parse_equality(s) as BinaryExpression;
     expect(expr.operator).toBe('!=');
   });
@@ -215,9 +199,7 @@ describe('parse_equality (RISK #5)', () => {
       // Test that even with arbitrary token value, the ternary picks
       // `!=` for any value that is not `==`. This pins the exact
       // ternary shape (`previous().value === '==' ? '==' : '!='`).
-      const s = make_parser_state(
-        eof(num(1), tk('NOT_EQUALS', 'something-else'), num(2)),
-      );
+      const s = make_parser_state(eof(num(1), tk('NOT_EQUALS', 'something-else'), num(2)));
       const expr = parse_equality(s) as BinaryExpression;
       // Token value is 'something-else', which is not '==', so the
       // ternary returns '!=' regardless.
@@ -226,9 +208,7 @@ describe('parse_equality (RISK #5)', () => {
   );
 
   it('folds left for `a == b == c`', () => {
-    const s = make_parser_state(
-      eof(id('a'), tk('EQUALS_EQUALS', '=='), id('b'), tk('EQUALS_EQUALS', '=='), id('c')),
-    );
+    const s = make_parser_state(eof(id('a'), tk('EQUALS_EQUALS', '=='), id('b'), tk('EQUALS_EQUALS', '=='), id('c')));
     const expr = parse_equality(s) as BinaryExpression;
     expect(expr.operator).toBe('==');
     expect((expr.left as BinaryExpression).operator).toBe('==');
@@ -269,9 +249,7 @@ describe('parse_term', () => {
   });
 
   it('folds left for `1 - 2 - 3` → `(1 - 2) - 3`', () => {
-    const s = make_parser_state(
-      eof(num(1), tk('MINUS', '-'), num(2), tk('MINUS', '-'), num(3)),
-    );
+    const s = make_parser_state(eof(num(1), tk('MINUS', '-'), num(2), tk('MINUS', '-'), num(3)));
     const expr = parse_term(s) as BinaryExpression;
     expect(expr.operator).toBe('-');
     const left = expr.left as BinaryExpression;
@@ -311,9 +289,7 @@ describe('parse_unary', () => {
   });
 
   it('right-associative — `!!x` builds two nested UnaryExpressions', () => {
-    const s = make_parser_state(
-      eof(tk('NOT', '!'), tk('NOT', '!'), id('x')),
-    );
+    const s = make_parser_state(eof(tk('NOT', '!'), tk('NOT', '!'), id('x')));
     const outer = parse_unary(s) as UnaryExpression;
     expect(outer.operator).toBe('!');
     const inner = outer.operand as UnaryExpression;
@@ -340,9 +316,7 @@ describe('parse_postfix', () => {
   });
 
   it('builds an IndexAccess for `x[1]`', () => {
-    const s = make_parser_state(
-      eof(id('x'), tk('LEFT_BRACKET', '['), num(1), tk('RIGHT_BRACKET', ']')),
-    );
+    const s = make_parser_state(eof(id('x'), tk('LEFT_BRACKET', '['), num(1), tk('RIGHT_BRACKET', ']')));
     const expr = parse_postfix(s) as IndexAccess;
     expect(expr.kind).toBe('IndexAccess');
     expect((expr.object as Identifier).name).toBe('x');
@@ -351,14 +325,7 @@ describe('parse_postfix', () => {
 
   it('builds a FunctionCall for `f(1, 2)`', () => {
     const s = make_parser_state(
-      eof(
-        id('f'),
-        tk('LEFT_PAREN', '('),
-        num(1),
-        tk('COMMA', ','),
-        num(2),
-        tk('RIGHT_PAREN', ')'),
-      ),
+      eof(id('f'), tk('LEFT_PAREN', '('), num(1), tk('COMMA', ','), num(2), tk('RIGHT_PAREN', ')')),
     );
     const expr = parse_postfix(s) as FunctionCall;
     expect(expr.kind).toBe('FunctionCall');
@@ -369,72 +336,41 @@ describe('parse_postfix', () => {
   });
 
   it('builds a FunctionCall for `f()` with zero args', () => {
-    const s = make_parser_state(
-      eof(id('f'), tk('LEFT_PAREN', '('), tk('RIGHT_PAREN', ')')),
-    );
+    const s = make_parser_state(eof(id('f'), tk('LEFT_PAREN', '('), tk('RIGHT_PAREN', ')')));
     const expr = parse_postfix(s) as FunctionCall;
     expect(expr.kind).toBe('FunctionCall');
     expect(expr.arguments).toHaveLength(0);
   });
 
-  it(
-    'RISK #6 — non-Identifier callee: emits error AND still constructs ' +
-      'FunctionCall (no break/skip)',
-    () => {
-      // `5(1, 2)` — callee is a NumberLiteral, not an Identifier.
-      const s = make_parser_state(
-        eof(
-          num(5),
-          tk('LEFT_PAREN', '('),
-          num(1),
-          tk('COMMA', ','),
-          num(2),
-          tk('RIGHT_PAREN', ')'),
-        ),
-      );
-      const expr = parse_postfix(s) as FunctionCall;
-      // Error MUST be emitted.
-      expect(s.errors.some((e) => e.message === 'Expected function name')).toBe(true);
-      // BUT the FunctionCall node is still constructed.
-      expect(expr.kind).toBe('FunctionCall');
-      expect(expr.arguments).toHaveLength(2);
-      // Cursor advanced past the closing `)`.
-      expect(s.pos).toBe(6);
-    },
-  );
+  it('RISK #6 — non-Identifier callee: emits error AND still constructs ' + 'FunctionCall (no break/skip)', () => {
+    // `5(1, 2)` — callee is a NumberLiteral, not an Identifier.
+    const s = make_parser_state(
+      eof(num(5), tk('LEFT_PAREN', '('), num(1), tk('COMMA', ','), num(2), tk('RIGHT_PAREN', ')')),
+    );
+    const expr = parse_postfix(s) as FunctionCall;
+    // Error MUST be emitted.
+    expect(s.errors.some((e) => e.message === 'Expected function name')).toBe(true);
+    // BUT the FunctionCall node is still constructed.
+    expect(expr.kind).toBe('FunctionCall');
+    expect(expr.arguments).toHaveLength(2);
+    // Cursor advanced past the closing `)`.
+    expect(s.pos).toBe(6);
+  });
 
-  it(
-    'RISK #6 — string-literal callee `"x"(1)` also emits error but still ' +
-      'returns FunctionCall',
-    () => {
-      const s = make_parser_state(
-        eof(
-          tk('STRING', '"x"', 'x'),
-          tk('LEFT_PAREN', '('),
-          num(1),
-          tk('RIGHT_PAREN', ')'),
-        ),
-      );
-      const expr = parse_postfix(s) as FunctionCall;
-      expect(s.errors.some((e) => e.message === 'Expected function name')).toBe(true);
-      expect(expr.kind).toBe('FunctionCall');
-      expect(expr.arguments).toHaveLength(1);
-      // Callee is the StringLiteral cast to Identifier (preserved
-      // verbatim — downstream sees a non-Identifier callee).
-      expect((expr.callee as unknown as StringLiteral).kind).toBe('StringLiteral');
-    },
-  );
+  it('RISK #6 — string-literal callee `"x"(1)` also emits error but still ' + 'returns FunctionCall', () => {
+    const s = make_parser_state(eof(tk('STRING', '"x"', 'x'), tk('LEFT_PAREN', '('), num(1), tk('RIGHT_PAREN', ')')));
+    const expr = parse_postfix(s) as FunctionCall;
+    expect(s.errors.some((e) => e.message === 'Expected function name')).toBe(true);
+    expect(expr.kind).toBe('FunctionCall');
+    expect(expr.arguments).toHaveLength(1);
+    // Callee is the StringLiteral cast to Identifier (preserved
+    // verbatim — downstream sees a non-Identifier callee).
+    expect((expr.callee as unknown as StringLiteral).kind).toBe('StringLiteral');
+  });
 
   it('chains postfix accessors — `x.y[0]` builds IndexAccess on PropertyAccess', () => {
     const s = make_parser_state(
-      eof(
-        id('x'),
-        tk('DOT', '.'),
-        id('y'),
-        tk('LEFT_BRACKET', '['),
-        num(0),
-        tk('RIGHT_BRACKET', ']'),
-      ),
+      eof(id('x'), tk('DOT', '.'), id('y'), tk('LEFT_BRACKET', '['), num(0), tk('RIGHT_BRACKET', ']')),
     );
     const expr = parse_postfix(s) as IndexAccess;
     expect(expr.kind).toBe('IndexAccess');
@@ -453,9 +389,7 @@ describe('parse_postfix', () => {
 
 describe('Precedence chain (RISK #7)', () => {
   it('multiplication binds tighter than addition: `1 + 2 * 3` → `1 + (2 * 3)`', () => {
-    const s = make_parser_state(
-      eof(num(1), tk('PLUS', '+'), num(2), tk('STAR', '*'), num(3)),
-    );
+    const s = make_parser_state(eof(num(1), tk('PLUS', '+'), num(2), tk('STAR', '*'), num(3)));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('+');
     // Right side must be the multiplication.
@@ -467,9 +401,7 @@ describe('Precedence chain (RISK #7)', () => {
   });
 
   it('addition binds tighter than equality: `1 + 2 == 3` → `(1 + 2) == 3`', () => {
-    const s = make_parser_state(
-      eof(num(1), tk('PLUS', '+'), num(2), tk('EQUALS_EQUALS', '=='), num(3)),
-    );
+    const s = make_parser_state(eof(num(1), tk('PLUS', '+'), num(2), tk('EQUALS_EQUALS', '=='), num(3)));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('==');
     const left = expr.left as BinaryExpression;
@@ -479,13 +411,7 @@ describe('Precedence chain (RISK #7)', () => {
 
   it('comparison binds tighter than equality: `1 < 2 == true` → `(1 < 2) == true`', () => {
     const s = make_parser_state(
-      eof(
-        num(1),
-        tk('LESS_THAN', '<'),
-        num(2),
-        tk('EQUALS_EQUALS', '=='),
-        tk('BOOLEAN', 'true', true),
-      ),
+      eof(num(1), tk('LESS_THAN', '<'), num(2), tk('EQUALS_EQUALS', '=='), tk('BOOLEAN', 'true', true)),
     );
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('==');
@@ -494,15 +420,7 @@ describe('Precedence chain (RISK #7)', () => {
 
   it('equality binds tighter than AND: `1 == 1 && 2 == 2` → `(1==1) && (2==2)`', () => {
     const s = make_parser_state(
-      eof(
-        num(1),
-        tk('EQUALS_EQUALS', '=='),
-        num(1),
-        tk('AND', '&&'),
-        num(2),
-        tk('EQUALS_EQUALS', '=='),
-        num(2),
-      ),
+      eof(num(1), tk('EQUALS_EQUALS', '=='), num(1), tk('AND', '&&'), num(2), tk('EQUALS_EQUALS', '=='), num(2)),
     );
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('&&');
@@ -511,9 +429,7 @@ describe('Precedence chain (RISK #7)', () => {
   });
 
   it('AND binds tighter than OR: `a && b || c` → `(a && b) || c`', () => {
-    const s = make_parser_state(
-      eof(id('a'), tk('AND', '&&'), id('b'), tk('OR', '||'), id('c')),
-    );
+    const s = make_parser_state(eof(id('a'), tk('AND', '&&'), id('b'), tk('OR', '||'), id('c')));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('||');
     expect((expr.left as BinaryExpression).operator).toBe('&&');
@@ -521,15 +437,7 @@ describe('Precedence chain (RISK #7)', () => {
 
   it('OR binds tighter than ternary: `a || b ? c : d` → `(a || b) ? c : d`', () => {
     const s = make_parser_state(
-      eof(
-        id('a'),
-        tk('OR', '||'),
-        id('b'),
-        tk('QUESTION', '?'),
-        id('c'),
-        tk('COLON', ':'),
-        id('d'),
-      ),
+      eof(id('a'), tk('OR', '||'), id('b'), tk('QUESTION', '?'), id('c'), tk('COLON', ':'), id('d')),
     );
     const expr = parse_expression(s) as ConditionalExpression;
     expect(expr.kind).toBe('ConditionalExpression');
@@ -537,9 +445,7 @@ describe('Precedence chain (RISK #7)', () => {
   });
 
   it('unary binds tighter than multiplication: `-1 * 2` → `(-1) * 2`', () => {
-    const s = make_parser_state(
-      eof(tk('MINUS', '-'), num(1), tk('STAR', '*'), num(2)),
-    );
+    const s = make_parser_state(eof(tk('MINUS', '-'), num(1), tk('STAR', '*'), num(2)));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('*');
     expect((expr.left as UnaryExpression).kind).toBe('UnaryExpression');
@@ -547,69 +453,57 @@ describe('Precedence chain (RISK #7)', () => {
   });
 
   it('postfix binds tightest: `x.y + 1` → `(x.y) + 1`', () => {
-    const s = make_parser_state(
-      eof(id('x'), tk('DOT', '.'), id('y'), tk('PLUS', '+'), num(1)),
-    );
+    const s = make_parser_state(eof(id('x'), tk('DOT', '.'), id('y'), tk('PLUS', '+'), num(1)));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.operator).toBe('+');
     expect((expr.left as PropertyAccess).kind).toBe('PropertyAccess');
   });
 
-  it(
-    'full chain stack — `!a + b * c == d && e || f ? g : h` parses with ' +
-      'expected precedence',
-    () => {
-      // Pins that all 10 levels are wired in the right order.
-      const s = make_parser_state(
-        eof(
-          tk('NOT', '!'),
-          id('a'),
-          tk('PLUS', '+'),
-          id('b'),
-          tk('STAR', '*'),
-          id('c'),
-          tk('EQUALS_EQUALS', '=='),
-          id('d'),
-          tk('AND', '&&'),
-          id('e'),
-          tk('OR', '||'),
-          id('f'),
-          tk('QUESTION', '?'),
-          id('g'),
-          tk('COLON', ':'),
-          id('h'),
-        ),
-      );
-      const expr = parse_expression(s) as ConditionalExpression;
-      expect(expr.kind).toBe('ConditionalExpression');
-      // Condition: `!a + b * c == d && e || f`
-      const cond = expr.condition as BinaryExpression;
-      expect(cond.operator).toBe('||');
-      const left = cond.left as BinaryExpression;
-      expect(left.operator).toBe('&&');
-      const eq = left.left as BinaryExpression;
-      expect(eq.operator).toBe('==');
-      // The left of `==` is `!a + b * c` → addition root, with unary
-      // `!a` on the left and `b * c` on the right.
-      const add = eq.left as BinaryExpression;
-      expect(add.operator).toBe('+');
-      expect((add.left as UnaryExpression).kind).toBe('UnaryExpression');
-      expect((add.right as BinaryExpression).operator).toBe('*');
-    },
-  );
+  it('full chain stack — `!a + b * c == d && e || f ? g : h` parses with ' + 'expected precedence', () => {
+    // Pins that all 10 levels are wired in the right order.
+    const s = make_parser_state(
+      eof(
+        tk('NOT', '!'),
+        id('a'),
+        tk('PLUS', '+'),
+        id('b'),
+        tk('STAR', '*'),
+        id('c'),
+        tk('EQUALS_EQUALS', '=='),
+        id('d'),
+        tk('AND', '&&'),
+        id('e'),
+        tk('OR', '||'),
+        id('f'),
+        tk('QUESTION', '?'),
+        id('g'),
+        tk('COLON', ':'),
+        id('h'),
+      ),
+    );
+    const expr = parse_expression(s) as ConditionalExpression;
+    expect(expr.kind).toBe('ConditionalExpression');
+    // Condition: `!a + b * c == d && e || f`
+    const cond = expr.condition as BinaryExpression;
+    expect(cond.operator).toBe('||');
+    const left = cond.left as BinaryExpression;
+    expect(left.operator).toBe('&&');
+    const eq = left.left as BinaryExpression;
+    expect(eq.operator).toBe('==');
+    // The left of `==` is `!a + b * c` → addition root, with unary
+    // `!a` on the left and `b * c` on the right.
+    const add = eq.left as BinaryExpression;
+    expect(add.operator).toBe('+');
+    expect((add.left as UnaryExpression).kind).toBe('UnaryExpression');
+    expect((add.right as BinaryExpression).operator).toBe('*');
+  });
 });
 
 describe('span tracking', () => {
   it('binary expression span runs from left.start to right.end', () => {
     const startPos: SourcePosition = { line: 1, column: 1, offset: 0, length: 1 };
     const endPos: SourcePosition = { line: 5, column: 9, offset: 50, length: 1 };
-    const s = make_parser_state(
-      eof(
-        tk('NUMBER', '1', 1, startPos),
-        tk('PLUS', '+'),
-        tk('NUMBER', '2', 2, endPos),
-      ),
-    );
+    const s = make_parser_state(eof(tk('NUMBER', '1', 1, startPos), tk('PLUS', '+'), tk('NUMBER', '2', 2, endPos)));
     const expr = parse_expression(s) as BinaryExpression;
     expect(expr.span.start).toEqual(startPos);
     expect(expr.span.end).toEqual(endPos);
@@ -635,12 +529,7 @@ describe('span tracking', () => {
   it('unary expression span runs from operator pos to operand.end', () => {
     const opPos: SourcePosition = { line: 1, column: 1, offset: 0, length: 1 };
     const operandPos: SourcePosition = { line: 1, column: 3, offset: 2, length: 1 };
-    const s = make_parser_state(
-      eof(
-        tk('NOT', '!', undefined, opPos),
-        tk('IDENTIFIER', 'x', undefined, operandPos),
-      ),
-    );
+    const s = make_parser_state(eof(tk('NOT', '!', undefined, opPos), tk('IDENTIFIER', 'x', undefined, operandPos)));
     const expr = parse_unary(s) as UnaryExpression;
     expect(expr.span.start).toEqual(opPos);
     expect(expr.span.end).toEqual(operandPos);

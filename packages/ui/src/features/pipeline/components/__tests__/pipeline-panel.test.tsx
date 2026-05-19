@@ -60,7 +60,10 @@ const mocks = vi.hoisted(() => ({
   activeCard: {
     nodes: [{ id: 'node-1', data: { label: 'My Service', repository: 'org/repo', branch: 'main' } }],
     edges: [],
-  } as unknown as { nodes: Array<{ id: string; data: Record<string, unknown> }>; edges: Array<{ source: string; target: string }> } | null,
+  } as unknown as {
+    nodes: Array<{ id: string; data: Record<string, unknown> }>;
+    edges: Array<{ source: string; target: string }>;
+  } | null,
   apiHandlers: {
     onPipelineUpdate: null as null | ((e: unknown) => void),
     onCardPipelineUpdate: null as null | ((e: unknown) => void),
@@ -157,7 +160,9 @@ vi.mock('react-redux', () => ({
 }));
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, params?: Record<string, unknown>) => (params ? `${k}:${JSON.stringify(params)}` : k) }),
+  useTranslation: () => ({
+    t: (k: string, params?: Record<string, unknown>) => (params ? `${k}:${JSON.stringify(params)}` : k),
+  }),
 }));
 
 vi.mock('../../../../shared/api/api-adapter', () => ({
@@ -284,10 +289,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -457,9 +459,7 @@ describe('PipelinePanel — header', () => {
     const tree = render();
     const banners = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        ((el.props as { className?: string }).className ?? '').includes('bg-red-500/10'),
+      (el) => el.type === 'div' && ((el.props as { className?: string }).className ?? '').includes('bg-red-500/10'),
     );
     expect(banners).toHaveLength(0);
   });
@@ -998,9 +998,7 @@ describe('PipelinePanel — callbacks', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children).some(
-          (c) => typeof c === 'string' && c === 'pipeline.deployNow',
-        ),
+        (el.props as { children: unknown[] }).children.some((c) => typeof c === 'string' && c === 'pipeline.deployNow'),
     );
     expect(buttons.length).toBeGreaterThanOrEqual(1);
     (buttons[0].props as { onClick: () => void }).onClick();
@@ -1015,7 +1013,7 @@ describe('PipelinePanel — callbacks', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children).some(
+        (el.props as { children: unknown[] }).children.some(
           (c) => typeof c === 'string' && c === 'pipeline.enablePipeline',
         ),
     );
@@ -1031,9 +1029,7 @@ describe('PipelinePanel — callbacks', () => {
     const tree = render();
     const buttons = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-pipeline-btn-add-rule',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-pipeline-btn-add-rule',
     );
     expect(buttons.length).toBe(1);
     mocks.thunks.createPipelineRule.mockClear();
@@ -1068,9 +1064,7 @@ describe('PipelinePanel — callbacks', () => {
     const tree = render();
     const innerPanels = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { id?: string }).id === 'ice-pipeline-panel',
+      (el) => el.type === 'div' && (el.props as { id?: string }).id === 'ice-pipeline-panel',
     );
     expect(innerPanels).toHaveLength(1);
     const stop = vi.fn();

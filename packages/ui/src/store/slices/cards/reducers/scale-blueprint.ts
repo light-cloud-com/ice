@@ -33,11 +33,11 @@
  * @see rf-cards-13
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { ExpandedBlueprint } from '../../../../config/blocks';
 import { migrateCardNode } from '../migration';
 import { pushSnapshot } from '../snapshot';
+import type { ExpandedBlueprint } from '../../../../config/blocks';
 import type { CardNode, CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const scaleBlueprintReducers = {
   // ── Proportional zoom scaling ──────────────────────────────────────
@@ -45,10 +45,7 @@ export const scaleBlueprintReducers = {
   // causes jumps), scale positions and sizes proportionally around the
   // centroid.  The relative arrangement stays identical — blocks just
   // grow/shrink in place.
-  scaleLayoutForZoom: (
-    state: CardsState,
-    action: PayloadAction<{ zoom: number; prevZoom: number }>,
-  ) => {
+  scaleLayoutForZoom: (state: CardsState, action: PayloadAction<{ zoom: number; prevZoom: number }>) => {
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (!card || card.nodes.length === 0) return;
 

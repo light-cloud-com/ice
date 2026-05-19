@@ -9,8 +9,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { DeployResourceResult } from '../../../../store/slices/deploy-slice';
 import { extractDnsResults, splitDnsByAction, type DnsRec } from '../dns-records';
+import type { DeployResourceResult } from '../../../../store/slices/deploy-slice';
 
 // ─── Test fixtures ──────────────────────────────────────────────────────────
 
@@ -80,9 +80,7 @@ describe('extractDnsResults', () => {
   });
 
   it('drops entries where custom_domain_dns_records is an empty array (length-0 filter)', () => {
-    const results: DeployResourceResult[] = [
-      makeResult({ outputs: { custom_domain_dns_records: [] } }),
-    ];
+    const results: DeployResourceResult[] = [makeResult({ outputs: { custom_domain_dns_records: [] } })];
     expect(extractDnsResults(results)).toEqual([]);
   });
 
@@ -142,9 +140,7 @@ describe('splitDnsByAction', () => {
   });
 
   it("puts records with required_action: 'add' into addRecords (literal, not just default)", () => {
-    const records: DnsRec[] = [
-      makeRec({ domain: 'literal-add.example.com', required_action: 'add' }),
-    ];
+    const records: DnsRec[] = [makeRec({ domain: 'literal-add.example.com', required_action: 'add' })];
     const out = splitDnsByAction(records);
     expect(out.addRecords).toEqual(records);
     expect(out.removeRecords).toEqual([]);

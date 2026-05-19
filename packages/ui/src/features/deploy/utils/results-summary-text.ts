@@ -108,10 +108,7 @@ export function summaryCounts(results: ResultLike[]): {
  * - Header uses `(totalMs / 1000).toFixed(1)` — integer ms / 1000 → 1-decimal
  *   seconds (so 4500 → "4.5s", 999 → "1.0s", 0 → "0.0s").
  */
-export function buildResultsSummaryText(
-  results: ResultLike[],
-  options: { errorsOnly: boolean },
-): string {
+export function buildResultsSummaryText(results: ResultLike[], options: { errorsOnly: boolean }): string {
   const { errorsOnly } = options;
   const { succeeded, failed, total, totalMs } = summaryCounts(results);
   const header = errorsOnly

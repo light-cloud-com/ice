@@ -29,8 +29,6 @@
  * decisions entry, the legacy channel is cut clean.
  */
 
-import jwt from 'jsonwebtoken';
-import { Server as SocketServer } from 'socket.io';
 import {
   DEPLOY_EVENT_CHANNEL,
   type DeployCompleteEvent,
@@ -40,6 +38,8 @@ import {
   type DeployNodeStatusEvent,
   type DeployRequirementVerifiedEvent,
 } from '@ice/types';
+import jwt from 'jsonwebtoken';
+import { Server as SocketServer } from 'socket.io';
 import { isDesktopMode } from '../auth/middleware';
 
 let _io: SocketServer;
@@ -209,10 +209,7 @@ export function emitDeployLog(cardId: string, event: DeployLogEvent): void {
   emitDeployEvent(cardId, event);
 }
 
-export function emitDeployRequirementVerified(
-  cardId: string,
-  event: DeployRequirementVerifiedEvent,
-): void {
+export function emitDeployRequirementVerified(cardId: string, event: DeployRequirementVerifiedEvent): void {
   emitDeployEvent(cardId, event);
 }
 
@@ -238,14 +235,7 @@ function emitDeployEvent(cardId: string, event: DeployEvent): void {
   const roomSockets = _io.sockets.adapter.rooms.get(room);
   const listenerCount = roomSockets?.size ?? 0;
   console.log(
-    '[socket] emit ' +
-      DEPLOY_EVENT_CHANNEL +
-      ' type=' +
-      event.type +
-      ' → ' +
-      room +
-      ' listeners=' +
-      listenerCount,
+    '[socket] emit ' + DEPLOY_EVENT_CHANNEL + ' type=' + event.type + ' → ' + room + ' listeners=' + listenerCount,
   );
   _io.to(room).emit(DEPLOY_EVENT_CHANNEL, event);
 }

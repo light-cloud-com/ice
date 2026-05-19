@@ -122,9 +122,7 @@ function textRes(body: string, init: { status?: number; statusText?: string } = 
 
 describe('connectWithPAT', () => {
   it('fetches the user with the given token, persists encrypted, and returns the user', async () => {
-    mockFetchOnce(() =>
-      jsonRes({ login: 'octocat', avatar_url: 'http://a', name: 'Octo', html_url: 'http://o' }),
-    );
+    mockFetchOnce(() => jsonRes({ login: 'octocat', avatar_url: 'http://a', name: 'Octo', html_url: 'http://o' }));
     upsertMock.mockResolvedValue({});
 
     const user = await connectWithPAT('user-1', 'tok-secret');
@@ -367,7 +365,7 @@ describe('listRepos', () => {
     const tail = [{ id: 999 }];
     mockFetchSequence([
       () => jsonRes(fullPage), // page 1: 100 entries — keep walking
-      () => jsonRes(tail),     // page 2: 1 entry — last page
+      () => jsonRes(tail), // page 2: 1 entry — last page
     ]);
     const result = await listRepos('user-1');
     expect(result).toHaveLength(101);
@@ -376,10 +374,7 @@ describe('listRepos', () => {
   it('walks pages until it finds an empty page', async () => {
     findUniqueMock.mockResolvedValue({ access_token: 'enc(tok)' });
     const fullPage = Array.from({ length: 100 }, (_, i) => ({ id: i }));
-    mockFetchSequence([
-      () => jsonRes(fullPage),
-      () => jsonRes([]),
-    ]);
+    mockFetchSequence([() => jsonRes(fullPage), () => jsonRes([])]);
     const result = await listRepos('user-1');
     expect(result).toHaveLength(100);
   });

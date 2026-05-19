@@ -5,9 +5,9 @@
  * definitions. Extracted from `validators.ts`.
  */
 
-import type { Validator, ValidationIssue } from '../base-validator';
 import type { SchemaProvider, IceType } from '../../../schema/schema-provider';
 import type { MutableGraph } from '../../mutable-graph';
+import type { Validator, ValidationIssue } from '../base-validator';
 
 /**
  * Validates that node types exist in the schema.

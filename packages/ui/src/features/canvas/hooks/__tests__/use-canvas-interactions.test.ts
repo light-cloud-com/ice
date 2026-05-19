@@ -12,25 +12,22 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
 import { useCanvasInteractions } from '../use-canvas-interactions';
-import type {
-  CanvasItem,
-  CanvasViewport,
-  UseCanvasInteractionsResult,
-} from '../use-canvas-interactions';
+import type { CanvasItem, CanvasViewport, UseCanvasInteractionsResult } from '../use-canvas-interactions';
 
 // ─── Test harness ───────────────────────────────────────────────────────────
 
 const captured: { current?: UseCanvasInteractionsResult } = {};
 
-const renderHook = (opts: {
-  viewport?: CanvasViewport;
-  items?: CanvasItem[];
-  selectedIds?: string[];
-  locked?: boolean;
-  onViewportChange?: (vp: CanvasViewport) => void;
-} = {}) => {
+const renderHook = (
+  opts: {
+    viewport?: CanvasViewport;
+    items?: CanvasItem[];
+    selectedIds?: string[];
+    locked?: boolean;
+    onViewportChange?: (vp: CanvasViewport) => void;
+  } = {},
+) => {
   const Probe: React.FC = () => {
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     captured.current = useCanvasInteractions({
@@ -58,7 +55,10 @@ beforeEach(() => {
   vi.stubGlobal('HTMLInputElement', class {});
   vi.stubGlobal('HTMLTextAreaElement', class {});
   vi.stubGlobal('HTMLSelectElement', class {});
-  vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
+  vi.stubGlobal(
+    'requestAnimationFrame',
+    vi.fn(() => 1),
+  );
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
 });
 

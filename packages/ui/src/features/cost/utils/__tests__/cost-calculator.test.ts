@@ -12,8 +12,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import type { CardNode } from '../../../../store/slices/cards-slice';
 import {
   computeCostSummary,
   formatCostRaw,
@@ -21,6 +19,7 @@ import {
   type ResourceMap,
   type ResourceDef,
 } from '../cost-calculator';
+import type { CardNode } from '../../../../store/slices/cards-slice';
 
 // ─── Fixture helpers ────────────────────────────────────────────────────────
 
@@ -106,7 +105,7 @@ describe('getNodeCostInfo — basic shape', () => {
     expect(info.label).toBe('lonely-node');
   });
 
-  it("returns 0 cost when no estimatedCost and no resourceMap is provided", () => {
+  it('returns 0 cost when no estimatedCost and no resourceMap is provided', () => {
     const info = getNodeCostInfo(node('n1', { iceType: 'Compute.Container' }));
     expect(info.monthlyCost).toBe(0);
     expect(info.perInstanceCost).toBe(0);
@@ -239,7 +238,7 @@ describe('getNodeCostInfo — scalable services', () => {
         estimatedCost: '$1/mo',
       }),
       null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       'unknown-tier' as any,
     );
     // factor 0.25 → 0 + (100-0)*0.25 = 25
@@ -321,7 +320,7 @@ describe('getNodeCostInfo — per-unit cost resolution', () => {
     expect(info.monthlyCost).toBe(36);
   });
 
-  it("returns the per-unit rate as-is for /RU costs (no multiplier branch matches)", () => {
+  it('returns the per-unit rate as-is for /RU costs (no multiplier branch matches)', () => {
     // `/RU` is recognised by isPerUnitCost so resolvePerUnitCost is called,
     // but no /RU branch exists inside it → falls through to `return rate`.
     const info = getNodeCostInfo(node('n', { iceType: 'Database.CosmosDB', estimatedCost: '$0.25/M RUs' }));
@@ -333,9 +332,7 @@ describe('getNodeCostInfo — per-unit cost resolution', () => {
   it('returns flat rate when no recognised unit matches', () => {
     // Construct a /RU rate without a /M or /K window so the resolver
     // exhausts every if-branch and lands on `return rate`.
-    const info = getNodeCostInfo(
-      node('n', { iceType: 'Database.CosmosDB', estimatedCost: '$0.50/RU/sec' }),
-    );
+    const info = getNodeCostInfo(node('n', { iceType: 'Database.CosmosDB', estimatedCost: '$0.50/RU/sec' }));
     expect(info.monthlyCost).toBe(0.5);
   });
 });
@@ -453,10 +450,7 @@ describe('getNodeCostInfo — resource map lookup', () => {
       ],
     };
     const map: ResourceMap = new Map([['compute-container', def]]);
-    const info = getNodeCostInfo(
-      node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }),
-      map,
-    );
+    const info = getNodeCostInfo(node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }), map);
     expect(info.monthlyCost).toBe(10);
   });
 
@@ -475,10 +469,7 @@ describe('getNodeCostInfo — resource map lookup', () => {
       ],
     };
     const map: ResourceMap = new Map([['compute-container', def]]);
-    const info = getNodeCostInfo(
-      node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }),
-      map,
-    );
+    const info = getNodeCostInfo(node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }), map);
     expect(info.monthlyCost).toBe(15);
   });
 
@@ -495,10 +486,7 @@ describe('getNodeCostInfo — resource map lookup', () => {
       ],
     };
     const map: ResourceMap = new Map([['compute-container', def]]);
-    const info = getNodeCostInfo(
-      node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }),
-      map,
-    );
+    const info = getNodeCostInfo(node('n', { iceType: 'Compute.Container', resourceId: 'compute-container' }), map);
     expect(info.monthlyCost).toBe(10);
   });
 

@@ -44,8 +44,8 @@ import {
 import { Globe, Plus, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { CARD_PX, CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import type { SvgCompactNodeProps } from '../compact-node/types';
 import { t } from '../../../../../i18n';
+import type { SvgCompactNodeProps } from '../compact-node/types';
 
 // Re-exported so SvgConnectionPath / tests can compute the exact y-coordinate
 // of each route's port when routing edges from this block.

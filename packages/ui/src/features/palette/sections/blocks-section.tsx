@@ -15,7 +15,6 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Blocks, Check, ChevronDown, ChevronRight, Globe, Search } from 'lucide-react';
 import React from 'react';
-
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';

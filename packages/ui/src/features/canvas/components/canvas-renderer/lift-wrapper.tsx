@@ -75,13 +75,7 @@ export const NodeLiftWrapper: React.FC<NodeLiftWrapperProps> = ({
           strokeDasharray="6 3"
           opacity={0.8}
         >
-          <animate
-            attributeName="stroke-dashoffset"
-            from="0"
-            to="-18"
-            dur="0.8s"
-            repeatCount="indefinite"
-          />
+          <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="0.8s" repeatCount="indefinite" />
         </rect>
       </g>
     );

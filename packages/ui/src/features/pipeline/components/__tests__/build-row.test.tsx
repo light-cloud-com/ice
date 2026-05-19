@@ -8,7 +8,6 @@
 
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-
 import { BuildRow } from '../build-row';
 import type { BuildRowProps } from '../build-row';
 
@@ -47,14 +46,14 @@ describe('BuildRow', () => {
     expect((valueSpan.props as { children: unknown }).children).toBe('pnpm build');
   });
 
-  it("renders an em-dash when value is null", () => {
+  it('renders an em-dash when value is null', () => {
     const tree = render({ label: 'Install', value: null });
     const children = (tree.props as { children: unknown }).children as React.ReactElement[];
     const valueSpan = children[1];
     expect((valueSpan.props as { children: unknown }).children).toBe('—');
   });
 
-  it("renders an em-dash when value is the empty string (|| not ??) — verbatim", () => {
+  it('renders an em-dash when value is the empty string (|| not ??) — verbatim', () => {
     // Pre-extraction source uses `value || '—'` so empty-string also
     // routes to em-dash. Pin so a future fix to `value ?? '—'` has to
     // update this expectation explicitly.

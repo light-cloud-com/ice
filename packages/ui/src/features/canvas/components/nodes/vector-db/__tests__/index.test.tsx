@@ -43,9 +43,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgVectorDbNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgVectorDbNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgVectorDbNode> = {
     node: makeNode(),
     isSelected: false,
@@ -55,7 +53,8 @@ const renderInner = (
 
 describe('computeVectorDbHeight', () => {
   it('sums header + padding*2 + body + footer', () => {
-    const expected = COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
+    const expected =
+      COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeVectorDbHeight()).toBe(expected);
   });
 });

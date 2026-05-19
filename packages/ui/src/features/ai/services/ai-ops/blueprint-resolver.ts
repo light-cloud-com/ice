@@ -21,18 +21,14 @@
  * Pure: no dispatch, no store reads — the caller owns those.
  */
 
+import { resolveId } from './id-utils';
+import { findPosition } from './position-finder';
 import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
 import type { Provider } from '../../../../config/blocks/types';
 import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 import type { AddBlueprintOp } from '@ice/types';
-import { resolveId } from './id-utils';
-import { findPosition } from './position-finder';
 
-export function resolveBlueprint(
-  op: AddBlueprintOp,
-  card: Card,
-  idMap: Map<string, string>,
-): CardNode | null {
+export function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, string>): CardNode | null {
   const blueprint = getBlueprint(op.iceType, op.provider);
   if (!blueprint) return null;
 

@@ -31,7 +31,9 @@ describe('scan_directory', () => {
     fs.writeFileSync(path.join(tmp, 'a.json'), '{}');
     fs.writeFileSync(path.join(tmp, 'b.yaml'), 'x: 1');
     fs.writeFileSync(path.join(tmp, 'c.txt'), 'plain');
-    const rows = scan_directory(tmp, ['.json']).map((r) => r.name).sort();
+    const rows = scan_directory(tmp, ['.json'])
+      .map((r) => r.name)
+      .sort();
     expect(rows).toEqual(['a.json']);
   });
 
@@ -39,7 +41,9 @@ describe('scan_directory', () => {
     fs.writeFileSync(path.join(tmp, 'a.yaml'), '');
     fs.writeFileSync(path.join(tmp, 'b.yml'), '');
     fs.writeFileSync(path.join(tmp, 'c.json'), '');
-    const names = scan_directory(tmp, ['.yaml', '.yml']).map((r) => r.name).sort();
+    const names = scan_directory(tmp, ['.yaml', '.yml'])
+      .map((r) => r.name)
+      .sort();
     expect(names).toEqual(['a.yaml', 'b.yml']);
   });
 

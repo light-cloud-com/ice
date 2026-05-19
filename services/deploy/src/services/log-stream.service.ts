@@ -16,35 +16,14 @@
  */
 
 import { randomUUID } from 'node:crypto';
-
-import {
-  emitToRoom,
-  resetRegistry,
-  streams,
-  subscriptionIndex,
-} from './log-stream/registry';
+import { emitToRoom, resetRegistry, streams, subscriptionIndex } from './log-stream/registry';
 import { resolveSource } from './log-stream/source-resolution';
 import { teardownStream } from './log-stream/stream-lifecycle';
-import {
-  openStreamForResolved,
-  registerPlaceholderStream,
-  restartStreamWithMode,
-} from './log-stream/stream-open';
-import type {
-  ActiveStream,
-  SourceResolution,
-  SubscribeArgs,
-  SubscribeResult,
-} from './log-stream/types';
+import { openStreamForResolved, registerPlaceholderStream, restartStreamWithMode } from './log-stream/stream-open';
 import { IDLE_TEARDOWN_MS } from './log-stream/types';
+import type { ActiveStream, SourceResolution, SubscribeArgs, SubscribeResult } from './log-stream/types';
 
-export type {
-  StreamingMode,
-  SubscribeArgs,
-  LogEntry,
-  SourceResolution,
-  SubscribeResult,
-} from './log-stream/types';
+export type { StreamingMode, SubscribeArgs, LogEntry, SourceResolution, SubscribeResult } from './log-stream/types';
 
 // ── Public API ─────────────────────────────────────────────────────────
 
@@ -177,5 +156,3 @@ export const __testing = {
     return streams.size;
   },
 };
-
-

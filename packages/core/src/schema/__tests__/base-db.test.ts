@@ -20,9 +20,9 @@
  * references). That makes this repo the canonical reproduction
  * environment for the bug.
  */
-import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
+import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { get_base_db_path } from '../customization/base-db';
 
 describe('get_base_db_path (bugfix-2: lazy require.resolve)', () => {

@@ -19,14 +19,13 @@
 import { getEnabledProvidersForTemplate } from '@ice/templates';
 import { Rocket, ArrowLeft, GitBranch, Box, Cable, Layers, Plus } from 'lucide-react';
 import React, { useMemo } from 'react';
-
+import { TrustBadge } from './badges';
 import { TEMPLATE_CATEGORIES, expandComposedTemplate } from '../../../config/templates';
 import { formatCostRaw } from '../../../features/cost/utils/cost-calculator';
 import { compareProviderCosts } from '../../../features/cost/utils/provider-pricing';
 import { useTranslation } from '../../../i18n';
 import { Badge } from '../../../shared/components/ui/badge';
 import { cn } from '../../../shared/utils/cn';
-import { TrustBadge } from './badges';
 import { ICON_MAP } from '../data/icon-map';
 import { getDifficultyLabels } from '../utils/difficulty-labels';
 import type { ComposedTemplate } from '../../../config/templates';

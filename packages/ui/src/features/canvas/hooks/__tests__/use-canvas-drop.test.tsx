@@ -20,10 +20,10 @@
  * verifiable.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -62,8 +62,8 @@ vi.mock('../../../../config/containment-rules', () => ({
 }));
 
 // Import AFTER the mocks are registered so the hook closes over them.
-import { useCanvasDrop, type UseCanvasDropResult } from '../use-canvas-drop';
 import { canContain } from '../../../../config/containment-rules';
+import { useCanvasDrop, type UseCanvasDropResult } from '../use-canvas-drop';
 import type { CardNode, CardEdge } from '../../../../store/slices/cards-slice';
 import type { CanvasNode } from '../../components/types';
 
@@ -102,8 +102,7 @@ const makeStore = (deployProvider = 'gcp') =>
       ghosts: { ghosts: [] } as any,
       deploy: { provider: deployProvider } as any,
     },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
@@ -119,8 +118,7 @@ interface CaptureArgs {
 
 const captureHook = (store: TestStore, overrides: CaptureArgs = {}): UseCanvasDropResult => {
   const args = {
-    screenToCanvas:
-      overrides.screenToCanvas ?? ((cx: number, cy: number) => ({ x: cx, y: cy })),
+    screenToCanvas: overrides.screenToCanvas ?? ((cx: number, cy: number) => ({ x: cx, y: cy })),
     findContainerAtPosition: overrides.findContainerAtPosition ?? (() => null),
     nodes: overrides.nodes ?? [],
     edges: overrides.edges ?? [],
@@ -186,7 +184,7 @@ const fakeContainer = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     },
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as unknown as CanvasNode);
+  }) as unknown as CanvasNode;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -232,11 +230,7 @@ describe('useCanvasDrop — group drop branch', () => {
     const result = captureHook(store);
     dispatchSpy.mockClear();
 
-    const { event } = mockDataTransferEvent(
-      { 'application/ice-group': 'AppGroup' },
-      120,
-      240,
-    );
+    const { event } = mockDataTransferEvent({ 'application/ice-group': 'AppGroup' }, 120, 240);
     result.handleDrop(event);
 
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
@@ -261,7 +255,7 @@ describe('useCanvasDrop — group drop branch', () => {
     expect(action.payload.id).toMatch(/^group-/);
   });
 
-  it("honors application/ice-group-name and -color overrides", () => {
+  it('honors application/ice-group-name and -color overrides', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const result = captureHook(store);
@@ -356,10 +350,7 @@ describe('useCanvasDrop — block drop with blueprint', () => {
     result.handleDrop(event);
 
     expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', 'aws');
-    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(
-      fakeBlueprint,
-      expect.objectContaining({ provider: 'aws' }),
-    );
+    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(fakeBlueprint, expect.objectContaining({ provider: 'aws' }));
   });
 
   it('merges application/ice-block-data JSON via Object.assign', () => {
@@ -436,10 +427,7 @@ describe('useCanvasDrop — block drop with blueprint', () => {
     result.handleDrop(event);
 
     expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', 'aws');
-    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(
-      fakeBlueprint,
-      expect.objectContaining({ provider: 'aws' }),
-    );
+    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(fakeBlueprint, expect.objectContaining({ provider: 'aws' }));
   });
 
   it('palette provider wins over the active deploy provider', () => {
@@ -494,11 +482,7 @@ describe('useCanvasDrop — resource drop branch', () => {
     const result = captureHook(store);
     dispatchSpy.mockClear();
 
-    const { event } = mockDataTransferEvent(
-      { 'application/ice-resource': 'Compute.Vm' },
-      300,
-      450,
-    );
+    const { event } = mockDataTransferEvent({ 'application/ice-resource': 'Compute.Vm' }, 300, 450);
     result.handleDrop(event);
 
     expect(dispatchSpy).toHaveBeenCalledTimes(2);
@@ -644,7 +628,7 @@ describe('useCanvasDrop — canContain gates parentId only', () => {
 });
 
 describe('useCanvasDrop — logging side-effects', () => {
-  it("logDrop fires with { position, targetContainer, nodeType }", () => {
+  it('logDrop fires with { position, targetContainer, nodeType }', () => {
     const container = fakeContainer({ id: 'logged-parent' });
     const store = makeStore();
     const result = captureHook(store, {

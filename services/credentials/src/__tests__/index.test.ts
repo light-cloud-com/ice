@@ -39,7 +39,7 @@ beforeEach(() => {
 
 describe('createCredentialsRouter', () => {
   it('mounts github routes under /github and provider routes under /providers', async () => {
-    const { createCredentialsRouter } = await import('../index');
+    const { createCredentialsRouter } = await import('..');
     const express = (await import('express')).default;
     const http = await import('node:http');
 
@@ -66,7 +66,7 @@ describe('createCredentialsRouter', () => {
   });
 
   it('re-exports the GitHub + provider service surface', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // Service functions should be accessible via the package barrel.
     expect(typeof (mod as any).connectWithPAT).toBe('function');
     expect(typeof (mod as any).pollDeviceFlow).toBe('function');

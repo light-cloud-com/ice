@@ -7,8 +7,7 @@ import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { Pill } from '../pill';
 
-const render = (props: React.ComponentProps<typeof Pill>): React.ReactElement =>
-  Pill(props) as React.ReactElement;
+const render = (props: React.ComponentProps<typeof Pill>): React.ReactElement => Pill(props) as React.ReactElement;
 
 describe('Pill', () => {
   it('renders the children verbatim inside a span by default', () => {

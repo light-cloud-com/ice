@@ -18,8 +18,8 @@ vi.mock('../deploy-event-dispatcher', () => ({
   emitDestroyNodeStatus: vi.fn(),
 }));
 
-import { attemptDestroy, emitDestroyLifecycle } from '../destroy-runner';
 import * as dispatcher from '../deploy-event-dispatcher';
+import { attemptDestroy, emitDestroyLifecycle } from '../destroy-runner';
 
 const emitDestroyNodeStatusMock = (dispatcher as any).emitDestroyNodeStatus as ReturnType<typeof vi.fn>;
 
@@ -224,12 +224,10 @@ describe('attemptDestroy', () => {
     });
 
     expect(deleteFn).toHaveBeenCalledTimes(1);
-    expect(deleteFn).toHaveBeenCalledWith(
-      'gcp.run.service',
-      'svc-name',
-      'projects/foo/services/bar',
-      { provider: 'gcp', project: 'my-project' },
-    );
+    expect(deleteFn).toHaveBeenCalledWith('gcp.run.service', 'svc-name', 'projects/foo/services/bar', {
+      provider: 'gcp',
+      project: 'my-project',
+    });
   });
 
   it('catch path: stringifies non-Error throws via String(err)', async () => {
@@ -332,10 +330,7 @@ describe('emitDestroyLifecycle', () => {
       });
 
       expect(emitDestroyNodeStatusMock).toHaveBeenCalledTimes(1);
-      expect(emitDestroyNodeStatusMock).toHaveBeenCalledWith(
-        'card-1',
-        expect.objectContaining({ status }),
-      );
+      expect(emitDestroyNodeStatusMock).toHaveBeenCalledWith('card-1', expect.objectContaining({ status }));
     },
   );
 

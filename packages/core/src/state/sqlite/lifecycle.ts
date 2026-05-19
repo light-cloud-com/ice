@@ -35,9 +35,9 @@
 
 import { InternalError } from '../../types/errors';
 import { failure, success } from '../../types/result';
+import type { SqliteContext, SqliteStateStoreOptions } from './types';
 import type { IceError } from '../../types/errors';
 import type { Result } from '../../types/result';
-import type { SqliteContext, SqliteStateStoreOptions } from './types';
 import type { Database, Statement } from 'better-sqlite3';
 
 // =============================================================================

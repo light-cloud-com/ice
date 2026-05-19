@@ -14,11 +14,11 @@
  * shape that the wrapper passes in.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   useCanvasInteractions: vi.fn(),

@@ -11,10 +11,10 @@
 import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Database } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import { formatStorage, renderDbIdentityBody } from '../postgres';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING };
 
@@ -29,9 +29,7 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const storage = formatStorage(data?.storage ?? data?.storageGb);
   const production = !!data?.production || !!data?.backups;
   const backups =
-    data?.backup_retention != null
-      ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) })
-      : '';
+    data?.backup_retention != null ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) }) : '';
   const parts = [
     version ? `${t('canvas.blocks.titles.mysql')} ${version}` : t('canvas.blocks.titles.mysql'),
     storage,
@@ -55,9 +53,7 @@ export const SvgMysqlNode: React.FC<SvgCompactNodeProps> = ({
   const storage = formatStorage(data.storage ?? data.storageGb);
   const production = !!data.production || !!data.backups;
   const backups =
-    data.backup_retention != null
-      ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) })
-      : '';
+    data.backup_retention != null ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) }) : '';
   const badges: Array<{ label: string; color: string }> = [];
   if (production) badges.push({ label: t('canvas.blocks.common.ha'), color: '#22c55e' });
   if (backups) badges.push({ label: backups, color: '#06b6d4' });
@@ -79,9 +75,7 @@ export const SvgMysqlNode: React.FC<SvgCompactNodeProps> = ({
       headerHeight={DB_HEADER_HEIGHT}
     >
       {renderDbIdentityBody({
-        engineLabel: version
-          ? `${t('canvas.blocks.titles.mysql')} ${version}`
-          : t('canvas.blocks.titles.mysql'),
+        engineLabel: version ? `${t('canvas.blocks.titles.mysql')} ${version}` : t('canvas.blocks.titles.mysql'),
         storage,
         badges,
         testId: `mysql-body-${node.id}`,

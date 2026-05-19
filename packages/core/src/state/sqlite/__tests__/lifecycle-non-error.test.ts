@@ -21,7 +21,6 @@ vi.mock('better-sqlite3', () => {
   // throws a string → catch fires → instanceof Error is false → the
   // String(error) branch runs.
   function ThrowingConstructor(): never {
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw 'sqlite-non-error-throw';
   }
   return { default: ThrowingConstructor };

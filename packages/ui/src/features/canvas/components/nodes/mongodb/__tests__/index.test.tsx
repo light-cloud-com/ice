@@ -59,9 +59,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgMongodbNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgMongodbNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgMongodbNode> = {
     node: makeNode(),
     isSelected: false,

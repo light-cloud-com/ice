@@ -27,9 +27,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import type { CanvasNode } from '../../components/types';
 import { findExistingLogSource, findExistingSpecialConnection } from '../connection-special-rules';
+import type { CanvasNode } from '../../components/types';
 
 /** Minimal CanvasNode factory — only the fields the rule reads. */
 function node(id: string, iceType: string, extraData: Record<string, unknown> = {}): CanvasNode {
@@ -224,32 +223,24 @@ describe('findExistingLogSource', () => {
     const svcA = node('svc-a', 'Compute.Service');
     const svcB = node('svc-b', 'Compute.Service');
     const log = node('log-a', 'Monitoring.Log');
-    expect(
-      findExistingLogSource(svcB, log, [{ source: 'svc-a', target: 'log-a' }]),
-    ).toEqual({ conflict: true });
+    expect(findExistingLogSource(svcB, log, [{ source: 'svc-a', target: 'log-a' }])).toEqual({ conflict: true });
   });
 
   it('detects conflict in either drag direction (log → service or service → log)', () => {
     const svc = node('svc-b', 'Compute.Service');
     const log = node('log-a', 'Monitoring.Log');
-    expect(
-      findExistingLogSource(log, svc, [{ source: 'svc-a', target: 'log-a' }]),
-    ).toEqual({ conflict: true });
+    expect(findExistingLogSource(log, svc, [{ source: 'svc-a', target: 'log-a' }])).toEqual({ conflict: true });
   });
 
   it('matches the Observability.Logs iceType as a log terminal', () => {
     const svc = node('svc-a', 'Compute.Service');
     const log = node('log-a', 'Observability.Logs');
-    expect(
-      findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }]),
-    ).toEqual({ conflict: true });
+    expect(findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }])).toEqual({ conflict: true });
   });
 
   it('matches any Log.* iceType as a log terminal', () => {
     const svc = node('svc-a', 'Compute.Service');
     const log = node('log-a', 'Log.Stream');
-    expect(
-      findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }]),
-    ).toEqual({ conflict: true });
+    expect(findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }])).toEqual({ conflict: true });
   });
 });

@@ -26,9 +26,9 @@
  * `useMemo` blocks.
  */
 
-import type { CanvasNode, CanvasConnection } from '../components/types';
 import { isContainerIceType } from './node-classification';
 import { isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import type { CanvasNode, CanvasConnection } from '../components/types';
 
 /** Minimal raw edge shape — structural match for `CardEdge` from the Redux store. */
 export interface RawCanvasEdge {
@@ -117,10 +117,7 @@ export function buildVisibleConnections(args: {
  * magnitude `|dx|`/`|dy|` ties go to the vertical branch. Mirror of
  * `connection-preview.ts`'s `>=`; do NOT cross-port.
  */
-function getSide(
-  fromNode: CanvasNode,
-  toNode: CanvasNode,
-): { exitSide: string; entrySide: string } {
+function getSide(fromNode: CanvasNode, toNode: CanvasNode): { exitSide: string; entrySide: string } {
   const dx = toNode.x + toNode.width / 2 - (fromNode.x + fromNode.width / 2);
   const dy = toNode.y + toNode.height / 2 - (fromNode.y + fromNode.height / 2);
   if (Math.abs(dx) > Math.abs(dy)) {

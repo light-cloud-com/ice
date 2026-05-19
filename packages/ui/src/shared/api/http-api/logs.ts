@@ -16,8 +16,8 @@
  */
 
 import axiosInstance from '../axios-instance';
-import type { IceAPI } from '../api-adapter';
 import { getSocket } from './socket';
+import type { IceAPI } from '../api-adapter';
 
 export function createLogsAdapter(): IceAPI['logs'] {
   return {

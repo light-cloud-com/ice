@@ -12,7 +12,6 @@
 
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import React from 'react';
-
 import { cn } from '../../../shared/utils/cn';
 import type { DeployStep } from '../../../store/slices/pipeline-slice';
 

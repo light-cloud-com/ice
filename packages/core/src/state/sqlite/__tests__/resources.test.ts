@@ -25,6 +25,7 @@
  *    delivery to the next)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
+import { create_node_id } from '../../../types/graph';
 import { create_memory_state_store } from '../../sqlite-state-store';
 import {
   ensure_db,
@@ -39,9 +40,8 @@ import {
   resources_delete,
   resources_delete_all,
 } from '../resources';
-import { create_node_id } from '../../../types/graph';
-import type { SqliteContext, ResourceRow } from '../types';
 import type { StoredResourceState, StateChangeEvent } from '../../state-store';
+import type { SqliteContext, ResourceRow } from '../types';
 
 // =============================================================================
 // Helpers

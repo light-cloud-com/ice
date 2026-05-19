@@ -32,9 +32,7 @@ export function get_base_db_path(): string {
     // When installed as a package
     () => {
       try {
-        return require
-          .resolve('@ice-engine/schemas/data/ice-schemas.db')
-          .replace('/index.js', '/data/ice-schemas.db');
+        return require.resolve('@ice-engine/schemas/data/ice-schemas.db').replace('/index.js', '/data/ice-schemas.db');
       } catch {
         return null;
       }

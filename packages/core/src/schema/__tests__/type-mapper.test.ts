@@ -11,12 +11,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { TypeMapper, create_type_mapper } from '../type-mapper';
-import type {
-  IceType,
-  PropertySchema,
-  ProviderImplementation,
-  SchemaProvider,
-} from '../schema-provider';
+import type { IceType, PropertySchema, ProviderImplementation, SchemaProvider } from '../schema-provider';
 
 function prop(over: Partial<PropertySchema> = {}): PropertySchema {
   return {
@@ -145,12 +140,7 @@ describe('TypeMapper.has_mapping / get_native_type', () => {
 describe('TypeMapper.map_properties', () => {
   it('returns properties unchanged when no mapping is available', () => {
     const properties = { foo: 1, bar: 'two' };
-    const out = new TypeMapper(makeProvider()).map_properties(
-      'x' as IceType,
-      properties,
-      'terraform',
-      'aws',
-    );
+    const out = new TypeMapper(makeProvider()).map_properties('x' as IceType, properties, 'terraform', 'aws');
     expect(out).toEqual(properties);
   });
 
@@ -173,12 +163,7 @@ describe('TypeMapper.map_properties', () => {
       get_implementation: vi.fn(() => impl({ source: 'pulumi' })),
       get_required_properties: vi.fn(() => []),
     });
-    const out = new TypeMapper(provider).map_properties(
-      'x' as IceType,
-      { unknown_prop: 'value' },
-      'pulumi',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_properties('x' as IceType, { unknown_prop: 'value' }, 'pulumi', 'aws');
     // unknown -> uses convert_property_name -> camelCase for pulumi
     expect(out).toEqual({ unknownProp: 'value' });
   });
@@ -188,12 +173,7 @@ describe('TypeMapper.map_properties', () => {
       get_implementation: vi.fn(() => impl()),
       get_required_properties: vi.fn(() => []),
     });
-    const out = new TypeMapper(provider).map_properties(
-      'x' as IceType,
-      { unknown_prop: 'value' },
-      'terraform',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_properties('x' as IceType, { unknown_prop: 'value' }, 'terraform', 'aws');
     expect(out).toEqual({ unknown_prop: 'value' });
   });
 
@@ -239,12 +219,7 @@ describe('TypeMapper.map_properties', () => {
       get_implementation: vi.fn(() => impl()),
       get_required_properties: vi.fn(() => [parent]),
     });
-    const out = new TypeMapper(provider).map_properties(
-      'x' as IceType,
-      { tags: ['a', 'b'] },
-      'terraform',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_properties('x' as IceType, { tags: ['a', 'b'] }, 'terraform', 'aws');
     expect(out).toEqual({ tags: ['a', 'b'] });
   });
 
@@ -256,24 +231,14 @@ describe('TypeMapper.map_properties', () => {
       get_implementation: vi.fn(() => impl()),
       get_required_properties: vi.fn(() => [parent]),
     });
-    const out = new TypeMapper(provider).map_properties(
-      'x' as IceType,
-      { nested_obj: null },
-      'terraform',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_properties('x' as IceType, { nested_obj: null }, 'terraform', 'aws');
     expect(out).toEqual({ nested_obj: null });
   });
 });
 
 describe('TypeMapper.map_from_native', () => {
   it('returns native_properties unchanged when no mapping is available', () => {
-    const out = new TypeMapper(makeProvider()).map_from_native(
-      'x' as IceType,
-      { foo: 1 },
-      'terraform',
-      'aws',
-    );
+    const out = new TypeMapper(makeProvider()).map_from_native('x' as IceType, { foo: 1 }, 'terraform', 'aws');
     expect(out).toEqual({ foo: 1 });
   });
 
@@ -282,12 +247,7 @@ describe('TypeMapper.map_from_native', () => {
       get_implementation: vi.fn(() => impl({ source: 'pulumi' })),
       get_required_properties: vi.fn(() => [prop({ name: 'instance_type' })]),
     });
-    const out = new TypeMapper(provider).map_from_native(
-      'x' as IceType,
-      { instanceType: 't3.micro' },
-      'pulumi',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_from_native('x' as IceType, { instanceType: 't3.micro' }, 'pulumi', 'aws');
     expect(out).toEqual({ instance_type: 't3.micro' });
   });
 
@@ -347,12 +307,7 @@ describe('TypeMapper.map_from_native', () => {
       get_implementation: vi.fn(() => impl({ source: 'pulumi' })),
       get_required_properties: vi.fn(() => [prop({ name: 'simple' })]),
     });
-    const out = new TypeMapper(provider).map_from_native(
-      'x' as IceType,
-      { simple: 'unchanged' },
-      'pulumi',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_from_native('x' as IceType, { simple: 'unchanged' }, 'pulumi', 'aws');
     expect(out).toEqual({ simple: 'unchanged' });
   });
 
@@ -363,12 +318,7 @@ describe('TypeMapper.map_from_native', () => {
       get_implementation: vi.fn(() => impl({ source: 'pulumi' })),
       get_required_properties: vi.fn(() => [parent]),
     });
-    const out = new TypeMapper(provider).map_from_native(
-      'x' as IceType,
-      { nestedObj: null },
-      'pulumi',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_from_native('x' as IceType, { nestedObj: null }, 'pulumi', 'aws');
     expect(out).toEqual({ nested_obj: null });
   });
 
@@ -379,12 +329,7 @@ describe('TypeMapper.map_from_native', () => {
       get_implementation: vi.fn(() => impl({ source: 'pulumi' })),
       get_required_properties: vi.fn(() => [parent]),
     });
-    const out = new TypeMapper(provider).map_from_native(
-      'x' as IceType,
-      { rules: ['a', 'b'] },
-      'pulumi',
-      'aws',
-    );
+    const out = new TypeMapper(provider).map_from_native('x' as IceType, { rules: ['a', 'b'] }, 'pulumi', 'aws');
     expect(out).toEqual({ rules: ['a', 'b'] });
   });
 });

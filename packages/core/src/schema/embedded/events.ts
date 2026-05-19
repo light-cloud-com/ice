@@ -11,12 +11,7 @@
  *  - emit_event(): builds the SchemaEvent payload (timestamp, ice_type,
  *    message), invokes each listener, swallows listener errors silently.
  */
-import type {
-  IceType,
-  SchemaEvent,
-  SchemaEventListener,
-  SchemaEventType,
-} from '../schema-provider';
+import type { IceType, SchemaEvent, SchemaEventListener, SchemaEventType } from '../schema-provider';
 
 export type EventListenerMap = Map<SchemaEventType, Set<SchemaEventListener>>;
 

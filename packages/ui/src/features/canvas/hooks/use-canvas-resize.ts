@@ -21,9 +21,10 @@
 
 import { useEffect, useState } from 'react';
 
-export function useCanvasDimensions(
-  containerRef: React.RefObject<HTMLDivElement | null>,
-): { width: number; height: number } {
+export function useCanvasDimensions(containerRef: React.RefObject<HTMLDivElement | null>): {
+  width: number;
+  height: number;
+} {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   useEffect(() => {

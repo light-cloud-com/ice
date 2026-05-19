@@ -67,9 +67,7 @@ describe('ui-slice persistence', () => {
     memStorage['ice-ui-panes'] = JSON.stringify({
       enabled: true,
       direction: 'vertical',
-      panes: [
-        { id: 'p-stored', cardId: 'c-stored', openCardIds: ['c-stored', 'c-tab2'] },
-      ],
+      panes: [{ id: 'p-stored', cardId: 'c-stored', openCardIds: ['c-stored', 'c-tab2'] }],
       activePaneId: 'p-stored',
     });
     const mod = await importFresh();

@@ -29,7 +29,9 @@ const hooks = vi.hoisted(() => ({
     onMouseUp: vi.fn(),
     onMouseLeave: vi.fn(),
   })),
-  useRenderCtx: vi.fn(() => ({ /* eighteen-field bundle */ })),
+  useRenderCtx: vi.fn(() => ({
+    /* eighteen-field bundle */
+  })),
   useCanvasValidation: vi.fn(),
   useComputingFlows: vi.fn(),
   useCanvasDimensions: vi.fn(() => ({ width: 800, height: 600 })),
@@ -299,9 +301,8 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
   return undefined;
 }
 
-const callRender = (
-  props: React.ComponentProps<typeof SvgCanvas> = {},
-): unknown => (SvgCanvas as (p: typeof props) => unknown)(props);
+const callRender = (props: React.ComponentProps<typeof SvgCanvas> = {}): unknown =>
+  (SvgCanvas as (p: typeof props) => unknown)(props);
 
 beforeEach(() => {
   for (const h of Object.values(hooks)) {
@@ -334,16 +335,9 @@ beforeEach(() => {
 describe('SvgCanvas — top-level rendering', () => {
   it('renders a wrapping div with id="ice-canvas-svg" and data-testid="svg-canvas"', () => {
     const tree = callRender();
-    const wrapper = findFirst(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { id?: string }).id === 'ice-canvas-svg',
-    );
+    const wrapper = findFirst(tree, (el) => el.type === 'div' && (el.props as { id?: string }).id === 'ice-canvas-svg');
     expect(wrapper).toBeDefined();
-    expect((wrapper!.props as { ['data-testid']?: string })['data-testid']).toBe(
-      'svg-canvas',
-    );
+    expect((wrapper!.props as { ['data-testid']?: string })['data-testid']).toBe('svg-canvas');
   });
 
   it('renders the CanvasDeployBanner with activeCard.id when present', () => {

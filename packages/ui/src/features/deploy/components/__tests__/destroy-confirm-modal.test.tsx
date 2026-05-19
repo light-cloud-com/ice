@@ -143,12 +143,7 @@ import { DestroyConfirmModal } from '../destroy-confirm-modal';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -174,10 +169,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -383,9 +375,7 @@ describe('DestroyConfirmModal — body branches', () => {
 
   it('uses the singular "resource" form when resources.length === 1', () => {
     mocks.destroyEverythingRef.current = false;
-    const tree = renderModal(
-      makeProps({ resources: [{ name: 'only', type: 'storage.googleapis.com/Bucket' }] }),
-    );
+    const tree = renderModal(makeProps({ resources: [{ name: 'only', type: 'storage.googleapis.com/Bucket' }] }));
     const text = collectText(tree);
     expect(text).toContain('This will permanently delete the following 1 resource from the cloud:');
     // Make sure the plural form is NOT present.
@@ -502,8 +492,7 @@ describe('DestroyConfirmModal — backdrop click-to-close', () => {
     const onCancel = vi.fn();
     const tree = renderModal(makeProps({ onCancel }));
     const backdrop = findBackdrop(tree);
-    const onClick = (backdrop.props as { onClick: (e: { target: unknown; currentTarget: unknown }) => void })
-      .onClick;
+    const onClick = (backdrop.props as { onClick: (e: { target: unknown; currentTarget: unknown }) => void }).onClick;
     const sentinel = {};
     onClick({ target: sentinel, currentTarget: sentinel });
     expect(onCancel).toHaveBeenCalledTimes(1);
@@ -515,8 +504,7 @@ describe('DestroyConfirmModal — backdrop click-to-close', () => {
     const onCancel = vi.fn();
     const tree = renderModal(makeProps({ onCancel }));
     const backdrop = findBackdrop(tree);
-    const onClick = (backdrop.props as { onClick: (e: { target: unknown; currentTarget: unknown }) => void })
-      .onClick;
+    const onClick = (backdrop.props as { onClick: (e: { target: unknown; currentTarget: unknown }) => void }).onClick;
     onClick({ target: {}, currentTarget: {} });
     expect(onCancel).not.toHaveBeenCalled();
     const cleanup = mocks.effectCleanups[0];

@@ -8,16 +8,11 @@
  * panel (CPU 70%, memory 80%, etc.).
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Server } from 'lucide-react';
 import React from 'react';
-import { CardShell, ScaleGauge } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell, ScaleGauge } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };

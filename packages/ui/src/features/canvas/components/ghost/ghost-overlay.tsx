@@ -24,12 +24,7 @@ export interface GhostOverlayProps {
   onDismiss: (ghostId: string) => void;
 }
 
-export const GhostOverlay: React.FC<GhostOverlayProps> = ({
-  ghosts,
-  nodes,
-  onAccept,
-  onDismiss,
-}) => {
+export const GhostOverlay: React.FC<GhostOverlayProps> = ({ ghosts, nodes, onAccept, onDismiss }) => {
   if (ghosts.length === 0) return null;
   return (
     <g pointerEvents="auto">

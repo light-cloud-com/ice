@@ -7,17 +7,12 @@
  * live-config footer.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  DB_BODY_HEIGHT,
-  DB_HEADER_HEIGHT,
-  DB_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Zap } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING };
 

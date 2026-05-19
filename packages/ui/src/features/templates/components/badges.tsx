@@ -18,7 +18,6 @@
 
 import { isProviderEnabled } from '@ice/constants';
 import React, { useMemo } from 'react';
-
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';

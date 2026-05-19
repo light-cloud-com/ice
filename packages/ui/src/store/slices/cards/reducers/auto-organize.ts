@@ -70,12 +70,12 @@
  */
 
 import { LAYOUT_NODE_SEP } from '@ice/constants';
-import type { PayloadAction } from '@reduxjs/toolkit';
 import { isContainer as isContainerIceType } from '../../../../config/containment-rules';
 import { autoLayout, type LayoutNode } from '../../../../shared/utils/auto-layout';
 import { applyEdgeRoutes } from '../edge-routes';
 import { pushSnapshot } from '../snapshot';
 import type { CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const autoOrganizeReducers = {
   // Auto-organize nodes in active card.

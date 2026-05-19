@@ -27,10 +27,7 @@ function build_change(name: string, type: string): ResourceChange {
   };
 }
 
-function build_graph(
-  resources: Array<{ name: string; type: string }>,
-  edges_from_to: Array<[string, string]>,
-): Graph {
+function build_graph(resources: Array<{ name: string; type: string }>, edges_from_to: Array<[string, string]>): Graph {
   const nodes = new Map<NodeId, Node>();
   const edges = new Map<EdgeId, Edge>();
   const now = new Date().toISOString();

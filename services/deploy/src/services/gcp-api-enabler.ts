@@ -123,7 +123,12 @@ export async function enableGcpApi(project: string, apiName: string, accessToken
   }
 }
 
-export async function autoEnableGCPApis(project: string, accessToken: string, canvasNodes: any[], log: (msg: string) => void) {
+export async function autoEnableGCPApis(
+  project: string,
+  accessToken: string,
+  canvasNodes: any[],
+  log: (msg: string) => void,
+) {
   const requiredApis = new Set<string>(BASE_APIS);
 
   for (const node of canvasNodes) {

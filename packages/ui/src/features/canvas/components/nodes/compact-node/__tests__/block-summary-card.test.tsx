@@ -55,10 +55,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -97,12 +94,12 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderBSC = (
-  props: Partial<React.ComponentProps<typeof BlockSummaryCard>> = {},
-): React.ReactElement => {
-  const Inner = (BlockSummaryCard as unknown as {
-    type: (p: React.ComponentProps<typeof BlockSummaryCard>) => React.ReactElement;
-  }).type;
+const renderBSC = (props: Partial<React.ComponentProps<typeof BlockSummaryCard>> = {}): React.ReactElement => {
+  const Inner = (
+    BlockSummaryCard as unknown as {
+      type: (p: React.ComponentProps<typeof BlockSummaryCard>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof BlockSummaryCard> = {
     node: makeNode(),
     isSelected: false,

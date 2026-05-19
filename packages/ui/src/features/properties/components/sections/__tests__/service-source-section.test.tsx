@@ -38,12 +38,7 @@ import { ServiceSourceSection } from '../service-source-section';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -57,10 +52,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -145,7 +137,10 @@ describe('ServiceSourceSection', () => {
       activeCard: {
         edges: [{ source: 'svc-1', target: 'src-1' }],
         nodes: [
-          { id: 'src-1', data: { iceType: 'Source.Repository', repository: 'org/app', branch: 'main', label: 'My Repo' } },
+          {
+            id: 'src-1',
+            data: { iceType: 'Source.Repository', repository: 'org/app', branch: 'main', label: 'My Repo' },
+          },
         ],
       },
     });
@@ -166,7 +161,12 @@ describe('ServiceSourceSection', () => {
       nodeBranch: '',
       activeCard: {
         edges: [{ source: 'src-2', target: 'svc-1' }],
-        nodes: [{ id: 'src-2', data: { behavior: 'source', repository: 'org/by-behavior', branch: 'develop', label: 'Behavior Source' } }],
+        nodes: [
+          {
+            id: 'src-2',
+            data: { behavior: 'source', repository: 'org/by-behavior', branch: 'develop', label: 'Behavior Source' },
+          },
+        ],
       },
     });
     const text = collectText(tree);
@@ -225,7 +225,12 @@ describe('ServiceSourceSection', () => {
       nodeBranch: 'service-branch',
       activeCard: {
         edges: [{ source: 'svc-1', target: 'src-3' }],
-        nodes: [{ id: 'src-3', data: { iceType: 'Source.Repository', repository: '', branch: '', label: 'Empty Repo Block' } }],
+        nodes: [
+          {
+            id: 'src-3',
+            data: { iceType: 'Source.Repository', repository: '', branch: '', label: 'Empty Repo Block' },
+          },
+        ],
       },
     });
     const text = collectText(tree);
@@ -248,8 +253,14 @@ describe('ServiceSourceSection', () => {
           { source: 'svc-1', target: 'src-B' },
         ],
         nodes: [
-          { id: 'src-A', data: { iceType: 'Source.Repository', repository: 'first/repo', branch: 'first-branch', label: 'First' } },
-          { id: 'src-B', data: { iceType: 'Source.Repository', repository: 'second/repo', branch: 'second-branch', label: 'Second' } },
+          {
+            id: 'src-A',
+            data: { iceType: 'Source.Repository', repository: 'first/repo', branch: 'first-branch', label: 'First' },
+          },
+          {
+            id: 'src-B',
+            data: { iceType: 'Source.Repository', repository: 'second/repo', branch: 'second-branch', label: 'Second' },
+          },
         ],
       },
     });
@@ -270,7 +281,12 @@ describe('ServiceSourceSection', () => {
       nodeBranch: '',
       activeCard: {
         edges: [{ source: 'svc-1', target: 'src-out' }],
-        nodes: [{ id: 'src-out', data: { iceType: 'Source.Repository', repository: 'out/repo', branch: 'main', label: 'Out' } }],
+        nodes: [
+          {
+            id: 'src-out',
+            data: { iceType: 'Source.Repository', repository: 'out/repo', branch: 'main', label: 'Out' },
+          },
+        ],
       },
     });
     expect(collectText(treeOutgoing)).toContain('out/repo');
@@ -281,7 +297,9 @@ describe('ServiceSourceSection', () => {
       nodeBranch: '',
       activeCard: {
         edges: [{ source: 'src-in', target: 'svc-1' }],
-        nodes: [{ id: 'src-in', data: { iceType: 'Source.Repository', repository: 'in/repo', branch: 'main', label: 'In' } }],
+        nodes: [
+          { id: 'src-in', data: { iceType: 'Source.Repository', repository: 'in/repo', branch: 'main', label: 'In' } },
+        ],
       },
     });
     expect(collectText(treeIncoming)).toContain('in/repo');
@@ -310,7 +328,12 @@ describe('ServiceSourceSection', () => {
       nodeBranch: '',
       activeCard: {
         edges: [{ source: 'svc-1', target: 'src-arrow' }],
-        nodes: [{ id: 'src-arrow', data: { iceType: 'Source.Repository', repository: 'arrow/repo', branch: 'feature-x', label: 'Arrow' } }],
+        nodes: [
+          {
+            id: 'src-arrow',
+            data: { iceType: 'Source.Repository', repository: 'arrow/repo', branch: 'feature-x', label: 'Arrow' },
+          },
+        ],
       },
     });
     // The arrow span uses font-mono class. Find the div whose first child is the

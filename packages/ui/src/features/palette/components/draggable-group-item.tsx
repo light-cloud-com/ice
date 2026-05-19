@@ -19,7 +19,6 @@
 
 import { Folder } from 'lucide-react';
 import React from 'react';
-
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';

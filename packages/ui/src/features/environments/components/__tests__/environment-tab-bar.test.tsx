@@ -77,11 +77,7 @@ vi.mock('react', async (orig) => {
   const useStateStub = <T,>(init: T | (() => T)): [T, (v: T) => void] => {
     const i = stateMocks.callIdx++;
     const seed =
-      i < stateMocks.prefill.length
-        ? stateMocks.prefill[i]
-        : typeof init === 'function'
-          ? (init as () => T)()
-          : init;
+      i < stateMocks.prefill.length ? stateMocks.prefill[i] : typeof init === 'function' ? (init as () => T)() : init;
     stateMocks.slots[i] = seed;
     const setter = vi.fn((v: unknown) => {
       stateMocks.slots[i] = typeof v === 'function' ? (v as (p: unknown) => unknown)(seed) : v;
@@ -215,12 +211,8 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
   return undefined;
 }
 
-const callRender = (
-  props: React.ComponentProps<typeof EnvironmentTabBar>,
-): unknown =>
-  (EnvironmentTabBar as (p: React.ComponentProps<typeof EnvironmentTabBar>) => unknown)(
-    props,
-  );
+const callRender = (props: React.ComponentProps<typeof EnvironmentTabBar>): unknown =>
+  (EnvironmentTabBar as (p: React.ComponentProps<typeof EnvironmentTabBar>) => unknown)(props);
 
 const makeEnv = (over: Record<string, unknown> = {}) => ({
   id: 'env-1',
@@ -297,9 +289,7 @@ describe('EnvironmentTabBar — empty / loading guard', () => {
     // Look for a Loader2-ish element (any element with className containing animate-spin)
     const spinner = findFirst(
       tree,
-      (el) =>
-        typeof el.props.className === 'string' &&
-        (el.props.className as string).includes('animate-spin'),
+      (el) => typeof el.props.className === 'string' && (el.props.className as string).includes('animate-spin'),
     );
     expect(spinner).toBeDefined();
   });
@@ -344,9 +334,7 @@ describe('EnvironmentTabBar — tab rendering', () => {
     const tree = callRender({ projectId: 'proj-1' });
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-env-btn-create',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-env-btn-create',
     );
     expect(btn).toBeDefined();
   });
@@ -355,9 +343,7 @@ describe('EnvironmentTabBar — tab rendering', () => {
     const tree = callRender({ projectId: 'proj-1' });
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.deployInfra',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.deployInfra',
     );
     expect(btn).toBeDefined();
   });
@@ -368,8 +354,7 @@ describe('EnvironmentTabBar — tab rendering', () => {
     const btn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
+        el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
     );
     expect(btn).toBeUndefined();
   });
@@ -384,8 +369,7 @@ describe('EnvironmentTabBar — tab rendering', () => {
     const btn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
+        el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
     );
     expect(btn).toBeUndefined();
   });
@@ -396,23 +380,19 @@ describe('EnvironmentTabBar — tab rendering', () => {
     const btn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
+        el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
     );
     expect(btn).toBeDefined();
   });
 
   it('omits the Promote button when there is no production env at all', () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', name: 'dev', type: 'dev' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', name: 'dev', type: 'dev' })];
     mocks.state.environments.activeEnvId['proj-1'] = 'env-1';
     const tree = callRender({ projectId: 'proj-1' });
     const btn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
+        el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
     );
     expect(btn).toBeUndefined();
   });
@@ -431,9 +411,7 @@ describe('EnvironmentTabBar — Promote / Deploy button click handlers', () => {
     const tree = callRender({ projectId: 'proj-1' });
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.deployInfra',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.deployInfra',
     )!;
     (btn.props.onClick as () => void)();
     expect(mocks.openDeployPanel).toHaveBeenCalled();
@@ -444,8 +422,7 @@ describe('EnvironmentTabBar — Promote / Deploy button click handlers', () => {
     const btn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
+        el.type === 'button' && (el.props as { title?: string }).title === 'environments.tabBar.promoteToProduction',
     )!;
     (btn.props.onClick as () => void)();
     expect(mocks.compareEnvironments).toHaveBeenCalledWith({
@@ -498,9 +475,7 @@ describe('EnvironmentTabBar — tab item callbacks', () => {
 
 describe('EnvironmentTabBar — onSwitch (handleSwitchEnv) flow', () => {
   beforeEach(() => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-2', name: 'staging', type: 'staging' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-2', name: 'staging', type: 'staging' })];
   });
 
   it('dispatches setActiveEnvironment immediately on switch', async () => {
@@ -694,9 +669,7 @@ describe('EnvironmentTabBar — deploy-status fetch effect', () => {
   });
 
   it('handles a non-array { deployments: [...] } shape', async () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', card_id: 'c1' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', card_id: 'c1' })];
     mocks.apiGetDeployments.mockResolvedValueOnce({
       deployments: [{ status: 'success', deployed_url: 'https://example.com' }],
     });
@@ -706,9 +679,7 @@ describe('EnvironmentTabBar — deploy-status fetch effect', () => {
   });
 
   it('handles a null deployments-shaped response (deploys[0] is undefined → skip)', async () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', card_id: 'c1' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', card_id: 'c1' })];
     mocks.apiGetDeployments.mockResolvedValueOnce(null);
     callRender({ projectId: 'proj-1' });
     await new Promise<void>((r) => setTimeout(r, 0));
@@ -738,18 +709,14 @@ describe('EnvironmentTabBar — auto-switch to production on first load', () => 
   });
 
   it('does not auto-switch when there is already an active env', () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-3', name: 'prod', type: 'production' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-3', name: 'prod', type: 'production' })];
     mocks.state.environments.activeEnvId['proj-1'] = 'env-3';
     callRender({ projectId: 'proj-1' });
     expect(mocks.setActiveEnvironment).not.toHaveBeenCalled();
   });
 
   it('does not auto-switch when there is no production env at all', () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', name: 'dev', type: 'dev' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', name: 'dev', type: 'dev' })];
     callRender({ projectId: 'proj-1' });
     expect(mocks.setActiveEnvironment).not.toHaveBeenCalled();
   });
@@ -757,18 +724,14 @@ describe('EnvironmentTabBar — auto-switch to production on first load', () => 
 
 describe('EnvironmentTabBar — create / rename / context-menu trigger callbacks', () => {
   beforeEach(() => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-2', name: 'staging', type: 'staging' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-2', name: 'staging', type: 'staging' })];
   });
 
   it('clicking the create button does not throw and is wired', () => {
     const tree = callRender({ projectId: 'proj-1' });
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-env-btn-create',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-env-btn-create',
     )!;
     expect(typeof btn.props.onClick).toBe('function');
     (btn.props.onClick as () => void)();
@@ -829,9 +792,7 @@ describe('EnvironmentTabBar — modal & context-menu rendering with pre-seeded s
   });
 
   it('context-menu onPromote skips dispatch when no production env exists', () => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', name: 'dev', type: 'dev' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', name: 'dev', type: 'dev' })];
     __resetUseState([false, null, { envId: 'env-1', x: 0, y: 0 }, {}]);
     const tree = callRender({ projectId: 'proj-1' });
     const menu = findFirst(tree, (el) => el.type === mocks.EnvironmentContextMenu)!;
@@ -885,9 +846,7 @@ describe('EnvironmentTabBar — modal & context-menu rendering with pre-seeded s
     __resetUseState([false, null, null, status]);
     const tree = callRender({ projectId: 'proj-1' });
     const items = findAll(tree, (el) => el.type === mocks.EnvironmentTabItem);
-    const active = items.find(
-      (i) => (i.props.env as { id: string }).id === 'env-2',
-    )!;
+    const active = items.find((i) => (i.props.env as { id: string }).id === 'env-2')!;
     expect(active.props.deployStatus).toEqual({ status: 'success', url: 'https://x' });
   });
 
@@ -911,9 +870,7 @@ describe('EnvironmentTabBar — modal & context-menu rendering with pre-seeded s
 
 describe('EnvironmentTabBar — fetchStatuses cleanup', () => {
   beforeEach(() => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-1', card_id: 'c1' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-1', card_id: 'c1' })];
   });
 
   it('the deploy-statuses effect returns a cleanup that flips the cancelled flag', () => {
@@ -928,9 +885,7 @@ describe('EnvironmentTabBar — fetchStatuses cleanup', () => {
 
 describe('EnvironmentTabBar — close-on-click-outside effect', () => {
   beforeEach(() => {
-    mocks.state.environments.byProject['proj-1'] = [
-      makeEnv({ id: 'env-2', name: 'staging', type: 'staging' }),
-    ];
+    mocks.state.environments.byProject['proj-1'] = [makeEnv({ id: 'env-2', name: 'staging', type: 'staging' })];
   });
 
   it('does not register a window click listener when contextMenu is null', () => {

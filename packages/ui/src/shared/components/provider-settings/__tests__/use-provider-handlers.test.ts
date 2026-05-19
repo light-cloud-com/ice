@@ -109,9 +109,7 @@ function buildInput(opts: BuildOpts = {}): {
   const setConnecting = vi.fn();
   const setImporting = vi.fn();
   const onClose = vi.fn();
-  const t = vi.fn((key: string, vars?: Record<string, unknown>) =>
-    vars ? `${key}:${JSON.stringify(vars)}` : key,
-  );
+  const t = vi.fn((key: string, vars?: Record<string, unknown>) => (vars ? `${key}:${JSON.stringify(vars)}` : key));
   const input: Parameters<typeof useProviderHandlers>[0] = {
     t,
     providerStates: opts.providerStates ?? {},

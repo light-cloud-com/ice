@@ -93,10 +93,6 @@ export function getEnabledProvidersForCategory(category: CategoryId): Provider[]
 
 // ── Derived lists used by the UI ───────────────────────────────────────────
 
-export const ENABLED_PROVIDER_IDS: ReadonlySet<string> = new Set<string>(
-  ALL_PROVIDERS.filter(isProviderEnabled),
-);
+export const ENABLED_PROVIDER_IDS: ReadonlySet<string> = new Set<string>(ALL_PROVIDERS.filter(isProviderEnabled));
 
-export const ENABLED_PROVIDERS: CloudProviderMeta[] = CLOUD_PROVIDERS.filter((p) =>
-  isProviderEnabled(p.id),
-);
+export const ENABLED_PROVIDERS: CloudProviderMeta[] = CLOUD_PROVIDERS.filter((p) => isProviderEnabled(p.id));

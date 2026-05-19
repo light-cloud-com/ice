@@ -153,8 +153,10 @@ function collectText(tree: unknown): string {
 
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 
-const render = (props: { error: string; results: Array<{ name?: string; type?: string; action?: string; error?: string }> }): React.ReactElement | null =>
-  (DeployDiagnosis as unknown as (p: typeof props) => React.ReactElement | null)(props);
+const render = (props: {
+  error: string;
+  results: Array<{ name?: string; type?: string; action?: string; error?: string }>;
+}): React.ReactElement | null => (DeployDiagnosis as unknown as (p: typeof props) => React.ReactElement | null)(props);
 
 beforeEach(() => {
   mocks.state.deploy.diagnosis = { status: 'idle', result: null, error: null };
@@ -225,7 +227,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.setDiagnosis).toHaveBeenCalledWith({
       diagnosis: 'No explanation returned.',
@@ -240,7 +242,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     const arg = mocks.setDiagnosis.mock.calls[0][0] as { suggestedFixes: unknown[] };
     expect(arg.suggestedFixes).toEqual([]);
@@ -254,7 +256,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.diagnosisError).toHaveBeenCalledWith('server error');
   });
@@ -267,7 +269,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.diagnosisError).toHaveBeenCalledWith('Diagnosis failed (503)');
   });
@@ -280,7 +282,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.diagnosisError).toHaveBeenCalledWith('Diagnosis failed (400)');
   });
@@ -293,7 +295,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     const init = mocks.fetchSpy.mock.calls[0][1] as { headers: Record<string, string> };
     expect(init.headers.Authorization).toBeUndefined();
@@ -307,7 +309,7 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     const init = mocks.fetchSpy.mock.calls[0][1] as { headers: Record<string, string> };
     expect(init.headers.Authorization).toBe('Bearer tok-123');
@@ -317,7 +319,7 @@ describe('DeployDiagnosis — idle status', () => {
     mocks.fetchSpy.mockRejectedValue(new Error('network failed'));
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.diagnosisError).toHaveBeenCalledWith('network failed');
   });
@@ -326,7 +328,7 @@ describe('DeployDiagnosis — idle status', () => {
     mocks.fetchSpy.mockRejectedValue('oops');
     const tree = render({ error: 'e', results: [] });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     expect(mocks.diagnosisError).toHaveBeenCalledWith('Diagnosis failed');
   });
@@ -338,10 +340,14 @@ describe('DeployDiagnosis — idle status', () => {
     });
     const tree = render({
       error: 'e',
-      results: [{ /* nothing set */ }] as Array<{ name?: string; type?: string; action?: string; error?: string }>,
+      results: [
+        {
+          /* nothing set */
+        },
+      ] as Array<{ name?: string; type?: string; action?: string; error?: string }>,
     });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     const init = mocks.fetchSpy.mock.calls[0][1] as { body: string };
     const parsedBody = JSON.parse(init.body);
@@ -358,7 +364,7 @@ describe('DeployDiagnosis — idle status', () => {
       results: undefined as unknown as Array<{ name?: string }>,
     });
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    await ((btn.props as { onClick: () => Promise<void> }).onClick)();
+    await (btn.props as { onClick: () => Promise<void> }).onClick();
     await flush();
     const init = mocks.fetchSpy.mock.calls[0][1] as { body: string };
     const parsedBody = JSON.parse(init.body);

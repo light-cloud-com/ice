@@ -84,9 +84,7 @@ export const outcomeReducers = {
       region: state.region,
       results: state.results,
       success: false,
-      duration_ms: payload.results
-        ? payload.results.reduce((acc, r) => acc + (r.duration_ms || 0), 0)
-        : 0,
+      duration_ms: payload.results ? payload.results.reduce((acc, r) => acc + (r.duration_ms || 0), 0) : 0,
     });
     if (state.history.length > 50) {
       state.history = state.history.slice(0, 50);

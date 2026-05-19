@@ -13,8 +13,12 @@
  *  - get_providers/get_stats: lazy-cache; cache holders are external so
  *    the orchestrator class can hold the same cache slots it always did.
  */
+import { convert_property, convert_resource_to_schema } from './converters';
+import { to_sqlite_query, type SqliteSchemaRegistry } from './sqlite-types';
 import { InternalError } from '../../types/errors';
 import { failure, success } from '../../types/result';
+import type { IceError } from '../../types/errors';
+import type { Result } from '../../types/result';
 import type {
   IceType,
   PropertySchema,
@@ -25,10 +29,6 @@ import type {
   SchemaQueryResult,
   SchemaStats,
 } from '../schema-provider';
-import type { IceError } from '../../types/errors';
-import type { Result } from '../../types/result';
-import { convert_property, convert_resource_to_schema } from './converters';
-import { to_sqlite_query, type SqliteSchemaRegistry } from './sqlite-types';
 
 /**
  * External cache slots passed to the cached query helpers.
@@ -94,10 +94,7 @@ export function get_categories(registry: SqliteSchemaRegistry | null): string[] 
  * The cache holds onto the last result; pass `cache.providers = null`
  * to invalidate.
  */
-export function get_providers(
-  registry: SqliteSchemaRegistry | null,
-  cache: QueryCache,
-): ProviderInfo[] {
+export function get_providers(registry: SqliteSchemaRegistry | null, cache: QueryCache): ProviderInfo[] {
   if (cache.providers) {
     return cache.providers;
   }
@@ -148,18 +145,12 @@ export function get_property_schema(
   return property ? convert_property(property) : undefined;
 }
 
-export function get_required_properties(
-  registry: SqliteSchemaRegistry | null,
-  ice_type: IceType,
-): PropertySchema[] {
+export function get_required_properties(registry: SqliteSchemaRegistry | null, ice_type: IceType): PropertySchema[] {
   const properties = registry?.get_required_properties(ice_type) ?? [];
   return properties.map((p) => convert_property(p));
 }
 
-export function get_computed_properties(
-  registry: SqliteSchemaRegistry | null,
-  ice_type: IceType,
-): PropertySchema[] {
+export function get_computed_properties(registry: SqliteSchemaRegistry | null, ice_type: IceType): PropertySchema[] {
   const properties = registry?.get_computed_properties(ice_type) ?? [];
   return properties.map((p) => convert_property(p));
 }
@@ -168,10 +159,7 @@ export function get_computed_properties(
  * Get schema statistics, with cache-through.
  * Falls back to a fixed empty `SchemaStats` when the registry is null.
  */
-export function get_stats(
-  registry: SqliteSchemaRegistry | null,
-  cache: QueryCache,
-): SchemaStats {
+export function get_stats(registry: SqliteSchemaRegistry | null, cache: QueryCache): SchemaStats {
   if (cache.stats) {
     return cache.stats;
   }

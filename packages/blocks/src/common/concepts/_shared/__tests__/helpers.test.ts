@@ -50,9 +50,7 @@ describe('resolveProviderNodeData', () => {
   it('merges overrides on top of base nodeData when variant matches', () => {
     const bp = {
       ...baseBlueprint,
-      providerVariants: [
-        { provider: 'aws' as Provider, dataOverrides: { size: 'large', region: 'us-east-1' } },
-      ],
+      providerVariants: [{ provider: 'aws' as Provider, dataOverrides: { size: 'large', region: 'us-east-1' } }],
     };
     const out = resolveProviderNodeData(bp, 'aws');
     expect(out).toEqual({ label: 'Container', size: 'large', region: 'us-east-1' });

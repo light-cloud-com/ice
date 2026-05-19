@@ -21,7 +21,7 @@ describe('crypto — CREDENTIAL_ENCRYPTION_KEY precondition', () => {
     process.env.NODE_ENV = 'production';
     vi.resetModules();
     try {
-      const mod = await import('../crypto/index');
+      const mod = await import('../crypto');
       expect(() => mod.encryptString('payload')).toThrow(/CREDENTIAL_ENCRYPTION_KEY/);
     } finally {
       process.env.CREDENTIAL_ENCRYPTION_KEY = originalKey;
@@ -35,7 +35,7 @@ describe('crypto — CREDENTIAL_ENCRYPTION_KEY precondition', () => {
     process.env.NODE_ENV = 'test';
     vi.resetModules();
     try {
-      const mod = await import('../crypto/index');
+      const mod = await import('../crypto');
       const ciphertext = mod.encryptString('payload');
       expect(mod.decryptString(ciphertext)).toBe('payload');
     } finally {

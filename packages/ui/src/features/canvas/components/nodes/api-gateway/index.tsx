@@ -13,18 +13,12 @@
  * "no routes yet" hint so the block reads as "needs setup".
  */
 
-import {
-  AG_HEADER_HEIGHT,
-  AG_PADDING,
-  AG_ROW_GAP,
-  AG_ROW_HEIGHT,
-  CARD_FOOTER_HEIGHT,
-} from '@ice/constants';
+import { AG_HEADER_HEIGHT, AG_PADDING, AG_ROW_GAP, AG_ROW_HEIGHT, CARD_FOOTER_HEIGHT } from '@ice/constants';
 import { Router } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { AG_HEADER_HEIGHT, AG_ROW_HEIGHT, AG_ROW_GAP, AG_PADDING };
 

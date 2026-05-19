@@ -8,13 +8,8 @@
  * construct a target graph in `clone` / `from_json`.
  */
 
-import type {
-  Edge,
-  GraphId,
-  GraphMetadata,
-  Node,
-} from '../../types/graph';
 import type { GraphStats, MutableGraphState, SerializedGraph } from './types';
+import type { Edge, GraphId, GraphMetadata, Node } from '../../types/graph';
 
 /**
  * Compute graph statistics from raw state.

@@ -8,12 +8,11 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { useCanvasMouseRouting } from '../use-canvas-mouse-routing';
 import type React from 'react';
 
-import { useCanvasMouseRouting } from '../use-canvas-mouse-routing';
-
 const makeEvent = (target?: { classList?: { contains: (s: string) => boolean } }): React.MouseEvent =>
-  ({ target } as never);
+  ({ target }) as never;
 
 const makeBindCanvas = () => ({
   onMouseDown: vi.fn(),
@@ -39,9 +38,7 @@ describe('useCanvasMouseRouting', () => {
     it('dismisses connection tooltip on every mousedown', () => {
       const args = makeArgs();
       const handlers = useCanvasMouseRouting(args);
-      handlers.onMouseDown(
-        makeEvent({ classList: { contains: () => false } }),
-      );
+      handlers.onMouseDown(makeEvent({ classList: { contains: () => false } }));
       expect(args.setConnTooltip).toHaveBeenCalledWith(null);
     });
 
@@ -134,9 +131,7 @@ describe('useCanvasMouseRouting', () => {
     it('does NOT call bindCanvas.onMouseDown when port path is taken', () => {
       const args = makeArgs();
       const handlers = useCanvasMouseRouting(args);
-      handlers.onMouseDown(
-        makeEvent({ classList: { contains: (s: string) => s === 'connection-port' } }),
-      );
+      handlers.onMouseDown(makeEvent({ classList: { contains: (s: string) => s === 'connection-port' } }));
       expect(args.handleConnectionPortDown).toHaveBeenCalledTimes(1);
       expect(args.bindCanvas.onMouseDown).not.toHaveBeenCalled();
     });

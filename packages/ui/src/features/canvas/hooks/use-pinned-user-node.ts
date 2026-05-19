@@ -41,12 +41,8 @@
  */
 
 import { useMemo, useRef, useState } from 'react';
+import { USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import type { CanvasNode, CanvasConnection } from '../components/types';
-import {
-  USER_NODE_WIDTH,
-  USER_NODE_HEIGHT,
-  USER_NODE_ID,
-} from '../../../shared/components/svg-user-node';
 
 /** Subset of `useExposedServices` return value this hook actually reads. */
 interface ExposedServicesShape {

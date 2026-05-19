@@ -23,7 +23,6 @@
  * from primitives. Same name, different signatures, different purposes.
  * Do not merge them and do not import the AST one in this file.
  */
-import type { SourcePosition, SourceSpan } from './tokens';
 import {
   type ParserState,
   ps_advance,
@@ -34,13 +33,8 @@ import {
   ps_previous,
   ps_add_error,
 } from './parser-state';
-import type {
-  BooleanLiteral,
-  Identifier,
-  NullLiteral,
-  StringLiteral,
-  TypeIdentifier,
-} from './ast';
+import type { BooleanLiteral, Identifier, NullLiteral, StringLiteral, TypeIdentifier } from './ast';
+import type { SourcePosition, SourceSpan } from './tokens';
 
 /**
  * Parse a single identifier token. Errors via `ps_consume` if the
@@ -142,10 +136,7 @@ export function parse_boolean_literal(s: ParserState): BooleanLiteral | null {
  * required slot after an error (see `parse_output_block`'s missing-
  * value recovery).
  */
-export function create_null_literal(
-  _s: ParserState,
-  pos: SourcePosition,
-): NullLiteral {
+export function create_null_literal(_s: ParserState, pos: SourcePosition): NullLiteral {
   return {
     kind: 'NullLiteral',
     span: create_span(pos, pos),

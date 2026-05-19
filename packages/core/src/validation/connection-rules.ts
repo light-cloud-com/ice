@@ -135,12 +135,7 @@ export function validateConnections(
   // missing endpoints; aligning the cycle detector with that contract
   // closes findings.md #20.
   const dataEdges = edges
-    .filter(
-      (e) =>
-        e.data?.relationship !== 'contains' &&
-        nodeMap.has(e.source) &&
-        nodeMap.has(e.target),
-    )
+    .filter((e) => e.data?.relationship !== 'contains' && nodeMap.has(e.source) && nodeMap.has(e.target))
     .map((e) => ({ source: e.source, target: e.target }));
 
   // Check each edge for cycle creation potential

@@ -142,27 +142,18 @@ describe('selectors', () => {
   });
 
   it('selectEdgeIssues filters by edgeId', () => {
-    const root = makeRoot([
-      issue({ id: 'a', edgeId: 'e1' }),
-      issue({ id: 'b', edgeId: 'e2' }),
-    ]);
+    const root = makeRoot([issue({ id: 'a', edgeId: 'e1' }), issue({ id: 'b', edgeId: 'e2' })]);
     expect(selectEdgeIssues(root, 'e1')).toHaveLength(1);
   });
 
   describe('selectNodeSeverity', () => {
     it('returns "error" when any node issue is an error', () => {
-      const root = makeRoot([
-        issue({ severity: 'warning', nodeId: 'n1' }),
-        issue({ severity: 'error', nodeId: 'n1' }),
-      ]);
+      const root = makeRoot([issue({ severity: 'warning', nodeId: 'n1' }), issue({ severity: 'error', nodeId: 'n1' })]);
       expect(selectNodeSeverity(root, 'n1')).toBe('error');
     });
 
     it('returns "warning" when no errors but at least one warning', () => {
-      const root = makeRoot([
-        issue({ severity: 'warning', nodeId: 'n1' }),
-        issue({ severity: 'info', nodeId: 'n1' }),
-      ]);
+      const root = makeRoot([issue({ severity: 'warning', nodeId: 'n1' }), issue({ severity: 'info', nodeId: 'n1' })]);
       expect(selectNodeSeverity(root, 'n1')).toBe('warning');
     });
 

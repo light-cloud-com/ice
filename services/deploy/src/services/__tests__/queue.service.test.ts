@@ -229,9 +229,7 @@ describe('queue.service', () => {
       expect(mocks.InMemQueueCtorMock).toHaveBeenCalledTimes(1);
       expect(mocks.QueueCtorMock).not.toHaveBeenCalled();
       // Console log announces in-memory mode.
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Using in-memory deploy queue'),
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Using in-memory deploy queue'));
     });
 
     it('uses InMemoryQueue when ICE_DESKTOP=true even if REDIS_URL is set', async () => {
@@ -280,9 +278,7 @@ describe('queue.service', () => {
       _Module.getDeployQueue();
       const opts = mocks.IORedisCtorMock.mock.calls[0][1];
       expect(opts.retryStrategy(4)).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Redis not available'),
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Redis not available'));
     });
 
     it('retryStrategy backs off with capped delay below the threshold', async () => {
@@ -468,9 +464,7 @@ describe('queue.service', () => {
       const worker = mocks.MockInMemoryWorker.instances[0];
       mocks.prismaMock.deployJob.update.mockRejectedValueOnce(new Error('db gone'));
 
-      await expect(
-        worker.handlers.completed({ data: { jobId: 'job-1' } } as any),
-      ).resolves.toBeUndefined();
+      await expect(worker.handlers.completed({ data: { jobId: 'job-1' } } as any)).resolves.toBeUndefined();
     });
 
     it('completed handler skips DB write for pipeline jobs', async () => {
@@ -489,10 +483,7 @@ describe('queue.service', () => {
       const worker = mocks.MockInMemoryWorker.instances[0];
       mocks.prismaMock.deployJob.update.mockResolvedValue({});
 
-      await worker.handlers.failed(
-        { data: { jobId: 'job-1' } } as any,
-        new Error('boom'),
-      );
+      await worker.handlers.failed({ data: { jobId: 'job-1' } } as any, new Error('boom'));
 
       expect(mocks.prismaMock.deployJob.update).toHaveBeenCalledWith({
         where: { id: 'job-1' },
@@ -517,10 +508,7 @@ describe('queue.service', () => {
       const worker = mocks.MockInMemoryWorker.instances[0];
       mocks.failEventMock.mockResolvedValue(undefined);
 
-      await worker.handlers.failed(
-        { data: { type: 'pipeline', eventId: 'evt-9' } } as any,
-        new Error('build broke'),
-      );
+      await worker.handlers.failed({ data: { type: 'pipeline', eventId: 'evt-9' } } as any, new Error('build broke'));
 
       expect(mocks.failEventMock).toHaveBeenCalledWith('evt-9', 'build broke');
       expect(mocks.prismaMock.deployJob.update).not.toHaveBeenCalled();
@@ -544,10 +532,7 @@ describe('queue.service', () => {
       mocks.failEventMock.mockRejectedValueOnce(new Error('event-store gone'));
 
       await expect(
-        worker.handlers.failed(
-          { data: { type: 'pipeline', eventId: 'evt-z' } } as any,
-          new Error('boom'),
-        ),
+        worker.handlers.failed({ data: { type: 'pipeline', eventId: 'evt-z' } } as any, new Error('boom')),
       ).resolves.toBeUndefined();
     });
   });
@@ -659,15 +644,11 @@ describe('queue.service', () => {
 
       // Per-line socket emit + per-line build-phase log.
       expect(mocks.emitPipelineUpdateMock).toHaveBeenCalledTimes(12);
-      const buildLineLogs = mocks.emitDeployLogMock.mock.calls.filter((c: any) =>
-        c[1].message.startsWith('[build] '),
-      );
+      const buildLineLogs = mocks.emitDeployLogMock.mock.calls.filter((c: any) => c[1].message.startsWith('[build] '));
       expect(buildLineLogs).toHaveLength(12);
 
       // Output batches: one mid-build (10-line batch) + one tail flush (2 lines).
-      const outputCalls = mocks.updateEventProgressMock.mock.calls.filter(
-        (c: any) => c[3]?.step === 'output',
-      );
+      const outputCalls = mocks.updateEventProgressMock.mock.calls.filter((c: any) => c[3]?.step === 'output');
       expect(outputCalls).toHaveLength(2);
       // Mid-batch is in 'started' state.
       expect(outputCalls[0][3].status).toBe('started');
@@ -689,9 +670,7 @@ describe('queue.service', () => {
 
       await worker.processor({ attemptsMade: 0, data: basePipelineData() });
 
-      const outputCalls = mocks.updateEventProgressMock.mock.calls.filter(
-        (c: any) => c[3]?.step === 'output',
-      );
+      const outputCalls = mocks.updateEventProgressMock.mock.calls.filter((c: any) => c[3]?.step === 'output');
       expect(outputCalls).toHaveLength(0);
     });
 
@@ -709,9 +688,7 @@ describe('queue.service', () => {
         return { success: true, buildDir: '/tmp/b', duration_ms: 1000 };
       });
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).resolves.toBeUndefined();
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).resolves.toBeUndefined();
     });
 
     it('runs applyDeployment with envVars + customDomain harvested from connected blocks', async () => {
@@ -824,10 +801,7 @@ describe('queue.service', () => {
 
       expect(mocks.cleanupBuildMock).toHaveBeenCalledWith('/tmp/build-A');
       // Final updateEventProgress call should be the success row.
-      const lastCall =
-        mocks.updateEventProgressMock.mock.calls[
-          mocks.updateEventProgressMock.mock.calls.length - 1
-        ];
+      const lastCall = mocks.updateEventProgressMock.mock.calls[mocks.updateEventProgressMock.mock.calls.length - 1];
       expect(lastCall[1]).toBe('success');
       expect(lastCall[2]).toBe('Deployment complete');
     });
@@ -839,9 +813,9 @@ describe('queue.service', () => {
 
       mocks.prismaMock.canvasProject.findFirst.mockResolvedValue(null);
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).rejects.toThrow(/Project not found/);
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).rejects.toThrow(
+        /Project not found/,
+      );
       // No build was attempted, so cleanup should not have run.
       expect(mocks.cleanupBuildMock).not.toHaveBeenCalled();
     });
@@ -859,14 +833,10 @@ describe('queue.service', () => {
         error: 'install failed',
       });
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).rejects.toThrow('install failed');
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).rejects.toThrow('install failed');
       expect(mocks.cleanupBuildMock).toHaveBeenCalledWith('/tmp/failed');
       // updateEventProgress called with 'failed' phase before the rethrow.
-      const failed = mocks.updateEventProgressMock.mock.calls.find(
-        (c: any) => c[1] === 'failed',
-      );
+      const failed = mocks.updateEventProgressMock.mock.calls.find((c: any) => c[1] === 'failed');
       expect(failed).toBeDefined();
       expect(String(failed?.[2])).toContain('install failed');
     });
@@ -883,9 +853,7 @@ describe('queue.service', () => {
         duration_ms: 1000,
       });
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).rejects.toThrow('Build failed');
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).rejects.toThrow('Build failed');
       // buildDir is null so cleanup is skipped.
       expect(mocks.cleanupBuildMock).not.toHaveBeenCalled();
     });
@@ -907,9 +875,7 @@ describe('queue.service', () => {
         duration_ms: 1000,
       });
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).rejects.toThrow(/not found/);
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).rejects.toThrow(/not found/);
       expect(mocks.cleanupBuildMock).toHaveBeenCalledWith('/tmp/b');
     });
 
@@ -926,13 +892,9 @@ describe('queue.service', () => {
       });
       mocks.applyDeploymentMock.mockRejectedValue(new Error('apply blew up'));
 
-      await expect(
-        worker.processor({ attemptsMade: 0, data: basePipelineData() }),
-      ).rejects.toThrow('apply blew up');
+      await expect(worker.processor({ attemptsMade: 0, data: basePipelineData() })).rejects.toThrow('apply blew up');
       expect(mocks.cleanupBuildMock).toHaveBeenCalledWith('/tmp/b');
-      const failed = mocks.updateEventProgressMock.mock.calls.find(
-        (c: any) => c[1] === 'failed',
-      );
+      const failed = mocks.updateEventProgressMock.mock.calls.find((c: any) => c[1] === 'failed');
       expect(failed).toBeDefined();
     });
 

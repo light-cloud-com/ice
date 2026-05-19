@@ -36,21 +36,15 @@ import {
 import { Clock } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { CardShell } from '../_shared';
-import { CARD_WIDTH } from '../../../../../config/canvas-constants';
-import { selectActiveCard } from '../../../../../store/slices/cards-slice';
-import { t } from '../../../../../i18n';
 import { formatCountdown, nextFireFromCron } from './next-fire';
+import { CARD_WIDTH } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
+import { selectActiveCard } from '../../../../../store/slices/cards-slice';
+import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { formatCountdown, nextFireFromCron };
-export {
-  CRON_HEADER_HEIGHT,
-  CRON_TASK_ROW_HEIGHT,
-  CRON_TASK_ROW_GAP,
-  CRON_BODY_PADDING_TOP,
-  CRON_BODY_PADDING_BOTTOM,
-};
+export { CRON_HEADER_HEIGHT, CRON_TASK_ROW_HEIGHT, CRON_TASK_ROW_GAP, CRON_BODY_PADDING_TOP, CRON_BODY_PADDING_BOTTOM };
 
 // ─── Layout helpers ───────────────────────────────────────────────────────
 
@@ -148,9 +142,11 @@ export function describeCron(expr: string): string {
   if (!expr) return t('canvas.blocks.scheduled.describeNoSchedule');
   const trimmed = expr.trim();
   if (trimmed === '* * * * *') return t('canvas.blocks.scheduled.describeEveryMinute');
-  if (/^\*\/\d+ \* \* \* \*$/.test(trimmed)) return `every ${trimmed.split(' ')[0].slice(2)} ${t('canvas.blocks.scheduled.describeMinAbbr')}`;
+  if (/^\*\/\d+ \* \* \* \*$/.test(trimmed))
+    return `every ${trimmed.split(' ')[0].slice(2)} ${t('canvas.blocks.scheduled.describeMinAbbr')}`;
   if (trimmed === '0 * * * *') return t('canvas.blocks.scheduled.describeEveryHour');
-  if (/^0 \*\/\d+ \* \* \*$/.test(trimmed)) return `every ${trimmed.split(' ')[1].slice(2)} ${t('canvas.blocks.scheduled.describeHours')}`;
+  if (/^0 \*\/\d+ \* \* \*$/.test(trimmed))
+    return `every ${trimmed.split(' ')[1].slice(2)} ${t('canvas.blocks.scheduled.describeHours')}`;
   const dailyMatch = /^(\d+) (\d+) \* \* \*$/.exec(trimmed);
   if (dailyMatch) {
     return `daily at ${dailyMatch[2].padStart(2, '0')}:${dailyMatch[1].padStart(2, '0')}`;
@@ -244,7 +240,16 @@ const ClockFace: React.FC<ClockFaceProps> = ({ hour, color, size = 16 }) => {
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }} aria-hidden="true">
       <circle cx={cx} cy={cy} r={r} fill="var(--ice-bg-base)" stroke={`${color}66`} strokeWidth={1} />
-      <line x1={cx} y1={cy} x2={cx} y2={cy - r * 0.7} stroke={color} strokeWidth={1} strokeLinecap="round" opacity={0.55} />
+      <line
+        x1={cx}
+        y1={cy}
+        x2={cx}
+        y2={cy - r * 0.7}
+        stroke={color}
+        strokeWidth={1}
+        strokeLinecap="round"
+        opacity={0.55}
+      />
       <line x1={cx} y1={cy} x2={handEndX} y2={handEndY} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
       <circle cx={cx} cy={cy} r={1.2} fill={color} />
     </svg>
@@ -296,8 +301,7 @@ export const SvgScheduledTaskNode: React.FC<SvgCompactNodeProps> = ({
       ? taskCount === 1
         ? t('canvas.blocks.scheduled.taskOne')
         : t('canvas.blocks.scheduled.taskMany', { n: taskCount })
-      : t('canvas.blocks.scheduled.noTasks')) +
-    (timezone ? ` · ${timezone}` : '');
+      : t('canvas.blocks.scheduled.noTasks')) + (timezone ? ` · ${timezone}` : '');
 
   return (
     <CardShell
@@ -391,16 +395,17 @@ export const SvgScheduledTaskNode: React.FC<SvgCompactNodeProps> = ({
                       textOverflow: 'ellipsis',
                       fontWeight: 500,
                     }}
-                    title={actionLabel ? `${task.name || t('canvas.blocks.scheduled.unnamedTask')} → ${actionLabel}` : task.name || t('canvas.blocks.scheduled.unnamedTask')}
+                    title={
+                      actionLabel
+                        ? `${task.name || t('canvas.blocks.scheduled.unnamedTask')} → ${actionLabel}`
+                        : task.name || t('canvas.blocks.scheduled.unnamedTask')
+                    }
                   >
                     {task.name || t('canvas.blocks.scheduled.unnamedTask')}
                     {actionLabel && (
                       <>
                         <span style={{ color: 'var(--ice-text-3)', opacity: 0.6, margin: '0 4px' }}>→</span>
-                        <span
-                          style={{ color: ACCENT, fontWeight: 600 }}
-                          data-testid={`st-task-action-${node.id}-${i}`}
-                        >
+                        <span style={{ color: ACCENT, fontWeight: 600 }} data-testid={`st-task-action-${node.id}-${i}`}>
                           {actionLabel}
                         </span>
                       </>

@@ -20,10 +20,7 @@ import type { GCPHandlerContext } from '../../types';
  * Versioning uses `!!properties.versioning` so `false`/`null`/`""` all
  * disable while `true`/non-empty truthy enables.
  */
-export async function applySimpleProperties(
-  bucket: any,
-  properties: Record<string, unknown>,
-): Promise<void> {
+export async function applySimpleProperties(bucket: any, properties: Record<string, unknown>): Promise<void> {
   if (properties.labels) {
     await bucket.setLabels(properties.labels);
   }
@@ -75,8 +72,7 @@ export async function prepareForAclFallback(
       } catch (disableErr: any) {
         const disableMsg = disableErr instanceof Error ? disableErr.message : String(disableErr);
         const isUblaConstraint =
-          disableMsg.includes('storage.uniformBucketLevelAccess') ||
-          disableMsg.includes('uniformBucketLevelAccess');
+          disableMsg.includes('storage.uniformBucketLevelAccess') || disableMsg.includes('uniformBucketLevelAccess');
         if (isUblaConstraint) {
           ublaForcedOn = true;
           ctx.on_log?.(

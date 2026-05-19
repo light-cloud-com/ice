@@ -12,17 +12,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type {
-  DeployCompleteEvent,
-  DeployNodeProgressEvent,
-  DeployNodeStatusEvent,
-} from '@ice/types';
-import deployReducer, {
-  applyDeployCompleteEvent,
-  applyNodeProgressEvent,
-  applyNodeStatusEvent,
-} from '../deploy-slice';
 import { setActiveCard } from '../cards-slice';
+import deployReducer, { applyDeployCompleteEvent, applyNodeProgressEvent, applyNodeStatusEvent } from '../deploy-slice';
+import type { DeployCompleteEvent, DeployNodeProgressEvent, DeployNodeStatusEvent } from '@ice/types';
 
 const CARD = 'card-1';
 const N1 = 'node-1';
@@ -121,29 +113,20 @@ describe('applyNodeStatusEvent', () => {
   it('does NOT dedup a destroy event against a prior apply (different action)', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
     // Apply finishes with a high seq (the apply's last terminal).
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 9, action: 'create', status: 'succeeded' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 9, action: 'create', status: 'succeeded' })));
     expect(state.nodesById[N1].status).toBe('succeeded');
     expect(state.nodesById[N1].action).toBe('create');
     // Destroy starts with seq=1 (per-deploymentId counter resets). Without the
     // cross-action exception, the existing.last_seq=9 >= e.seq=1 guard would
     // silently drop this event — the exact `ux-destroy-action-bypasses-node-
     // status-wire` regression.
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 1, action: 'delete', status: 'queued' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, action: 'delete', status: 'queued' })));
     expect(state.nodesById[N1].status).toBe('queued');
     expect(state.nodesById[N1].action).toBe('delete');
     expect(state.nodesById[N1].last_seq).toBe(1);
     // And the next applying event (still seq=2 from the destroy counter)
     // continues forward cleanly.
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 2, action: 'delete', status: 'applying' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 2, action: 'delete', status: 'applying' })));
     expect(state.nodesById[N1].status).toBe('applying');
     expect(state.nodesById[N1].last_seq).toBe(2);
   });
@@ -151,35 +134,23 @@ describe('applyNodeStatusEvent', () => {
   it('replaces a terminal record when a fresh `queued` event arrives for the same action (re-deploy)', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
     // First apply finishes terminal.
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 5, action: 'create', status: 'succeeded' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 5, action: 'create', status: 'succeeded' })));
     expect(state.nodesById[N1].last_seq).toBe(5);
     // User clicks Deploy again. Same node, same action, but a new
     // operation — so seq resets to 1. The queued status flag is the
     // marker that this is a fresh op, not a stale replay.
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 1, action: 'create', status: 'queued' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, action: 'create', status: 'queued' })));
     expect(state.nodesById[N1].status).toBe('queued');
     expect(state.nodesById[N1].last_seq).toBe(1);
   });
 
   it('still dedups same-action mid-operation duplicates (replay arrives after live)', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 5, action: 'create', status: 'applying' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 5, action: 'create', status: 'applying' })));
     // Replay arrives with an older event for the SAME action and a non-queued
     // status — must drop, not replace. Otherwise the in-flight 'applying'
     // would regress to 'queued'.
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ seq: 1, action: 'create', status: 'applying' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, action: 'create', status: 'applying' })));
     expect(state.nodesById[N1].last_seq).toBe(5);
   });
 
@@ -199,12 +170,7 @@ describe('applyNodeStatusEvent', () => {
 
   it('mirrors a terminal succeeded event into state.results', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(
-        statusEvent({ seq: 1, status: 'succeeded', duration_ms: 1500 }),
-      ),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, status: 'succeeded', duration_ms: 1500 })));
     expect(state.results).toHaveLength(1);
     expect(state.results[0]).toMatchObject({
       name: 'foo-instance-abc',
@@ -235,20 +201,14 @@ describe('applyNodeStatusEvent', () => {
   it('does not mirror non-terminal events into state.results', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
     state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, status: 'applying' })));
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ node_id: N2, seq: 2, status: 'queued' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ node_id: N2, seq: 2, status: 'queued' })));
     expect(state.results).toHaveLength(0);
   });
 
   it('records the applying node in nodesById with the correct resource_name', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
     state = { ...state, status: 'deploying' };
-    state = deployReducer(
-      state,
-      applyNodeStatusEvent(statusEvent({ resource_name: 'redis-instance-xyz' })),
-    );
+    state = deployReducer(state, applyNodeStatusEvent(statusEvent({ resource_name: 'redis-instance-xyz' })));
     // pdl-5 — the panel reads applying state via deriveRollup(nodesById)
     // rather than a single state.currentResource string.
     expect(state.nodesById[N1].resource_name).toBe('redis-instance-xyz');
@@ -272,9 +232,7 @@ describe('applyNodeProgressEvent', () => {
     state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 1, status: 'applying' })));
     state = deployReducer(
       state,
-      applyNodeProgressEvent(
-        progressEvent({ seq: 2, step: { label: 'Building image', index: 2, total: 4 } }),
-      ),
+      applyNodeProgressEvent(progressEvent({ seq: 2, step: { label: 'Building image', index: 2, total: 4 } })),
     );
     expect(state.nodesById[N1].step).toEqual({ label: 'Building image', index: 2, total: 4 });
     expect(state.nodesById[N1].status).toBe('applying');
@@ -298,9 +256,7 @@ describe('applyNodeProgressEvent', () => {
     state = deployReducer(state, applyNodeStatusEvent(statusEvent({ seq: 5 })));
     state = deployReducer(
       state,
-      applyNodeProgressEvent(
-        progressEvent({ seq: 3, step: { label: 'old step', index: 1, total: 2 } }),
-      ),
+      applyNodeProgressEvent(progressEvent({ seq: 3, step: { label: 'old step', index: 1, total: 2 } })),
     );
     expect(state.nodesById[N1].step).toBeUndefined();
     expect(state.nodesById[N1].last_seq).toBe(5);

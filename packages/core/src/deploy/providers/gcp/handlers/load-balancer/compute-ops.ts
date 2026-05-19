@@ -7,8 +7,8 @@
  * 120 seconds and surface a timeout error so a stalled operation
  * doesn't block the whole deploy thread.
  */
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../../messages';
 import { BASE_URL } from './result-helpers';
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../../messages';
 import type { GCPHandlerContext } from '../../types';
 
 /** How long to wait for a single Compute Engine operation to reach DONE. */

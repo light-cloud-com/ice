@@ -14,10 +14,6 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-
-import type { CardNode } from '../../../store/slices/cards-slice';
-import type { DeployedResource, NodeDriftInfo } from '../../../store/slices/deploy-slice';
-import type { NodePipelineStatus } from '../../../store/slices/pipeline-slice';
 import {
   buildEndpoints,
   deriveStatus,
@@ -29,6 +25,9 @@ import {
   STATUS_COLORS,
   type StatusContext,
 } from '../inline-table-view-helpers';
+import type { CardNode } from '../../../store/slices/cards-slice';
+import type { DeployedResource, NodeDriftInfo } from '../../../store/slices/deploy-slice';
+import type { NodePipelineStatus } from '../../../store/slices/pipeline-slice';
 
 // ─── Fixture helpers ────────────────────────────────────────────────────────
 
@@ -267,9 +266,7 @@ describe('buildEndpoints — live URL', () => {
   });
 
   it('falls back to deploy_outputs.custom_domain_url', () => {
-    const out = buildEndpoints(
-      node('n', { deploy_outputs: { custom_domain_url: 'https://www.example.com' } }),
-    );
+    const out = buildEndpoints(node('n', { deploy_outputs: { custom_domain_url: 'https://www.example.com' } }));
     expect(out[0].url).toBe('https://www.example.com');
   });
 
@@ -429,7 +426,10 @@ describe('buildEndpoints — provider console', () => {
   }
 
   it('emits a GCP Cloud Run console URL for Compute.Container', () => {
-    const out = buildEndpoints(node('n', { provider: 'gcp', iceType: 'Compute.Container', region: 'us-east1' }), deployed());
+    const out = buildEndpoints(
+      node('n', { provider: 'gcp', iceType: 'Compute.Container', region: 'us-east1' }),
+      deployed(),
+    );
     const console_ = out.find((e) => e.kind === 'console');
     expect(console_!.url).toBe('https://console.cloud.google.com/run?region=us-east1');
     expect(console_!.label).toBe('GCP console');
@@ -486,10 +486,7 @@ describe('buildEndpoints — provider console', () => {
   });
 
   it('returns the base provider console URL when no deep link applies', () => {
-    const out = buildEndpoints(
-      node('n', { provider: 'cloudflare', iceType: 'Network.CDN' }),
-      deployed(),
-    );
+    const out = buildEndpoints(node('n', { provider: 'cloudflare', iceType: 'Network.CDN' }), deployed());
     expect(out.find((e) => e.kind === 'console')!.url).toBe('https://dash.cloudflare.com/');
   });
 
@@ -539,9 +536,7 @@ describe('getSettingsChips — Compute.StaticSite', () => {
   });
 
   it('omits chips with null/empty/undefined values', () => {
-    const chips = getSettingsChips(
-      node('n', { iceType: 'Compute.StaticSite', framework: '', outputDir: null }),
-    );
+    const chips = getSettingsChips(node('n', { iceType: 'Compute.StaticSite', framework: '', outputDir: null }));
     expect(chips.find((c) => c.key === 'framework')).toBeUndefined();
     expect(chips.find((c) => c.key === 'output')).toBeUndefined();
   });
@@ -566,16 +561,12 @@ describe('getSettingsChips — Compute.Container', () => {
   });
 
   it('falls back to snake_case instances chip', () => {
-    const chips = getSettingsChips(
-      node('n', { iceType: 'Compute.Container', min_instances: 2, max_instances: 4 }),
-    );
+    const chips = getSettingsChips(node('n', { iceType: 'Compute.Container', min_instances: 2, max_instances: 4 }));
     expect(chips.find((c) => c.key === 'instances')!.value).toBe('2–4');
   });
 
   it('matches Compute.ScalableBackend like Compute.Container', () => {
-    const chips = getSettingsChips(
-      node('n', { iceType: 'Compute.ScalableBackend', minInstances: 1, maxInstances: 3 }),
-    );
+    const chips = getSettingsChips(node('n', { iceType: 'Compute.ScalableBackend', minInstances: 1, maxInstances: 3 }));
     expect(chips.find((c) => c.key === 'instances')!.value).toBe('1–3');
   });
 
@@ -647,9 +638,7 @@ describe('getSettingsChips — Storage.*', () => {
 
 describe('getSettingsChips — Source.GitHubRepo', () => {
   it('emits source chip with branch (default main)', () => {
-    const chips = getSettingsChips(
-      node('n', { iceType: 'Source.GitHubRepo', repository: 'octocat/hello' }),
-    );
+    const chips = getSettingsChips(node('n', { iceType: 'Source.GitHubRepo', repository: 'octocat/hello' }));
     expect(chips.find((c) => c.key === 'source')!.value).toBe('octocat/hello @ main');
   });
 
@@ -676,9 +665,7 @@ describe('getSettingsChips — CustomDomain', () => {
   });
 
   it('emits domain and cert chips for Edge.CustomDomain', () => {
-    const chips = getSettingsChips(
-      node('n', { iceType: 'Edge.CustomDomain', domain: 'www.example.com' }),
-    );
+    const chips = getSettingsChips(node('n', { iceType: 'Edge.CustomDomain', domain: 'www.example.com' }));
     expect(chips.find((c) => c.key === 'domain')!.value).toBe('www.example.com');
   });
 });

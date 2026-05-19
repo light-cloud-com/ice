@@ -20,14 +20,13 @@
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-
-import type { AppDispatch, RootState } from '../../../store';
-import { getTour } from '../utils/tour-registry';
-import { useTour } from './use-tour';
-import { useTargetResolver, type ResolverResult } from './use-target-resolver';
 import { useElementPosition } from './use-element-position';
+import { useTargetResolver, type ResolverResult } from './use-target-resolver';
+import { useTour } from './use-tour';
 import { useTourRoute } from './use-tour-route';
 import { setPhase, selectPhase, type TourPhase } from '../store/tour-slice';
+import { getTour } from '../utils/tour-registry';
+import type { AppDispatch, RootState } from '../../../store';
 import type { TourLifecycleCtx, TourStep } from '../tour.types';
 
 export interface UseTourRunnerReturn {
@@ -141,10 +140,8 @@ export function useTourRunner(): UseTourRunnerReturn {
       // steps silently runs the tour to completion and marks it done
       // forever, even though the user saw nothing — exactly the bug we
       // were chasing. Stop instead so the user can re-launch later.
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[tour] Step "${activeStep?.id}" target missing; aborting tour.`,
-      );
+
+      console.warn(`[tour] Step "${activeStep?.id}" target missing; aborting tour.`);
       stop();
     }
   }, [phase, resolver.status, activeStep, stop, dispatch]);
@@ -178,7 +175,6 @@ export function useTourRunner(): UseTourRunnerReturn {
           try {
             await prevStep.onExit({ ...ctxAtStart, stepId: prev.stepId });
           } catch (err) {
-            // eslint-disable-next-line no-console
             console.warn(`[tour] onExit("${prev.stepId}") threw:`, err);
           }
         }
@@ -189,7 +185,6 @@ export function useTourRunner(): UseTourRunnerReturn {
         try {
           await enterFn(ctxAtStart);
         } catch (err) {
-          // eslint-disable-next-line no-console
           console.warn(`[tour] onEnter("${ctxAtStart.stepId}") threw:`, err);
         }
       }
@@ -216,8 +211,7 @@ export function useTourRunner(): UseTourRunnerReturn {
 
   // Live rect: from the position hook, falling back to resolver's snapshot
   // for the first frame of `placed` before the position observer fires.
-  const liveRect: DOMRect | null =
-    elementPosition ?? (resolver.rect as DOMRect | null) ?? null;
+  const liveRect: DOMRect | null = elementPosition ?? (resolver.rect as DOMRect | null) ?? null;
 
   return {
     phase,

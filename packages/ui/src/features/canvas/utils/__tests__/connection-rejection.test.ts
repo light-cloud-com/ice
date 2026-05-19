@@ -19,9 +19,9 @@ describe('buildRejectionMessage', () => {
   });
 
   it('splits CamelCase tails (ServerlessFunction → Serverless Function)', () => {
-    expect(
-      buildRejectionMessage('Network.Gateway', 'Compute.ServerlessFunction', { kind: 'no-rule' }),
-    ).toBe("Gateway can't connect directly to Serverless Function");
+    expect(buildRejectionMessage('Network.Gateway', 'Compute.ServerlessFunction', { kind: 'no-rule' })).toBe(
+      "Gateway can't connect directly to Serverless Function",
+    );
   });
 
   it('returns the special-conflict template with the label inlined', () => {
@@ -43,8 +43,6 @@ describe('buildRejectionMessage', () => {
   });
 
   it('falls back to "This block"/"that block" when iceType is empty', () => {
-    expect(buildRejectionMessage('', '', { kind: 'no-rule' })).toBe(
-      "This block can't connect directly to that block",
-    );
+    expect(buildRejectionMessage('', '', { kind: 'no-rule' })).toBe("This block can't connect directly to that block");
   });
 });

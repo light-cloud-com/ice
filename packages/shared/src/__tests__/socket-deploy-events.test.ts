@@ -22,7 +22,6 @@
  * shape (or a wrong helper accepting any union member) would fail tsc.
  */
 
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   DEPLOY_EVENT_CHANNEL,
   type DeployCompleteEvent,
@@ -31,6 +30,7 @@ import {
   type DeployNodeStatusEvent,
   type DeployRequirementVerifiedEvent,
 } from '@ice/types';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 beforeAll(() => {
   process.env.NODE_ENV = 'test';
@@ -310,9 +310,7 @@ describe('deploy event emitters — listener count logging', () => {
     expect(emitLogs).toHaveLength(1);
     // Use the imported constant in the assertion — never a string literal —
     // to keep the test honest about what wire name is in play.
-    expect(emitLogs[0]?.[0]).toBe(
-      `[socket] emit ${DEPLOY_EVENT_CHANNEL} type=node_status → deploy:abc listeners=2`,
-    );
+    expect(emitLogs[0]?.[0]).toBe(`[socket] emit ${DEPLOY_EVENT_CHANNEL} type=node_status → deploy:abc listeners=2`);
   });
 
   it('logs `listeners=0` when no clients are subscribed', async () => {
@@ -335,8 +333,6 @@ describe('deploy event emitters — listener count logging', () => {
       (call) => typeof call[0] === 'string' && (call[0] as string).startsWith('[socket] emit '),
     );
     expect(emitLogs).toHaveLength(1);
-    expect(emitLogs[0]?.[0]).toBe(
-      `[socket] emit ${DEPLOY_EVENT_CHANNEL} type=log → deploy:abc listeners=0`,
-    );
+    expect(emitLogs[0]?.[0]).toBe(`[socket] emit ${DEPLOY_EVENT_CHANNEL} type=log → deploy:abc listeners=0`);
   });
 });

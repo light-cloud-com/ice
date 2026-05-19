@@ -197,7 +197,7 @@ describe('RequirementsSection — RequirementRow status icons', () => {
       tree,
       (el) =>
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-emerald-500'),
+        (el.props as { className: string }).className.includes('text-emerald-500'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -210,7 +210,7 @@ describe('RequirementsSection — RequirementRow status icons', () => {
       tree,
       (el) =>
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-amber-500'),
+        (el.props as { className: string }).className.includes('text-amber-500'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -223,7 +223,7 @@ describe('RequirementsSection — RequirementRow status icons', () => {
       tree,
       (el) =>
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-sky-500'),
+        (el.props as { className: string }).className.includes('text-sky-500'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -392,7 +392,7 @@ describe('RequirementsSection — message + lastChecked', () => {
       (el) =>
         el.type === 'p' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-amber-600'),
+        (el.props as { className: string }).className.includes('text-amber-600'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -410,7 +410,7 @@ describe('RequirementsSection — message + lastChecked', () => {
       (el) =>
         el.type === 'p' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-sky-600'),
+        (el.props as { className: string }).className.includes('text-sky-600'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -428,7 +428,7 @@ describe('RequirementsSection — message + lastChecked', () => {
       (el) =>
         el.type === 'p' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-muted-foreground'),
+        (el.props as { className: string }).className.includes('text-muted-foreground'),
     );
     expect(matches.length).toBeGreaterThan(0);
   });
@@ -450,7 +450,7 @@ describe('RequirementsSection — copy-dns-record action', () => {
       onVerify,
     });
     // Walk the tree to invoke nested FCs, which in turn invoke the mock.
-    [...walk(tree)];
+    void [...walk(tree)];
     expect(mocks.DnsRecordCard).toHaveBeenCalled();
     const props = mocks.DnsRecordCard.mock.calls[0][0] as {
       recordType: string;
@@ -480,7 +480,7 @@ describe('RequirementsSection — copy-dns-record action', () => {
       ],
       onVerify,
     });
-    [...walk(tree)];
+    void [...walk(tree)];
     const props = mocks.DnsRecordCard.mock.calls[0][0] as { onVerify: () => void };
     props.onVerify();
     expect(onVerify).toHaveBeenCalledWith('d1', 'n7');
@@ -497,7 +497,7 @@ describe('RequirementsSection — copy-dns-record action', () => {
       ],
       verifyingId: 'd1:n9',
     });
-    [...walk(tree)];
+    void [...walk(tree)];
     const props = mocks.DnsRecordCard.mock.calls[0][0] as { verifying: boolean };
     expect(props.verifying).toBe(true);
   });
@@ -513,7 +513,7 @@ describe('RequirementsSection — copy-dns-record action', () => {
       ],
       verifyingId: 'something-else',
     });
-    [...walk(tree)];
+    void [...walk(tree)];
     const props = mocks.DnsRecordCard.mock.calls[0][0] as { verifying: boolean };
     expect(props.verifying).toBe(false);
   });
@@ -549,9 +549,7 @@ describe('RequirementsSection — non-dns action button', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children).some(
-          (c) => typeof c === 'string' && c === 'Connect GitHub',
-        ),
+        (el.props as { children: unknown[] }).children.some((c) => typeof c === 'string' && c === 'Connect GitHub'),
     )!;
     const onClick = (btn.props as { onClick: () => void }).onClick;
     onClick();
@@ -568,12 +566,7 @@ describe('RequirementsSection — non-dns action button', () => {
       ],
       verifyingId: 'd1:',
     });
-    const btn = findFirst(
-      tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { disabled?: boolean }).disabled === true,
-    );
+    const btn = findFirst(tree, (el) => el.type === 'button' && (el.props as { disabled?: boolean }).disabled === true);
     expect(btn).toBeDefined();
   });
 });

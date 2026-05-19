@@ -79,7 +79,7 @@ describe('http-api/socket — getSocket()', () => {
   it('passes window.location.origin to io() when VITE_WS_URL is unset', async () => {
     const mod = await importFresh();
     mod.getSocket();
-    const [url] = ioFactory.mock.calls[0] as unknown as [string,Record<string, unknown>];
+    const [url] = ioFactory.mock.calls[0] as unknown as [string, Record<string, unknown>];
     expect(url).toBe('http://localhost:3000');
   });
 
@@ -87,21 +87,21 @@ describe('http-api/socket — getSocket()', () => {
     lsStore['ice-token'] = 'abc-123';
     const mod = await importFresh();
     mod.getSocket();
-    const [, opts] = ioFactory.mock.calls[0] as unknown as [string,{ auth?: { token?: string } }];
+    const [, opts] = ioFactory.mock.calls[0] as unknown as [string, { auth?: { token?: string } }];
     expect(opts.auth).toEqual({ token: 'abc-123' });
   });
 
   it('passes an empty `auth: {}` when no token is present', async () => {
     const mod = await importFresh();
     mod.getSocket();
-    const [, opts] = ioFactory.mock.calls[0] as unknown as [string,{ auth?: Record<string, unknown> }];
+    const [, opts] = ioFactory.mock.calls[0] as unknown as [string, { auth?: Record<string, unknown> }];
     expect(opts.auth).toEqual({});
   });
 
   it('forces websocket-first transport with polling fallback', async () => {
     const mod = await importFresh();
     mod.getSocket();
-    const [, opts] = ioFactory.mock.calls[0] as unknown as [string,{ transports?: string[] }];
+    const [, opts] = ioFactory.mock.calls[0] as unknown as [string, { transports?: string[] }];
     expect(opts.transports).toEqual(['websocket', 'polling']);
   });
 
@@ -147,10 +147,7 @@ describe('http-api/socket — getSocket()', () => {
     expect(errCall).toBeDefined();
     const handler = errCall![1] as (e: Error) => void;
     handler(new Error('websocket error'));
-    expect((s.io as unknown as { opts: { transports: string[] } }).opts.transports).toEqual([
-      'polling',
-      'websocket',
-    ]);
+    expect((s.io as unknown as { opts: { transports: string[] } }).opts.transports).toEqual(['polling', 'websocket']);
   });
 
   it('does NOT flip transports when connect_error is unrelated to websocket', async () => {
@@ -169,7 +166,7 @@ describe('http-api/socket — getSocket()', () => {
     };
     const mod = await importFresh();
     mod.getSocket();
-    const [, opts] = ioFactory.mock.calls[0] as unknown as [string,{ auth?: Record<string, unknown> }];
+    const [, opts] = ioFactory.mock.calls[0] as unknown as [string, { auth?: Record<string, unknown> }];
     expect(opts.auth).toEqual({});
     (globalThis as any).localStorage.getItem = original;
   });
@@ -194,9 +191,7 @@ describe('http-api/socket — getSocket()', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const mod = await importFresh();
     mod.getSocket();
-    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'disconnect')![1] as (
-      r: string,
-    ) => void;
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'disconnect')![1] as (r: string) => void;
     handler('transport close');
     expect(warnSpy).toHaveBeenCalledWith('[ice-socket] disconnected:', 'transport close');
     warnSpy.mockRestore();
@@ -206,9 +201,7 @@ describe('http-api/socket — getSocket()', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const mod = await importFresh();
     mod.getSocket();
-    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (
-      e: Error,
-    ) => void;
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (e: Error) => void;
     handler(new Error('timeout'));
     expect(errSpy).toHaveBeenCalledWith('[ice-socket] connect_error:', 'timeout');
     errSpy.mockRestore();
@@ -218,9 +211,7 @@ describe('http-api/socket — getSocket()', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const mod = await importFresh();
     mod.getSocket();
-    const handler = mockManager.on.mock.calls.find((c: unknown[]) => c[0] === 'reconnect')![1] as (
-      n: number,
-    ) => void;
+    const handler = mockManager.on.mock.calls.find((c: unknown[]) => c[0] === 'reconnect')![1] as (n: number) => void;
     handler(3);
     expect(logSpy).toHaveBeenCalledWith('[ice-socket] reconnected after', 3, 'attempts');
     logSpy.mockRestore();
@@ -243,9 +234,7 @@ describe('http-api/socket — getSocket()', () => {
     // circuit's first arm (socket null) — defends the explicit null check.
     const mod = await importFresh();
     mod.getSocket();
-    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (
-      e: Error,
-    ) => void;
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (e: Error) => void;
     // Even with a non-websocket error, transports stay default — covers
     // the falsy-second-arm path of the conditional.
     handler({ message: undefined } as unknown as Error);

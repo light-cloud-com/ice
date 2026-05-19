@@ -9,16 +9,11 @@
  * rather than identity-defining.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Zap } from 'lucide-react';
 import React from 'react';
-import { CardShell } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };

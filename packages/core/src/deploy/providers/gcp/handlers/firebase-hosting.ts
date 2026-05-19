@@ -35,21 +35,11 @@
 import { type FirebaseHostingDnsRecord } from './firebase-hosting/dns-extractor';
 import { registerHostingDomain } from './firebase-hosting/domain-registrar';
 import { downloadGitHubRepo } from './firebase-hosting/github-downloader';
-import {
-  FIREBASE_HOSTING_API,
-  restRequest,
-} from './firebase-hosting/rest-client';
+import { FIREBASE_HOSTING_API, restRequest } from './firebase-hosting/rest-client';
 import { result, fail } from './firebase-hosting/result-helpers';
-import {
-  ensureFirebaseProject,
-  ensureHostingSite,
-} from './firebase-hosting/site-provisioner';
+import { ensureFirebaseProject, ensureHostingSite } from './firebase-hosting/site-provisioner';
 import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils';
-import {
-  publishVersion,
-  publishPlaceholderVersion,
-  parseRepository,
-} from './firebase-hosting/version-publisher';
+import { publishVersion, publishPlaceholderVersion, parseRepository } from './firebase-hosting/version-publisher';
 import type { GCPResourceHandler } from '../types';
 
 // Re-export the DNS record interface so external consumers (currently

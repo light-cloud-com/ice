@@ -169,7 +169,7 @@ describe('EnvironmentStep — selected styling', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         ((el.props as { className: string }).className.includes('rounded-lg border transition-all') ?? false),
     );
-    expect((cards[0].props.className as string)).toContain('bg-ice-surface');
-    expect((cards[1].props.className as string)).toContain('opacity-60');
+    expect(cards[0].props.className as string).toContain('bg-ice-surface');
+    expect(cards[1].props.className as string).toContain('opacity-60');
   });
 });

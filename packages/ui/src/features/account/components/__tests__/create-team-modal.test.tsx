@@ -207,7 +207,10 @@ describe('CreateTeamModal — render', () => {
     // include the className fragment for the red banner.
     const errorPara = findFirst(
       tree,
-      (el) => el.type === 'p' && typeof el.props.className === 'string' && (el.props.className as string).includes('text-red-400'),
+      (el) =>
+        el.type === 'p' &&
+        typeof el.props.className === 'string' &&
+        (el.props.className as string).includes('text-red-400'),
     );
     expect(errorPara).toBeUndefined();
     expect(text).not.toContain('boom');
@@ -315,9 +318,7 @@ describe('CreateTeamModal — onClose handlers', () => {
     const cancelBtn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        el.props.type === 'button' &&
-        el.props.children === 'account.createTeam.cancelButton',
+        el.type === 'button' && el.props.type === 'button' && el.props.children === 'account.createTeam.cancelButton',
     );
     expect(cancelBtn).toBeDefined();
     (cancelBtn!.props.onClick as () => void)();

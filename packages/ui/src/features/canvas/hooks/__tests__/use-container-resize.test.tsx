@@ -14,10 +14,10 @@
  * verifiable independently of the real walk's implementation.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -35,16 +35,10 @@ vi.mock('../../utils/container-bounds', async (importOriginal) => {
 });
 
 // Import AFTER the mock is registered so the hook closes over the spy.
-import {
-  useContainerResize,
-  type UseContainerResizeResult,
-} from '../use-container-resize';
-import type { CanvasNode } from '../../components/types';
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../../config/canvas-constants';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
 import { CONTAINER_PAD } from '../../utils/container-bounds';
+import { useContainerResize, type UseContainerResizeResult } from '../use-container-resize';
+import type { CanvasNode } from '../../components/types';
 
 // ─── Store builder ──────────────────────────────────────────────────────────
 // The hook DISPATCHES `resizeCardNode` and `updateCardNodePosition` into
@@ -61,18 +55,14 @@ const cardsStubSlice = createSlice({
 const makeStore = () =>
   configureStore({
     reducer: { cards: cardsStubSlice.reducer },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
 
 // ─── Probe ──────────────────────────────────────────────────────────────────
 
-const captureHook = (
-  store: TestStore,
-  visibleNodes: CanvasNode[],
-): UseContainerResizeResult => {
+const captureHook = (store: TestStore, visibleNodes: CanvasNode[]): UseContainerResizeResult => {
   const captured: { current?: UseContainerResizeResult } = {};
   const Probe: React.FC = () => {
     captured.current = useContainerResize({ visibleNodes });
@@ -101,7 +91,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -223,7 +213,10 @@ describe('useContainerResize — handleNodeResize clamps + dispatch shape', () =
     result.handleNodeResize('parent', 50, 50);
 
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const action = dispatchSpy.mock.calls[0][0] as { type: string; payload: { id: string; width: number; height: number } };
+    const action = dispatchSpy.mock.calls[0][0] as {
+      type: string;
+      payload: { id: string; width: number; height: number };
+    };
     expect(action.type).toBe('cards/resizeCardNode');
     expect(action.payload).toEqual({ id: 'parent', width: expectedMinW, height: expectedMinH });
   });
@@ -238,16 +231,17 @@ describe('useContainerResize — handleNodeResize clamps + dispatch shape', () =
     // Above-min request — should pass through unchanged.
     result.handleNodeResize('lone', 800, 600);
 
-    const action = dispatchSpy.mock.calls[0][0] as { type: string; payload: { id: string; width: number; height: number } };
+    const action = dispatchSpy.mock.calls[0][0] as {
+      type: string;
+      payload: { id: string; width: number; height: number };
+    };
     expect(action.type).toBe('cards/resizeCardNode');
     expect(action.payload).toEqual({ id: 'lone', width: 800, height: 600 });
   });
 
-  it('builds nodeStates with the resized node\'s pending state and forwards it to recalculateAncestorBounds', () => {
+  it("builds nodeStates with the resized node's pending state and forwards it to recalculateAncestorBounds", () => {
     const store = makeStore();
-    const visibleNodes = [
-      mkNode({ id: 'lone', x: 42, y: 24, width: 100, height: 100 }),
-    ];
+    const visibleNodes = [mkNode({ id: 'lone', x: 42, y: 24, width: 100, height: 100 })];
     const result = captureHook(store, visibleNodes);
     mocks.recalculateAncestorBoundsSpy.mockClear();
 
@@ -318,11 +312,7 @@ describe('useContainerResize — handleNodeResize clamps + dispatch shape', () =
     // Calls: resize(leaf), resize(p), updatePos(gp). 3 total.
     expect(dispatchSpy).toHaveBeenCalledTimes(3);
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
-    expect(types).toEqual([
-      'cards/resizeCardNode',
-      'cards/resizeCardNode',
-      'cards/updateCardNodePosition',
-    ]);
+    expect(types).toEqual(['cards/resizeCardNode', 'cards/resizeCardNode', 'cards/updateCardNodePosition']);
   });
 
   it('is a no-op for an unknown node id (no dispatches, no ancestor walk)', () => {
@@ -342,18 +332,13 @@ describe('useContainerResize — handleNodeResize clamps + dispatch shape', () =
 describe('useContainerResize — recalculateAncestorBounds thin wrapper', () => {
   it('forwards (visibleNodes, startId, nodeStates) verbatim to the rf-canv-4 util', () => {
     const store = makeStore();
-    const visibleNodes = [
-      mkNode({ id: 'a' }),
-      mkNode({ id: 'b' }),
-    ];
+    const visibleNodes = [mkNode({ id: 'a' }), mkNode({ id: 'b' })];
     const result = captureHook(store, visibleNodes);
 
     const expected = [{ id: 'b', size: { width: 50, height: 50 } }];
     mocks.recalculateAncestorBoundsSpy.mockReturnValue(expected);
 
-    const states = new Map([
-      ['a', { x: 1, y: 2, width: 3, height: 4 }],
-    ]);
+    const states = new Map([['a', { x: 1, y: 2, width: 3, height: 4 }]]);
     const got = result.recalculateAncestorBounds('a', states);
 
     expect(got).toBe(expected);

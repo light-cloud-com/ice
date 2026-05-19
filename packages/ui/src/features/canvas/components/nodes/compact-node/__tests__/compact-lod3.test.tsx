@@ -95,9 +95,9 @@ vi.mock('../../_shared/drag-over-glow', () => ({ DragOverGlow: mocks.DragOverGlo
 
 // Imports come AFTER vi.mock so the mocked modules are bound.
 import { CompactLod3 } from '../compact-lod3';
+import type { BrandIcon } from '../../../../../../assets/icons/brand-registry';
 import type { CanvasNode } from '../../../svg-canvas';
 import type { NodePipelineStatus } from '../types';
-import type { BrandIcon } from '../../../../../../assets/icons/brand-registry';
 
 // Aliases for assertions.
 const MockConnectedPipelineDots = mocks.ConnectedPipelineDots;
@@ -134,10 +134,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -184,9 +181,11 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
 });
 
 const renderLod3 = (props: Partial<React.ComponentProps<typeof CompactLod3>> = {}): React.ReactElement => {
-  const Inner = (CompactLod3 as unknown as {
-    type: (p: React.ComponentProps<typeof CompactLod3>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    CompactLod3 as unknown as {
+      type: (p: React.ComponentProps<typeof CompactLod3>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof CompactLod3> = {
     node: makeNode(),
     x: 100,
@@ -1110,10 +1109,12 @@ describe('CompactLod3 — deploy progress / URL pill', () => {
   it('http URL row click opens window.open in a new tab (no shift key)', () => {
     const opened: Array<[string, string, string | undefined]> = [];
     const originalOpen = (globalThis as unknown as { window?: { open?: typeof window.open } }).window?.open;
-    const fakeWindow = { open: ((url: string, target?: string, features?: string) => {
-      opened.push([url, target ?? '', features]);
-      return null;
-    }) as unknown as typeof window.open };
+    const fakeWindow = {
+      open: ((url: string, target?: string, features?: string) => {
+        opened.push([url, target ?? '', features]);
+        return null;
+      }) as unknown as typeof window.open,
+    };
     Object.defineProperty(globalThis, 'window', { value: fakeWindow, configurable: true, writable: true });
     try {
       const tree = renderLod3({
@@ -1133,7 +1134,11 @@ describe('CompactLod3 — deploy progress / URL pill', () => {
       expect(opened[0][1]).toBe('_blank');
     } finally {
       if (originalOpen) {
-        Object.defineProperty(globalThis, 'window', { value: { open: originalOpen }, configurable: true, writable: true });
+        Object.defineProperty(globalThis, 'window', {
+          value: { open: originalOpen },
+          configurable: true,
+          writable: true,
+        });
       } else {
         delete (globalThis as Record<string, unknown>).window;
       }
@@ -1144,7 +1149,14 @@ describe('CompactLod3 — deploy progress / URL pill', () => {
     const written: string[] = [];
     const originalNavigator = (globalThis as unknown as { navigator?: unknown }).navigator;
     Object.defineProperty(globalThis, 'navigator', {
-      value: { clipboard: { writeText: (t: string) => { written.push(t); return Promise.resolve(); } } },
+      value: {
+        clipboard: {
+          writeText: (t: string) => {
+            written.push(t);
+            return Promise.resolve();
+          },
+        },
+      },
       configurable: true,
       writable: true,
     });
@@ -1169,7 +1181,14 @@ describe('CompactLod3 — deploy progress / URL pill', () => {
     const written: string[] = [];
     const originalNavigator = (globalThis as unknown as { navigator?: unknown }).navigator;
     Object.defineProperty(globalThis, 'navigator', {
-      value: { clipboard: { writeText: (t: string) => { written.push(t); return Promise.resolve(); } } },
+      value: {
+        clipboard: {
+          writeText: (t: string) => {
+            written.push(t);
+            return Promise.resolve();
+          },
+        },
+      },
       configurable: true,
       writable: true,
     });
@@ -1347,8 +1366,14 @@ describe('CompactLod3 — ConceptInfoTrigger', () => {
   it('passes opacity 0.85 when hovered, 0.45 otherwise', () => {
     const hov = renderLod3({ isHovered: true });
     const idle = renderLod3({ isHovered: false });
-    const hovTrigger = findByType((findByType(hov, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing, MockConceptInfoTrigger)[0];
-    const idleTrigger = findByType((findByType(idle, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing, MockConceptInfoTrigger)[0];
+    const hovTrigger = findByType(
+      (findByType(hov, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing,
+      MockConceptInfoTrigger,
+    )[0];
+    const idleTrigger = findByType(
+      (findByType(idle, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing,
+      MockConceptInfoTrigger,
+    )[0];
     expect((hovTrigger.props as { opacity: number }).opacity).toBe(0.85);
     expect((idleTrigger.props as { opacity: number }).opacity).toBe(0.45);
   });
@@ -1358,7 +1383,10 @@ describe('CompactLod3 — ConceptInfoTrigger', () => {
       label: 'My API',
       node: makeNode({ data: { iceType: 'Compute.BackendAPI' } }),
     });
-    const trigger = findByType((findByType(tree, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing, MockConceptInfoTrigger)[0];
+    const trigger = findByType(
+      (findByType(tree, MockNodeHeader)[0].props as { trailing: React.ReactNode }).trailing,
+      MockConceptInfoTrigger,
+    )[0];
     const props = trigger.props as { iceType: string; displayName: string };
     expect(props.iceType).toBe('Compute.BackendAPI');
     expect(props.displayName).toBe('My API');

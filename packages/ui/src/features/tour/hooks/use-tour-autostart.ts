@@ -26,9 +26,9 @@
  * The hook is called from inside `<TourRunner />` (single mount point).
  */
 import { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTour } from './use-tour';
-import { useSelector } from 'react-redux';
 import { selectCompletedTours } from '../store/tour-slice';
 import { getTour } from '../utils/tour-registry';
 
@@ -86,11 +86,7 @@ export function useTourAutostart(): void {
     // De-dupe: same pathname + same id seen this tick → skip. The
     // location object identity-changes whenever react-router updates
     // anything (pathname, search, hash), so we compare values.
-    if (
-      lastHandled.current &&
-      lastHandled.current.pathname === location.pathname &&
-      lastHandled.current.tour === id
-    ) {
+    if (lastHandled.current && lastHandled.current.pathname === location.pathname && lastHandled.current.tour === id) {
       return;
     }
     lastHandled.current = { pathname: location.pathname, tour: id };
@@ -100,7 +96,6 @@ export function useTourAutostart(): void {
     const isCompleted = completedTours.includes(id);
 
     if (!isRegistered && process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.warn(`[tour] unknown tour id: ${id}`);
     }
 
@@ -114,9 +109,6 @@ export function useTourAutostart(): void {
     // Strip — preserves other params + hash. `replace: true` keeps the
     // back stack clean.
     const nextSearch = stripTourParam(location.search);
-    navigate(
-      { pathname: location.pathname, search: nextSearch, hash: location.hash },
-      { replace: true },
-    );
+    navigate({ pathname: location.pathname, search: nextSearch, hash: location.hash }, { replace: true });
   }, [location.pathname, location.search, location.hash, completedTours, navigate, start]);
 }

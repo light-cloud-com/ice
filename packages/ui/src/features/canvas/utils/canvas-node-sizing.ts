@@ -30,24 +30,12 @@
  * (rf-canv-5). Pure — no React, no Redux, no module state.
  */
 
-import {
-  computeCompactNodeHeight,
-  computeCompactNodeWidth,
-} from '../components/nodes/compact-node';
-import {
-  computeCustomDomainHeight,
-  computeCustomDomainWidth,
-} from '../components/nodes/custom-domain';
-import {
-  computePrivateNetworkHeight,
-  computePrivateNetworkWidth,
-} from '../components/nodes/private-network';
-import {
-  computeCronJobHeight,
-  computeCronJobWidth,
-} from '../components/nodes/scheduled-task';
-import type { CanvasNode } from '../components/types';
 import { isGroupContainer, isPrivateNetwork as isPrivateNetworkIce } from './node-classification';
+import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
+import { computeCustomDomainHeight, computeCustomDomainWidth } from '../components/nodes/custom-domain';
+import { computePrivateNetworkHeight, computePrivateNetworkWidth } from '../components/nodes/private-network';
+import { computeCronJobHeight, computeCronJobWidth } from '../components/nodes/scheduled-task';
+import type { CanvasNode } from '../components/types';
 
 /** Minimal Redux-shape input — `nodes` from the cards slice. */
 export interface SizingInputNode {
@@ -115,11 +103,7 @@ export function computeNodeSizes(node: SizingInputNode, hasPipelineStatus: boole
  * `CanvasNode` shape. Verbatim port of the return-object at L461–471 of
  * the inline reducer.
  */
-export function toLocalCanvasNode(
-  node: SizingInputNode,
-  _hasPipelineStatus: boolean,
-  sizes: NodeSizes,
-): CanvasNode {
+export function toLocalCanvasNode(node: SizingInputNode, _hasPipelineStatus: boolean, sizes: NodeSizes): CanvasNode {
   const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
   return {
     id: node.id,

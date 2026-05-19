@@ -64,10 +64,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -317,9 +314,11 @@ describe('ProviderCard — expanded, NOT connected (form view)', () => {
     )[0];
     expect(helpBtn).toBeDefined();
     (helpBtn.props as { onClick: () => void }).onClick();
-    expect(
-      (window as unknown as { open: ReturnType<typeof vi.fn> }).open,
-    ).toHaveBeenCalledWith('https://example.test/sa', '_blank', 'noopener,noreferrer');
+    expect((window as unknown as { open: ReturnType<typeof vi.fn> }).open).toHaveBeenCalledWith(
+      'https://example.test/sa',
+      '_blank',
+      'noopener,noreferrer',
+    );
   });
 
   it('connect button onClick fires onConnect(provider.id)', () => {
@@ -348,9 +347,7 @@ describe('ProviderCard — expanded, NOT connected (form view)', () => {
     const tree = renderCard(makeProps({ expanded: true, provider: awsConfig, onUpdateFormValue }));
     const accessKeyInput = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'input' &&
-        (el.props as { placeholder?: string }).placeholder === 'AKIA...',
+      (el) => el.type === 'input' && (el.props as { placeholder?: string }).placeholder === 'AKIA...',
     )[0];
     (accessKeyInput.props as { onChange: (e: { target: { value: string } }) => void }).onChange({
       target: { value: 'AKIA1234' },
@@ -396,16 +393,12 @@ describe('ProviderCard — expanded, NOT connected (form view)', () => {
     );
     const accessKeyInput = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'input' &&
-        (el.props as { placeholder?: string }).placeholder === 'AKIA...',
+      (el) => el.type === 'input' && (el.props as { placeholder?: string }).placeholder === 'AKIA...',
     )[0];
     expect((accessKeyInput.props as { value: string }).value).toBe('PRESET');
     const secretKeyInput = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'input' &&
-        (el.props as { placeholder?: string }).placeholder === '****',
+      (el) => el.type === 'input' && (el.props as { placeholder?: string }).placeholder === '****',
     )[0];
     expect((secretKeyInput.props as { value: string }).value).toBe('');
   });
@@ -444,9 +437,7 @@ describe('ProviderCard — expanded, connected (project list view)', () => {
 
   it('disconnect button fires onDisconnect(provider.id)', () => {
     const onDisconnect = vi.fn();
-    const tree = renderCard(
-      makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState, onDisconnect }),
-    );
+    const tree = renderCard(makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState, onDisconnect }));
     const disconnectBtn = findByPredicate(
       tree,
       (el) =>
@@ -462,9 +453,7 @@ describe('ProviderCard — expanded, connected (project list view)', () => {
 
   it('import button fires onImport(provider.id, project.id) per project', () => {
     const onImport = vi.fn();
-    const tree = renderCard(
-      makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState, onImport }),
-    );
+    const tree = renderCard(makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState, onImport }));
     const importBtns = findByPredicate(
       tree,
       (el) =>
@@ -541,9 +530,7 @@ describe('ProviderCard — expanded, connected (project list view)', () => {
   });
 
   it('non-GCP: addProject button is NOT rendered', () => {
-    const tree = renderCard(
-      makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState }),
-    );
+    const tree = renderCard(makeProps({ expanded: true, provider: awsConfig, state: connectedAwsState }));
     const text = collectText(tree);
     expect(text).not.toContain('providerSettings.projects.addProject');
   });
@@ -568,8 +555,7 @@ describe('ProviderCard — expanded, connected (project list view)', () => {
     const removeBtns = findByPredicate(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'providerSettings.import.removeTooltip',
+        el.type === 'button' && (el.props as { title?: string }).title === 'providerSettings.import.removeTooltip',
     );
     expect(removeBtns.length).toBe(2);
     (removeBtns[0].props as { onClick: () => void }).onClick();
@@ -587,8 +573,7 @@ describe('ProviderCard — expanded, connected (project list view)', () => {
     const removeBtns = findByPredicate(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'providerSettings.import.removeTooltip',
+        el.type === 'button' && (el.props as { title?: string }).title === 'providerSettings.import.removeTooltip',
     );
     expect(removeBtns.length).toBe(0);
   });
@@ -717,9 +702,9 @@ describe('ProviderCard — GCP add-project form', () => {
       projectId: 'projectA',
       serviceAccountKey: '{"k":"v"}',
     });
-    const updater = setProviderStates.mock.calls[0][0] as (
-      prev: { gcp: ProviderRuntimeState },
-    ) => { gcp: ProviderRuntimeState };
+    const updater = setProviderStates.mock.calls[0][0] as (prev: { gcp: ProviderRuntimeState }) => {
+      gcp: ProviderRuntimeState;
+    };
     const next = updater({
       gcp: {
         connected: true,
@@ -884,9 +869,7 @@ describe('ProviderCard — GCP add-project form', () => {
     // add-project form falls into the <input> arm (line 177 in source).
     const syntheticGcpWithText: ProviderConfig = {
       ...gcpConfig,
-      configFields: [
-        { name: 'projectId', label: 'Project ID', type: 'text', required: false, placeholder: 'pid' },
-      ],
+      configFields: [{ name: 'projectId', label: 'Project ID', type: 'text', required: false, placeholder: 'pid' }],
     };
     const onUpdateFormValue = vi.fn();
     const tree = renderCard(

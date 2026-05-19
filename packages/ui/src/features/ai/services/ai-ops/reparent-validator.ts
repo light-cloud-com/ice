@@ -22,9 +22,7 @@
 import { canContain } from '../../../../config/containment-rules';
 import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 
-export type ReparentVerdict =
-  | { kind: 'skip'; reason: string }
-  | { kind: 'ok'; resolvedParentId: string };
+export type ReparentVerdict = { kind: 'skip'; reason: string } | { kind: 'ok'; resolvedParentId: string };
 
 export function validateReparent(
   card: Card,

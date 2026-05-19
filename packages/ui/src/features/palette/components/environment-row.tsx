@@ -47,8 +47,7 @@ export const EnvironmentRow: React.FC<EnvironmentRowProps> = ({
 }) => {
   const isActiveEnv = activeEnvId === env.id && activeProjectId === project.id;
   const dotColor = ENV_DOT_COLORS[env.type] || 'bg-gray-500';
-  const isDeploying =
-    deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
+  const isDeploying = deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
   const isDeployFailed = deployingCardId === env.cardId && deployStatus === 'error';
 
   return (
@@ -56,9 +55,7 @@ export const EnvironmentRow: React.FC<EnvironmentRowProps> = ({
       onClick={(e) => onClick(e, project, env)}
       className={cn(
         'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
-        isActiveEnv
-          ? 'bg-blue-500/10 text-ice-text-1'
-          : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
+        isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
         isDeploying && 'bg-blue-500/20 ring-1 ring-blue-500/40 animate-pulse',
         isDeployFailed && 'bg-red-500/10 ring-1 ring-red-500/40',
       )}
@@ -71,9 +68,7 @@ export const EnvironmentRow: React.FC<EnvironmentRowProps> = ({
         <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
       )}
       <span className="text-ice-sm truncate">{env.name}</span>
-      <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">
-        {isDeploying ? 'deploying' : env.region}
-      </span>
+      <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">{isDeploying ? 'deploying' : env.region}</span>
     </div>
   );
 };

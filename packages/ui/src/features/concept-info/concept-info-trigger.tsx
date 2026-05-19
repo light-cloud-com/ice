@@ -9,8 +9,8 @@
 import { hasConceptInfo } from '@ice/blocks';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from '../../i18n';
 import { ConceptInfoModal } from './concept-info-modal';
+import { useTranslation } from '../../i18n';
 import type { Provider } from '@ice/blocks';
 
 interface ConceptInfoTriggerProps {

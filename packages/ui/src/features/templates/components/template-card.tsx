@@ -18,12 +18,11 @@
 import { getEnabledProvidersForTemplate } from '@ice/templates';
 import { Rocket, ChevronRight } from 'lucide-react';
 import React from 'react';
-
+import { DifficultyDots, ProviderBadges, TrustBadge, TechStackLogos } from './badges';
 import { TEMPLATE_CATEGORIES } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { ICON_MAP } from '../data/icon-map';
-import { DifficultyDots, ProviderBadges, TrustBadge, TechStackLogos } from './badges';
 import type { ComposedTemplate } from '../../../config/templates';
 
 export interface TemplateCardProps {

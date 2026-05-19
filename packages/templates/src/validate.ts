@@ -346,10 +346,7 @@ export function runValidation(templates: readonly ComposedTemplate[]): Issue[] {
  * issues so a caller (the CLI driver, or a test) can decide what to
  * do with them — process.exit is intentionally NOT called here.
  */
-export function printReport(
-  issues: Issue[],
-  totalTemplates: number,
-): { errors: Issue[]; warnings: Issue[] } {
+export function printReport(issues: Issue[], totalTemplates: number): { errors: Issue[]; warnings: Issue[] } {
   const errors = issues.filter((i) => i.severity === 'error');
   const warnings = issues.filter((i) => i.severity === 'warn');
 

@@ -76,7 +76,7 @@ export function useCanvasEffects(args: UseCanvasEffectsArgs): void {
       .then(({ getApi }) => {
         const api = getApi();
         unsubCard = api.subscribeCardPipeline?.(cardId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pipeline event is loosely typed at the socket boundary
+
         cleanupCard = api.onCardPipelineUpdate?.((event: any) => {
           dispatch(receiveCardPipelineUpdate(event));
         });
@@ -87,7 +87,6 @@ export function useCanvasEffects(args: UseCanvasEffectsArgs): void {
       unsubCard?.();
       cleanupCard?.();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- use cardId only to avoid re-subscribing on every card mutation
   }, [cardId, dispatch]);
 
   // Non-passive wheel listener for zoom (React onWheel is passive, preventDefault fails)
@@ -97,7 +96,7 @@ export function useCanvasEffects(args: UseCanvasEffectsArgs): void {
     const handler = (e: WheelEvent) => {
       e.preventDefault();
       setConnTooltip(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bindCanvas.onWheel is typed against React.WheelEvent (synthetic); the native event is passed verbatim from the pre-rf-canv2-4 inline form
+
       bindCanvas.onWheel(e as any);
     };
     svg.addEventListener('wheel', handler, { passive: false });

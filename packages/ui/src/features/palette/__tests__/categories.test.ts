@@ -11,8 +11,6 @@
  * key (independent of en.json strings).
  */
 
-import { describe, it, expect } from 'vitest';
-
 import {
   Server,
   Clock,
@@ -28,7 +26,7 @@ import {
   FileText,
   Cog,
 } from 'lucide-react';
-
+import { describe, it, expect } from 'vitest';
 import { getCategoryDefs, getCategoryMap, CATEGORY_ORDER } from '../data/categories';
 
 const identityT = (key: string) => key;

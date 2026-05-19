@@ -87,12 +87,7 @@ import type { DeployRollup, DeployStatus, NodeDeployState } from '../../../../st
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -116,10 +111,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -164,16 +156,12 @@ function collectText(tree: React.ReactNode): string {
 
 // `React.memo(Inner)` returns `{ $$typeof: Symbol(react.memo), type: Inner, compare }`.
 // To invoke the inner render under the tree-walker, reach for `.type`.
-const renderPanel = (
-  nodesById: Record<string, NodeDeployState>,
-  status: DeployStatus,
-): React.ReactElement => {
-  const Inner = (DeployInFlightPanel as unknown as {
-    type: (props: {
-      nodesById: Record<string, NodeDeployState>;
-      status: DeployStatus;
-    }) => React.ReactElement;
-  }).type;
+const renderPanel = (nodesById: Record<string, NodeDeployState>, status: DeployStatus): React.ReactElement => {
+  const Inner = (
+    DeployInFlightPanel as unknown as {
+      type: (props: { nodesById: Record<string, NodeDeployState>; status: DeployStatus }) => React.ReactElement;
+    }
+  ).type;
   return Inner({ nodesById, status });
 };
 
@@ -344,7 +332,7 @@ describe('DeployInFlightPanel — non-empty rollup header counts', () => {
     const tree = renderPanel({ a: baseNode() }, 'deploying');
     const text = collectText(tree);
     // Two middle-dot separators when failed > 0 (between in-flight/done and done/failed).
-    expect((text.match(/ · /g) ?? [])).toHaveLength(2);
+    expect(text.match(/ · /g) ?? []).toHaveLength(2);
   });
 
   it('renders a single middle-dot " · " when failed === 0 (only in-flight/done separator)', () => {
@@ -352,7 +340,7 @@ describe('DeployInFlightPanel — non-empty rollup header counts', () => {
     setOrdered([]);
     const tree = renderPanel({ a: baseNode() }, 'deploying');
     const text = collectText(tree);
-    expect((text.match(/ · /g) ?? [])).toHaveLength(1);
+    expect(text.match(/ · /g) ?? []).toHaveLength(1);
   });
 
   it('counts use blue/emerald/red color classes', () => {
@@ -585,8 +573,6 @@ describe('DeployInFlightPanel — React.memo boundary', () => {
   });
 
   it('preserves the displayName "DeployInFlightPanel" on the memo wrapper', () => {
-    expect((DeployInFlightPanel as unknown as { displayName: string }).displayName).toBe(
-      'DeployInFlightPanel',
-    );
+    expect((DeployInFlightPanel as unknown as { displayName: string }).displayName).toBe('DeployInFlightPanel');
   });
 });

@@ -15,7 +15,6 @@
  *  callbacks).
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -253,10 +252,7 @@ describe('ProfileAvatar — dropdown items navigate', () => {
     expect(text).toContain('account.avatar.settings');
     // Items are rendered via the mocked DropdownMenu.Item, which becomes a
     // div with onClick prop intact.
-    const items = findAll(
-      tree,
-      (el) => typeof el.props.onClick === 'function' && el.props.children !== undefined,
-    );
+    const items = findAll(tree, (el) => typeof el.props.onClick === 'function' && el.props.children !== undefined);
     // First item is settings, second is team.
     const settings = items.find((el) => collectText(el).includes('account.avatar.settings'));
     expect(settings).toBeDefined();
@@ -267,10 +263,7 @@ describe('ProfileAvatar — dropdown items navigate', () => {
   it('clicking the team item navigates to /team', () => {
     mocks.state.account.user = { name: 'Alice' };
     const tree = render();
-    const items = findAll(
-      tree,
-      (el) => typeof el.props.onClick === 'function' && el.props.children !== undefined,
-    );
+    const items = findAll(tree, (el) => typeof el.props.onClick === 'function' && el.props.children !== undefined);
     const team = items.find((el) => collectText(el).includes('account.avatar.team'));
     expect(team).toBeDefined();
     (team!.props.onClick as () => void)();

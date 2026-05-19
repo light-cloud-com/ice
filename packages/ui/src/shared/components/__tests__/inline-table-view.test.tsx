@@ -103,8 +103,7 @@ vi.mock('../../../i18n', () => ({
 }));
 
 vi.mock('../../../store/slices/cards-slice', () => ({
-  selectActiveCard: (s: typeof mocks.state) =>
-    s.cards.cards.find((c) => c.id === s.cards.activeCardId) || undefined,
+  selectActiveCard: (s: typeof mocks.state) => s.cards.cards.find((c) => c.id === s.cards.activeCardId) || undefined,
   deleteCardNode: mocks.deleteCardNode,
 }));
 
@@ -151,8 +150,7 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
   return undefined;
 }
 
-const callRender = (): unknown =>
-  (InlineTableView as unknown as (p: unknown) => unknown)({});
+const callRender = (): unknown => (InlineTableView as unknown as (p: unknown) => unknown)({});
 
 beforeEach(() => {
   mocks.state.selection.selectedNodes = [];
@@ -260,9 +258,7 @@ describe('InlineTableView — Toolbar wiring', () => {
     const toolbar = findFirst(tree, (el) => el.type === mocks.Toolbar)!;
     (toolbar.props as { onToggleStatus: (s: string) => void }).onToggleStatus('live');
     // setStatusFilter is slot 3 — its setter receives a updater function.
-    const updater = mocks.useStateSetters[3].mock.calls[0][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = mocks.useStateSetters[3].mock.calls[0][0] as (prev: Set<string>) => Set<string>;
     const next = updater(new Set<string>());
     expect(next.has('live')).toBe(true);
   });
@@ -271,9 +267,7 @@ describe('InlineTableView — Toolbar wiring', () => {
     const tree = callRender();
     const toolbar = findFirst(tree, (el) => el.type === mocks.Toolbar)!;
     (toolbar.props as { onToggleStatus: (s: string) => void }).onToggleStatus('failed');
-    const updater = mocks.useStateSetters[3].mock.calls[0][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = mocks.useStateSetters[3].mock.calls[0][0] as (prev: Set<string>) => Set<string>;
     const next = updater(new Set(['failed']));
     expect(next.has('failed')).toBe(false);
   });
@@ -282,9 +276,7 @@ describe('InlineTableView — Toolbar wiring', () => {
     const tree = callRender();
     const toolbar = findFirst(tree, (el) => el.type === mocks.Toolbar)!;
     (toolbar.props as { onToggleProvider: (p: string) => void }).onToggleProvider('aws');
-    const updater = mocks.useStateSetters[4].mock.calls[0][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = mocks.useStateSetters[4].mock.calls[0][0] as (prev: Set<string>) => Set<string>;
     const next = updater(new Set<string>());
     expect(next.has('aws')).toBe(true);
   });
@@ -293,9 +285,7 @@ describe('InlineTableView — Toolbar wiring', () => {
     const tree = callRender();
     const toolbar = findFirst(tree, (el) => el.type === mocks.Toolbar)!;
     (toolbar.props as { onToggleProvider: (p: string) => void }).onToggleProvider('aws');
-    const updater = mocks.useStateSetters[4].mock.calls[0][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = mocks.useStateSetters[4].mock.calls[0][0] as (prev: Set<string>) => Set<string>;
     const next = updater(new Set(['aws']));
     expect(next.has('aws')).toBe(false);
   });
@@ -359,9 +349,11 @@ describe('InlineTableView — TableBody wiring', () => {
   it('onSelectRow with a regular click replaces the selection', () => {
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    const onSelect = (body.props as {
-      onSelectRow: (id: string, e: React.MouseEvent) => void;
-    }).onSelectRow;
+    const onSelect = (
+      body.props as {
+        onSelectRow: (id: string, e: React.MouseEvent) => void;
+      }
+    ).onSelectRow;
     onSelect('n1', { metaKey: false, ctrlKey: false } as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n1']);
     // showProperties=false so toggleProperties is dispatched.
@@ -372,9 +364,11 @@ describe('InlineTableView — TableBody wiring', () => {
     mocks.state.selection.selectedNodes = [];
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    const onSelect = (body.props as {
-      onSelectRow: (id: string, e: React.MouseEvent) => void;
-    }).onSelectRow;
+    const onSelect = (
+      body.props as {
+        onSelectRow: (id: string, e: React.MouseEvent) => void;
+      }
+    ).onSelectRow;
     onSelect('n1', { metaKey: true } as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n1']);
   });
@@ -383,9 +377,11 @@ describe('InlineTableView — TableBody wiring', () => {
     mocks.state.selection.selectedNodes = ['n1', 'n2'];
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    const onSelect = (body.props as {
-      onSelectRow: (id: string, e: React.MouseEvent) => void;
-    }).onSelectRow;
+    const onSelect = (
+      body.props as {
+        onSelectRow: (id: string, e: React.MouseEvent) => void;
+      }
+    ).onSelectRow;
     onSelect('n1', { ctrlKey: true } as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n2']);
   });
@@ -394,10 +390,9 @@ describe('InlineTableView — TableBody wiring', () => {
     mocks.state.ui.showProperties = true;
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    (body.props as { onSelectRow: (id: string, e: React.MouseEvent) => void }).onSelectRow(
-      'n1',
-      { metaKey: false } as React.MouseEvent,
-    );
+    (body.props as { onSelectRow: (id: string, e: React.MouseEvent) => void }).onSelectRow('n1', {
+      metaKey: false,
+    } as React.MouseEvent);
     expect(mocks.toggleProperties).not.toHaveBeenCalled();
   });
 
@@ -406,9 +401,10 @@ describe('InlineTableView — TableBody wiring', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    (body.props as { onCopyId: (row: { providerId?: string; node: { id: string } }) => void }).onCopyId(
-      { providerId: 'svc-1', node: { id: 'fallback' } },
-    );
+    (body.props as { onCopyId: (row: { providerId?: string; node: { id: string } }) => void }).onCopyId({
+      providerId: 'svc-1',
+      node: { id: 'fallback' },
+    });
     expect(writeText).toHaveBeenCalledWith('svc-1');
     vi.unstubAllGlobals();
   });
@@ -418,9 +414,10 @@ describe('InlineTableView — TableBody wiring', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     const tree = callRender();
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
-    (body.props as { onCopyId: (row: { providerId?: string; node: { id: string } }) => void }).onCopyId(
-      { providerId: '', node: { id: 'fallback' } },
-    );
+    (body.props as { onCopyId: (row: { providerId?: string; node: { id: string } }) => void }).onCopyId({
+      providerId: '',
+      node: { id: 'fallback' },
+    });
     expect(writeText).toHaveBeenCalledWith('fallback');
     vi.unstubAllGlobals();
   });
@@ -479,9 +476,7 @@ describe('InlineTableView — TableBody wiring', () => {
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
     (body.props as { onToggleExpand: (id: string) => void }).onToggleExpand('n1');
     // expanded is slot 7.
-    const updater = mocks.useStateSetters[7].mock.calls[0][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = mocks.useStateSetters[7].mock.calls[0][0] as (prev: Set<string>) => Set<string>;
     expect(updater(new Set()).has('n1')).toBe(true);
     expect(updater(new Set(['n1'])).has('n1')).toBe(false);
   });
@@ -522,9 +517,7 @@ describe('InlineTableView — expanded-rows cleanup effect', () => {
     // setExpanded (slot 7) called with an updater fn.
     const setter = mocks.useStateSetters[7];
     expect(setter).toHaveBeenCalled();
-    const updater = setter.mock.calls[setter.mock.calls.length - 1][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = setter.mock.calls[setter.mock.calls.length - 1][0] as (prev: Set<string>) => Set<string>;
     const next = updater(new Set(['a', 'gone']));
     expect(next.has('a')).toBe(true);
     expect(next.has('gone')).toBe(false);
@@ -538,16 +531,17 @@ describe('InlineTableView — expanded-rows cleanup effect', () => {
     callRender();
     for (const fx of mocks.effects) fx();
     const setter = mocks.useStateSetters[7];
-    const updater = setter.mock.calls[setter.mock.calls.length - 1][0] as (
-      prev: Set<string>,
-    ) => Set<string>;
+    const updater = setter.mock.calls[setter.mock.calls.length - 1][0] as (prev: Set<string>) => Set<string>;
     const prev = new Set(['a']);
     const next = updater(prev);
     expect(next).toBe(prev);
   });
 
   it('handles missing activeCard.nodes gracefully (treats as empty list)', () => {
-    mocks.state.cards = { activeCardId: 'c1', cards: [{ id: 'c1', nodes: undefined as unknown as Array<{ id: string }> }] };
+    mocks.state.cards = {
+      activeCardId: 'c1',
+      cards: [{ id: 'c1', nodes: undefined as unknown as Array<{ id: string }> }],
+    };
     callRender();
     for (const fx of mocks.effects) fx();
     const setter = mocks.useStateSetters[7];

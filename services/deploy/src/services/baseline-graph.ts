@@ -66,9 +66,7 @@ export interface BuildBaselineGraphResult {
   hasResults: boolean;
 }
 
-export async function buildBaselineGraph(
-  args: BuildBaselineGraphArgs,
-): Promise<BuildBaselineGraphResult> {
+export async function buildBaselineGraph(args: BuildBaselineGraphArgs): Promise<BuildBaselineGraphResult> {
   const { cardId, environment, excludeDeploymentId, statusFilter } = args;
 
   // @ts-ignore — resolved at runtime via pnpm workspace

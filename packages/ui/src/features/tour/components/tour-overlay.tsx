@@ -32,7 +32,6 @@
 
 import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
-
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { cn } from '../../../shared/utils/cn';
 
@@ -70,7 +69,12 @@ interface ShieldStripStyles {
  * the user-supplied `pad`, so each strip's edges align flush with the
  * spotlight border.
  */
-function computeShieldStrips(spotlightLeft: number, spotlightTop: number, spotlightWidth: number, spotlightHeight: number): ShieldStripStyles {
+function computeShieldStrips(
+  spotlightLeft: number,
+  spotlightTop: number,
+  spotlightWidth: number,
+  spotlightHeight: number,
+): ShieldStripStyles {
   const right = spotlightLeft + spotlightWidth;
   const bottom = spotlightTop + spotlightHeight;
   return {
@@ -168,11 +172,7 @@ export function TourOverlay({ rect, pad = 8, radius = 8, onSkip }: TourOverlayPr
        * inner rect remains pristine. `pointer-events: none` lets clicks
        * within the rect pass through to the actual page content beneath.
        */}
-      <div
-        data-tour-overlay="spotlight"
-        className={cn(Z_CLASS)}
-        style={spotlightStyle}
-      />
+      <div data-tour-overlay="spotlight" className={cn(Z_CLASS)} style={spotlightStyle} />
     </>
   );
 

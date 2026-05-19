@@ -163,7 +163,5 @@ export function filterByProvider(templates: ComposedTemplate[], provider: Provid
  */
 export function getEnabledProvidersForTemplate(template: ComposedTemplate): Provider[] {
   if (!template.providers) return [];
-  return template.providers.filter((p) =>
-    template.blocks.some((b) => getBlueprint(b.iceType, p) !== undefined),
-  );
+  return template.providers.filter((p) => template.blocks.some((b) => getBlueprint(b.iceType, p) !== undefined));
 }

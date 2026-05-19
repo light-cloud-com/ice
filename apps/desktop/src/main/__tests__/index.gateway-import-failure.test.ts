@@ -22,12 +22,12 @@ const h = vi.hoisted(() => {
       send: vi.fn(),
       setWindowOpenHandler: vi.fn(),
       on: vi.fn((channel: string, listener: Listener) => {
-        ((this.webContents as any)._listeners ??= {} as Listeners);
+        (this.webContents as any)._listeners ??= {} as Listeners;
         (((this.webContents as any)._listeners as Listeners)[channel] ??= []).push(listener);
         return this.webContents;
       }),
       once: vi.fn((channel: string, listener: Listener) => {
-        ((this.webContents as any)._listeners ??= {} as Listeners);
+        (this.webContents as any)._listeners ??= {} as Listeners;
         (((this.webContents as any)._listeners as Listeners)[channel] ??= []).push(listener);
         return this.webContents;
       }),

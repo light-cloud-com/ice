@@ -62,7 +62,7 @@ export function registerTour(tour: Tour): void {
     // Production: warn + overwrite. Plugins may legitimately re-register
     // an updated definition, and we'd rather replace than crash a
     // shipped build over a stale registration.
-    // eslint-disable-next-line no-console
+
     console.warn(`[tour] Tour "${tour.id}" already registered; overwriting (prod only).`);
   }
   tourRegistry.set(tour.id, tour);

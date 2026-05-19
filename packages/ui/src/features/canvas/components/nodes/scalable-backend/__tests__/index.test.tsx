@@ -61,9 +61,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgScalableBackendNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgScalableBackendNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgScalableBackendNode> = {
     node: makeNode(),
     isSelected: false,
@@ -73,7 +71,8 @@ const renderInner = (
 
 describe('computeScalableBackendHeight', () => {
   it('sums header + padding*2 + body + footer', () => {
-    const expected = COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
+    const expected =
+      COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeScalableBackendHeight()).toBe(expected);
   });
 });

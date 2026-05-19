@@ -34,11 +34,7 @@ vi.mock('../../components/nodes/private-network', () => ({
   computePrivateNetworkHeight: vi.fn((current: number) => Math.max(current, 200)),
 }));
 
-import {
-  computeNodeSizes,
-  toLocalCanvasNode,
-  type SizingInputNode,
-} from '../canvas-node-sizing';
+import { computeNodeSizes, toLocalCanvasNode, type SizingInputNode } from '../canvas-node-sizing';
 
 /** Minimal Redux-shape node factory — only the fields these utils read. */
 function n(overrides: Partial<SizingInputNode> & Pick<SizingInputNode, 'id'>): SizingInputNode {

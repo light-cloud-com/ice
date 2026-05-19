@@ -6,9 +6,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  cnSpy: vi.fn((...args: unknown[]) =>
-    args.filter((a) => typeof a === 'string' && a).join(' '),
-  ),
+  cnSpy: vi.fn((...args: unknown[]) => args.filter((a) => typeof a === 'string' && a).join(' ')),
 }));
 
 vi.mock('../../../../../shared/utils/cn', () => ({
@@ -34,10 +32,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findAllByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike[] {
+function findAllByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike[] {
   const out: ReactElementLike[] = [];
   for (const el of walk(tree)) {
     if (predicate(el)) out.push(el);
@@ -89,11 +84,13 @@ describe('PropertiesTabBar', () => {
       { id: 'deploy', label: 'D', show: true, dot: true },
     ];
     callRender({ visibleTabs: tabs, activeTab: 'deploy', onSelect: vi.fn() });
-    const cnArgs = mocks.cnSpy.mock.calls.find((args) =>
-      typeof args[0] === 'string' && (args[0] as string).includes('flex-1'),
+    const cnArgs = mocks.cnSpy.mock.calls.find(
+      (args) => typeof args[0] === 'string' && (args[0] as string).includes('flex-1'),
     );
     // Last call's branch result is the active deploy class
-    expect(mocks.cnSpy.mock.calls.some((args) => args[1] === 'text-ice-text-1 border-b-2 border-emerald-500')).toBe(true);
+    expect(mocks.cnSpy.mock.calls.some((args) => args[1] === 'text-ice-text-1 border-b-2 border-emerald-500')).toBe(
+      true,
+    );
   });
 
   it('uses border-ice-accent for active non-deploy tab', () => {
@@ -102,7 +99,9 @@ describe('PropertiesTabBar', () => {
       { id: 'b', label: 'B', show: true },
     ];
     callRender({ visibleTabs: tabs, activeTab: 'a', onSelect: vi.fn() });
-    expect(mocks.cnSpy.mock.calls.some((args) => args[1] === 'text-ice-text-1 border-b-2 border-ice-accent')).toBe(true);
+    expect(mocks.cnSpy.mock.calls.some((args) => args[1] === 'text-ice-text-1 border-b-2 border-ice-accent')).toBe(
+      true,
+    );
   });
 
   it('uses muted style for inactive tabs', () => {

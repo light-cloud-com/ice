@@ -34,11 +34,11 @@ import { ConnectionPorts } from './connection-ports';
 import { useIsNodeOrphan } from './orphan-context';
 import { ProviderPill } from './provider-pill';
 import { StatusDot } from './status-dot';
-import { CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
-import { ConceptInfoTrigger } from '../../../../concept-info';
 import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { getServiceName } from '../../../../../assets/icons/service-names';
+import { CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
 import { t } from '../../../../../i18n';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import type { NodePipelineStatus, SvgCompactNodeProps } from '../compact-node/types';
 import type { LucideIcon } from 'lucide-react';
 
@@ -184,11 +184,7 @@ export const CardShell: React.FC<CardShellProps> = ({
   // hover/selection/source/valid-target, faded out when this block is
   // an invalid drop target during an active drag.
   const renderPorts = !customPorts;
-  const portOpacity = isInvalidTarget
-    ? 0.12
-    : isHovered || isSelected || isValidTarget || isSource
-      ? 1
-      : 0.35;
+  const portOpacity = isInvalidTarget ? 0.12 : isHovered || isSelected || isValidTarget || isSource ? 1 : 0.35;
 
   const onEnter = useCallback(() => {
     setIsHovered(true);
@@ -280,7 +276,14 @@ export const CardShell: React.FC<CardShellProps> = ({
               }}
             >
               {brand?.url ? (
-                <img src={brand.url} alt={brand.label} width={36} height={36} draggable={false} style={{ objectFit: 'contain' }} />
+                <img
+                  src={brand.url}
+                  alt={brand.label}
+                  width={36}
+                  height={36}
+                  draggable={false}
+                  style={{ objectFit: 'contain' }}
+                />
               ) : (
                 <Icon size={32} style={{ color: ACCENT }} />
               )}

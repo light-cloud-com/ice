@@ -8,9 +8,9 @@
  * middleware are mocked too.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 const getCredentialStatusMock = vi.fn();
@@ -98,7 +98,7 @@ async function request(method: string, path: string, body?: unknown) {
   // the test client's calls.
   const res = await originalFetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -150,9 +150,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   });
 
   it('returns 400 when token exchange returns non-OK', async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(textRes('bad code', { status: 400 })) as any;
+    globalThis.fetch = vi.fn().mockResolvedValueOnce(textRes('bad code', { status: 400 })) as any;
 
     const res = await request('POST', '/api/providers/gcp/oauth/exchange', { code: 'bad' });
     expect(res.status).toBe(400);
@@ -160,9 +158,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   });
 
   it('returns 400 when no access_token is in the token response', async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(jsonRes({ refresh_token: 'rt' })) as any;
+    globalThis.fetch = vi.fn().mockResolvedValueOnce(jsonRes({ refresh_token: 'rt' })) as any;
 
     const res = await request('POST', '/api/providers/gcp/oauth/exchange', { code: 'c' });
     expect(res.status).toBe(400);
@@ -172,9 +168,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('persists OAuth credentials and returns user_email + project_id on success', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', refresh_token: 'rt', expires_in: 3600 }),
-      ) // token exchange
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', refresh_token: 'rt', expires_in: 3600 })) // token exchange
       .mockResolvedValueOnce(jsonRes({ email: 'user@x.com' })) // userinfo
       .mockResolvedValueOnce(jsonRes({ projects: [{ projectId: 'first-proj' }] })) as any;
     connectProviderMock.mockResolvedValue({ success: true, id: 'cred-1' });
@@ -199,9 +193,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('treats userinfo + projects sub-fetches as best-effort (proceeds when they fail)', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', expires_in: 3600 }),
-      ) // token exchange OK
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', expires_in: 3600 })) // token exchange OK
       .mockResolvedValueOnce(textRes('forbidden', { status: 403 })) // userinfo non-OK
       .mockResolvedValueOnce(textRes('forbidden', { status: 403 })) as any; // projects non-OK
     connectProviderMock.mockResolvedValue({ success: true, id: 'cred-1' });
@@ -235,9 +227,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('handles project list with empty projects array (project_id undefined)', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', expires_in: 3600 }),
-      )
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', expires_in: 3600 }))
       .mockResolvedValueOnce(jsonRes({ email: 'user@x.com' }))
       .mockResolvedValueOnce(jsonRes({ projects: [] })) as any;
     connectProviderMock.mockResolvedValue({ success: true, id: 'cred-1' });
@@ -249,9 +239,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('handles project list with no projects key at all (project_id undefined)', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', expires_in: 3600 }),
-      )
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', expires_in: 3600 }))
       .mockResolvedValueOnce(jsonRes({ email: 'user@x.com' }))
       .mockResolvedValueOnce(jsonRes({})) as any;
     connectProviderMock.mockResolvedValue({ success: true, id: 'cred-1' });
@@ -263,9 +251,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('returns 500 when the connect-provider call throws', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', expires_in: 3600 }),
-      )
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', expires_in: 3600 }))
       .mockResolvedValueOnce(jsonRes({ email: 'u@x' }))
       .mockResolvedValueOnce(jsonRes({ projects: [{ projectId: 'p' }] })) as any;
     connectProviderMock.mockRejectedValue(new Error('persist failed'));
@@ -278,9 +264,7 @@ describe('POST /api/providers/gcp/oauth/exchange', () => {
   it('returns "OAuth failed" fallback when error has no message', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        jsonRes({ access_token: 'at', expires_in: 3600 }),
-      )
+      .mockResolvedValueOnce(jsonRes({ access_token: 'at', expires_in: 3600 }))
       .mockResolvedValueOnce(jsonRes({}))
       .mockResolvedValueOnce(jsonRes({})) as any;
     connectProviderMock.mockRejectedValue(new Error(''));

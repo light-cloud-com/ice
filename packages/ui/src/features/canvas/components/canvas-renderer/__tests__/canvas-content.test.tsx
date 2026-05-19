@@ -85,9 +85,7 @@ const renderResult = (props: CanvasContentProps) =>
 const liveChildren = (
   el: React.ReactElement<{ children: React.ReactElement[] | (React.ReactElement | false)[] }>,
 ): React.ReactElement[] =>
-  (el.props.children as Array<React.ReactElement | false>).filter(
-    (c): c is React.ReactElement => Boolean(c),
-  );
+  (el.props.children as Array<React.ReactElement | false>).filter((c): c is React.ReactElement => Boolean(c));
 
 const childTypes = (el: React.ReactElement<{ children: React.ReactElement[] }>): unknown[] =>
   liveChildren(el).map((c) => c.type);

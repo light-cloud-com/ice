@@ -30,7 +30,11 @@ const mocks = vi.hoisted(() => ({
       getDeployStream: vi.fn(),
       getResources: vi.fn(),
     },
-    onDeployEvent: vi.fn((..._args: any[]) => () => undefined),
+    onDeployEvent: vi.fn(
+      (..._args: any[]) =>
+        () =>
+          undefined,
+    ),
     subscribeDeployProgress: vi.fn(() => () => undefined),
   },
 }));
@@ -50,6 +54,14 @@ vi.mock('../../../../shared/api/api-adapter', () => ({
   getApi: () => mocks.api,
 }));
 
+import cardsReducer from '../../../../store/slices/cards-slice';
+import deployReducer from '../../../../store/slices/deploy-slice';
+import {
+  applyDeployEvent,
+  mapWireStatusToOverlay,
+  overlayToWireStatus,
+  useDeploySubscription,
+} from '../use-deploy-subscription';
 import type {
   DeployCompleteEvent,
   DeployEvent,
@@ -58,18 +70,10 @@ import type {
   DeployNodeStatusEvent,
   DeployRequirementVerifiedEvent,
 } from '@ice/types';
-import {
-  applyDeployEvent,
-  mapWireStatusToOverlay,
-  overlayToWireStatus,
-  useDeploySubscription,
-} from '../use-deploy-subscription';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import deployReducer from '../../../../store/slices/deploy-slice';
-import cardsReducer from '../../../../store/slices/cards-slice';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -575,9 +579,7 @@ describe('useDeploySubscription — Phase 2 (snapshot)', () => {
     mocks.api.deploy.getCurrentDeploy.mockResolvedValueOnce({
       snapshot: { status: 'deploying', nodeStatuses: { n1: { deploy_status: 'deploying' } } },
     });
-    mocks.api.deploy.getDeployments.mockResolvedValueOnce([
-      { action_type: 'apply', status: 'success' },
-    ]);
+    mocks.api.deploy.getDeployments.mockResolvedValueOnce([{ action_type: 'apply', status: 'success' }]);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
@@ -764,9 +766,7 @@ describe('useDeploySubscription — Phase 2.5 (replay)', () => {
     const phase25 = mocks.effects[3];
     if (typeof phase25.cleanup === 'function') phase25.cleanup();
     resolve!({
-      events: [
-        { seq: 1, type: 'node_status', payload: { type: 'node_status', node_id: 'n', status: 'applying' } },
-      ],
+      events: [{ seq: 1, type: 'node_status', payload: { type: 'node_status', node_id: 'n', status: 'applying' } }],
     });
     await flushMicrotasks();
     await flushMicrotasks();
@@ -1156,9 +1156,7 @@ describe('useDeploySubscription — Phase 3 (live)', () => {
   it('Phase 3 cleanup tolerates missing subscribeDeployProgress', () => {
     (mocks.api as any).subscribeDeployProgress = undefined;
     const cleanupListener = vi.fn();
-    mocks.api.onDeployEvent
-      .mockImplementationOnce(() => () => undefined)
-      .mockImplementationOnce(() => cleanupListener);
+    mocks.api.onDeployEvent.mockImplementationOnce(() => () => undefined).mockImplementationOnce(() => cleanupListener);
     const store = makeStore();
     captureHook(store, 'card-1');
     const phase3 = mocks.effects[4];

@@ -14,9 +14,8 @@
  * `svg-connection-path.test.tsx` pattern in `features/canvas`).
  */
 
-import React from 'react';
+import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { act } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({

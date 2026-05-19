@@ -17,10 +17,10 @@
  * Coverage target: 100% on the public surface.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -147,8 +147,7 @@ const wrapStoreDispatch = (store: ReturnType<typeof makeStore>): void => {
   }) as typeof store.dispatch;
 };
 
-const dispatchedTypes = (): string[] =>
-  mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
+const dispatchedTypes = (): string[] => mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
 
 const findDispatch = (type: string): unknown =>
   mocks.dispatch.mock.calls.find((c) => (c[0] as { type: string }).type === type)?.[0];
@@ -217,11 +216,7 @@ describe('handleEnvClick', () => {
     const { result } = captureHook({ store });
     const stopPropagation = vi.fn();
     const env = PROJECT_A.environments[1];
-    result.handleEnvClick(
-      { stopPropagation } as unknown as React.MouseEvent,
-      PROJECT_A,
-      env,
-    );
+    result.handleEnvClick({ stopPropagation } as unknown as React.MouseEvent, PROJECT_A, env);
     expect(stopPropagation).toHaveBeenCalledTimes(1);
     expect(dispatchedTypes()).toEqual([
       'projects/setActiveProject',
@@ -240,16 +235,9 @@ describe('handleEnvClick', () => {
     wrapStoreDispatch(store);
     const { result } = captureHook({ store, panes: [] });
     const stopPropagation = vi.fn();
-    result.handleEnvClick(
-      { stopPropagation } as unknown as React.MouseEvent,
-      PROJECT_A,
-      PROJECT_A.environments[0],
-    );
+    result.handleEnvClick({ stopPropagation } as unknown as React.MouseEvent, PROJECT_A, PROJECT_A.environments[0]);
     expect(stopPropagation).toHaveBeenCalled();
-    expect(dispatchedTypes()).toEqual([
-      'projects/setActiveProject',
-      'projects/setActiveEnvironment',
-    ]);
+    expect(dispatchedTypes()).toEqual(['projects/setActiveProject', 'projects/setActiveEnvironment']);
   });
 });
 
@@ -382,7 +370,9 @@ describe('handleFinishRename', () => {
     });
     await result.handleFinishRename();
     expect(findDispatch('projects/renameProject')).toBeDefined();
-    expect((findDispatch('projects/renameProject') as { payload: { projectId: string; name: string } }).payload).toEqual({
+    expect(
+      (findDispatch('projects/renameProject') as { payload: { projectId: string; name: string } }).payload,
+    ).toEqual({
       projectId: 'p1',
       name: 'Renamed Alpha',
     });
@@ -450,10 +440,7 @@ describe('handleDelete', () => {
     expect(types.filter((t) => t === 'cards/deleteCard')).toHaveLength(2);
     expect(types[types.length - 1]).toBe('projects/deleteProject');
     expect(mocks.axios.post).toHaveBeenCalledWith('/canvas/projects/delete', { projectId: 'p1' });
-    expect((findDispatch('ui/closeTabsByCardIds') as { payload: string[] }).payload).toEqual([
-      'card-prod',
-      'card-stg',
-    ]);
+    expect((findDispatch('ui/closeTabsByCardIds') as { payload: string[] }).payload).toEqual(['card-prod', 'card-stg']);
   });
 
   it('project with no environments: skips closeTabs+deleteCard, still posts and dispatches deleteProject', async () => {

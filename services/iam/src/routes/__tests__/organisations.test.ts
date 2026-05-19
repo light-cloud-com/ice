@@ -5,9 +5,9 @@
  * Prisma + auth middleware are mocked at the module boundary.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks ─────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ async function post(path: string, body: unknown) {
     body: JSON.stringify(body),
   });
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {

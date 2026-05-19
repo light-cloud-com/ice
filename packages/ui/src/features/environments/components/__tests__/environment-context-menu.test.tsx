@@ -34,19 +34,13 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
   return undefined;
 }
-function findAllByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike[] {
+function findAllByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike[] {
   const out: ReactElementLike[] = [];
   for (const el of walk(tree)) {
     if (predicate(el)) out.push(el);
@@ -193,7 +187,9 @@ describe('EnvironmentContextMenu — handlers', () => {
     });
     const deployBtn = findByPredicate(
       tree,
-      (el) => el.type === 'button' && Array.isArray(el.props.children) &&
+      (el) =>
+        el.type === 'button' &&
+        Array.isArray(el.props.children) &&
         (el.props.children as unknown[]).some((c) => c === 't:environments.tabBar.contextDeploy'),
     );
     (deployBtn?.props.onClick as () => void)?.();
@@ -219,7 +215,9 @@ describe('EnvironmentContextMenu — handlers', () => {
     });
     const promoteBtn = findByPredicate(
       tree,
-      (el) => el.type === 'button' && Array.isArray(el.props.children) &&
+      (el) =>
+        el.type === 'button' &&
+        Array.isArray(el.props.children) &&
         (el.props.children as unknown[]).some((c) => c === 't:environments.tabBar.contextPromote'),
     );
     (promoteBtn?.props.onClick as () => void)?.();
@@ -246,7 +244,9 @@ describe('EnvironmentContextMenu — handlers', () => {
     });
     const renameBtn = findByPredicate(
       tree,
-      (el) => el.type === 'button' && Array.isArray(el.props.children) &&
+      (el) =>
+        el.type === 'button' &&
+        Array.isArray(el.props.children) &&
         (el.props.children as unknown[]).some((c) => c === 't:environments.tabBar.contextRename'),
     );
     (renameBtn?.props.onClick as () => void)?.();
@@ -271,7 +271,9 @@ describe('EnvironmentContextMenu — handlers', () => {
     });
     const deleteBtn = findByPredicate(
       tree,
-      (el) => el.type === 'button' && Array.isArray(el.props.children) &&
+      (el) =>
+        el.type === 'button' &&
+        Array.isArray(el.props.children) &&
         (el.props.children as unknown[]).some((c) => c === 't:environments.tabBar.contextDelete'),
     );
     (deleteBtn?.props.onClick as () => void)?.();

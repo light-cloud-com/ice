@@ -5,12 +5,11 @@
  * Uses AWS Resource Explorer to discover ALL resources across all regions.
  */
 
-import { get_ice_type, map_properties } from './type-mapper';
-import { init_aws_sdk, get_account_id } from './sdk-init';
 import { discover_with_resource_explorer, discover_with_config } from './discovery';
 import { aws_result_to_graph as aws_result_to_graph_impl, infer_relationships } from './graph-conversion';
+import { init_aws_sdk, get_account_id } from './sdk-init';
+import { get_ice_type, map_properties } from './type-mapper';
 import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors';
-import type { MutableGraph } from '../../graph/mutable-graph';
 import type {
   AWSImportOptions,
   AWSImportResult,
@@ -20,6 +19,7 @@ import type {
   AWSImportMetadata,
   AWSResource,
 } from './types';
+import type { MutableGraph } from '../../graph/mutable-graph';
 
 // =============================================================================
 // Default Options

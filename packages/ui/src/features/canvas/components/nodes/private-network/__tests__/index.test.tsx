@@ -55,10 +55,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -94,9 +91,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderPN = (
-  props: Partial<React.ComponentProps<typeof SvgPrivateNetworkNode>> = {},
-): React.ReactElement => {
+const renderPN = (props: Partial<React.ComponentProps<typeof SvgPrivateNetworkNode>> = {}): React.ReactElement => {
   const Inner = SvgPrivateNetworkNode as React.FC<React.ComponentProps<typeof SvgPrivateNetworkNode>>;
   const defaults: React.ComponentProps<typeof SvgPrivateNetworkNode> = {
     node: makeNode(),

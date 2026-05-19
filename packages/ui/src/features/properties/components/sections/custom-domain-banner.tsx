@@ -10,8 +10,8 @@
 
 import React from 'react';
 import { t } from '../../../../i18n';
-import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 import { findCustomDomainEdge } from '../../utils/node-properties-derivations';
+import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 
 export const CustomDomainBanner: React.FC<{
   selectedNode: CardNode;

@@ -25,9 +25,11 @@ function* walk(node: React.ReactNode): Generator<React.ReactElement> {
 }
 
 const render = (props: React.ComponentProps<typeof ConnectionRejectionOverlay>): React.ReactElement =>
-  (ConnectionRejectionOverlay as unknown as (
-    p: React.ComponentProps<typeof ConnectionRejectionOverlay>,
-  ) => React.ReactElement)(props);
+  (
+    ConnectionRejectionOverlay as unknown as (
+      p: React.ComponentProps<typeof ConnectionRejectionOverlay>,
+    ) => React.ReactElement
+  )(props);
 
 describe('ConnectionRejectionOverlay', () => {
   it('renders a pointer-events:none wrapping group', () => {
@@ -56,12 +58,9 @@ describe('ConnectionRejectionOverlay', () => {
     });
     const bodies = [...walk(tree)].filter(
       (el) =>
-        el.type === 'div' &&
-        (el.props as { 'data-testid'?: string })['data-testid'] === 'connection-rejection-tooltip',
+        el.type === 'div' && (el.props as { 'data-testid'?: string })['data-testid'] === 'connection-rejection-tooltip',
     );
     expect(bodies).toHaveLength(1);
-    expect((bodies[0].props as { children?: unknown }).children).toBe(
-      "Gateway can't connect directly to MySQL",
-    );
+    expect((bodies[0].props as { children?: unknown }).children).toBe("Gateway can't connect directly to MySQL");
   });
 });

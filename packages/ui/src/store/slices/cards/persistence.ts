@@ -57,10 +57,7 @@ export function loadPersistedCards(): CardsState {
         // discarding the user's canvas.
         if (storedVersion < CARDS_DATA_VERSION) {
           try {
-            localStorage.setItem(
-              CARDS_STORAGE_KEY,
-              JSON.stringify({ ...parsed, cards }),
-            );
+            localStorage.setItem(CARDS_STORAGE_KEY, JSON.stringify({ ...parsed, cards }));
             localStorage.setItem(CARDS_VERSION_KEY, String(CARDS_DATA_VERSION));
           } catch {
             /* localStorage write failed (quota, private mode); leave the

@@ -9,16 +9,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  MockProvider,
-  create_mock_provider,
-  create_mock_provider_factory,
-} from '../mock-provider';
-import type {
-  ProviderConfig,
-  ResourceState,
-} from '../../types/providers';
+import { MockProvider, create_mock_provider, create_mock_provider_factory } from '../mock-provider';
 import type { Node, NodeId } from '../../types/graph';
+import type { ProviderConfig, ResourceState } from '../../types/providers';
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -38,9 +31,7 @@ function make_node(id: string, overrides: Partial<Node> = {}): Node {
   } as Node;
 }
 
-function make_config(
-  overrides: Partial<ProviderConfig> = {},
-): ProviderConfig {
+function make_config(overrides: Partial<ProviderConfig> = {}): ProviderConfig {
   return {
     provider: 'aws',
     region: 'us-east-1',
@@ -124,10 +115,7 @@ describe('MockProvider.deploy', () => {
   });
 
   it('falls back to "global" in the arn when region is omitted', async () => {
-    const provider = new MockProvider(
-      make_config({ region: undefined }),
-      { delay_range: [0, 0] },
-    );
+    const provider = new MockProvider(make_config({ region: undefined }), { delay_range: [0, 0] });
 
     const result = await provider.deploy(make_node('beta'));
     expect(result.state!.arn).toMatch(/^arn:mock:aws:global:resource\//);
@@ -290,12 +278,13 @@ describe('MockProvider type support', () => {
 
 describe('MockProvider.state_generator override', () => {
   it('uses a caller-supplied generator instead of the default for create', async () => {
-    const custom = vi.fn(() =>
-      ({
-        cloud_id: 'custom-id',
-        status: 'available',
-        outputs: { custom: true },
-      }) as ResourceState,
+    const custom = vi.fn(
+      () =>
+        ({
+          cloud_id: 'custom-id',
+          status: 'available',
+          outputs: { custom: true },
+        }) as ResourceState,
     );
 
     const provider = new MockProvider(make_config(), {
@@ -312,12 +301,13 @@ describe('MockProvider.state_generator override', () => {
   });
 
   it('uses the override for update too while still preserving cloud_id', async () => {
-    const custom = vi.fn(() =>
-      ({
-        cloud_id: 'should-be-overwritten',
-        status: 'available',
-        outputs: { mode: 'update' },
-      }) as ResourceState,
+    const custom = vi.fn(
+      () =>
+        ({
+          cloud_id: 'should-be-overwritten',
+          status: 'available',
+          outputs: { mode: 'update' },
+        }) as ResourceState,
     );
 
     const provider = new MockProvider(make_config(), {
@@ -353,9 +343,11 @@ describe('default_state_generator status branch', () => {
     // Even when the generator is invoked with an unusual action it
     // returns 'available' — the action label still threads through
     // to the message and provider_metadata, just not the status.
-    const generator = (provider as unknown as {
-      options: { state_generator: (n: Node, a: string) => ResourceState };
-    }).options.state_generator;
+    const generator = (
+      provider as unknown as {
+        options: { state_generator: (n: Node, a: string) => ResourceState };
+      }
+    ).options.state_generator;
 
     const noop_state = generator(make_node('two'), 'noop');
     expect(noop_state.status).toBe('available');

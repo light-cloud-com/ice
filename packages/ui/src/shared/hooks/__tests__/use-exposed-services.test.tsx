@@ -17,8 +17,8 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
-import type { CanvasNode } from '../../../features/canvas/components/types';
 import { useExposedServices } from '../use-exposed-services';
+import type { CanvasNode } from '../../../features/canvas/components/types';
 
 interface EdgeLike {
   source: string;
@@ -63,10 +63,7 @@ describe('useExposedServices — empty result paths', () => {
   });
 
   it('returns empty result when no nodes are entry candidates', () => {
-    const out = captureHook(
-      [makeNode({ id: 'n1', data: { iceType: 'Database.PostgreSQL' } })],
-      [],
-    );
+    const out = captureHook([makeNode({ id: 'n1', data: { iceType: 'Database.PostgreSQL' } })], []);
     expect(out.nodeIds).toEqual([]);
     expect(out.userIconPosition).toBeNull();
   });
@@ -85,10 +82,7 @@ describe('useExposedServices — explicit exposed flag', () => {
   });
 
   it('excludes a node with data.exposed === false even if it would otherwise qualify', () => {
-    const out = captureHook(
-      [makeNode({ id: 'n1', data: { iceType: 'Network.LoadBalancer', exposed: false } })],
-      [],
-    );
+    const out = captureHook([makeNode({ id: 'n1', data: { iceType: 'Network.LoadBalancer', exposed: false } })], []);
     expect(out.nodeIds).toEqual([]);
   });
 });
@@ -105,10 +99,7 @@ describe('useExposedServices — entry type detection', () => {
   it('does not expose a Network.LoadBalancer that has incoming connects_to edge', () => {
     const lb = makeNode({ id: 'lb', data: { iceType: 'Network.LoadBalancer' } });
     const waf = makeNode({ id: 'waf', data: { iceType: 'Security.WAF' } });
-    const out = captureHook(
-      [waf, lb],
-      [{ source: 'waf', target: 'lb', data: { relationship: 'connects_to' } }],
-    );
+    const out = captureHook([waf, lb], [{ source: 'waf', target: 'lb', data: { relationship: 'connects_to' } }]);
     expect(out.nodeIds).toEqual(['waf']);
   });
 
@@ -132,10 +123,7 @@ describe('useExposedServices — entry type detection', () => {
   it('treats placeholder example.com as internal (not exposed via domain alone)', () => {
     // Use Compute.Worker which is NEVER_EXPOSED_TYPES so it can't qualify on iceType alone.
     // Use a normal block type, see if a domain of example.com counts as internal.
-    const out = captureHook(
-      [makeNode({ id: 'app', data: { iceType: 'Custom.Block', domain: 'example.com' } })],
-      [],
-    );
+    const out = captureHook([makeNode({ id: 'app', data: { iceType: 'Custom.Block', domain: 'example.com' } })], []);
     expect(out.nodeIds).toEqual([]);
   });
 
@@ -274,9 +262,7 @@ describe('useExposedServices — frontend filter', () => {
       id: 'beApp',
       data: { iceType: 'Network.LoadBalancer' },
     });
-    const edges: EdgeLike[] = [
-      { source: 'fe', target: 'feApp', data: { relationship: 'contains' } },
-    ];
+    const edges: EdgeLike[] = [{ source: 'fe', target: 'feApp', data: { relationship: 'contains' } }];
     const out = captureHook([frontend, feApp, beApp], edges);
     // beApp gets filtered out because frontend block exists; feApp survives
     expect(out.nodeIds).toEqual(['feApp']);
@@ -408,10 +394,7 @@ describe('useExposedServices — defaults for missing iceType (|| fallback branc
   it('handles a candidate node with no iceType key at all (uses ENTRY check fallback to false)', () => {
     // Node with no iceType — fails NEVER_EXPOSED_TYPES check (empty string),
     // fails ENTRY_TYPES, no domain → not a candidate
-    const out = captureHook(
-      [makeNode({ id: 'n1', data: { exposed: true } })],
-      [],
-    );
+    const out = captureHook([makeNode({ id: 'n1', data: { exposed: true } })], []);
     // Explicit exposed=true short-circuits regardless
     expect(out.nodeIds).toEqual(['n1']);
   });
@@ -420,7 +403,9 @@ describe('useExposedServices — defaults for missing iceType (|| fallback branc
     const parent = makeNode({
       id: 'p',
       type: 'container',
-      data: { /* no iceType */ },
+      data: {
+        /* no iceType */
+      },
     });
     const lb = makeNode({
       id: 'lb',
@@ -443,7 +428,9 @@ describe('useExposedServices — defaults for missing iceType (|| fallback branc
     });
     const fallback = makeNode({
       id: 'rand',
-      data: { /* no iceType */ },
+      data: {
+        /* no iceType */
+      },
     });
     const lb = makeNode({
       id: 'lb',
@@ -468,7 +455,9 @@ describe('useExposedServices — defaults for missing iceType (|| fallback branc
     });
     const orphan = makeNode({
       id: 'orphan',
-      data: { /* no iceType */ },
+      data: {
+        /* no iceType */
+      },
     });
     const lb = makeNode({
       id: 'lb',

@@ -15,18 +15,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  deriveRollup,
-  orderNodesForPanel,
-  type NodeDeployState,
-} from '../deploy-slice';
+import { deriveRollup, orderNodesForPanel, type NodeDeployState } from '../deploy-slice';
 import type { DeployNodeStatus } from '@ice/types';
 
-function node(
-  id: string,
-  status: DeployNodeStatus,
-  overrides: Partial<NodeDeployState> = {},
-): NodeDeployState {
+function node(id: string, status: DeployNodeStatus, overrides: Partial<NodeDeployState> = {}): NodeDeployState {
   return {
     node_id: id,
     status,

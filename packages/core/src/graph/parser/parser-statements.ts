@@ -42,6 +42,24 @@
  *            load-bearing for callers that have used arbitrary
  *            trailing words as comments.
  */
+import { parse_expression } from './parser-binary-exprs';
+import {
+  create_null_literal,
+  create_span,
+  parse_boolean_literal,
+  parse_identifier,
+  parse_string_literal,
+} from './parser-literals';
+import {
+  type ParserState,
+  ps_add_error,
+  ps_check,
+  ps_consume,
+  ps_current,
+  ps_is_at_end,
+  ps_match,
+  ps_previous,
+} from './parser-state';
 import type {
   Attribute,
   Expression,
@@ -53,24 +71,6 @@ import type {
   StringLiteral,
   VariableBlock,
 } from './ast';
-import {
-  type ParserState,
-  ps_add_error,
-  ps_check,
-  ps_consume,
-  ps_current,
-  ps_is_at_end,
-  ps_match,
-  ps_previous,
-} from './parser-state';
-import {
-  create_null_literal,
-  create_span,
-  parse_boolean_literal,
-  parse_identifier,
-  parse_string_literal,
-} from './parser-literals';
-import { parse_expression } from './parser-binary-exprs';
 
 /**
  * `variable <name> { description?, default?, sensitive?, ... }`. The

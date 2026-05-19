@@ -23,7 +23,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { ConnectionLayer, type ConnectionLayerProps } from '../connection-layer';
 import type { CanvasNode, CanvasConnection } from '../types';
 
@@ -45,12 +44,7 @@ const MockSvgConnectionPath = mocks.SvgConnectionPath;
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -64,10 +58,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -120,8 +111,7 @@ const baseProps = (overrides: Partial<ConnectionLayerProps> = {}): ConnectionLay
   ...overrides,
 });
 
-const render = (overrides: Partial<ConnectionLayerProps> = {}) =>
-  ConnectionLayer(baseProps(overrides));
+const render = (overrides: Partial<ConnectionLayerProps> = {}) => ConnectionLayer(baseProps(overrides));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Mode: background
@@ -195,15 +185,10 @@ describe('ConnectionLayer — mode="background" — animation wrap', () => {
       animatingEdges: { c1: 200 },
     });
     // Find the animation wrap — a <g> whose key is the wrap key.
-    const wraps = findByPredicate(
-      tree,
-      (el) => el.type === 'g' && el.key === 'anim-edge-c1',
-    );
+    const wraps = findByPredicate(tree, (el) => el.type === 'g' && el.key === 'anim-edge-c1');
     expect(wraps).toHaveLength(1);
     const style = (wraps[0].props as { style?: { animation?: string } }).style;
-    expect(style?.animation).toBe(
-      'ice-edge-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) 200ms both',
-    );
+    expect(style?.animation).toBe('ice-edge-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) 200ms both');
   });
 
   it('does NOT wrap connections without an animatingEdges entry', () => {
@@ -225,10 +210,7 @@ describe('ConnectionLayer — mode="background" — animation wrap', () => {
       canvasConnections: [makeConn({ id: 'c1' })],
       animatingEdges: { c1: 0 },
     });
-    const wraps = findByPredicate(
-      tree,
-      (el) => el.type === 'g' && el.key === 'anim-edge-c1',
-    );
+    const wraps = findByPredicate(tree, (el) => el.type === 'g' && el.key === 'anim-edge-c1');
     expect(wraps).toHaveLength(1);
   });
 });
@@ -419,20 +401,20 @@ describe('ConnectionLayer — mode="background" — leaf props', () => {
 
   it('rewrites the onContextMenu callback into (pos, "edge", edgeId)', () => {
     const captured: Array<[unknown, string, string]> = [];
-    const handleContextMenu = vi.fn(
-      (pos: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', id?: string) => {
-        captured.push([pos, type, id ?? '']);
-      },
-    );
+    const handleContextMenu = vi.fn((pos: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', id?: string) => {
+      captured.push([pos, type, id ?? '']);
+    });
     const tree = render({
       mode: 'background',
       canvasConnections: [makeConn({ id: 'c1' })],
       handleContextMenu,
     });
     const path = findByType(tree, MockSvgConnectionPath)[0];
-    const onContextMenu = (path.props as {
-      onContextMenu: (id: string, pos: { x: number; y: number }) => void;
-    }).onContextMenu;
+    const onContextMenu = (
+      path.props as {
+        onContextMenu: (id: string, pos: { x: number; y: number }) => void;
+      }
+    ).onContextMenu;
     onContextMenu('c1', { x: 10, y: 20 });
     expect(handleContextMenu).toHaveBeenCalledTimes(1);
     expect(captured).toEqual([[{ x: 10, y: 20 }, 'edge', 'c1']]);
@@ -448,9 +430,7 @@ describe('ConnectionLayer — mode="highlighted" — gate', () => {
     const tree = render({ mode: 'highlighted' });
     const wrappers = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'g' &&
-        (el.props as { className?: string }).className === 'connections-highlighted-layer',
+      (el) => el.type === 'g' && (el.props as { className?: string }).className === 'connections-highlighted-layer',
     );
     expect(wrappers).toHaveLength(1);
   });
@@ -632,10 +612,7 @@ describe('ConnectionLayer — risk #4 key preservation', () => {
       animatingEdges: { c1: 50 },
     });
     // Outer: <g key="anim-edge-c1">
-    const wrap = findByPredicate(
-      tree,
-      (el) => el.type === 'g' && el.key === 'anim-edge-c1',
-    )[0];
+    const wrap = findByPredicate(tree, (el) => el.type === 'g' && el.key === 'anim-edge-c1')[0];
     expect(wrap).toBeDefined();
     // Inner: <SvgConnectionPath key="c1">
     const inner = findByType(wrap, MockSvgConnectionPath)[0];

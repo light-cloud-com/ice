@@ -10,6 +10,7 @@
  * the engine reads only the graph + state map.
  */
 import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import {
   create_plan,
   plan_has_changes,
@@ -19,7 +20,6 @@ import {
   serialize_plan,
   deserialize_plan,
 } from '../plan-engine';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type { NodeId } from '../../types/graph';
 import type { ResourceState } from '../../types/providers';
 
@@ -38,13 +38,11 @@ beforeEach(() => {
  * Each node carries its own `properties` for the diff path. `type`
  * defaults to a generic test type but can be overridden per node.
  */
-function build_graph(
-  spec: {
-    nodes: Array<{ name: string; type?: string; properties?: Record<string, unknown> }>;
-    edges?: Array<{ source: string; target: string }>;
-    graph_name?: string;
-  },
-): { graph: MutableGraph; ids: Map<string, NodeId> } {
+function build_graph(spec: {
+  nodes: Array<{ name: string; type?: string; properties?: Record<string, unknown> }>;
+  edges?: Array<{ source: string; target: string }>;
+  graph_name?: string;
+}): { graph: MutableGraph; ids: Map<string, NodeId> } {
   const graph = create_mutable_graph(spec.graph_name ?? 'test-plan');
   const ids = new Map<string, NodeId>();
 
@@ -151,9 +149,7 @@ describe('create_plan: sync mode', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', properties: { region: 'us-east-1' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { region: 'us-east-1' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { region: 'us-east-1' } })]]);
     const plan = create_plan(graph, state);
 
     expect(plan.changes).toHaveLength(1);
@@ -169,9 +165,7 @@ describe('create_plan: sync mode', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', properties: { tag: 'new' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { tag: 'old' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { tag: 'old' } })]]);
     const plan = create_plan(graph, state);
 
     expect(plan.changes[0]).toMatchObject({
@@ -187,9 +181,7 @@ describe('create_plan: sync mode', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', type: 'aws.ec2.instance', properties: { ami: 'ami-new' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { ami: 'ami-old' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { ami: 'ami-old' } })]]);
     const plan = create_plan(graph, state);
 
     expect(plan.changes[0]).toMatchObject({
@@ -205,9 +197,7 @@ describe('create_plan: sync mode', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', properties: { tag: 'new', size: 10 } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { tag: 'old', size: 10 } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { tag: 'old', size: 10 } })]]);
     const plan = create_plan(graph, state);
 
     expect(plan.changes[0]?.changed_properties).toHaveLength(1);
@@ -252,9 +242,7 @@ describe('create_plan: destroy mode', () => {
 
   it('attaches the existing ResourceState to delete entries', () => {
     const { graph, ids } = build_graph({ nodes: [{ name: 'a' }] });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ cloud_id: 'cloud-a' })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ cloud_id: 'cloud-a' })]]);
     const plan = create_plan(graph, state, { destroy: true });
     expect(plan.changes[0]?.current_state?.cloud_id).toBe('cloud-a');
   });
@@ -279,9 +267,7 @@ describe('create_plan: destroy mode', () => {
     // State has node ids that don't exist in the graph (orphans).
     const { graph } = build_graph({ nodes: [] });
     const orphan_id = 'orphan-node' as NodeId;
-    const state = new Map<string, ResourceState>([
-      [orphan_id, fake_state({ cloud_id: 'orphan' })],
-    ]);
+    const state = new Map<string, ResourceState>([[orphan_id, fake_state({ cloud_id: 'orphan' })]]);
     const plan = create_plan(graph, state, { destroy: true });
 
     expect(plan.changes).toHaveLength(1);
@@ -493,9 +479,7 @@ describe('plan_has_changes', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', properties: { v: 'new' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { v: 'old' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { v: 'old' } })]]);
     expect(plan_has_changes(create_plan(graph, state))).toBe(true);
   });
 
@@ -503,9 +487,7 @@ describe('plan_has_changes', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', type: 'aws.ec2.instance', properties: { ami: 'new' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { ami: 'old' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { ami: 'old' } })]]);
     expect(plan_has_changes(create_plan(graph, state))).toBe(true);
   });
 
@@ -520,9 +502,7 @@ describe('plan_has_changes', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', properties: { v: 1 } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { v: 1 } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { v: 1 } })]]);
     expect(plan_has_changes(create_plan(graph, state))).toBe(false);
   });
 });
@@ -543,9 +523,7 @@ describe('plan_has_destructive_changes', () => {
     const { graph, ids } = build_graph({
       nodes: [{ name: 'a', type: 'aws.ec2.instance', properties: { ami: 'new' } }],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('a')!, fake_state({ outputs: { ami: 'old' } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('a')!, fake_state({ outputs: { ami: 'old' } })]]);
     expect(plan_has_destructive_changes(create_plan(graph, state))).toBe(true);
   });
 });
@@ -562,9 +540,7 @@ describe('get_changes_by_action', () => {
         { name: 'b', properties: { v: 1 } }, // no_op
       ],
     });
-    const state = new Map<string, ResourceState>([
-      [ids.get('b')!, fake_state({ outputs: { v: 1 } })],
-    ]);
+    const state = new Map<string, ResourceState>([[ids.get('b')!, fake_state({ outputs: { v: 1 } })]]);
     const plan = create_plan(graph, state);
 
     const creates = get_changes_by_action(plan, 'create');

@@ -17,7 +17,6 @@
  *     dispatched action is observable.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -29,10 +28,16 @@ const mocks = vi.hoisted(() => ({
     },
     deploy: { status: 'idle' as 'idle' | 'deploying' | 'error' },
     selection: { selectedNodes: [] as string[] },
-    cards: { cards: [] as Array<{ id: string; nodes?: unknown[]; viewport?: { scale: number } }>, activeCardId: undefined as string | undefined },
+    cards: {
+      cards: [] as Array<{ id: string; nodes?: unknown[]; viewport?: { scale: number } }>,
+      activeCardId: undefined as string | undefined,
+    },
     projects: { activeProjectId: 'proj-1' as string | undefined },
     environments: {
-      byProject: {} as Record<string, Array<{ id: string; name: string; type: string; pr_number?: number; is_protected?: boolean; card_id: string }>>,
+      byProject: {} as Record<
+        string,
+        Array<{ id: string; name: string; type: string; pr_number?: number; is_protected?: boolean; card_id: string }>
+      >,
       activeEnvId: {} as Record<string, string | undefined>,
     },
   },
@@ -245,21 +250,15 @@ describe('ProjectToolbar — sub-page navigation', () => {
 
   it('marks the active sub-page with the bold + active background class', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'table' });
-    const tableBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable',
-    )!;
-    expect((tableBtn.props.className as string)).toContain('bg-ice-active');
-    expect((tableBtn.props.className as string)).toContain('font-medium');
+    const tableBtn = findFirst(tree, (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable')!;
+    expect(tableBtn.props.className as string).toContain('bg-ice-active');
+    expect(tableBtn.props.className as string).toContain('font-medium');
   });
 
   it('uses the muted style for inactive sub-pages', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
-    const tableBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable',
-    )!;
-    expect((tableBtn.props.className as string)).toContain('text-ice-text-3');
+    const tableBtn = findFirst(tree, (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable')!;
+    expect(tableBtn.props.className as string).toContain('text-ice-text-3');
   });
 
   it('navigates to /basePath when clicking the canvas sub-page', () => {
@@ -274,10 +273,7 @@ describe('ProjectToolbar — sub-page navigation', () => {
 
   it('navigates to /basePath/<subpage> for non-canvas pages', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
-    const tableBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable',
-    )!;
+    const tableBtn = findFirst(tree, (el) => el.type === 'button' && el.props.children === 'projectBrowser.subTable')!;
     (tableBtn.props.onClick as () => void)();
     expect(mocks.navigate).toHaveBeenCalledWith('/p/1/table');
   });
@@ -288,7 +284,7 @@ describe('ProjectToolbar — sub-page navigation', () => {
       tree,
       (el) => el.type === 'button' && el.props.children === 'projectBrowser.subSettings',
     )!;
-    expect((settingsBtn.props.className as string)).toContain('bg-ice-active');
+    expect(settingsBtn.props.className as string).toContain('bg-ice-active');
   });
 });
 
@@ -305,10 +301,7 @@ describe('ProjectToolbar — canvas-only action group', () => {
 
   it('clicking the vertical-organize button dispatches autoOrganizeCard + auto-organize-style + edge-style', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
-    const vBtn = findFirst(
-      tree,
-      (el) => el.props.tip === 'Auto-organize all (vertical)',
-    )!;
+    const vBtn = findFirst(tree, (el) => el.props.tip === 'Auto-organize all (vertical)')!;
     (vBtn.props.onClick as () => void)();
     expect(mocks.autoOrganizeCard).toHaveBeenCalledWith({
       direction: 'vertical',
@@ -337,10 +330,7 @@ describe('ProjectToolbar — canvas-only action group', () => {
       activeCardId: 'card-1',
     } as typeof mocks.state.cards;
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
-    const hBtn = findFirst(
-      tree,
-      (el) => el.props.tip === 'Organize group (horizontal)',
-    )!;
+    const hBtn = findFirst(tree, (el) => el.props.tip === 'Organize group (horizontal)')!;
     (hBtn.props.onClick as () => void)();
     expect(mocks.autoOrganizeCard).toHaveBeenCalledWith({
       direction: 'horizontal',
@@ -370,15 +360,21 @@ describe('ProjectToolbar — canvas-only action group', () => {
   it('does not pass containerId when more than one node is selected', () => {
     mocks.state.selection = { selectedNodes: ['a', 'b'] };
     mocks.state.cards = {
-      cards: [{ id: 'card-1', nodes: [{ id: 'a', type: 'container' }, { id: 'b', type: 'container' }] }],
+      cards: [
+        {
+          id: 'card-1',
+          nodes: [
+            { id: 'a', type: 'container' },
+            { id: 'b', type: 'container' },
+          ],
+        },
+      ],
       activeCardId: 'card-1',
     } as typeof mocks.state.cards;
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
     const vBtn = findFirst(tree, (el) => el.props.tip === 'Auto-organize all (vertical)')!;
     (vBtn.props.onClick as () => void)();
-    expect(mocks.autoOrganizeCard).toHaveBeenCalledWith(
-      expect.objectContaining({ containerId: undefined }),
-    );
+    expect(mocks.autoOrganizeCard).toHaveBeenCalledWith(expect.objectContaining({ containerId: undefined }));
   });
 
   it('cycles the edge-style bezier → straight → rectangular → bezier', () => {
@@ -684,19 +680,19 @@ describe('ProjectToolbar — deploy button', () => {
     mocks.state.deploy = { status: 'deploying' };
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
     const btn = findFirst(tree, (el) => el.props.id === 'ice-btn-deploy')!;
-    expect((btn.props.className as string)).toContain('animate-pulse');
+    expect(btn.props.className as string).toContain('animate-pulse');
   });
 
   it('marks the deploy button as active when on the deploy sub-page', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'deploy' });
     const btn = findFirst(tree, (el) => el.props.id === 'ice-btn-deploy')!;
-    expect((btn.props.className as string)).toContain('bg-ice-active');
+    expect(btn.props.className as string).toContain('bg-ice-active');
   });
 
   it('omits the active background when not on the deploy sub-page', () => {
     const tree = render({ basePath: '/p/1', activeSubpage: 'canvas' });
     const btn = findFirst(tree, (el) => el.props.id === 'ice-btn-deploy')!;
-    expect((btn.props.className as string)).not.toContain('bg-ice-active');
+    expect(btn.props.className as string).not.toContain('bg-ice-active');
   });
 });
 

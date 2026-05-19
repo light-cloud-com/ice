@@ -11,10 +11,9 @@
  * truthy strings.
  */
 
+import { Zap, Loader2 } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { Zap, Loader2 } from 'lucide-react';
-
 import { Section } from '../section';
 import type { SectionProps } from '../section';
 

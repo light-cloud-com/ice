@@ -23,12 +23,8 @@
  * mirror real consumer setups.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  build_dependency_map,
-  export_graph,
-  node_to_resource,
-} from '../converter';
 import { MutableGraph } from '../../../graph/mutable-graph';
+import { build_dependency_map, export_graph, node_to_resource } from '../converter';
 import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider';
 
 /**
@@ -36,9 +32,7 @@ import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-pro
  * single method consulted by the converter (`get_implementation`).
  * The other class members are typed-only — never invoked here.
  */
-function makeSchemaProvider(
-  implMap: Record<string, { native_type: string }> = {},
-): EmbeddedSchemaProvider {
+function makeSchemaProvider(implMap: Record<string, { native_type: string }> = {}): EmbeddedSchemaProvider {
   return {
     get_implementation: vi.fn((ice_type: string) => implMap[ice_type] ?? null),
   } as unknown as EmbeddedSchemaProvider;
@@ -293,9 +287,7 @@ describe('export_graph', () => {
 
     const result = await export_graph(provider, g, {
       provider: 'gcp',
-      required_providers: [
-        { name: 'google', source: 'hashicorp/google', version: '~> 4.0' },
-      ],
+      required_providers: [{ name: 'google', source: 'hashicorp/google', version: '~> 4.0' }],
     });
     expect(result.config.terraform).toBeDefined();
     expect(result.config.terraform?.required_providers).toEqual({

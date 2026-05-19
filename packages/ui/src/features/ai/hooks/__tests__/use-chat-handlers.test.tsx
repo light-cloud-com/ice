@@ -19,10 +19,10 @@
  *     (rf-pdpl-20)
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React, { useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Microtask flush — equivalent to setImmediate but works in Node + browser.
@@ -395,10 +395,7 @@ describe('persistMessages', () => {
     await cap.handlers.persistMessages([baseMsg]);
 
     // First POST creates the conversation row with project + card linkage.
-    expect(mockAxios.post.mock.calls[0]).toEqual([
-      '/ai/conversations',
-      { projectId: 'proj-1', cardId: 'card-1' },
-    ]);
+    expect(mockAxios.post.mock.calls[0]).toEqual(['/ai/conversations', { projectId: 'proj-1', cardId: 'card-1' }]);
     // Ref + state both updated to the freshly-minted id.
     expect(cap.conversationIdRef.current).toBe('fresh-conv');
     expect(cap.setConversationIdSpy).toHaveBeenCalledWith('fresh-conv');
@@ -410,18 +407,13 @@ describe('persistMessages', () => {
 
   it('without convId + no active card → posts cardId: null', async () => {
     const store = makeStore();
-    mockAxios.post
-      .mockResolvedValueOnce({ data: { id: 'fresh-conv' } })
-      .mockResolvedValueOnce({ data: {} });
+    mockAxios.post.mockResolvedValueOnce({ data: { id: 'fresh-conv' } }).mockResolvedValueOnce({ data: {} });
     mockAxios.get.mockResolvedValueOnce({ data: [] });
     const cap = captureHook({ activeCard: null, store });
 
     await cap.handlers.persistMessages([baseMsg]);
 
-    expect(mockAxios.post.mock.calls[0]).toEqual([
-      '/ai/conversations',
-      { projectId: 'proj-1', cardId: null },
-    ]);
+    expect(mockAxios.post.mock.calls[0]).toEqual(['/ai/conversations', { projectId: 'proj-1', cardId: null }]);
   });
 
   it('persistLock guard: when lock is true on entry and convId is null → bails out', async () => {
@@ -503,9 +495,7 @@ describe('persistMessages', () => {
 
     expect(warnSpy).toHaveBeenCalled();
     const calls = warnSpy.mock.calls;
-    const found = calls.find(
-      (c) => typeof c[0] === 'string' && c[0].includes('Failed to persist AI messages'),
-    );
+    const found = calls.find((c) => typeof c[0] === 'string' && c[0].includes('Failed to persist AI messages'));
     expect(found).toBeDefined();
     warnSpy.mockRestore();
   });
@@ -576,9 +566,7 @@ describe('handleSubmit', () => {
     expect(mockAxios.post).toHaveBeenCalledWith(
       '/ai/conversations/cv/messages',
       expect.objectContaining({
-        messages: expect.arrayContaining([
-          expect.objectContaining({ role: 'user', content: 'please deploy' }),
-        ]),
+        messages: expect.arrayContaining([expect.objectContaining({ role: 'user', content: 'please deploy' })]),
       }),
     );
   });
@@ -684,9 +672,7 @@ describe('handleDeleteConversation', () => {
     expect(mockAxios.delete).toHaveBeenCalledWith('/ai/conversations/victim-conv');
     // setConversations called with a filter updater
     expect(cap.setConversationsSpy).toHaveBeenCalledTimes(1);
-    const updater = cap.setConversationsSpy.mock.calls[0][0] as (
-      prev: ConversationSummary[],
-    ) => ConversationSummary[];
+    const updater = cap.setConversationsSpy.mock.calls[0][0] as (prev: ConversationSummary[]) => ConversationSummary[];
     const out = updater([
       {
         id: 'victim-conv',

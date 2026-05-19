@@ -123,4 +123,3 @@ export function logApiResponse(method: string, path: string, status: number, dat
 export function logStateChange(actionType: string, payload?: unknown): void {
   logAction('state', 'dispatch', actionType, { payload: payload ?? null });
 }
-

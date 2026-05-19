@@ -10,13 +10,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { type RowStatus } from './inline-table-view-helpers';
 import { ColumnHeader } from './inline-table-view/column-header';
 import { TableBody } from './inline-table-view/table-body';
 import { TableFooter } from './inline-table-view/table-footer';
 import { Toolbar } from './inline-table-view/toolbar';
 import { type Density, type GroupBy, type SortCol, type SortDir } from './inline-table-view/types';
 import { useTableRows } from './inline-table-view/use-table-rows';
+import { type RowStatus } from './inline-table-view-helpers';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard, deleteCardNode } from '../../store/slices/cards-slice';
 import { setSelectedNodes } from '../../store/slices/selection-slice';

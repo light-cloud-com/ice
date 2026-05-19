@@ -19,14 +19,14 @@
  *   re-export shim live in `./scale-presets.ts`.
  */
 
-import type { ScaleTier, TierPreset } from './scale-presets-types';
 import { COMPUTE_PRESETS } from './scale-presets-data/compute';
 import { DATABASE_PRESETS } from './scale-presets-data/database';
-import { STORAGE_PRESETS } from './scale-presets-data/storage';
-import { NETWORKING_PRESETS } from './scale-presets-data/networking';
 import { MESSAGING_PRESETS } from './scale-presets-data/messaging';
-import { SECURITY_PRESETS } from './scale-presets-data/security';
 import { MONITORING_PRESETS } from './scale-presets-data/monitoring';
+import { NETWORKING_PRESETS } from './scale-presets-data/networking';
+import { SECURITY_PRESETS } from './scale-presets-data/security';
+import { STORAGE_PRESETS } from './scale-presets-data/storage';
+import type { ScaleTier, TierPreset } from './scale-presets-types';
 
 // Key = resource ID from HIGH_LEVEL_CATEGORIES.
 // For each tier: common props + `_providers` for instance-size overrides.

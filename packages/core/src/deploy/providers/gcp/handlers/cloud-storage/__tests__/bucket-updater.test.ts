@@ -166,9 +166,7 @@ describe('cloud-storage/bucket-updater', () => {
 describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
   it('returns ublaForcedOn=false when UBLA is already disabled (no setMetadata)', async () => {
     const bucket = {
-      getMetadata: vi.fn().mockResolvedValue([
-        { iamConfiguration: { uniformBucketLevelAccess: { enabled: false } } },
-      ]),
+      getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: false } } }]),
       setMetadata: vi.fn(),
     };
     const { ctx } = makeCtx();
@@ -190,9 +188,7 @@ describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
 
   it('returns ublaForcedOn=false on a clean UBLA-disable when previously enabled', async () => {
     const bucket = {
-      getMetadata: vi.fn().mockResolvedValue([
-        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-      ]),
+      getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
       setMetadata: vi.fn().mockResolvedValue(undefined),
     };
     const { ctx, logs } = makeCtx();
@@ -209,9 +205,7 @@ describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
 
   it('returns ublaForcedOn=true when disable hits UBLA constraint (full-string variant)', async () => {
     const bucket = {
-      getMetadata: vi.fn().mockResolvedValue([
-        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-      ]),
+      getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
       setMetadata: vi.fn().mockRejectedValue(new Error('storage.uniformBucketLevelAccess constraint')),
     };
     const { ctx, logs } = makeCtx();
@@ -222,9 +216,7 @@ describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
 
   it('returns ublaForcedOn=true when disable hits UBLA constraint (bare-string variant)', async () => {
     const bucket = {
-      getMetadata: vi.fn().mockResolvedValue([
-        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-      ]),
+      getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
       setMetadata: vi.fn().mockRejectedValue(new Error('uniformBucketLevelAccess locked')),
     };
     const { ctx } = makeCtx();
@@ -236,9 +228,7 @@ describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
     // The inner catch re-throws non-UBLA errors; the outer catch
     // logs them and still flips ublaForcedOn to true (degraded path).
     const bucket = {
-      getMetadata: vi.fn().mockResolvedValue([
-        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-      ]),
+      getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
       setMetadata: vi.fn().mockRejectedValue(new Error('quota exceeded')),
     };
     const { ctx, logs } = makeCtx();

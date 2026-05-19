@@ -40,6 +40,7 @@ export {
   getAllRegisteredInfoIceTypes,
 } from './common/concepts/_shared/info-registry';
 
+import { isIceTypeEnabledForProvider } from '@ice/constants';
 import { alibabaScheduledTaskBlueprint } from './alibaba/backend/scheduled-task';
 import { functionComputeBlueprint } from './alibaba/compute/function-compute';
 import { alibabaRedisCacheBlueprint } from './alibaba/data/redis-cache';
@@ -146,7 +147,6 @@ import { gcpSecretsBlueprint } from './gcp/security/secrets';
 import { gcpSslCertificateBlueprint } from './gcp/security/ssl-certificate';
 import { gcpWafBlueprint } from './gcp/security/waf';
 import { gcpStorageBlueprint } from './gcp/storage/storage';
-import { isIceTypeEnabledForProvider } from '@ice/constants';
 import { kubernetesLlmGatewayBlueprint } from './kubernetes/ai/llm-gateway';
 import { kubernetesSearchBlueprint } from './kubernetes/analytics/search';
 import { kubernetesScalableBackendBlueprint } from './kubernetes/backend/scalable-backend';

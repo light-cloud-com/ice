@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import aiConversationRoutes from './routes/ai-conversations';
 import aiRoutes from './routes/ai';
+import aiConversationRoutes from './routes/ai-conversations';
 export * from './services/ai.service';
 
 export function createAiRouter(): Router {

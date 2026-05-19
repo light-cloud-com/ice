@@ -25,10 +25,7 @@ export interface CertStatus {
  * back yet — we default to `PROVISIONING` so the UI immediately shows
  * the spinner instead of looking blank.
  */
-export async function fetch_initial_status(
-  ctx: GCPHandlerContext,
-  sslCertificateName: string,
-): Promise<CertStatus> {
+export async function fetch_initial_status(ctx: GCPHandlerContext, sslCertificateName: string): Promise<CertStatus> {
   if (!sslCertificateName) return {};
   try {
     const cert = (await ctx.rest_client.get(
@@ -50,10 +47,7 @@ export async function fetch_initial_status(
  * fall back to PROVISIONING — if the GET fails, leave both fields
  * undefined so the canvas keeps the most recent cached status.
  */
-export async function fetch_current_status(
-  ctx: GCPHandlerContext,
-  sslCertificateName: string,
-): Promise<CertStatus> {
+export async function fetch_current_status(ctx: GCPHandlerContext, sslCertificateName: string): Promise<CertStatus> {
   if (!sslCertificateName) return {};
   try {
     const cert = (await ctx.rest_client.get(

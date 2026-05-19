@@ -18,16 +18,9 @@ import type { Card, CardNode } from '../../../store/slices/cards-slice';
  * `runtime` / `iceType` / `label` in that order) and falling back to the
  * provider-typed icon, then the DEFAULT_ICON.
  */
-export function resolveNodeIconUrl(
-  selectedNode: CardNode,
-  iceType: string,
-  provider: string,
-  label: string,
-): string {
+export function resolveNodeIconUrl(selectedNode: CardNode, iceType: string, provider: string, label: string): string {
   const brandIcon =
-    getBrandIcon((selectedNode.data?.runtime as string) || '') ||
-    getBrandIcon(iceType) ||
-    getBrandIcon(label);
+    getBrandIcon((selectedNode.data?.runtime as string) || '') || getBrandIcon(iceType) || getBrandIcon(label);
   const providerIcon = getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider);
   return brandIcon?.url || providerIcon?.icon || DEFAULT_ICON;
 }

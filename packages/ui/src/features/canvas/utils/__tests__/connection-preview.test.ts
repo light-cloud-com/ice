@@ -21,9 +21,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import type { CanvasNode } from '../../components/types';
 import { computeConnectionPreviewPath, pickPreviewColor } from '../connection-preview';
+import type { CanvasNode } from '../../components/types';
 
 /** Minimal CanvasNode factory — only the fields the helpers read. */
 function node(id: string, x: number, y: number, width: number, height: number): CanvasNode {

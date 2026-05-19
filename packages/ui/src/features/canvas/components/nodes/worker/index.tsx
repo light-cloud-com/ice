@@ -8,16 +8,11 @@
  * scalable-backend.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
-import { CardShell, ScaleGauge } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell, ScaleGauge } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
@@ -68,7 +63,8 @@ export const SvgWorkerNode: React.FC<SvgCompactNodeProps> = ({
   const min = node.data?.minInstances != null ? Number(node.data.minInstances) : 1;
   const max = node.data?.maxInstances != null ? Number(node.data.maxInstances) : 3;
   const replicas = node.data?.replicas != null ? Number(node.data.replicas) : null;
-  const caption = replicas != null ? t('canvas.blocks.worker.replicas', { n: replicas }) : t('canvas.blocks.worker.autoScaled');
+  const caption =
+    replicas != null ? t('canvas.blocks.worker.replicas', { n: replicas }) : t('canvas.blocks.worker.autoScaled');
   const liveConfig = buildLiveConfig(node.data);
 
   return (

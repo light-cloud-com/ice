@@ -197,7 +197,7 @@ describe('getCore caching', () => {
     // resolves, later calls should not re-trigger the dynamic import. We
     // observe this by mutating the mock factory after first import — the
     // cached value should persist.
-    let categoriesProvided = [{ id: 'compute', name: 'Compute', description: 'd', icon: 'i', resources: [{}] }];
+    const categoriesProvided = [{ id: 'compute', name: 'Compute', description: 'd', icon: 'i', resources: [{}] }];
     vi.doMock('@ice/core', () => ({
       HIGH_LEVEL_CATEGORIES: categoriesProvided,
       getAllHighLevelResources: () => [],

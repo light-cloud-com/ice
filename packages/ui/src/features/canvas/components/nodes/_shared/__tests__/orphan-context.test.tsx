@@ -8,10 +8,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 import { OrphanNodesProvider, useIsNodeOrphan } from '../orphan-context';
 
-const Probe: React.FC<{ nodeId: string; onResult: (val: boolean) => void }> = ({
-  nodeId,
-  onResult,
-}) => {
+const Probe: React.FC<{ nodeId: string; onResult: (val: boolean) => void }> = ({ nodeId, onResult }) => {
   const orphan = useIsNodeOrphan(nodeId);
   onResult(orphan);
   return null;

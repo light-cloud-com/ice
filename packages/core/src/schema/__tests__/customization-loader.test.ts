@@ -55,11 +55,7 @@ vi.mock('../customization/base-db', () => ({
   get_base_db_path: customizationMocks.resolve_base_db_path,
 }));
 
-import {
-  CustomizationLoader,
-  create_customization_loader,
-  get_base_db_path,
-} from '../customization-loader';
+import { CustomizationLoader, create_customization_loader, get_base_db_path } from '../customization-loader';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -107,20 +103,19 @@ describe('CustomizationLoader.scan', () => {
     new CustomizationLoader('/proj').scan();
     expect(customizationMocks.scan_directory).toHaveBeenCalledTimes(4);
     // providers: .json
-    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(
-      path.join('/proj', '.ice/schemas', 'providers'),
-      ['.json'],
-    );
+    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(path.join('/proj', '.ice/schemas', 'providers'), [
+      '.json',
+    ]);
     // overrides: .yaml/.yml
-    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(
-      path.join('/proj', '.ice/schemas', 'overrides'),
-      ['.yaml', '.yml'],
-    );
+    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(path.join('/proj', '.ice/schemas', 'overrides'), [
+      '.yaml',
+      '.yml',
+    ]);
     // custom: .yaml/.yml
-    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(
-      path.join('/proj', '.ice/schemas', 'custom'),
-      ['.yaml', '.yml'],
-    );
+    expect(customizationMocks.scan_directory).toHaveBeenCalledWith(path.join('/proj', '.ice/schemas', 'custom'), [
+      '.yaml',
+      '.yml',
+    ]);
     // relationships: .yaml/.yml
     expect(customizationMocks.scan_directory).toHaveBeenCalledWith(
       path.join('/proj', '.ice/schemas', 'relationships'),

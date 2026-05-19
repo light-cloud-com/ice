@@ -8,9 +8,9 @@
 import { CARD_FOOTER_HEIGHT, ES_FIELD_HEIGHT, ES_HEADER_HEIGHT, ES_PADDING } from '@ice/constants';
 import { Mail } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell, LabelLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { ES_HEADER_HEIGHT, ES_FIELD_HEIGHT, ES_PADDING };
 

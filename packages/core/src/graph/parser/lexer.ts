@@ -5,8 +5,16 @@
  * Handles string interpolation, heredocs, and error recovery.
  */
 
-import { create_token } from './tokens';
-import type { Token, SourcePosition } from './tokens';
+import { scan_heredoc } from './lexer-heredoc';
+import {
+  is_digit,
+  is_alpha,
+  scan_block_comment,
+  scan_identifier,
+  scan_line_comment,
+  scan_number,
+  scan_string,
+} from './lexer-scanners';
 import {
   type LexerState,
   make_lexer_state,
@@ -19,16 +27,8 @@ import {
   ls_add_token,
   ls_add_error,
 } from './lexer-state';
-import {
-  is_digit,
-  is_alpha,
-  scan_block_comment,
-  scan_identifier,
-  scan_line_comment,
-  scan_number,
-  scan_string,
-} from './lexer-scanners';
-import { scan_heredoc } from './lexer-heredoc';
+import { create_token } from './tokens';
+import type { Token, SourcePosition } from './tokens';
 
 // =============================================================================
 // Lexer Error
@@ -300,7 +300,6 @@ export class Lexer {
         break;
     }
   }
-
 }
 
 // =============================================================================

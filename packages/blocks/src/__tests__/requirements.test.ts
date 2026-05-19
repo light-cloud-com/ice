@@ -110,24 +110,18 @@ describe('githubRepoAttachedRequirement.applies', () => {
       'Compute.Worker',
       'Compute.ServerlessFunction',
     ]) {
-      expect(
-        githubRepoAttachedRequirement.applies(makeCtx({ block: { id: 'b', data: { iceType } } })),
-      ).toBe(true);
+      expect(githubRepoAttachedRequirement.applies(makeCtx({ block: { id: 'b', data: { iceType } } }))).toBe(true);
     }
   });
 
   it('returns false for non-compute iceTypes', () => {
     expect(
-      githubRepoAttachedRequirement.applies(
-        makeCtx({ block: { id: 'b', data: { iceType: 'Database.PostgreSQL' } } }),
-      ),
+      githubRepoAttachedRequirement.applies(makeCtx({ block: { id: 'b', data: { iceType: 'Database.PostgreSQL' } } })),
     ).toBe(false);
   });
 
   it('returns false when iceType is missing entirely', () => {
-    expect(
-      githubRepoAttachedRequirement.applies(makeCtx({ block: { id: 'b', data: {} } })),
-    ).toBe(false);
+    expect(githubRepoAttachedRequirement.applies(makeCtx({ block: { id: 'b', data: {} } }))).toBe(false);
   });
 });
 
@@ -302,9 +296,7 @@ describe('publicEndpointDomainRequirement.applies', () => {
 describe('publicEndpointDomainRequirement.applies — wrong iceType', () => {
   it('returns false for any iceType other than Network.PublicEndpoint', () => {
     expect(
-      publicEndpointDomainRequirement.applies(
-        makeCtx({ block: { id: 'b', data: { iceType: 'Compute.StaticSite' } } }),
-      ),
+      publicEndpointDomainRequirement.applies(makeCtx({ block: { id: 'b', data: { iceType: 'Compute.StaticSite' } } })),
     ).toBe(false);
   });
 });
@@ -348,9 +340,7 @@ describe('dnsARecordRequirement.applies', () => {
 
   it('returns false when domain is missing', () => {
     expect(
-      dnsARecordRequirement.applies(
-        makeCtx({ block: { id: 'b', data: { iceType: 'Network.PublicEndpoint' } } }),
-      ),
+      dnsARecordRequirement.applies(makeCtx({ block: { id: 'b', data: { iceType: 'Network.PublicEndpoint' } } })),
     ).toBe(false);
   });
 
@@ -850,17 +840,13 @@ describe('managedCertIssuanceRequirement.check', () => {
   });
 
   it('returns "unmet" with the error message when the checker throws', async () => {
-    const result = await managedCertIssuanceRequirement.check(
-      ctxWithChecker('UNUSED', new Error('rpc deadline')),
-    );
+    const result = await managedCertIssuanceRequirement.check(ctxWithChecker('UNUSED', new Error('rpc deadline')));
     expect(result.status).toBe('unmet');
     expect(result.message).toMatch(/rpc deadline/);
   });
 
   it('handles non-Error throwables by stringifying them', async () => {
-    const result = await managedCertIssuanceRequirement.check(
-      ctxWithChecker('UNUSED', 'string-error'),
-    );
+    const result = await managedCertIssuanceRequirement.check(ctxWithChecker('UNUSED', 'string-error'));
     expect(result.status).toBe('unmet');
     expect(result.message).toMatch(/string-error/);
   });
@@ -873,7 +859,7 @@ describe('managedCertIssuanceRequirement.check', () => {
 function beforeEachReset() {
   // Vitest's `beforeEach` is global via globals: true — wrap so we can call
   // it inside a `describe` block for narrower scoping.
-  // eslint-disable-next-line no-undef
+
   beforeEach(() => {
     mockedResolve4.mockReset();
   });

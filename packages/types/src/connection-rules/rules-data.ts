@@ -16,7 +16,6 @@
  */
 
 import { type ConnectionCategory, DEFAULT_PORTS, DEFAULT_ENV_VARS } from '@ice/constants';
-import type { ConnectionRule } from './types';
 import {
   isAuth,
   isBackend,
@@ -39,6 +38,7 @@ import {
   isStorage,
   isVectorDb,
 } from './predicates';
+import type { ConnectionRule } from './types';
 
 // ─── Declarative Connection Rules ───────────────────────────────────────────
 // Each rule defines: "blocks matching source() CAN connect to blocks matching

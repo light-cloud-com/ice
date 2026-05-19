@@ -8,8 +8,8 @@
 import { CARD_FOOTER_HEIGHT, MQ_HEADER_HEIGHT, MQ_PADDING, MQ_ROW_GAP, MQ_ROW_HEIGHT } from '@ice/constants';
 import { List } from 'lucide-react';
 import React from 'react';
-import { Badge, CardShell, EmptyHint, Pill } from '../_shared';
 import { t } from '../../../../../i18n';
+import { Badge, CardShell, EmptyHint, Pill } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 // Re-exported so svg-canvas / tests can compute card height.
@@ -19,9 +19,7 @@ export { MQ_HEADER_HEIGHT, MQ_ROW_HEIGHT, MQ_ROW_GAP, MQ_PADDING };
 export function computeMessageQueueHeight(data: Record<string, unknown>): number {
   const queues = (data?.queues as unknown[] | undefined) || [];
   const rowCount = Math.max(queues.length, 1);
-  return (
-    MQ_HEADER_HEIGHT + MQ_PADDING + rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT
-  );
+  return MQ_HEADER_HEIGHT + MQ_PADDING + rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -97,7 +95,9 @@ export const SvgMessageQueueNode: React.FC<SvgCompactNodeProps> = ({
             }}
           >
             <Pill>{q.name || t('canvas.blocks.common.unnamed')}</Pill>
-            <Badge tone={q.fifo ? 'accent' : 'neutral'}>{q.fifo ? t('canvas.blocks.queue.fifo') : t('canvas.blocks.queue.std')}</Badge>
+            <Badge tone={q.fifo ? 'accent' : 'neutral'}>
+              {q.fifo ? t('canvas.blocks.queue.fifo') : t('canvas.blocks.queue.std')}
+            </Badge>
           </div>
         ))
       )}

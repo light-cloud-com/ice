@@ -74,11 +74,9 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
-const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) =>
-  [...walk(tree)].filter(p);
+const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) => [...walk(tree)].filter(p);
 
 beforeEach(() => {
   mocks.dispatch.mockClear();
@@ -131,12 +129,9 @@ describe('EmptyCanvasOverlay', () => {
     const iconEls = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'object' &&
-        (el.props as { style?: Record<string, string> }).style?.color !== undefined,
+        typeof el.type === 'object' && (el.props as { style?: Record<string, string> }).style?.color !== undefined,
     );
-    const fallback = iconEls.find(
-      (el) => (el.props as { style: { color: string } }).style.color === '#3b82f6',
-    );
+    const fallback = iconEls.find((el) => (el.props as { style: { color: string } }).style.color === '#3b82f6');
     expect(fallback).toBeDefined();
   });
 
@@ -146,12 +141,9 @@ describe('EmptyCanvasOverlay', () => {
     const iconEls = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'object' &&
-        (el.props as { style?: Record<string, string> }).style?.color !== undefined,
+        typeof el.type === 'object' && (el.props as { style?: Record<string, string> }).style?.color !== undefined,
     );
-    const known = iconEls.find(
-      (el) => (el.props as { style: { color: string } }).style.color === '#abcdef',
-    );
+    const known = iconEls.find((el) => (el.props as { style: { color: string } }).style.color === '#abcdef');
     expect(known).toBeDefined();
   });
 
@@ -187,9 +179,7 @@ describe('EmptyCanvasOverlay', () => {
     const tree = EmptyCanvasOverlay({});
     const labelEls = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        (el.props as { children?: unknown }).children === 'canvas.emptyState.quickStart',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'canvas.emptyState.quickStart',
     );
     expect(labelEls).toHaveLength(1);
   });
@@ -199,9 +189,7 @@ describe('EmptyCanvasOverlay', () => {
     const tree = EmptyCanvasOverlay({});
     const labelEls = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        (el.props as { children?: unknown }).children === 'canvas.emptyState.more',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'canvas.emptyState.more',
     );
     expect(labelEls).toHaveLength(1);
   });

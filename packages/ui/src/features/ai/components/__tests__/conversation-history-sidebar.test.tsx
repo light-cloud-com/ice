@@ -7,10 +7,7 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import {
-  ConversationHistorySidebar,
-  type ConversationHistorySidebarProps,
-} from '../conversation-history-sidebar';
+import { ConversationHistorySidebar, type ConversationHistorySidebarProps } from '../conversation-history-sidebar';
 import type { ConversationSummary } from '../../hooks/use-chat-handlers';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
@@ -41,10 +38,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -223,8 +217,7 @@ describe('ConversationHistorySidebar — interactions', () => {
     const deleteButtons = findByPredicate(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { 'aria-label'?: string })['aria-label'] === '[t:ai.chat.deleteTitle]',
+        el.type === 'button' && (el.props as { 'aria-label'?: string })['aria-label'] === '[t:ai.chat.deleteTitle]',
     );
     expect(deleteButtons).toHaveLength(1);
     const onClick = (deleteButtons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick;

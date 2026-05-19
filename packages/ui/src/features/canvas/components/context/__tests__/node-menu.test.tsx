@@ -7,7 +7,6 @@
  * Mocks i18n + slice action creators; React hooks via passthrough.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -84,8 +83,8 @@ vi.mock('@ice/constants', () => ({
   ],
 }));
 
-import { NodeMenu } from '../node-menu';
 import { fireKey } from '../menu-primitives';
+import { NodeMenu } from '../node-menu';
 
 vi.mock('../menu-primitives', async (orig) => {
   const actual = (await orig()) as typeof import('../menu-primitives');
@@ -129,10 +128,7 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
 }
 
 const findFCByLabel = (tree: unknown, label: string): ElLike | undefined =>
-  findFirst(
-    tree,
-    (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label,
-  );
+  findFirst(tree, (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label);
 
 // SubMenu items become buttons with string children inside the popover.
 const findSubItem = (tree: unknown, label: string): ElLike | undefined =>
@@ -159,8 +155,7 @@ const baseProps = (overrides: Partial<Parameters<typeof NodeMenu>[0]> = {}): Par
   ...overrides,
 });
 
-const render = (props: Parameters<typeof NodeMenu>[0]) =>
-  (NodeMenu as unknown as (p: unknown) => unknown)(props);
+const render = (props: Parameters<typeof NodeMenu>[0]) => (NodeMenu as unknown as (p: unknown) => unknown)(props);
 
 beforeEach(() => {
   mocks.effects = [];
@@ -448,9 +443,7 @@ describe('NodeMenu — Delete', () => {
   it('multi-selection delete dispatches deleteCardNode for each selected and clearSelection', () => {
     const dispatch = vi.fn();
     const close = vi.fn();
-    const tree = render(
-      baseProps({ dispatch, close, selectedNodes: ['a', 'b', 'c'] }),
-    );
+    const tree = render(baseProps({ dispatch, close, selectedNodes: ['a', 'b', 'c'] }));
     // The label includes the count via i18n vars.
     const item = findFirst(
       tree,
@@ -516,10 +509,7 @@ describe('NodeMenu — Defensive defaults for missing target', () => {
 describe('NodeMenu — root container', () => {
   it('positions the root at left=position.x / top=position.y', () => {
     const tree = render(baseProps({ position: { x: 12, y: 34 } }));
-    const root = findFirst(
-      tree,
-      (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 12,
-    )!;
+    const root = findFirst(tree, (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 12)!;
     expect((root.props.style as { top: number }).top).toBe(34);
   });
 });

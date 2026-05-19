@@ -300,9 +300,7 @@ describe('generateVerificationToken', () => {
   it('returns null when SERVICE_DISABLED is detected but the auto-enable attempt itself fails', async () => {
     mocks.getDecryptedCredentials.mockResolvedValueOnce({ _auth_type: 'oauth', project_id: 'proj-enable-2' });
     mocks.getValidGCPAccessToken.mockResolvedValueOnce('tok');
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 403, textBody: 'has not been used in project' }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 403, textBody: 'has not been used in project' }));
     mocks.enableGcpApi.mockResolvedValueOnce(false);
 
     const token = await generateVerificationToken(uniqueOrg('en2'), 'svc-disabled-fail.com');
@@ -316,9 +314,7 @@ describe('generateVerificationToken', () => {
     const orgId = uniqueOrg('en3');
     mocks.getDecryptedCredentials.mockResolvedValueOnce({ _auth_type: 'oauth', project_id: 'proj-enable-3' });
     mocks.getValidGCPAccessToken.mockResolvedValueOnce('tok');
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 403, textBody: 'SERVICE_DISABLED' }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 403, textBody: 'SERVICE_DISABLED' }));
     mocks.enableGcpApi.mockResolvedValueOnce(false);
     await generateVerificationToken(orgId, 'first-call.com');
     expect(mocks.enableGcpApi).toHaveBeenCalledTimes(1);
@@ -326,9 +322,7 @@ describe('generateVerificationToken', () => {
     // Second call with same (orgId, project) — idempotent skip; no new enable.
     mocks.getDecryptedCredentials.mockResolvedValueOnce({ _auth_type: 'oauth', project_id: 'proj-enable-3' });
     mocks.getValidGCPAccessToken.mockResolvedValueOnce('tok');
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 403, textBody: 'SERVICE_DISABLED' }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 403, textBody: 'SERVICE_DISABLED' }));
     const token = await generateVerificationToken(orgId, 'second-call.com');
     expect(token).toBeNull();
     expect(mocks.enableGcpApi).toHaveBeenCalledTimes(1); // still 1, not 2
@@ -390,9 +384,7 @@ describe('checkSearchConsoleVerification', () => {
   it('does not retry when 403 SERVICE_DISABLED is detected but auto-enable returns false', async () => {
     mocks.getDecryptedCredentials.mockResolvedValueOnce({ _auth_type: 'oauth', project_id: 'proj-vchk-2' });
     mocks.getValidGCPAccessToken.mockResolvedValueOnce('tok');
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 403, textBody: 'has not been used in project' }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 403, textBody: 'has not been used in project' }));
     mocks.enableGcpApi.mockResolvedValueOnce(false);
 
     expect(await checkSearchConsoleVerification(uniqueOrg('chk5'), 'svc-disabled-no-enable.com')).toBe(false);

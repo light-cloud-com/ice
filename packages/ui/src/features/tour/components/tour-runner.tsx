@@ -22,19 +22,15 @@
  */
 
 import * as React from 'react';
-
-import {
-  registerTour as registerTourImpl,
-  getTour,
-} from '../utils/tour-registry';
+import { TourOverlay } from './tour-overlay';
+import { TourPopover } from './tour-popover';
 import { tours } from '../config/tours';
 import { useCanvasTourPanels } from '../hooks/use-canvas-tour-panels';
 import { useTourAutostart } from '../hooks/use-tour-autostart';
 import { useTourKeyboard } from '../hooks/use-tour-keyboard';
 import { useTourPredicateAutostart } from '../hooks/use-tour-predicate-autostart';
 import { useTourRunner } from '../hooks/use-tour-runner';
-import { TourOverlay } from './tour-overlay';
-import { TourPopover } from './tour-popover';
+import { registerTour as registerTourImpl, getTour } from '../utils/tour-registry';
 
 /**
  * Module-scoped guard — survives StrictMode double-mount. Generalizes
@@ -60,7 +56,6 @@ function useRegisterTours(): void {
         registerTourImpl(tour);
         registeredIds.add(tour.id);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn(`[tour] Failed to register tour "${tour.id}":`, err);
       }
     }
@@ -78,18 +73,7 @@ export function TourRunner(): JSX.Element | null {
   // Open the right panel for each canvas-tour step (and restore the
   // user's pre-tour layout when the tour ends).
   useCanvasTourPanels();
-  const {
-    phase,
-    activeStep,
-    totalSteps,
-    stepIdx,
-    resolver,
-    liveRect,
-    advance,
-    previous,
-    skip,
-    stop,
-  } = useTourRunner();
+  const { phase, activeStep, totalSteps, stepIdx, resolver, liveRect, advance, previous, skip, stop } = useTourRunner();
 
   // Keyboard shortcuts active only while a step is placed.
   useTourKeyboard({
@@ -106,11 +90,7 @@ export function TourRunner(): JSX.Element | null {
 
   return (
     <>
-      <TourOverlay
-        rect={liveRect}
-        pad={activeStep.pad}
-        onSkip={stop}
-      />
+      <TourOverlay rect={liveRect} pad={activeStep.pad} onSkip={stop} />
       <TourPopover
         step={activeStep}
         stepIdx={stepIdx}

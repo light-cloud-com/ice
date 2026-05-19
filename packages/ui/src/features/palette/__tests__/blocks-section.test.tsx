@@ -105,9 +105,7 @@ vi.mock('../../../shared/components/ui/panel-header', () => ({
 
 // SelectPrimitive passthrough — every part renders its children inline.
 vi.mock('@radix-ui/react-select', () => {
-  const passthrough = (
-    name: string,
-  ): React.FC<{ children?: React.ReactNode } & Record<string, unknown>> => {
+  const passthrough = (name: string): React.FC<{ children?: React.ReactNode } & Record<string, unknown>> => {
     const FC: React.FC<{ children?: React.ReactNode } & Record<string, unknown>> = (props) =>
       React.createElement('div', { 'data-radix': name, ...props }, props.children);
     FC.displayName = `Select.${name}`;
@@ -156,10 +154,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -500,7 +495,10 @@ describe('BlocksSection — category groups', () => {
         mounted: false,
         staggerIdx: 0,
         categorizedItems: [
-          { category: makeCategory({ id: 'A' }), items: [makeComponent({ type: 'a1' }), makeComponent({ type: 'a2' })] },
+          {
+            category: makeCategory({ id: 'A' }),
+            items: [makeComponent({ type: 'a1' }), makeComponent({ type: 'a2' })],
+          },
           { category: makeCategory({ id: 'B' }), items: [makeComponent({ type: 'b1' })] },
         ],
       }),
@@ -515,7 +513,10 @@ describe('BlocksSection — category groups', () => {
         mounted: true,
         staggerIdx: 5,
         categorizedItems: [
-          { category: makeCategory({ id: 'A' }), items: [makeComponent({ type: 'a1' }), makeComponent({ type: 'a2' })] },
+          {
+            category: makeCategory({ id: 'A' }),
+            items: [makeComponent({ type: 'a1' }), makeComponent({ type: 'a2' })],
+          },
         ],
       }),
     );
@@ -544,7 +545,11 @@ describe('BlocksSection — category groups', () => {
     );
     const spans2 = findByPredicate(collapsed, (el) => {
       const props = el.props as Record<string, unknown>;
-      return el.type === 'span' && (props.style as React.CSSProperties)?.color === undefined && (props.style as React.CSSProperties)?.opacity === 0.5;
+      return (
+        el.type === 'span' &&
+        (props.style as React.CSSProperties)?.color === undefined &&
+        (props.style as React.CSSProperties)?.opacity === 0.5
+      );
     });
     expect(spans2.length).toBe(1);
   });
@@ -579,18 +584,14 @@ describe('BlocksSection — empty state', () => {
   });
 
   it('renders the divider only when showGroup is true AND filteredComponents has entries', () => {
-    const withItems = renderSection(
-      makeProps({ filteredComponents: [makeComponent()], showGroup: true }),
-    );
+    const withItems = renderSection(makeProps({ filteredComponents: [makeComponent()], showGroup: true }));
     const divs1 = findByPredicate(withItems, (el) => {
       const cn = (el.props as { className?: string }).className;
       return typeof cn === 'string' && cn.includes('h-px') && cn.includes('bg-gradient-to-r');
     });
     expect(divs1.length).toBe(1);
 
-    const empty = renderSection(
-      makeProps({ filteredComponents: [], categorizedItems: [], showGroup: true }),
-    );
+    const empty = renderSection(makeProps({ filteredComponents: [], categorizedItems: [], showGroup: true }));
     const divs2 = findByPredicate(empty, (el) => {
       const cn = (el.props as { className?: string }).className;
       return typeof cn === 'string' && cn.includes('h-px') && cn.includes('bg-gradient-to-r');

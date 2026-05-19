@@ -24,13 +24,13 @@ import {
 } from '@ice/constants';
 import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
+import { getServiceName } from '../../../../../assets/icons/service-names';
+import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import { ProviderPill } from '../_shared/provider-pill';
 import { StatusDot } from '../_shared/status-dot';
-import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
-import { ConceptInfoTrigger } from '../../../../concept-info';
-import { getServiceName } from '../../../../../assets/icons/service-names';
 import type { SvgCompactNodeProps } from '../compact-node';
-import { t } from '../../../../../i18n';
 
 export { PN_HEADER_HEIGHT, PN_MIN_WIDTH, PN_MIN_HEIGHT };
 
@@ -73,11 +73,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
   const region = (data?.region as string) || '';
   const deployStatus = (data?.deploy_status as string) || '';
   const serviceName = getServiceName(iceType, provider || 'aws');
-  const metaLine = serviceName
-    ? `${serviceName} · ${region || 'auto'}`
-    : region
-      ? region
-      : '';
+  const metaLine = serviceName ? `${serviceName} · ${region || 'auto'}` : region ? region : '';
   const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
 

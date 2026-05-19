@@ -18,8 +18,8 @@
 
 import React from 'react';
 import { t } from '../../../../i18n';
-import type { CardNode } from '../../../../store/slices/cards-slice';
 import { Section, StepperField, SelectField, NumberField } from '../fields';
+import type { CardNode } from '../../../../store/slices/cards-slice';
 
 // ─── Scaling Section ────────────────────────────────────────────────────────
 
@@ -27,12 +27,9 @@ export const ScalingSection: React.FC<{
   selectedNode: CardNode;
   updateNodeField: (field: string, value: unknown) => void;
 }> = ({ selectedNode, updateNodeField }) => {
-  const minInstances =
-    selectedNode.data?.minInstances != null ? Number(selectedNode.data.minInstances) : null;
-  const maxInstances =
-    selectedNode.data?.maxInstances != null ? Number(selectedNode.data.maxInstances) : null;
-  const activeInstances =
-    selectedNode.data?.activeInstances != null ? Number(selectedNode.data.activeInstances) : null;
+  const minInstances = selectedNode.data?.minInstances != null ? Number(selectedNode.data.minInstances) : null;
+  const maxInstances = selectedNode.data?.maxInstances != null ? Number(selectedNode.data.maxInstances) : null;
+  const activeInstances = selectedNode.data?.activeInstances != null ? Number(selectedNode.data.activeInstances) : null;
   const scalingMetric = (selectedNode.data?.scalingMetric as string) || '';
   const scalingThreshold =
     selectedNode.data?.scalingThreshold != null ? Number(selectedNode.data.scalingThreshold) : 70;

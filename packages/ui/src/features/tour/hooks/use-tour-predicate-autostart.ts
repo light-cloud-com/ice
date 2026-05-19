@@ -25,12 +25,11 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-
-import type { RootState } from '../../../store';
-import { selectActiveTourId, selectCompletedTours } from '../store/tour-slice';
-import type { AutoStartCtx, Tour } from '../tour.types';
-import { allTours } from '../utils/tour-registry';
 import { useTour } from './use-tour';
+import { selectActiveTourId, selectCompletedTours } from '../store/tour-slice';
+import { allTours } from '../utils/tour-registry';
+import type { RootState } from '../../../store';
+import type { AutoStartCtx, Tour } from '../tour.types';
 
 /**
  * Per-session "already auto-fired" guard. Module-scoped so it survives
@@ -87,13 +86,13 @@ export function useTourPredicateAutostart(): void {
         if (completed) continue;
         if (!predicateOk) continue;
         if (!anchorOk) continue;
-        // eslint-disable-next-line no-console
+
         console.info('[tour-autostart] firing', tour.id, ctx);
         sessionFired.add(tour.id);
         start(tour.id);
         return true;
       }
-      // eslint-disable-next-line no-console
+
       console.debug('[tour-autostart] no match', { ctx, reasons });
       return false;
     };
@@ -101,7 +100,6 @@ export function useTourPredicateAutostart(): void {
     if (tryFire()) return;
     if (typeof document === 'undefined' || !document.body) return;
 
-    // eslint-disable-next-line no-console
     console.debug('[tour-autostart] observing DOM for anchor mounts');
     const observer = new MutationObserver(() => {
       if (tryFire()) observer.disconnect();

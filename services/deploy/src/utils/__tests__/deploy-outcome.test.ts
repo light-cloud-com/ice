@@ -14,11 +14,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  computeCompleteTotals,
-  computeDeploySummary,
-  deriveCompleteOutcome,
-} from '../deploy-outcome';
+import { computeCompleteTotals, computeDeploySummary, deriveCompleteOutcome } from '../deploy-outcome';
 
 describe('computeCompleteTotals', () => {
   it('returns zero counts for undefined input', () => {
@@ -82,10 +78,7 @@ describe('computeCompleteTotals', () => {
     // The reducer only acts on explicit true/false. A row with `success:
     // null` (or absent) shouldn't bump any counter — protects the rollup
     // from in-flight rows when the result snapshot is read mid-deploy.
-    const totals = computeCompleteTotals([
-      { success: null, action: 'create' },
-      { action: 'create' },
-    ]);
+    const totals = computeCompleteTotals([{ success: null, action: 'create' }, { action: 'create' }]);
     expect(totals.succeeded).toBe(0);
     expect(totals.failed).toBe(0);
     expect(totals.cancelled).toBe(0);
@@ -147,12 +140,9 @@ describe('deriveCompleteOutcome', () => {
   });
 
   it('returns "cancelled" when cancel flag fired with only failures (no success)', () => {
-    expect(
-      deriveCompleteOutcome(
-        [{ success: false, action: 'create', error: 'boom' }],
-        { cancelled: true },
-      ),
-    ).toBe('cancelled');
+    expect(deriveCompleteOutcome([{ success: false, action: 'create', error: 'boom' }], { cancelled: true })).toBe(
+      'cancelled',
+    );
   });
 
   it('returns "partial" when cancel flag fired but a resource already succeeded', () => {

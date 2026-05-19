@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { ProviderError, InternalError } from '../../types/errors';
 import {
   DefaultProviderRegistry,
   ProviderManager,
@@ -19,7 +20,6 @@ import {
   get_global_registry,
   set_global_registry,
 } from '../provider-registry';
-import { ProviderError, InternalError } from '../../types/errors';
 import type {
   ProviderClient,
   ProviderConfig,
@@ -58,9 +58,7 @@ vi.mock('@ice-engine/provider-aws', () => ({
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
-function make_config(
-  overrides: Partial<ProviderConfig> = {},
-): ProviderConfig {
+function make_config(overrides: Partial<ProviderConfig> = {}): ProviderConfig {
   return {
     provider: 'test',
     region: 'us-east-1',
@@ -78,9 +76,7 @@ function make_client(
   return {
     provider,
     region: 'us-east-1',
-    health_check: vi.fn(async () =>
-      typeof health === 'function' ? await health() : health,
-    ),
+    health_check: vi.fn(async () => (typeof health === 'function' ? await health() : health)),
     deploy: vi.fn(),
     update: vi.fn(),
     destroy: vi.fn(),
@@ -92,9 +88,7 @@ function make_client(
 }
 
 function make_factory(client?: ProviderClient): ProviderFactory {
-  return vi.fn(async (config: ProviderConfig) =>
-    client ?? make_client(config.provider),
-  );
+  return vi.fn(async (config: ProviderConfig) => client ?? make_client(config.provider));
 }
 
 beforeEach(() => {
@@ -114,14 +108,18 @@ describe('Provider Registry', () => {
   it('should register provider factory', () => {
     const registry = create_provider_registry();
 
-    registry.register('test', async () => ({
-      provider: 'test',
-      create: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
-      read: async () => ({ exists: true, properties: {}, outputs: {} }),
-      update: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
-      delete: async () => ({ success: true }),
-      health_check: async () => ({ healthy: true }),
-    }) as unknown as ProviderClient);
+    registry.register(
+      'test',
+      async () =>
+        ({
+          provider: 'test',
+          create: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
+          read: async () => ({ exists: true, properties: {}, outputs: {} }),
+          update: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
+          delete: async () => ({ success: true }),
+          health_check: async () => ({ healthy: true }),
+        }) as unknown as ProviderClient,
+    );
 
     expect(registry.has('test')).toBe(true);
     expect(registry.list()).toContain('test');
@@ -147,9 +145,7 @@ describe('Provider Registry', () => {
     expect(warnSpy).not.toHaveBeenCalled();
 
     registry.register('dup', make_factory('second'));
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/register\("dup"\) replacing an existing factory/),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/register\("dup"\) replacing an existing factory/));
     warnSpy.mockRestore();
   });
 });
@@ -411,10 +407,7 @@ describe('DefaultProviderRegistry.health_check_all', () => {
 
   it('aggregates health results keyed by provider name', async () => {
     const registry = new DefaultProviderRegistry();
-    registry.register(
-      'aws',
-      async () => make_client('aws', { healthy: true, latency_ms: 1 }),
-    );
+    registry.register('aws', async () => make_client('aws', { healthy: true, latency_ms: 1 }));
     await registry.get(make_config({ provider: 'aws' }));
 
     const results = await registry.health_check_all();
@@ -481,9 +474,7 @@ describe('ProviderManager construction & defaults', () => {
       return make_client('aws');
     });
 
-    await manager.get_provider(
-      make_config({ provider: 'aws', timeout_ms: 9999, max_retries: 7 }),
-    );
+    await manager.get_provider(make_config({ provider: 'aws', timeout_ms: 9999, max_retries: 7 }));
 
     expect(captured!.timeout_ms).toBe(9999);
     expect(captured!.max_retries).toBe(7);

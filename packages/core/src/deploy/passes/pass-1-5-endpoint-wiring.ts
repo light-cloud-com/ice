@@ -14,16 +14,9 @@
  * the counter, only the graph + deployables array.
  */
 
-import {
-  sanitize_name,
-  sanitize_label_value,
-} from '../utils/name-utils';
-import type {
-  CardEdgeInput,
-  CardNodeInput,
-  DeployableNodeInfo,
-} from '../card-translator';
+import { sanitize_name, sanitize_label_value } from '../utils/name-utils';
 import type { MutableGraph } from '../../graph/mutable-graph';
+import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../card-translator';
 
 /**
  * One backend connected to a PublicEndpoint. Promoted to module-level

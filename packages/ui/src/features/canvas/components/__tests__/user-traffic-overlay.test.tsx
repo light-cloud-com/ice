@@ -20,7 +20,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import type { CanvasNode, CanvasConnection } from '../types';
 
 // ─── Mock the leaf renderers so we can assert on props by reference ──────────
@@ -54,12 +53,7 @@ import { UserTrafficOverlay, type UserTrafficOverlayProps } from '../user-traffi
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -73,10 +67,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -120,8 +111,7 @@ const baseProps = (overrides: Partial<UserTrafficOverlayProps> = {}): UserTraffi
   ...overrides,
 });
 
-const render = (overrides: Partial<UserTrafficOverlayProps> = {}) =>
-  UserTrafficOverlay(baseProps(overrides));
+const render = (overrides: Partial<UserTrafficOverlayProps> = {}) => UserTrafficOverlay(baseProps(overrides));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Gate matrix — both gates pinned independently
@@ -144,9 +134,7 @@ describe('UserTrafficOverlay — render gates', () => {
     expect(
       findByPredicate(
         tree,
-        (el) =>
-          el.type === 'g' &&
-          (el.props as { className?: string }).className === 'user-traffic-connections-layer',
+        (el) => el.type === 'g' && (el.props as { className?: string }).className === 'user-traffic-connections-layer',
       ).length,
     ).toBe(0);
     expect(findByType(tree, MockSvgUserNode)).toHaveLength(0);
@@ -162,9 +150,7 @@ describe('UserTrafficOverlay — render gates', () => {
     });
     const layer = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'g' &&
-        (el.props as { className?: string }).className === 'user-traffic-connections-layer',
+      (el) => el.type === 'g' && (el.props as { className?: string }).className === 'user-traffic-connections-layer',
     );
     expect(layer).toHaveLength(1);
     expect(findByType(tree, MockSvgConnectionPath)).toHaveLength(1);
@@ -180,9 +166,7 @@ describe('UserTrafficOverlay — render gates', () => {
     expect(
       findByPredicate(
         tree,
-        (el) =>
-          el.type === 'g' &&
-          (el.props as { className?: string }).className === 'user-traffic-connections-layer',
+        (el) => el.type === 'g' && (el.props as { className?: string }).className === 'user-traffic-connections-layer',
       ).length,
     ).toBe(0);
     expect(findByType(tree, MockSvgConnectionPath)).toHaveLength(0);
@@ -214,9 +198,7 @@ describe('UserTrafficOverlay — connections layer wrapper', () => {
     });
     const layers = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'g' &&
-        (el.props as { className?: string }).className === 'user-traffic-connections-layer',
+      (el) => el.type === 'g' && (el.props as { className?: string }).className === 'user-traffic-connections-layer',
     );
     expect(layers).toHaveLength(1);
     // The path must be a descendant of the wrapping g — confirm by walking
@@ -231,11 +213,7 @@ describe('UserTrafficOverlay — connections layer wrapper', () => {
   it('renders one <SvgConnectionPath> per connection in the input array', () => {
     const tree = render({
       show: true,
-      userConnections: [
-        makeConn({ id: 'a' }),
-        makeConn({ id: 'b' }),
-        makeConn({ id: 'c' }),
-      ],
+      userConnections: [makeConn({ id: 'a' }), makeConn({ id: 'b' }), makeConn({ id: 'c' })],
       nodesWithUserNode: [makeNode()],
     });
     expect(findByType(tree, MockSvgConnectionPath)).toHaveLength(3);
@@ -244,10 +222,7 @@ describe('UserTrafficOverlay — connections layer wrapper', () => {
   it('keys each <SvgConnectionPath> by conn.id', () => {
     const tree = render({
       show: true,
-      userConnections: [
-        makeConn({ id: 'k-1' }),
-        makeConn({ id: 'k-2' }),
-      ],
+      userConnections: [makeConn({ id: 'k-1' }), makeConn({ id: 'k-2' })],
       nodesWithUserNode: [makeNode()],
     });
     const paths = findByType(tree, MockSvgConnectionPath);

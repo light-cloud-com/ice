@@ -23,11 +23,11 @@
  * tautology check.
  */
 
-import * as React from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { act } from 'react';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import * as React from 'react';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { Provider } from 'react-redux';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Hoisted mocks ───────────────────────────────────────────────────────────────
@@ -117,12 +117,8 @@ vi.mock('../tour-popover', () => ({
 
 // Imports come AFTER vi.mock setups so the mocks are in place.
 import tourReducer, { startTour, setStep, setPhase } from '../../store/tour-slice';
+import { registerTour, clearRegistry, getTour } from '../../utils/tour-registry';
 import { TourRunner, __clearTourRunnerRegisteredIds } from '../tour-runner';
-import {
-  registerTour,
-  clearRegistry,
-  getTour,
-} from '../../utils/tour-registry';
 import type { Tour } from '../../tour.types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -158,20 +154,24 @@ function mountRunner(store: TestStore): void {
   );
 }
 
-function makeAnchor(id: string, rect: { left: number; top: number; width: number; height: number } = { left: 10, top: 20, width: 30, height: 40 }): HTMLDivElement {
+function makeAnchor(
+  id: string,
+  rect: { left: number; top: number; width: number; height: number } = { left: 10, top: 20, width: 30, height: 40 },
+): HTMLDivElement {
   const el = document.createElement('div');
   el.id = id;
-  el.getBoundingClientRect = () => ({
-    x: rect.left,
-    y: rect.top,
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-    right: rect.left + rect.width,
-    bottom: rect.top + rect.height,
-    toJSON: () => ({}),
-  } as DOMRect);
+  el.getBoundingClientRect = () =>
+    ({
+      x: rect.left,
+      y: rect.top,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      right: rect.left + rect.width,
+      bottom: rect.top + rect.height,
+      toJSON: () => ({}),
+    }) as DOMRect;
   document.body.appendChild(el);
   return el;
 }
@@ -202,10 +202,18 @@ async function flushAsync(): Promise<void> {
 // runner's tests don't care about observer firing, just that the
 // constructor is callable.
 class StubObserver {
-  observe(): void { /* no-op */ }
-  unobserve(): void { /* no-op */ }
-  disconnect(): void { /* no-op */ }
-  takeRecords(): unknown[] { return []; }
+  observe(): void {
+    /* no-op */
+  }
+  unobserve(): void {
+    /* no-op */
+  }
+  disconnect(): void {
+    /* no-op */
+  }
+  takeRecords(): unknown[] {
+    return [];
+  }
 }
 
 beforeEach(() => {
@@ -268,10 +276,7 @@ describe('TourRunner — registration', () => {
     mocks.tours = [bad];
     const store = makeStore();
     expect(() => mountRunner(store)).not.toThrow();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to register tour'),
-      expect.anything(),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to register tour'), expect.anything());
     warnSpy.mockRestore();
   });
 });
@@ -345,13 +350,10 @@ describe('TourRunner — phase progression', () => {
       store.dispatch(startTour({ tourId: 'm-tour', totalSteps: 2 }));
     });
     for (let i = 0; i < 100; i++) {
-      // eslint-disable-next-line no-await-in-loop
       await flushAsync();
       if (store.getState().tour.activeTourId === null) break;
     }
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('target missing'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('target missing'));
     const finalState = store.getState().tour;
     expect(finalState.activeTourId).toBeNull();
     expect(finalState.completedTours).not.toContain('m-tour');
@@ -418,10 +420,7 @@ describe('TourRunner — onEnter / onExit lifecycle', () => {
     });
     await flushAsync();
     await flushAsync();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('onEnter("step-1") threw'),
-      expect.any(Error),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('onEnter("step-1") threw'), expect.any(Error));
     // Tour did NOT abort — phase still placed.
     expect(store.getState().tour.phase).toBe('placed');
     warnSpy.mockRestore();
@@ -521,7 +520,7 @@ describe('TourRunner — onEnter / onExit lifecycle', () => {
     expect(document.querySelector('[data-testid="tour-overlay-mock"]')).not.toBeNull();
   });
 
-  it("phase transitions: idle → navigating → resolving → entering → placed", async () => {
+  it('phase transitions: idle → navigating → resolving → entering → placed', async () => {
     makeAnchor('anchor-1');
     let resolveEnter!: () => void;
     const enterPromise = new Promise<void>((r) => {
@@ -687,10 +686,7 @@ describe('TourRunner — onEnter / onExit lifecycle', () => {
     });
     await flushAsync();
     await flushAsync();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('onExit("step-1") threw'),
-      expect.any(Error),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('onExit("step-1") threw'), expect.any(Error));
     warnSpy.mockRestore();
   });
 });
@@ -706,9 +702,10 @@ describe('TourRunner — focus restoration', () => {
     trigger.focus();
     expect(document.activeElement).toBe(trigger);
 
-    const t = makeTour({ id: 'focus-tour', steps: [
-      { id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' },
-    ] });
+    const t = makeTour({
+      id: 'focus-tour',
+      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
+    });
     mocks.tours = [t];
     registerTour(t);
     const store = makeStore();
@@ -733,9 +730,10 @@ describe('TourRunner — focus restoration', () => {
     if (document.activeElement instanceof HTMLElement) {
       (document.activeElement as HTMLElement).blur();
     }
-    const t = makeTour({ id: 'null-focus-tour', steps: [
-      { id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' },
-    ] });
+    const t = makeTour({
+      id: 'null-focus-tour',
+      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
+    });
     mocks.tours = [t];
     registerTour(t);
     const store = makeStore();
@@ -757,9 +755,10 @@ describe('TourRunner — keyboard', () => {
     document.body.appendChild(trigger);
     trigger.focus();
 
-    const t = makeTour({ id: 'esc-tour', steps: [
-      { id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' },
-    ] });
+    const t = makeTour({
+      id: 'esc-tour',
+      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
+    });
     mocks.tours = [t];
     registerTour(t);
     const store = makeStore();
@@ -808,9 +807,10 @@ describe('TourRunner — multi-tour registry', () => {
 describe('TourRunner — overlay rect prop', () => {
   it('overlay receives a non-null rect once the step is placed', async () => {
     makeAnchor('anchor-1', { left: 50, top: 60, width: 70, height: 80 });
-    const t = makeTour({ id: 'rect-tour', steps: [
-      { id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' },
-    ] });
+    const t = makeTour({
+      id: 'rect-tour',
+      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
+    });
     mocks.tours = [t];
     registerTour(t);
     const store = makeStore();
@@ -913,9 +913,7 @@ describe('TourRunner — terminal-step advance + skip', () => {
     expect(store.getState().tour.completedTours).toContain('last-tour');
     expect(store.getState().tour.activeTourId).toBeNull();
     // persist thunk PUTs to /onboarding/completed-tours/:id.
-    expect(mocks.axiosPut).toHaveBeenCalledWith(
-      '/onboarding/completed-tours/last-tour',
-    );
+    expect(mocks.axiosPut).toHaveBeenCalledWith('/onboarding/completed-tours/last-tour');
   });
 
   it('skip from popover marks tour completed and closes', async () => {
@@ -987,9 +985,7 @@ describe('TourRunner — terminal-step advance + skip', () => {
     await flushAsync();
     expect(store.getState().tour.activeTourId).toBeNull();
     expect(store.getState().tour.completedTours).toContain('close-last-tour');
-    expect(mocks.axiosPut).toHaveBeenCalledWith(
-      '/onboarding/completed-tours/close-last-tour',
-    );
+    expect(mocks.axiosPut).toHaveBeenCalledWith('/onboarding/completed-tours/close-last-tour');
   });
 
   it('overlay-shield click on an earlier step stops without completion', async () => {

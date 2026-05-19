@@ -29,14 +29,14 @@
 
 import React from 'react';
 import { CanvasGrid } from '../canvas-grid';
-import { SelectionFrame } from '../selection-frame';
 import { ConnectionLayer, type ConnectionLayerProps } from '../connection-layer';
 import { ConnectionPreviewOverlay, type ConnectionPreviewOverlayProps } from '../connection-preview-overlay';
 import { ConnectionRejectionOverlay, type ConnectionRejection } from '../connection-rejection-overlay';
-import { UserTrafficOverlay, type UserTrafficOverlayProps } from '../user-traffic-overlay';
 import { GhostOverlay, type GhostOverlayProps } from '../ghost/ghost-overlay';
-import { ParentClipDefs } from './parent-clip-defs';
+import { UserTrafficOverlay, type UserTrafficOverlayProps } from '../user-traffic-overlay';
 import { NodesLayer } from './nodes-layer';
+import { ParentClipDefs } from './parent-clip-defs';
+import { SelectionFrame } from '../selection-frame';
 import type { RenderCtx } from './node-renderer-registry';
 import type { CanvasNode } from '../types';
 
@@ -234,12 +234,7 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
       {/* Ghost-mode suggestions (AI-Native #1) — rf-canv2-7: extracted
           to `./ghost/ghost-overlay`. Returns null when ghosts is empty
           so the orchestrator's JSX surface stays compact. */}
-      <GhostOverlay
-        ghosts={ghosts}
-        nodes={nodes}
-        onAccept={onAcceptGhost}
-        onDismiss={onDismissGhost}
-      />
+      <GhostOverlay ghosts={ghosts} nodes={nodes} onAccept={onAcceptGhost} onDismiss={onDismissGhost} />
     </g>
   );
 };

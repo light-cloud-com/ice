@@ -68,10 +68,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
@@ -153,7 +150,10 @@ describe('RenameEnvironmentModal — handlers', () => {
     const tree = callRender({ env: makeEnv({ name: '' }), projectId: 'p1', onClose: vi.fn() });
     const save = findByPredicate(
       tree,
-      (el) => el.type === 'button' && typeof el.props.onClick === 'function' && el.props.children !== 't:environments.renameModal.cancelButton',
+      (el) =>
+        el.type === 'button' &&
+        typeof el.props.onClick === 'function' &&
+        el.props.children !== 't:environments.renameModal.cancelButton',
     );
     expect(save?.props.disabled).toBe(true);
   });
@@ -162,7 +162,10 @@ describe('RenameEnvironmentModal — handlers', () => {
     const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose: vi.fn() });
     const save = findByPredicate(
       tree,
-      (el) => el.type === 'button' && typeof el.props.onClick === 'function' && el.props.children !== 't:environments.renameModal.cancelButton',
+      (el) =>
+        el.type === 'button' &&
+        typeof el.props.onClick === 'function' &&
+        el.props.children !== 't:environments.renameModal.cancelButton',
     );
     expect(save?.props.disabled).toBe(true);
   });

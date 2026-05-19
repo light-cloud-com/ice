@@ -8,9 +8,9 @@
  * without touching the real DB or signing real JWTs.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks ─────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ async function request(method: string, path: string, body?: unknown) {
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -133,11 +133,9 @@ describe('POST /api/auth/switch-org — happy path', () => {
         user_id_organisation_id: { user_id: 'user-1', organisation_id: 'org-2' },
       },
     });
-    expect(jwtSignMock).toHaveBeenCalledWith(
-      { userId: 'user-1', organisationId: 'org-2' },
-      'test-secret',
-      { expiresIn: '1h' },
-    );
+    expect(jwtSignMock).toHaveBeenCalledWith({ userId: 'user-1', organisationId: 'org-2' }, 'test-secret', {
+      expiresIn: '1h',
+    });
   });
 });
 
@@ -316,11 +314,7 @@ describe('JWT_SECRET resolution', () => {
       body: JSON.stringify({ organisationId: 'org-2' }),
     });
 
-    expect(jwtSignMock).toHaveBeenCalledWith(
-      expect.any(Object),
-      'real-prod-secret',
-      expect.any(Object),
-    );
+    expect(jwtSignMock).toHaveBeenCalledWith(expect.any(Object), 'real-prod-secret', expect.any(Object));
 
     await new Promise<void>((resolve) => localServer.close(() => resolve()));
   });

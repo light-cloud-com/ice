@@ -179,7 +179,11 @@ export const QueueListField: React.FC<{
             {/* FIFO toggle */}
             <button
               onClick={() => update(i, { ...q, fifo: !q.fifo })}
-              title={q.fifo ? t('canvas.properties.fields.queueFifoTooltip') : t('canvas.properties.fields.queueStandardTooltip')}
+              title={
+                q.fifo
+                  ? t('canvas.properties.fields.queueFifoTooltip')
+                  : t('canvas.properties.fields.queueStandardTooltip')
+              }
               className="flex-shrink-0 px-1.5 py-0.5 rounded text-ice-2xs font-medium transition-colors"
               style={{
                 background: q.fifo ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
@@ -321,7 +325,9 @@ export const TaskListField: React.FC<{
               </div>
               {/* Frequency row */}
               <div className="flex items-center gap-2 pl-8">
-                <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowWhen')}</span>
+                <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                  {t('canvas.properties.fields.taskRowWhen')}
+                </span>
                 <IceSelect
                   value={task.frequency || t('canvas.properties.fields.freqDailyMidnight')}
                   onChange={(v) => update(i, { ...task, frequency: v })}
@@ -333,7 +339,9 @@ export const TaskListField: React.FC<{
               {/* Custom cron row — only when frequency === 'Custom' */}
               {isCustom && (
                 <div className="flex items-center gap-2 pl-8">
-                  <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowCron')}</span>
+                  <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                    {t('canvas.properties.fields.taskRowCron')}
+                  </span>
                   <input
                     type="text"
                     value={task.schedule_expression || ''}
@@ -345,12 +353,12 @@ export const TaskListField: React.FC<{
               )}
               {/* Action picker — what the task DOES when it fires. */}
               <div className="flex items-center gap-2 pl-8">
-                <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowAction')}</span>
+                <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                  {t('canvas.properties.fields.taskRowAction')}
+                </span>
                 <IceSelect
                   value={task.action_type || 'block'}
-                  onChange={(v) =>
-                    update(i, { ...task, action_type: v === 'http' ? 'http' : 'block' })
-                  }
+                  onChange={(v) => update(i, { ...task, action_type: v === 'http' ? 'http' : 'block' })}
                   options={ACTION_TYPE_OPTIONS}
                   width="160px"
                   allowEmpty={false}
@@ -359,13 +367,19 @@ export const TaskListField: React.FC<{
               {/* Action target — depends on action_type. */}
               {(task.action_type || 'block') === 'block' ? (
                 <div className="flex items-center gap-2 pl-8">
-                  <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowBlock')}</span>
+                  <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                    {t('canvas.properties.fields.taskRowBlock')}
+                  </span>
                   <IceSelect
                     value={task.action_target_node_id || ''}
                     onChange={(v) => update(i, { ...task, action_target_node_id: v || undefined })}
                     options={blockOptions}
                     width="160px"
-                    placeholder={blockOptions.length === 0 ? t('canvas.properties.fields.taskNoBlocks') : t('canvas.properties.fields.taskPickBlock')}
+                    placeholder={
+                      blockOptions.length === 0
+                        ? t('canvas.properties.fields.taskNoBlocks')
+                        : t('canvas.properties.fields.taskPickBlock')
+                    }
                     emptyLabel={t('canvas.properties.fields.taskBlockNotSet')}
                     allowEmpty
                     disabled={blockOptions.length === 0}
@@ -374,7 +388,9 @@ export const TaskListField: React.FC<{
               ) : (
                 <>
                   <div className="flex items-center gap-2 pl-8">
-                    <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowUrl')}</span>
+                    <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                      {t('canvas.properties.fields.taskRowUrl')}
+                    </span>
                     <input
                       type="text"
                       value={task.action_url || ''}
@@ -384,7 +400,9 @@ export const TaskListField: React.FC<{
                     />
                   </div>
                   <div className="flex items-center gap-2 pl-8">
-                    <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">{t('canvas.properties.fields.taskRowMethod')}</span>
+                    <span className="text-ice-2xs text-ice-text-3/70 shrink-0 w-14">
+                      {t('canvas.properties.fields.taskRowMethod')}
+                    </span>
                     <IceSelect
                       value={task.action_http_method || 'GET'}
                       onChange={(v) => update(i, { ...task, action_http_method: v })}

@@ -9,9 +9,9 @@
  * test by writing into `mocks.openRef.current` before invoking the FC.
  */
 
+import { ChevronRight, Zap } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChevronRight, Zap } from 'lucide-react';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -36,7 +36,6 @@ vi.mock('react', async (importOriginal) => {
 
 // ─── Imports must come AFTER vi.mock ──────────────────────────────────────
 
-// eslint-disable-next-line import/first
 import { Section, type SectionProps } from '../section';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
@@ -69,10 +68,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);

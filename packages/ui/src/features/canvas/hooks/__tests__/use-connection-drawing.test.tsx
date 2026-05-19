@@ -35,10 +35,10 @@
  * short-circuit before the state update.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -137,8 +137,7 @@ const cardsStubSlice = createSlice({
 const makeStore = () =>
   configureStore({
     reducer: { cards: cardsStubSlice.reducer },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
@@ -155,8 +154,7 @@ const captureHook = (store: TestStore, overrides: CaptureArgs = {}): UseConnecti
   const args = {
     effectiveNodes: overrides.effectiveNodes ?? [],
     card: overrides.card,
-    screenToCanvas:
-      overrides.screenToCanvas ?? ((cx: number, cy: number) => ({ x: cx, y: cy })),
+    screenToCanvas: overrides.screenToCanvas ?? ((cx: number, cy: number) => ({ x: cx, y: cy })),
   };
   const captured: { current?: UseConnectionDrawingResult } = {};
   const Probe: React.FC = () => {
@@ -225,7 +223,7 @@ const makeNode = (overrides: Partial<CanvasNode> & { id: string }): CanvasNode =
     label: overrides.label ?? overrides.id,
     parentId: overrides.parentId ?? null,
     data: overrides.data ?? { iceType: 'Compute.Service' },
-  } as unknown as CanvasNode);
+  }) as unknown as CanvasNode;
 
 const makeCard = (edges: CardEdge[] = []): Card =>
   ({
@@ -235,7 +233,7 @@ const makeCard = (edges: CardEdge[] = []): Card =>
     edges,
     viewport: { panX: 0, panY: 0, scale: 1 },
     createdAt: 0,
-  } as Card);
+  }) as Card;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -271,11 +269,13 @@ afterEach(() => {
  * `handleConnectionPortDown` path so individual tests can focus on the
  * end-of-drag validation cascade.
  */
-function startDrag(options: {
-  sourceId?: string;
-  sourceRouteId?: string;
-  sourcePoint?: { x: number; y: number };
-} = {}) {
+function startDrag(
+  options: {
+    sourceId?: string;
+    sourceRouteId?: string;
+    sourcePoint?: { x: number; y: number };
+  } = {},
+) {
   mocks.drawingConnectionSlot.current = {
     sourceId: options.sourceId ?? 'src',
     sourceRouteId: options.sourceRouteId,
@@ -403,11 +403,7 @@ describe('useConnectionDrawing — connectionDragTargets memo', () => {
       return ctx.tgtNode.id === 'n1';
     });
 
-    const nodes: CanvasNode[] = [
-      makeNode({ id: 'svc' }),
-      makeNode({ id: 'n1' }),
-      makeNode({ id: 'n2' }),
-    ];
+    const nodes: CanvasNode[] = [makeNode({ id: 'svc' }), makeNode({ id: 'n1' }), makeNode({ id: 'n2' })];
     const result = captureHook(store, { effectiveNodes: nodes });
     expect(result.connectionDragTargets).not.toBeNull();
     const targets = result.connectionDragTargets!;
@@ -645,9 +641,7 @@ describe('useConnectionDrawing — handleConnectionEnd validation cascade', () =
     r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
 
     // Cycle warning surfaced...
-    expect(
-      warnSpy.mock.calls.some((c) => String(c[0]).includes('circular dependency')),
-    ).toBe(true);
+    expect(warnSpy.mock.calls.some((c) => String(c[0]).includes('circular dependency'))).toBe(true);
     // ...but the dispatch still fired.
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
@@ -792,17 +786,13 @@ describe('useConnectionDrawing — risk #3: card stays in dep array', () => {
     captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
     startDrag({ sourceId: 'src' });
 
-    const newEdges: CardEdge[] = [
-      { id: 'preexisting', source: 'src', target: 'envvars-1', data: {} },
-    ];
+    const newEdges: CardEdge[] = [{ id: 'preexisting', source: 'src', target: 'envvars-1', data: {} }];
     const cardWithEdge = makeCard(newEdges);
     let observedEdges: ReadonlyArray<{ source: string; target: string }> | undefined;
-    mocks.findExistingSpecialConnectionSpy.mockImplementation(
-      (_src, _tgt, edges, _nodes) => {
-        observedEdges = edges as ReadonlyArray<{ source: string; target: string }>;
-        return { specialType: null, conflict: false };
-      },
-    );
+    mocks.findExistingSpecialConnectionSpy.mockImplementation((_src, _tgt, edges, _nodes) => {
+      observedEdges = edges as ReadonlyArray<{ source: string; target: string }>;
+      return { specialType: null, conflict: false };
+    });
 
     const r = captureHook(store, { effectiveNodes: nodes, card: cardWithEdge });
     r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
@@ -837,10 +827,7 @@ describe('useConnectionDrawing — risk #3: card stays in dep array', () => {
     const store = makeStore();
     startDrag({ sourceId: 'svc' });
 
-    const nodes: CanvasNode[] = [
-      makeNode({ id: 'svc', data: {} }),
-      makeNode({ id: 'n1' }),
-    ];
+    const nodes: CanvasNode[] = [makeNode({ id: 'svc', data: {} }), makeNode({ id: 'n1' })];
     captureHook(store, { effectiveNodes: nodes });
     // canConnect was called with src iceType === '' (the empty-string fallback).
     const args = mocks.canConnectSpy.mock.calls[0];
@@ -911,18 +898,14 @@ describe('useConnectionDrawing — risk #3: card stays in dep array', () => {
     startDrag({ sourceId: 'src' });
     dispatchSpy.mockClear();
 
-    mocks.validateConnectionSpy.mockReturnValue([
-      { level: 'warning', message: 'minor concern' /* no suggestion */ },
-    ]);
+    mocks.validateConnectionSpy.mockReturnValue([{ level: 'warning', message: 'minor concern' /* no suggestion */ }]);
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
     r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
 
     // The warning is logged WITHOUT the suggestion suffix — pure message text.
-    const warningCall = warnSpy.mock.calls.find((c) =>
-      String(c[0]).includes('minor concern'),
-    );
+    const warningCall = warnSpy.mock.calls.find((c) => String(c[0]).includes('minor concern'));
     expect(warningCall).toBeDefined();
     expect(String(warningCall![0])).not.toContain(' — ');
     warnSpy.mockRestore();

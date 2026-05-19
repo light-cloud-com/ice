@@ -51,10 +51,12 @@ vi.mock('../tar-parser', () => ({
  * `(ctx.rest_client as any).requestRaw`). The other fields are required
  * by the type but unread.
  */
-function makeCtx(overrides: {
-  on_log?: (msg: string) => void;
-  requestRaw?: (opts: any) => Promise<any>;
-} = {}): GCPHandlerContext {
+function makeCtx(
+  overrides: {
+    on_log?: (msg: string) => void;
+    requestRaw?: (opts: any) => Promise<any>;
+  } = {},
+): GCPHandlerContext {
   const restClient: any = {
     get: vi.fn(),
     post: vi.fn(),
@@ -74,12 +76,7 @@ function makeCtx(overrides: {
 }
 
 /** Build a `Response`-shaped object that satisfies `globalThis.fetch`. */
-function makeFetchResponse(opts: {
-  ok: boolean;
-  status?: number;
-  statusText?: string;
-  body?: ArrayBuffer;
-}): Response {
+function makeFetchResponse(opts: { ok: boolean; status?: number; statusText?: string; body?: ArrayBuffer }): Response {
   return {
     ok: opts.ok,
     status: opts.status ?? (opts.ok ? 200 : 500),
@@ -107,9 +104,7 @@ describe('firebase-hosting/github-downloader', () => {
       // Arrange: stub the global fetch to return a 200 with a fake
       // gzipped body, and mock parseTar to return two files under the
       // standard `<repo>-<branch>/` prefix that codeload tarballs use.
-      const fetchSpy = vi.fn(async () =>
-        makeFetchResponse({ ok: true, body: new ArrayBuffer(8) }),
-      );
+      const fetchSpy = vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(8) }));
       vi.stubGlobal('fetch', fetchSpy);
       mocks.parseTar.mockReturnValue([
         { name: 'my-repo-main/index.html', data: Buffer.from('<!doctype html>') },
@@ -139,26 +134,20 @@ describe('firebase-hosting/github-downloader', () => {
     it('builds the codeload URL from owner/repo/branch', async () => {
       // Pin the URL template — a future refactor that swaps the order
       // of segments would silently 404 for every public repo.
-      const fetchSpy = vi.fn(async () =>
-        makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-      );
+      const fetchSpy = vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }));
       vi.stubGlobal('fetch', fetchSpy);
 
       await downloadGitHubRepo(makeCtx(), 'octocat', 'hello-world', 'develop', '');
 
       const args = fetchSpy.mock.calls[0]!;
-      expect(args[0]).toBe(
-        'https://codeload.github.com/octocat/hello-world/tar.gz/refs/heads/develop',
-      );
+      expect(args[0]).toBe('https://codeload.github.com/octocat/hello-world/tar.gz/refs/heads/develop');
     });
 
     it('passes redirect:"follow" so codeload\'s 302 to the CDN works', async () => {
       // The codeload endpoint 302s to a CDN host; without
       // `redirect: 'follow'` the fetch would return the redirect
       // response itself instead of the bytes.
-      const fetchSpy = vi.fn(async () =>
-        makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-      );
+      const fetchSpy = vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }));
       vi.stubGlobal('fetch', fetchSpy);
 
       await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '');
@@ -172,14 +161,12 @@ describe('firebase-hosting/github-downloader', () => {
       // try/catch can fall back to a placeholder version.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: false, status: 404, statusText: 'Not Found' }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: false, status: 404, statusText: 'Not Found' })),
       );
 
-      await expect(
-        downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', ''),
-      ).rejects.toThrow('GitHub tarball download failed: 404 Not Found');
+      await expect(downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '')).rejects.toThrow(
+        'GitHub tarball download failed: 404 Not Found',
+      );
     });
   });
 
@@ -188,9 +175,7 @@ describe('firebase-hosting/github-downloader', () => {
       // The whole reason the global-fetch branch exists. The fetch init
       // object must NOT include an `Authorization` (or any other) header
       // — codeload is a public CDN that 401s on bearer tokens.
-      const fetchSpy = vi.fn(async () =>
-        makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-      );
+      const fetchSpy = vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }));
       vi.stubGlobal('fetch', fetchSpy);
 
       await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '');
@@ -216,9 +201,7 @@ describe('firebase-hosting/github-downloader', () => {
       }));
       vi.stubGlobal('fetch', undefined);
 
-      mocks.parseTar.mockReturnValue([
-        { name: 'r-main/a.txt', data: Buffer.from('a') },
-      ]);
+      mocks.parseTar.mockReturnValue([{ name: 'r-main/a.txt', data: Buffer.from('a') }]);
 
       const ctx = makeCtx({ requestRaw: requestRawSpy });
       const out = await downloadGitHubRepo(ctx, 'me', 'r', 'main', '');
@@ -248,9 +231,7 @@ describe('firebase-hosting/github-downloader', () => {
       // the `dist/` prefix so files land at hosting root.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/dist/index.html', data: Buffer.from('<html>') },
@@ -275,18 +256,12 @@ describe('firebase-hosting/github-downloader', () => {
       // resolve to the same filter prefix.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
-      mocks.parseTar.mockReturnValue([
-        { name: 'r-main/dist/index.html', data: Buffer.from('<html>') },
-      ]);
+      mocks.parseTar.mockReturnValue([{ name: 'r-main/dist/index.html', data: Buffer.from('<html>') }]);
 
       const out = await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '/dist/');
-      expect(out).toEqual([
-        { hostingPath: '/index.html', bytes: Buffer.from('<html>') },
-      ]);
+      expect(out).toEqual([{ hostingPath: '/index.html', bytes: Buffer.from('<html>') }]);
     });
 
     it('returns all files at hosting root when outputDirectory is empty', async () => {
@@ -295,9 +270,7 @@ describe('firebase-hosting/github-downloader', () => {
       // stripped).
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/index.html', data: Buffer.from('<html>') },
@@ -321,9 +294,7 @@ describe('firebase-hosting/github-downloader', () => {
       // blank site; with the fallback we deploy something useful.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         // Nothing under `dist/` — only root-level files.
@@ -361,13 +332,9 @@ describe('firebase-hosting/github-downloader', () => {
       // the summary should read like the no-outputDirectory case.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
-      mocks.parseTar.mockReturnValue([
-        { name: 'r-main/index.html', data: Buffer.from('<html>') },
-      ]);
+      mocks.parseTar.mockReturnValue([{ name: 'r-main/index.html', data: Buffer.from('<html>') }]);
 
       const onLog = vi.fn();
       await downloadGitHubRepo(makeCtx({ on_log: onLog }), 'me', 'r', 'main', 'dist');
@@ -386,9 +353,7 @@ describe('firebase-hosting/github-downloader', () => {
       // switches to a placeholder version.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/.git/HEAD', data: Buffer.from('ref') },
@@ -412,9 +377,7 @@ describe('firebase-hosting/github-downloader', () => {
       // and the caller switches to a placeholder.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/.gitignore', data: Buffer.from('node_modules') },
@@ -426,9 +389,7 @@ describe('firebase-hosting/github-downloader', () => {
 
       expect(out).toEqual([]);
       // No fallback warning was emitted.
-      const fallbackWarning = onLog.mock.calls.find((c) =>
-        String(c[0]).includes('matched no files'),
-      );
+      const fallbackWarning = onLog.mock.calls.find((c) => String(c[0]).includes('matched no files'));
       expect(fallbackWarning).toBeUndefined();
     });
   });
@@ -443,9 +404,7 @@ describe('firebase-hosting/github-downloader', () => {
       //   - README.md + LICENSE (informational, not a site asset)
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/.git/HEAD', data: Buffer.from('ref') },
@@ -458,9 +417,7 @@ describe('firebase-hosting/github-downloader', () => {
       ]);
 
       const out = await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '');
-      expect(out).toEqual([
-        { hostingPath: '/index.html', bytes: Buffer.from('html') },
-      ]);
+      expect(out).toEqual([{ hostingPath: '/index.html', bytes: Buffer.from('html') }]);
     });
 
     it('skips entries whose path is empty after stripping the repo prefix', async () => {
@@ -470,9 +427,7 @@ describe('firebase-hosting/github-downloader', () => {
       // which Firebase rejects.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/', data: Buffer.from('') },
@@ -480,9 +435,7 @@ describe('firebase-hosting/github-downloader', () => {
       ]);
 
       const out = await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', '');
-      expect(out).toEqual([
-        { hostingPath: '/index.html', bytes: Buffer.from('html') },
-      ]);
+      expect(out).toEqual([{ hostingPath: '/index.html', bytes: Buffer.from('html') }]);
     });
 
     it('skips an outputDirectory entry whose path is the bare directory', async () => {
@@ -492,9 +445,7 @@ describe('firebase-hosting/github-downloader', () => {
       // outDir branch handles this.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/dist/', data: Buffer.from('') },
@@ -502,9 +453,7 @@ describe('firebase-hosting/github-downloader', () => {
       ]);
 
       const out = await downloadGitHubRepo(makeCtx(), 'me', 'r', 'main', 'dist');
-      expect(out).toEqual([
-        { hostingPath: '/index.html', bytes: Buffer.from('html') },
-      ]);
+      expect(out).toEqual([{ hostingPath: '/index.html', bytes: Buffer.from('html') }]);
     });
   });
 
@@ -512,17 +461,13 @@ describe('firebase-hosting/github-downloader', () => {
     it('defaults branch to "main" when not provided', async () => {
       // The signature accepts `branch?` so tests / future callers can
       // omit it. The default 'main' goes into the URL.
-      const fetchSpy = vi.fn(async () =>
-        makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-      );
+      const fetchSpy = vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }));
       vi.stubGlobal('fetch', fetchSpy);
 
       await downloadGitHubRepo(makeCtx(), 'me', 'r');
 
       const args = fetchSpy.mock.calls[0]!;
-      expect(args[0]).toBe(
-        'https://codeload.github.com/me/r/tar.gz/refs/heads/main',
-      );
+      expect(args[0]).toBe('https://codeload.github.com/me/r/tar.gz/refs/heads/main');
     });
 
     it('defaults outputDirectory to "" (whole repo) when not provided', async () => {
@@ -530,9 +475,7 @@ describe('firebase-hosting/github-downloader', () => {
       // behaviour as passing '' explicitly.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([
         { name: 'r-main/a.html', data: Buffer.from('a') },
@@ -565,9 +508,7 @@ describe('firebase-hosting/github-downloader', () => {
       await downloadGitHubRepo(makeCtx({ on_log: onLog }), 'me', 'r', 'main', '');
 
       const messages = onLog.mock.calls.map((c) => String(c[0]));
-      expect(messages.some((m) => m.includes('Downloading me/r#main from'))).toBe(
-        true,
-      );
+      expect(messages.some((m) => m.includes('Downloading me/r#main from'))).toBe(true);
       expect(messages.some((m) => m.includes('Downloaded 123 bytes'))).toBe(true);
     });
 
@@ -576,13 +517,9 @@ describe('firebase-hosting/github-downloader', () => {
       // the configured outputDirectory (not when we fell back).
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
-      mocks.parseTar.mockReturnValue([
-        { name: 'r-main/dist/index.html', data: Buffer.from('html') },
-      ]);
+      mocks.parseTar.mockReturnValue([{ name: 'r-main/dist/index.html', data: Buffer.from('html') }]);
 
       const onLog = vi.fn();
       await downloadGitHubRepo(makeCtx({ on_log: onLog }), 'me', 'r', 'main', 'dist');
@@ -600,18 +537,14 @@ describe('firebase-hosting/github-downloader', () => {
       // optional chaining surfaces here.
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () =>
-          makeFetchResponse({ ok: true, body: new ArrayBuffer(0) }),
-        ),
+        vi.fn(async () => makeFetchResponse({ ok: true, body: new ArrayBuffer(0) })),
       );
       mocks.parseTar.mockReturnValue([]);
 
       const ctx = makeCtx();
       delete ctx.on_log;
 
-      await expect(downloadGitHubRepo(ctx, 'me', 'r', 'main', '')).resolves.toEqual(
-        [],
-      );
+      await expect(downloadGitHubRepo(ctx, 'me', 'r', 'main', '')).resolves.toEqual([]);
     });
   });
 

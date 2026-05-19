@@ -5,13 +5,8 @@
  * `graph/algorithms.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  find_cycles,
-  has_cycle,
-  reverse_topological_sort,
-  topological_sort,
-} from '../topo-cycle';
-import { id_of, make_graph } from './fixtures';
+import { find_cycles, has_cycle, reverse_topological_sort, topological_sort } from '../topo-cycle';
+import { make_graph } from './fixtures';
 
 describe('topological_sort', () => {
   it('returns nodes in dependency order for linear chain', () => {

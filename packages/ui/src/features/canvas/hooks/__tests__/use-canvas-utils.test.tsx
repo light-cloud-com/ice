@@ -49,10 +49,7 @@ interface Captured {
   distance: (p1: { x: number; y: number }, p2: { x: number; y: number }) => number;
 }
 
-const renderHook = (
-  svgRef: React.RefObject<SVGSVGElement>,
-  viewState: ViewState,
-): Captured => {
+const renderHook = (svgRef: React.RefObject<SVGSVGElement>, viewState: ViewState): Captured => {
   const captured: { current?: Captured } = {};
   const Probe: React.FC = () => {
     captured.current = useCanvasUtils(svgRef, viewState);

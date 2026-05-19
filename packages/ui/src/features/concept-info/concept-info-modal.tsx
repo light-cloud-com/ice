@@ -16,8 +16,8 @@ import {
   Provider,
 } from '@ice/blocks';
 import React, { useMemo, useState } from 'react';
-import { useTranslation } from '../../i18n';
 import { renderMarkdown } from './markdown';
+import { useTranslation } from '../../i18n';
 
 type Tab = 'overview' | 'compiles' | 'snippets' | 'links';
 
@@ -162,9 +162,7 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
 const OverviewTab: React.FC<{ content: InfoContent }> = ({ content }) => {
   const { locale } = useTranslation();
   const markdown =
-    locale === 'zh' && content.overview.markdownZh
-      ? content.overview.markdownZh
-      : content.overview.markdown;
+    locale === 'zh' && content.overview.markdownZh ? content.overview.markdownZh : content.overview.markdown;
   return (
     <div
       className="text-ice-sm prose-custom"
@@ -324,10 +322,7 @@ const LinksTab: React.FC<{ content: InfoContent }> = ({ content }) => {
   return (
     <div className="flex flex-col gap-2">
       {content.links?.map((link, i) => {
-        const label =
-          locale === 'zh' && content.linksZh && content.linksZh[i]
-            ? content.linksZh[i]
-            : link.label;
+        const label = locale === 'zh' && content.linksZh && content.linksZh[i] ? content.linksZh[i] : link.label;
         return (
           <a
             key={link.url}

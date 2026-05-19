@@ -7,9 +7,9 @@ import { compute_primary_url, backend_ref } from '../url-builder';
 describe('load-balancer/url-builder', () => {
   describe('compute_primary_url', () => {
     it('prefers customDomain over everything else', () => {
-      expect(
-        compute_primary_url({ customDomain: 'example.com', wantsHttps: true, ipAddress: '1.2.3.4' }),
-      ).toBe('https://example.com');
+      expect(compute_primary_url({ customDomain: 'example.com', wantsHttps: true, ipAddress: '1.2.3.4' })).toBe(
+        'https://example.com',
+      );
     });
 
     it('always uses https scheme for customDomain even when wantsHttps is false', () => {
@@ -19,15 +19,11 @@ describe('load-balancer/url-builder', () => {
     });
 
     it('uses https://<ip> when wantsHttps and an IP is available but no customDomain', () => {
-      expect(compute_primary_url({ customDomain: '', wantsHttps: true, ipAddress: '1.2.3.4' })).toBe(
-        'https://1.2.3.4',
-      );
+      expect(compute_primary_url({ customDomain: '', wantsHttps: true, ipAddress: '1.2.3.4' })).toBe('https://1.2.3.4');
     });
 
     it('falls back to http://<ip> when wantsHttps is false', () => {
-      expect(compute_primary_url({ customDomain: '', wantsHttps: false, ipAddress: '1.2.3.4' })).toBe(
-        'http://1.2.3.4',
-      );
+      expect(compute_primary_url({ customDomain: '', wantsHttps: false, ipAddress: '1.2.3.4' })).toBe('http://1.2.3.4');
     });
 
     it('returns undefined when nothing is available', () => {
@@ -47,9 +43,7 @@ describe('load-balancer/url-builder', () => {
     });
 
     it('builds a backend service URL from the service variant', () => {
-      expect(backend_ref('my-project', 'my-svc', 'service')).toBe(
-        'projects/my-project/global/backendServices/my-svc',
-      );
+      expect(backend_ref('my-project', 'my-svc', 'service')).toBe('projects/my-project/global/backendServices/my-svc');
     });
 
     it('does not URL-encode the project or backend name (caller responsibility)', () => {

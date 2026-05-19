@@ -88,11 +88,7 @@ let mockAutoLayoutResult: {
 } = { nodes: [], edgeRoutes: new Map() };
 
 vi.mock('../../../../../shared/utils/auto-layout', () => ({
-  autoLayout: (
-    nodes: unknown[],
-    edges: unknown[],
-    options: Record<string, unknown>,
-  ) => {
+  autoLayout: (nodes: unknown[], edges: unknown[], options: Record<string, unknown>) => {
     // Deep-clone the spy args because the reducer is invoked from inside
     // an Immer `produce(...)` callback — the LayoutNode array is built
     // by mapping over the draft, and references to the draft proxies
@@ -110,8 +106,8 @@ vi.mock('../../../../../shared/utils/auto-layout', () => ({
 // Imports MUST come AFTER `vi.mock` so the mock takes effect before module
 // resolution. Vitest hoists `vi.mock` calls regardless, but keeping the
 // physical order matches the cognitive flow (mock first, then code under test).
-import { autoOrganizeReducers } from '../auto-organize';
 import { pushSnapshot } from '../../snapshot';
+import { autoOrganizeReducers } from '../auto-organize';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
 
 // -----------------------------------------------------------------------------
@@ -161,14 +157,12 @@ function makeState(opts: { cards?: Card[]; activeCardId?: string | null } = {}):
 
 // Synthetic action constructor: caller supplies the payload, we forge the
 // `type` field so the PayloadAction shape is satisfied.
-function autoOrganizeAction(
-  payload?: {
-    direction?: 'vertical' | 'horizontal';
-    layout?: 'flow' | 'grid' | 'circular';
-    containerId?: string;
-    zoom?: number;
-  },
-): PayloadAction<
+function autoOrganizeAction(payload?: {
+  direction?: 'vertical' | 'horizontal';
+  layout?: 'flow' | 'grid' | 'circular';
+  containerId?: string;
+  zoom?: number;
+}): PayloadAction<
   | {
       direction?: 'vertical' | 'horizontal';
       layout?: 'flow' | 'grid' | 'circular';
@@ -262,9 +256,7 @@ describe('autoOrganizeCard — parentId cleanup pass', () => {
     expect(next.cards[0].nodes.find((n) => n.id === 'child')?.parentId).toBeUndefined();
     // The LayoutNode autoLayout received had parentId=null.
     const [layoutNodesArg] = mockAutoLayoutSpy.mock.calls[0];
-    const childLayoutNode = (layoutNodesArg as Array<Record<string, unknown>>).find(
-      (n) => n.id === 'child',
-    );
+    const childLayoutNode = (layoutNodesArg as Array<Record<string, unknown>>).find((n) => n.id === 'child');
     expect(childLayoutNode?.parentId).toBeNull();
   });
 
@@ -548,9 +540,7 @@ describe('autoOrganizeCard — master organize branch', () => {
     const state = makeState({
       cards: [
         makeCard('c1', {
-          nodes: [
-            makeNode('a', { height: 42, data: { folded: true } }),
-          ],
+          nodes: [makeNode('a', { height: 42, data: { folded: true } })],
         }),
       ],
     });
@@ -647,7 +637,13 @@ describe('autoOrganizeCard — centroid stabilize (master branch)', () => {
         { id: 'b', x: 500, y: 500, width: 200, height: 200 },
       ],
       edgeRoutes: new Map([
-        ['a::b', [{ x: 200, y: 200 }, { x: 600, y: 600 }]],
+        [
+          'a::b',
+          [
+            { x: 200, y: 200 },
+            { x: 600, y: 600 },
+          ],
+        ],
       ]),
     };
     const state = makeState({
@@ -797,7 +793,13 @@ describe('autoOrganizeCard — per-container branch', () => {
         { id: 'inside', x: 50, y: 50, width: 240, height: 56 },
       ],
       edgeRoutes: new Map([
-        ['inside::inside', [{ x: 100, y: 100 }, { x: 200, y: 200 }]],
+        [
+          'inside::inside',
+          [
+            { x: 100, y: 100 },
+            { x: 200, y: 200 },
+          ],
+        ],
       ]),
     };
     const state = makeState({
@@ -996,7 +998,13 @@ describe('autoOrganizeCard — applyEdgeRoutes is master-only', () => {
         { id: 'b', x: 400, y: 400, width: 200, height: 200 },
       ],
       edgeRoutes: new Map([
-        ['a::b', [{ x: 100, y: 100 }, { x: 500, y: 500 }]],
+        [
+          'a::b',
+          [
+            { x: 100, y: 100 },
+            { x: 500, y: 500 },
+          ],
+        ],
       ]),
     };
     const state = makeState({

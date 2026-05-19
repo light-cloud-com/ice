@@ -16,10 +16,10 @@
  * `flushMicrotasks` helper so we can observe the dispatched action.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted effect-capture mocks ───────────────────────────────────────────
@@ -73,20 +73,17 @@ import { useCanvasEffects } from '../use-canvas-effects';
 // ─── Store builder ──────────────────────────────────────────────────────────
 
 const makeStore = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialPipeline = pipelineReducer(undefined as any, { type: '@@INIT' });
   return configureStore({
     reducer: { pipeline: pipelineReducer },
     preloadedState: { pipeline: initialPipeline },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 };
 
 type TestStore = ReturnType<typeof makeStore>;
 
-const flushMicrotasks = () =>
-  new Promise<void>((resolve) => setTimeout(resolve, 0));
+const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 // ─── Probe ──────────────────────────────────────────────────────────────────
 
@@ -103,7 +100,7 @@ const renderHook = (store: TestStore, args: CaptureArgs = {}): void => {
       cardId: args.cardId,
       bindCanvas: args.bindCanvas ?? { onWheel: vi.fn() },
       svgRef: args.svgRef ?? React.createRef<SVGSVGElement>(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       setConnTooltip: (args.setConnTooltip ?? vi.fn()) as any,
     });
     return React.createElement('div', null, 'probe');
@@ -249,7 +246,7 @@ describe('useCanvasEffects — wheel listener effect', () => {
       cardId: 'c',
       svgRef,
       bindCanvas: { onWheel },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       setConnTooltip: setConnTooltip as any,
     });
 

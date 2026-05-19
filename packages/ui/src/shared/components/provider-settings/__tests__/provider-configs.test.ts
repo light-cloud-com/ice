@@ -82,12 +82,7 @@ describe('PROVIDER_CONFIGS — shape regression', () => {
     const az = PROVIDER_CONFIGS.find((p) => p.id === 'azure');
     expect(az?.color).toBe('text-sky-500');
     expect(az?.bgColor).toBe('bg-sky-100 dark:bg-sky-900/30');
-    expect(az?.configFields.map((f) => f.name)).toEqual([
-      'subscriptionId',
-      'tenantId',
-      'clientId',
-      'clientSecret',
-    ]);
+    expect(az?.configFields.map((f) => f.name)).toEqual(['subscriptionId', 'tenantId', 'clientId', 'clientSecret']);
     expect(az?.configFields.every((f) => f.required)).toBe(true);
     const clientSecret = az?.configFields.find((f) => f.name === 'clientSecret');
     expect(clientSecret?.type).toBe('password');

@@ -2,7 +2,6 @@
  * TeamStep — onboarding team create/join screen.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -19,7 +18,7 @@ vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
     const next = mocks.useStateQueue.shift();
-    return [(next === undefined ? init : (next as T)), vi.fn()];
+    return [next === undefined ? init : (next as T), vi.fn()];
   });
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return { ...actual, useState, default: { ...def, useState } };
@@ -96,8 +95,8 @@ describe('TeamStep', () => {
     mocks.state.onboarding.teamMode = 'create';
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    expect((buttons[0].props.className as string)).toContain('border-ice-accent');
-    expect((buttons[1].props.className as string)).not.toContain('border-ice-accent');
+    expect(buttons[0].props.className as string).toContain('border-ice-accent');
+    expect(buttons[1].props.className as string).not.toContain('border-ice-accent');
   });
 
   it('clicking the create option dispatches setTeamMode("create")', () => {

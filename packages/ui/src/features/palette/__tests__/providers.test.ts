@@ -28,13 +28,7 @@ vi.mock('../../../config/providers', () => ({
   ENABLED_PROVIDER_IDS: new Set(['aws', 'gcp', 'azure']),
 }));
 
-import {
-  getProviders,
-  STORAGE_KEY,
-  PALETTE_STYLES,
-  loadCollapsed,
-  saveCollapsed,
-} from '../data/providers';
+import { getProviders, STORAGE_KEY, PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
 
 const t = (k: string) => k;
 const PROVIDERS = getProviders(t);

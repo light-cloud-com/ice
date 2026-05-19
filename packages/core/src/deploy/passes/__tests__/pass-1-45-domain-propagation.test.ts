@@ -28,8 +28,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { create_mutable_graph } from '../../../graph/mutable-graph';
-import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
 import { propagate_custom_domain_hosts } from '../pass-1-45-domain-propagation';
+import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
 
 /**
  * Build a fresh graph with one compute node already added. Returns the
@@ -124,9 +124,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
       },
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e-bare', source: 'domain-card', target: 'compute-card' },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e-bare', source: 'domain-card', target: 'compute-card' }];
     const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
@@ -221,9 +219,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
       },
       // no 'missing-target' entry
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e5', source: 'domain-card', target: 'missing-target' },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e5', source: 'domain-card', target: 'missing-target' }];
     const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
@@ -291,9 +287,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
       { id: 'e8', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
     // Map points to a non-existent graph node key
-    const card_id_to_name = new Map<string, string>([
-      ['compute-card', 'gcp.run.service:no-such-node'],
-    ]);
+    const card_id_to_name = new Map<string, string>([['compute-card', 'gcp.run.service:no-such-node']]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -571,9 +565,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
       },
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'er5', source: 'domain-card', target: 'compute-card', data: {} },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'er5', source: 'domain-card', target: 'compute-card', data: {} }];
     const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);

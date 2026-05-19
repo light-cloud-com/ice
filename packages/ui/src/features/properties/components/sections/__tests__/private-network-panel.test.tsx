@@ -62,12 +62,7 @@ import { PrivateNetworkPanel } from '../private-network-panel';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -90,10 +85,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -142,23 +134,15 @@ const findRadioLabels = (tree: React.ReactNode): React.ReactElement[] =>
       (el.props as LabelProps)['data-testid']!.startsWith('pn-'),
   );
 
-const findRadioByTestid = (
-  tree: React.ReactNode,
-  testid: string,
-): React.ReactElement | undefined => {
-  const label = findRadioLabels(tree).find(
-    (el) => (el.props as LabelProps)['data-testid'] === testid,
-  );
+const findRadioByTestid = (tree: React.ReactNode, testid: string): React.ReactElement | undefined => {
+  const label = findRadioLabels(tree).find((el) => (el.props as LabelProps)['data-testid'] === testid);
   if (!label) return undefined;
   // The label has a single `<input type="radio">` child — find it.
   const inputs = findByPredicate(label, (el) => el.type === 'input');
   return inputs[0];
 };
 
-const findAllowlistInputs = (
-  tree: React.ReactNode,
-  direction: 'inbound' | 'outbound',
-): React.ReactElement[] =>
+const findAllowlistInputs = (tree: React.ReactNode, direction: 'inbound' | 'outbound'): React.ReactElement[] =>
   findByPredicate(
     tree,
     (el) =>
@@ -173,9 +157,7 @@ const findAllowlistAddButton = (
 ): React.ReactElement | undefined =>
   findByPredicate(
     tree,
-    (el) =>
-      el.type === 'button' &&
-      (el.props as ButtonProps)['data-testid'] === `pn-${direction}-allowlist-add`,
+    (el) => el.type === 'button' && (el.props as ButtonProps)['data-testid'] === `pn-${direction}-allowlist-add`,
   )[0];
 
 interface RenderResult {
@@ -237,17 +219,13 @@ describe('PrivateNetworkPanel', () => {
 
     it("the other inbound options are not checked when ingress defaults to 'all'", () => {
       const { tree } = renderPanel();
-      expect((findRadioByTestid(tree, 'pn-inbound-allowlist')!.props as InputProps).checked).toBe(
-        false,
-      );
+      expect((findRadioByTestid(tree, 'pn-inbound-allowlist')!.props as InputProps).checked).toBe(false);
       expect((findRadioByTestid(tree, 'pn-inbound-none')!.props as InputProps).checked).toBe(false);
     });
 
     it("the other outbound options are not checked when egress defaults to 'all'", () => {
       const { tree } = renderPanel();
-      expect((findRadioByTestid(tree, 'pn-outbound-allowlist')!.props as InputProps).checked).toBe(
-        false,
-      );
+      expect((findRadioByTestid(tree, 'pn-outbound-allowlist')!.props as InputProps).checked).toBe(false);
       expect((findRadioByTestid(tree, 'pn-outbound-none')!.props as InputProps).checked).toBe(false);
     });
   });
@@ -255,9 +233,7 @@ describe('PrivateNetworkPanel', () => {
   describe('Current policy values from selectedNode.data', () => {
     it('renders the current ingress=allowlist value', () => {
       const { tree } = renderPanel({ ingress: 'allowlist' });
-      expect((findRadioByTestid(tree, 'pn-inbound-allowlist')!.props as InputProps).checked).toBe(
-        true,
-      );
+      expect((findRadioByTestid(tree, 'pn-inbound-allowlist')!.props as InputProps).checked).toBe(true);
       expect((findRadioByTestid(tree, 'pn-inbound-all')!.props as InputProps).checked).toBe(false);
       expect((findRadioByTestid(tree, 'pn-inbound-none')!.props as InputProps).checked).toBe(false);
     });
@@ -269,9 +245,7 @@ describe('PrivateNetworkPanel', () => {
 
     it('renders the current egress=allowlist value', () => {
       const { tree } = renderPanel({ egress: 'allowlist' });
-      expect((findRadioByTestid(tree, 'pn-outbound-allowlist')!.props as InputProps).checked).toBe(
-        true,
-      );
+      expect((findRadioByTestid(tree, 'pn-outbound-allowlist')!.props as InputProps).checked).toBe(true);
       expect((findRadioByTestid(tree, 'pn-outbound-all')!.props as InputProps).checked).toBe(false);
     });
 
@@ -413,30 +387,28 @@ describe('PrivateNetworkPanel', () => {
       expect(updateNodeField).toHaveBeenCalledWith('ingressAllowlist', ['']);
     });
 
-    it("inbound remove button removes the matching entry by index", () => {
+    it('inbound remove button removes the matching entry by index', () => {
       const { tree, updateNodeField } = renderPanel({
         ingress: 'allowlist',
         ingressAllowlist: ['a', 'b', 'c'],
       });
       const removeBtns = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'button' && (el.props as ButtonProps)['aria-label'] === 'Remove source',
+        (el) => el.type === 'button' && (el.props as ButtonProps)['aria-label'] === 'Remove source',
       );
       expect(removeBtns).toHaveLength(3);
       (removeBtns[1].props as ButtonProps).onClick();
       expect(updateNodeField).toHaveBeenCalledWith('ingressAllowlist', ['a', 'c']);
     });
 
-    it("outbound remove button removes the matching entry by index", () => {
+    it('outbound remove button removes the matching entry by index', () => {
       const { tree, updateNodeField } = renderPanel({
         egress: 'allowlist',
         egressAllowlist: ['x', 'y', 'z'],
       });
       const removeBtns = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'button' && (el.props as ButtonProps)['aria-label'] === 'Remove destination',
+        (el) => el.type === 'button' && (el.props as ButtonProps)['aria-label'] === 'Remove destination',
       );
       expect(removeBtns).toHaveLength(3);
       (removeBtns[0].props as ButtonProps).onClick();
@@ -487,11 +459,7 @@ describe('PrivateNetworkPanel', () => {
       const inboundIds = labels
         .map((l) => (l.props as LabelProps)['data-testid']!)
         .filter((id) => id.startsWith('pn-inbound-'));
-      expect(inboundIds.sort()).toEqual([
-        'pn-inbound-all',
-        'pn-inbound-allowlist',
-        'pn-inbound-none',
-      ]);
+      expect(inboundIds.sort()).toEqual(['pn-inbound-all', 'pn-inbound-allowlist', 'pn-inbound-none']);
     });
 
     it('all three outbound radio labels carry data-testid="pn-outbound-{value}"', () => {
@@ -500,11 +468,7 @@ describe('PrivateNetworkPanel', () => {
       const outboundIds = labels
         .map((l) => (l.props as LabelProps)['data-testid']!)
         .filter((id) => id.startsWith('pn-outbound-'));
-      expect(outboundIds.sort()).toEqual([
-        'pn-outbound-all',
-        'pn-outbound-allowlist',
-        'pn-outbound-none',
-      ]);
+      expect(outboundIds.sort()).toEqual(['pn-outbound-all', 'pn-outbound-allowlist', 'pn-outbound-none']);
     });
 
     it('allowlist entry inputs carry data-testid="pn-inbound-allowlist-entry-{i}" verbatim', () => {
@@ -579,12 +543,8 @@ describe('PrivateNetworkPanel', () => {
       }) as React.ReactElement;
       const sections = findSections(tree);
       expect(sections).toHaveLength(2);
-      expect(
-        (findRadioByTestid(tree, 'pn-inbound-all')!.props as InputProps).checked,
-      ).toBe(true);
-      expect(
-        (findRadioByTestid(tree, 'pn-outbound-all')!.props as InputProps).checked,
-      ).toBe(true);
+      expect((findRadioByTestid(tree, 'pn-inbound-all')!.props as InputProps).checked).toBe(true);
+      expect((findRadioByTestid(tree, 'pn-outbound-all')!.props as InputProps).checked).toBe(true);
     });
 
     it('selectedNode itself null/undefined → still renders both sections with default policies', () => {
@@ -595,9 +555,7 @@ describe('PrivateNetworkPanel', () => {
       }) as React.ReactElement;
       const sections = findSections(tree);
       expect(sections).toHaveLength(2);
-      expect(
-        (findRadioByTestid(tree, 'pn-inbound-all')!.props as InputProps).checked,
-      ).toBe(true);
+      expect((findRadioByTestid(tree, 'pn-inbound-all')!.props as InputProps).checked).toBe(true);
     });
   });
 });

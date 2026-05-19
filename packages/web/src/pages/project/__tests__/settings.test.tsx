@@ -139,10 +139,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -238,8 +235,7 @@ describe('ProjectSettings — tab navigation', () => {
     const envTab = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.settings.tabEnvironments',
+        typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.settings.tabEnvironments',
     )[0];
     (envTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('environments');
@@ -250,9 +246,7 @@ describe('ProjectSettings — tab navigation', () => {
     const tree = render();
     const genTab = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.settings.tabGeneral',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.settings.tabGeneral',
     )[0];
     (genTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('general');
@@ -264,8 +258,7 @@ describe('ProjectSettings — tab navigation', () => {
     const dangerTab = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.settings.tabDangerZone',
+        typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.settings.tabDangerZone',
     )[0];
     (dangerTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('danger');
@@ -276,9 +269,7 @@ describe('ProjectSettings — tab navigation', () => {
     const tree = render();
     const genTab = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.settings.tabGeneral',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.settings.tabGeneral',
     )[0];
     expect((genTab.props as { active: boolean }).active).toBe(true);
   });
@@ -307,7 +298,9 @@ describe('ProjectSettings — general inputs', () => {
       tree,
       (el) => el.type === 'input' && (el.props as { name?: string }).name === 'name',
     )[0];
-    (input.props as { onChange: (e: { target: { value: string } }) => void }).onChange({ target: { value: 'Renamed' } });
+    (input.props as { onChange: (e: { target: { value: string } }) => void }).onChange({
+      target: { value: 'Renamed' },
+    });
     expect(mocks.stateSlots[1]).toBe('Renamed');
   });
 
@@ -318,7 +311,9 @@ describe('ProjectSettings — general inputs', () => {
       tree,
       (el) => el.type === 'textarea' && (el.props as { name?: string }).name === 'description',
     )[0];
-    (textarea.props as { onChange: (e: { target: { value: string } }) => void }).onChange({ target: { value: 'New desc' } });
+    (textarea.props as { onChange: (e: { target: { value: string } }) => void }).onChange({
+      target: { value: 'New desc' },
+    });
     expect(mocks.stateSlots[2]).toBe('New desc');
   });
 });
@@ -344,9 +339,7 @@ describe('ProjectSettings — provider selection', () => {
     const tree = render();
     const providerBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { type?: string }).type === 'button',
+      (el) => el.type === 'button' && (el.props as { type?: string }).type === 'button',
     );
     (providerBtns[0].props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[3]).toBe('gcp');
@@ -359,9 +352,7 @@ describe('ProjectSettings — provider selection', () => {
     const tree = render();
     const providerBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { type?: string }).type === 'button',
+      (el) => el.type === 'button' && (el.props as { type?: string }).type === 'button',
     );
     // Click the gcp button (different from current aws)
     const gcpBtn = providerBtns[0];
@@ -385,7 +376,8 @@ describe('ProjectSettings — provider selection', () => {
     const tree = render();
     const lockedDesc = findByPredicate(
       tree,
-      (el) => el.type === 'p' && (el.props as { children?: unknown }).children === 'project.settings.providerLockedDesc',
+      (el) =>
+        el.type === 'p' && (el.props as { children?: unknown }).children === 'project.settings.providerLockedDesc',
     );
     expect(lockedDesc).toHaveLength(1);
   });
@@ -395,7 +387,8 @@ describe('ProjectSettings — provider selection', () => {
     const tree = render();
     const unlockedDesc = findByPredicate(
       tree,
-      (el) => el.type === 'p' && (el.props as { children?: unknown }).children === 'project.settings.providerUnlockedDesc',
+      (el) =>
+        el.type === 'p' && (el.props as { children?: unknown }).children === 'project.settings.providerUnlockedDesc',
     );
     expect(unlockedDesc).toHaveLength(1);
   });

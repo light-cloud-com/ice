@@ -113,31 +113,19 @@ describe('opBadgeColor', () => {
         node: { id: 'n1', type: 'block', position: { x: 0, y: 0 }, data: {} },
       }),
     ).toBe('bg-emerald-500/20 text-emerald-400');
-    expect(
-      opBadgeColor({ op: 'addEdge', edge: { id: 'e', source: 'a', target: 'b' } }),
-    ).toBe('bg-emerald-500/20 text-emerald-400');
-    expect(opBadgeColor({ op: 'addBlueprint', iceType: 'X' })).toBe(
+    expect(opBadgeColor({ op: 'addEdge', edge: { id: 'e', source: 'a', target: 'b' } })).toBe(
       'bg-emerald-500/20 text-emerald-400',
     );
+    expect(opBadgeColor({ op: 'addBlueprint', iceType: 'X' })).toBe('bg-emerald-500/20 text-emerald-400');
   });
 
   it('non-add / non-delete ops → blue bucket', () => {
-    expect(opBadgeColor({ op: 'updateNodeData', nodeId: 'x', data: {} })).toBe(
-      'bg-blue-500/20 text-blue-400',
-    );
+    expect(opBadgeColor({ op: 'updateNodeData', nodeId: 'x', data: {} })).toBe('bg-blue-500/20 text-blue-400');
     expect(opBadgeColor({ op: 'autoOrganize' })).toBe('bg-blue-500/20 text-blue-400');
-    expect(opBadgeColor({ op: 'updateNodePosition', nodeId: 'n', x: 0, y: 0 })).toBe(
-      'bg-blue-500/20 text-blue-400',
-    );
-    expect(opBadgeColor({ op: 'resizeNode', id: 'n', width: 1, height: 1 })).toBe(
-      'bg-blue-500/20 text-blue-400',
-    );
-    expect(opBadgeColor({ op: 'reparentNode', nodeId: 'n', parentId: null })).toBe(
-      'bg-blue-500/20 text-blue-400',
-    );
-    expect(opBadgeColor({ op: 'updateEdgeData', edgeId: 'e', data: {} })).toBe(
-      'bg-blue-500/20 text-blue-400',
-    );
+    expect(opBadgeColor({ op: 'updateNodePosition', nodeId: 'n', x: 0, y: 0 })).toBe('bg-blue-500/20 text-blue-400');
+    expect(opBadgeColor({ op: 'resizeNode', id: 'n', width: 1, height: 1 })).toBe('bg-blue-500/20 text-blue-400');
+    expect(opBadgeColor({ op: 'reparentNode', nodeId: 'n', parentId: null })).toBe('bg-blue-500/20 text-blue-400');
+    expect(opBadgeColor({ op: 'updateEdgeData', edgeId: 'e', data: {} })).toBe('bg-blue-500/20 text-blue-400');
   });
 
   it('delete-bucket takes precedence — even though no real op starts with both, the order is observable', () => {

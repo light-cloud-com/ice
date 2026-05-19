@@ -10,17 +10,12 @@
  * want flicker when the user nudges unrelated fields.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Target } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -67,7 +62,7 @@ const DOTS = (() => {
   return Array.from({ length: 28 }).map(() => ({
     x: 4 + (next() % 92),
     y: 4 + (next() % 60),
-    r: 1 + ((next() % 3) * 0.5),
+    r: 1 + (next() % 3) * 0.5,
     a: 0.4 + (next() % 60) / 100,
   }));
 })();

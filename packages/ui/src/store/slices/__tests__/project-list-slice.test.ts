@@ -117,9 +117,7 @@ describe('project-list-slice', () => {
       s = projectListReducer(
         s,
         setScanResults({
-          files: [
-            { id: 'f-2', name: 'doc.ice', path: '/root/sub/doc.ice', parentPath: '/root/sub', lastModified: 7 },
-          ],
+          files: [{ id: 'f-2', name: 'doc.ice', path: '/root/sub/doc.ice', parentPath: '/root/sub', lastModified: 7 }],
           folders: [
             { id: 'd-1', name: 'sub', path: '/root/sub', parentPath: '/root' },
             { id: 'd-2', name: 'unopened', path: '/root/unopened', parentPath: '/root' },

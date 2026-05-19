@@ -13,10 +13,8 @@
  * fallback shape is exercised).
  */
 
-import { describe, it, expect } from 'vitest';
-import { Server } from 'lucide-react';
-
 import {
+  Server,
   Globe,
   HardDrive,
   Zap,
@@ -35,6 +33,7 @@ import {
   Database,
   Activity,
 } from 'lucide-react';
+import { describe, it, expect } from 'vitest';
 void Folder;
 
 import { getComponents, blockKey, def } from '../data/components';
@@ -257,13 +256,7 @@ describe('COMPONENTS — runtimes', () => {
   it('Compute.ServerlessFunction exposes 5 runtime options (no Rust)', () => {
     const fn = COMPONENTS.find((c) => c.type === 'Compute.ServerlessFunction');
     expect(fn?.runtimes).toHaveLength(5);
-    expect(fn?.runtimes?.map((r) => r.label)).toEqual([
-      'Node.js',
-      'Python',
-      'Go',
-      'Java',
-      '.NET',
-    ]);
+    expect(fn?.runtimes?.map((r) => r.label)).toEqual(['Node.js', 'Python', 'Go', 'Java', '.NET']);
   });
 
   it('blocks without runtimes omit the field entirely', () => {

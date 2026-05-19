@@ -16,8 +16,8 @@
  */
 
 import React from 'react';
-import { Section } from '../fields';
 import { t } from '../../../../i18n';
+import { Section } from '../fields';
 
 // ─── Env Vars Editor ────────────────────────────────────────────────────────
 

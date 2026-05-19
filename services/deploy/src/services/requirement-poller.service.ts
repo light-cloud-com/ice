@@ -20,9 +20,9 @@
 import { BUILT_IN_REQUIREMENTS, type RequirementContext } from '@ice/blocks/requirements';
 import prisma from '@ice/db';
 import { emitDeployRequirementVerified } from '@ice/shared';
-import type { DeployRequirementVerifiedEvent } from '@ice/types';
 import { checkSearchConsoleVerification, fetchSslCertificateStatus } from './google-verification.service';
 import { getResourceMap } from './resource-mapping.service';
+import type { DeployRequirementVerifiedEvent } from '@ice/types';
 
 const POLL_INTERVAL_MS = 30_000;
 const MAX_CONCURRENT = 10;

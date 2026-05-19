@@ -72,8 +72,7 @@ export function collectDesignRequirements(
     const explicit_size = (node.data?.size as string) || '';
     const explicit_edition = (node.data?.edition as string) || '';
     if (!explicit_edition) {
-      const inferred =
-        explicit_size && /^db-perf-optimized/i.test(explicit_size) ? 'ENTERPRISE_PLUS' : 'ENTERPRISE';
+      const inferred = explicit_size && /^db-perf-optimized/i.test(explicit_size) ? 'ENTERPRISE_PLUS' : 'ENTERPRISE';
       const inferred_tier = explicit_size || 'db-f1-micro';
       out.push({
         id: 'pg-edition-implicit',
@@ -148,10 +147,7 @@ export const DesignRequirements: React.FC<{
   allNodes: readonly CardNode[];
   edges: readonly CardEdge[];
 }> = ({ node, allNodes, edges }) => {
-  const requirements = React.useMemo(
-    () => collectDesignRequirements(node, allNodes, edges),
-    [node, allNodes, edges],
-  );
+  const requirements = React.useMemo(() => collectDesignRequirements(node, allNodes, edges), [node, allNodes, edges]);
 
   // Auto-collapse when all-green so power users aren't bothered. Errors
   // expand by default (they block deploy); warnings + info collapse.
@@ -197,19 +193,20 @@ export const DesignRequirements: React.FC<{
                   )
                 : null,
               infoCount > 0
-                ? t(
-                    infoCount === 1
-                      ? 'canvas.properties.requirements.note'
-                      : 'canvas.properties.requirements.notes',
-                    { count: infoCount },
-                  )
+                ? t(infoCount === 1 ? 'canvas.properties.requirements.note' : 'canvas.properties.requirements.notes', {
+                    count: infoCount,
+                  })
                 : null,
             ]
               .filter(Boolean)
               .join(' · ')}
           </span>
         </span>
-        {expanded ? <ChevronDown className="w-3.5 h-3.5 text-ice-text-3" /> : <ChevronRight className="w-3.5 h-3.5 text-ice-text-3" />}
+        {expanded ? (
+          <ChevronDown className="w-3.5 h-3.5 text-ice-text-3" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5 text-ice-text-3" />
+        )}
       </button>
 
       {expanded && (
@@ -218,10 +215,7 @@ export const DesignRequirements: React.FC<{
             const Icon = LEVEL_ICONS[r.level];
             const palette = LEVEL_COLORS[r.level];
             return (
-              <div
-                key={r.id}
-                className={cn('rounded px-2 py-1.5 ring-1 text-ice-2xs', palette.bg, palette.ring)}
-              >
+              <div key={r.id} className={cn('rounded px-2 py-1.5 ring-1 text-ice-2xs', palette.bg, palette.ring)}>
                 <div className="flex items-start gap-1.5">
                   <Icon className={cn('w-3 h-3 mt-0.5 shrink-0', palette.icon)} />
                   <div className="flex-1 min-w-0">

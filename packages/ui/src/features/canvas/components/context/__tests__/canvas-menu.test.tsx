@@ -7,7 +7,6 @@
  * actions; React hooks are stubbed via passthrough.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -116,17 +115,11 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
 }
 
 const findItemByLabel = (tree: unknown, label: string): ElLike | undefined =>
-  findFirst(
-    tree,
-    (el) => el.type === 'button' && (el.props.children as unknown[])?.[0]?.props?.children === label,
-  );
+  findFirst(tree, (el) => el.type === 'button' && (el.props.children as unknown[])?.[0]?.props?.children === label);
 
 // Helper: find a SubMenu / CategorySubMenu / MenuItem (FC) by its label prop
 const findFCByLabel = (tree: unknown, label: string): ElLike | undefined =>
-  findFirst(
-    tree,
-    (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label,
-  );
+  findFirst(tree, (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label);
 
 // Helper: find an item-button rendered by the SubMenu (string children).
 const findSubItem = (tree: unknown, label: string): ElLike | undefined =>
@@ -158,8 +151,7 @@ const baseProps = (overrides: Partial<Parameters<typeof CanvasMenu>[0]> = {}): P
   ...overrides,
 });
 
-const render = (props: Parameters<typeof CanvasMenu>[0]) =>
-  (CanvasMenu as unknown as (p: unknown) => unknown)(props);
+const render = (props: Parameters<typeof CanvasMenu>[0]) => (CanvasMenu as unknown as (p: unknown) => unknown)(props);
 
 beforeEach(() => {
   mocks.effects = [];
@@ -267,9 +259,7 @@ describe('CanvasMenu — paste / select all', () => {
   it('clicking select all dispatches setSelectedNodes for every node id', () => {
     const dispatch = vi.fn();
     const close = vi.fn();
-    const tree = render(
-      baseProps({ dispatch, close, activeCard: { nodes: [{ id: 'a' }, { id: 'b' }] } }),
-    );
+    const tree = render(baseProps({ dispatch, close, activeCard: { nodes: [{ id: 'a' }, { id: 'b' }] } }));
     const selAll = findFCByLabel(tree, 'canvas.contextMenu.selectAll')!;
     (selAll.props.onClick as () => void)();
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['a', 'b']);
@@ -427,10 +417,7 @@ describe('CanvasMenu — hover handlers wire submenu state', () => {
 describe('CanvasMenu — root container', () => {
   it('positions itself at the supplied left/top', () => {
     const tree = render(baseProps({ position: { x: 50, y: 75 } }));
-    const root = findFirst(
-      tree,
-      (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 50,
-    );
+    const root = findFirst(tree, (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 50);
     expect(root).toBeDefined();
     expect((root!.props.style as { top: number }).top).toBe(75);
   });

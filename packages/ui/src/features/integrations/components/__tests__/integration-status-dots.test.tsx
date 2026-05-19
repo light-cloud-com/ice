@@ -2,7 +2,6 @@
  * IntegrationStatusDots — small status pills in the status bar.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({

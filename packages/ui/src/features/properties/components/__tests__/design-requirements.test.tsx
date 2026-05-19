@@ -37,11 +37,7 @@ vi.mock('../../../../shared/utils/cn', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }));
 
-import {
-  collectDesignRequirements,
-  DesignRequirements,
-  type DesignRequirement,
-} from '../design-requirements';
+import { collectDesignRequirements, DesignRequirements, type DesignRequirement } from '../design-requirements';
 import type { CardNode, CardEdge } from '../../../../store/slices/cards-slice';
 
 const makeNode = (overrides: Partial<CardNode> = {}): CardNode =>
@@ -54,7 +50,7 @@ const makeNode = (overrides: Partial<CardNode> = {}): CardNode =>
   }) as CardNode;
 
 const makeEdge = (source: string, target: string, id = `${source}-${target}`): CardEdge =>
-  ({ id, source, target } as CardEdge);
+  ({ id, source, target }) as CardEdge;
 
 describe('collectDesignRequirements — Database.PostgreSQL', () => {
   it('emits "no service connected" when nothing Compute.* connects', () => {
@@ -204,10 +200,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }

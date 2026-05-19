@@ -14,11 +14,7 @@
  *    object-branch of `transform_value`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  build_options,
-  map_properties,
-  transform_value,
-} from '../value-transform';
+import { build_options, map_properties, transform_value } from '../value-transform';
 
 describe('build_options', () => {
   it('returns undefined when deps is empty', () => {
@@ -68,9 +64,7 @@ describe('map_properties', () => {
   });
 
   it('recursively transforms nested object values via transform_value', () => {
-    expect(
-      map_properties({ network_config: { subnet_id: 'abc' } }),
-    ).toEqual({
+    expect(map_properties({ network_config: { subnet_id: 'abc' } })).toEqual({
       networkConfig: { subnetId: 'abc' },
     });
   });
@@ -89,9 +83,7 @@ describe('map_properties', () => {
   });
 
   it('preserves multi-segment snake_case in keys', () => {
-    expect(
-      map_properties({ very_long_property_name: 1 }),
-    ).toEqual({ veryLongPropertyName: 1 });
+    expect(map_properties({ very_long_property_name: 1 })).toEqual({ veryLongPropertyName: 1 });
   });
 });
 
@@ -164,15 +156,13 @@ describe('transform_value — objects', () => {
   });
 
   it('processes object values that are themselves arrays', () => {
-    expect(
-      transform_value({ tag_list: ['a_1', 'b_2'] }),
-    ).toEqual({ tagList: ['a_1', 'b_2'] });
+    expect(transform_value({ tag_list: ['a_1', 'b_2'] })).toEqual({ tagList: ['a_1', 'b_2'] });
   });
 
   it('chains key-rewrites and value-rewrites simultaneously', () => {
-    expect(
-      transform_value({ outer_key: { mid_key: { inner_key: 'value' } } }),
-    ).toEqual({ outerKey: { midKey: { innerKey: 'value' } } });
+    expect(transform_value({ outer_key: { mid_key: { inner_key: 'value' } } })).toEqual({
+      outerKey: { midKey: { innerKey: 'value' } },
+    });
   });
 });
 
@@ -195,8 +185,6 @@ describe('map_properties + transform_value composition', () => {
   it('top-level snake_case keys are camelCased once, not twice', () => {
     // map_properties converts snake_to_camel; the value's nested
     // object (if present) also gets snake_to_camel via transform_value.
-    expect(
-      map_properties({ machine_config: { cpu_count: 4 } }),
-    ).toEqual({ machineConfig: { cpuCount: 4 } });
+    expect(map_properties({ machine_config: { cpu_count: 4 } })).toEqual({ machineConfig: { cpuCount: 4 } });
   });
 });

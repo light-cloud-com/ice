@@ -69,7 +69,10 @@ describe('logs-slice', () => {
       let state = init();
       state = logsReducer(
         state,
-        setSource({ terminalNodeId: TID, source: { state: 'permission-denied', message: 'roles/logging.viewer required' } }),
+        setSource({
+          terminalNodeId: TID,
+          source: { state: 'permission-denied', message: 'roles/logging.viewer required' },
+        }),
       );
       expect(state.byTerminalNodeId[TID]?.lastError).toBe('roles/logging.viewer required');
     });
@@ -116,7 +119,10 @@ describe('logs-slice', () => {
       let state = init();
       state = logsReducer(state, setSubscription({ terminalNodeId: TID, subscriptionId: 'sub-1', mode: 'polling' }));
       for (let i = 0; i < 250; i++) {
-        state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry(`id-${i}`, { message: `msg-${i}` }) }));
+        state = logsReducer(
+          state,
+          appendEntry({ terminalNodeId: TID, entry: entry(`id-${i}`, { message: `msg-${i}` }) }),
+        );
       }
       const entries = state.byTerminalNodeId[TID]!.entries;
       expect(entries.length).toBe(200);

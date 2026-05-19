@@ -8,9 +8,9 @@
  * each test dials in the auth outcome it cares about.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Pipeline service mocks ────────────────────────────────────────────
@@ -72,14 +72,12 @@ vi.mock('@ice/shared', () => ({
     req.organisationId = currentAuth === 'no-org' ? undefined : currentOrgId;
     next();
   },
-  requireProjectAccess:
-    (_role: string) =>
-    (_req: any, res: any, next: any) => {
-      if (currentAuth === 'no-project-access') {
-        return res.status(403).json({ message: 'Insufficient project permissions' });
-      }
-      next();
-    },
+  requireProjectAccess: (_role: string) => (_req: any, res: any, next: any) => {
+    if (currentAuth === 'no-project-access') {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  },
 }));
 
 // ── Test harness ──────────────────────────────────────────────────────
@@ -123,7 +121,7 @@ async function request(method: string, path: string, body?: unknown) {
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -507,14 +505,7 @@ describe('POST /api/pipeline/trigger', () => {
 
     await post('/api/pipeline/trigger', { ruleId: 'r1' });
 
-    expect(createDeploymentEventMock).toHaveBeenCalledWith(
-      'r1',
-      'manual',
-      'HEAD',
-      'main',
-      'Manual deploy',
-      'user-1',
-    );
+    expect(createDeploymentEventMock).toHaveBeenCalledWith('r1', 'manual', 'HEAD', 'main', 'Manual deploy', 'user-1');
     const payload = queueAddMock.mock.calls[0][1];
     // branch falls back to rule.branch_pattern when body branch is absent
     expect(payload.branch).toBe('main');
@@ -641,14 +632,7 @@ describe('POST /api/pipeline/retry', () => {
 
     await post('/api/pipeline/retry', { eventId: 'e-old' });
 
-    expect(createDeploymentEventMock).toHaveBeenCalledWith(
-      'r1',
-      'manual',
-      'sha-old',
-      'main',
-      'Retry: ',
-      'user-1',
-    );
+    expect(createDeploymentEventMock).toHaveBeenCalledWith('r1', 'manual', 'sha-old', 'main', 'Retry: ', 'user-1');
   });
 
   it('returns 400 when eventId is missing from the body', async () => {

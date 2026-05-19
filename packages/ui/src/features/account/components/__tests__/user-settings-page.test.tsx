@@ -171,10 +171,7 @@ describe('UserSettingsPage — render', () => {
   it('shows the email input as disabled with the user email when present', () => {
     mocks.useSelectorReturn = { user: { name: 'Ada Lovelace', email: 'ada@x.com' } };
     const tree = render();
-    const emailInput = findFirst(
-      tree,
-      (el) => el.type === 'input' && (el.props as { type?: string }).type === 'email',
-    );
+    const emailInput = findFirst(tree, (el) => el.type === 'input' && (el.props as { type?: string }).type === 'email');
     expect(emailInput).toBeDefined();
     expect((emailInput!.props as { disabled?: boolean }).disabled).toBe(true);
     expect((emailInput!.props as { value?: string }).value).toBe('ada@x.com');
@@ -183,10 +180,7 @@ describe('UserSettingsPage — render', () => {
   it('email input falls back to empty string when user has no email', () => {
     mocks.useSelectorReturn = { user: null };
     const tree = render();
-    const emailInput = findFirst(
-      tree,
-      (el) => el.type === 'input' && (el.props as { type?: string }).type === 'email',
-    );
+    const emailInput = findFirst(tree, (el) => el.type === 'input' && (el.props as { type?: string }).type === 'email');
     expect((emailInput!.props as { value?: string }).value).toBe('');
   });
 });
@@ -254,10 +248,7 @@ describe('UserSettingsPage — first-name input', () => {
 
   it('changing the second (last name) input invokes the lastName setter', () => {
     const tree = render();
-    const inputs = findAll(
-      tree,
-      (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text',
-    );
+    const inputs = findAll(tree, (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text');
     // First text input is firstName, second is lastName.
     const onChange = (inputs[1].props as { onChange: (e: { target: { value: string } }) => void }).onChange;
     onChange({ target: { value: 'Kernighan' } });
@@ -378,20 +369,14 @@ describe('UserSettingsPage — submit button', () => {
   it('disables the submit button when firstName is empty', () => {
     mocks.useStateOverrides = { 0: '' };
     const tree = render();
-    const btn = findFirst(
-      tree,
-      (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit',
-    )!;
+    const btn = findFirst(tree, (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit')!;
     expect((btn.props as { disabled?: boolean }).disabled).toBe(true);
   });
 
   it('disables the submit button when profileLoading is true', () => {
     mocks.useStateOverrides = { 0: 'Ada', 2: true };
     const tree = render();
-    const btn = findFirst(
-      tree,
-      (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit',
-    )!;
+    const btn = findFirst(tree, (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit')!;
     expect((btn.props as { disabled?: boolean }).disabled).toBe(true);
   });
 
@@ -400,36 +385,27 @@ describe('UserSettingsPage — submit button', () => {
     const tree = render();
     // Loader2 (lucide) renders an SVG; check for any element whose className
     // (props OR rendered output) carries 'animate-spin'.
-    const hit = findFirst(
-      tree,
-      (el) => {
-        const cn = (el.props as { className?: unknown }).className;
-        return typeof cn === 'string' && cn.includes('animate-spin');
-      },
-    );
+    const hit = findFirst(tree, (el) => {
+      const cn = (el.props as { className?: unknown }).className;
+      return typeof cn === 'string' && cn.includes('animate-spin');
+    });
     expect(hit).toBeDefined();
   });
 
   it('does NOT render an animate-spin icon when profileLoading is false (Save renders)', () => {
     mocks.useStateOverrides = { 0: 'Ada', 2: false };
     const tree = render();
-    const hit = findFirst(
-      tree,
-      (el) => {
-        const cn = (el.props as { className?: unknown }).className;
-        return typeof cn === 'string' && cn.includes('animate-spin');
-      },
-    );
+    const hit = findFirst(tree, (el) => {
+      const cn = (el.props as { className?: unknown }).className;
+      return typeof cn === 'string' && cn.includes('animate-spin');
+    });
     expect(hit).toBeUndefined();
   });
 
   it('enables the submit button when firstName is non-empty and profileLoading is false', () => {
     mocks.useStateOverrides = { 0: 'Ada', 2: false };
     const tree = render();
-    const btn = findFirst(
-      tree,
-      (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit',
-    )!;
+    const btn = findFirst(tree, (el) => el.type === 'button' && (el.props as { type?: string }).type === 'submit')!;
     expect((btn.props as { disabled?: boolean }).disabled).toBe(false);
   });
 });

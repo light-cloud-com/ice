@@ -9,8 +9,8 @@
 import { CARD_FOOTER_HEIGHT, EC_HEADER_HEIGHT, EC_PADDING, EC_ROW_HEIGHT } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
-import { CardShell, EmptyHint, KvLine } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { EC_HEADER_HEIGHT, EC_ROW_HEIGHT, EC_PADDING };

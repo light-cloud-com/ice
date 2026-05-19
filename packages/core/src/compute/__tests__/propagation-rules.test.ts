@@ -11,13 +11,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROPAGATION_RULES, AGGREGATE_RULES } from '../propagation-rules';
-import type {
-  PropagationContext,
-  PropagationEdge,
-  PropagationNode,
-  PropagationRule,
-  AggregateRule,
-} from '../types';
+import type { PropagationContext, PropagationEdge, PropagationNode, PropagationRule, AggregateRule } from '../types';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -37,12 +31,7 @@ function makeNode(id: string, iceType: string, extra: Record<string, unknown> = 
   return { id, type: 'block', data: { iceType, ...extra } };
 }
 
-function makeEdge(
-  id: string,
-  source: string,
-  target: string,
-  data: PropagationEdge['data'] = {},
-): PropagationEdge {
+function makeEdge(id: string, source: string, target: string, data: PropagationEdge['data'] = {}): PropagationEdge {
   return { id, source, target, data };
 }
 
@@ -320,10 +309,7 @@ describe('Service → Secret: inject secret references', () => {
   it('maps secrets to envVar/secretName pairs', () => {
     const svc = makeNode('s1', 'Compute.Container');
     const sec = makeNode('sec1', 'Security.Secret', {
-      secrets: [
-        { key: 'API_KEY', ref: 'prod-api-key' },
-        { key: 'TOKEN' },
-      ],
+      secrets: [{ key: 'API_KEY', ref: 'prod-api-key' }, { key: 'TOKEN' }],
     });
     const edge = makeEdge('e1', 's1', 'sec1');
     expect(rule.compute(svc, sec, edge, EMPTY_CTX)).toEqual({
@@ -710,9 +696,7 @@ describe('Service: derive allowedTargets from outbound traffic edges', () => {
       },
     ];
     expect(rule.compute(node, [], outbound, EMPTY_CTX)).toEqual({
-      allowedTargets: [
-        { nodeId: 'db1', label: 'Primary', iceType: 'Database.PostgreSQL' },
-      ],
+      allowedTargets: [{ nodeId: 'db1', label: 'Primary', iceType: 'Database.PostgreSQL' }],
     });
   });
 

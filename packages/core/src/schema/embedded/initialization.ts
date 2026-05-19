@@ -45,9 +45,7 @@ export function resolve_db_path(): string | undefined {
  * `db_path` is forwarded to the factory; if `undefined`, the factory uses
  * its bundled default.
  */
-export async function initialize_registry(
-  db_path: string | undefined,
-): Promise<SqliteSchemaRegistry | null> {
+export async function initialize_registry(db_path: string | undefined): Promise<SqliteSchemaRegistry | null> {
   // Dynamic import so the schemas package is optional at runtime.
   const schemas: Record<string, unknown> | null = await import('../../schemas/db').catch(() => null);
   if (schemas && typeof schemas.get_schema_registry === 'function') {

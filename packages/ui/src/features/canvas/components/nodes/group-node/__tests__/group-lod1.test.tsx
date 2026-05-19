@@ -49,10 +49,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -61,12 +58,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderL1 = (
-  props: Partial<React.ComponentProps<typeof GroupLod1>> = {},
-): React.ReactElement => {
-  const Inner = (GroupLod1 as unknown as {
-    type: (p: React.ComponentProps<typeof GroupLod1>) => React.ReactElement;
-  }).type;
+const renderL1 = (props: Partial<React.ComponentProps<typeof GroupLod1>> = {}): React.ReactElement => {
+  const Inner = (
+    GroupLod1 as unknown as {
+      type: (p: React.ComponentProps<typeof GroupLod1>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof GroupLod1> = {
     nodeId: 'g-1',
     x: 0,

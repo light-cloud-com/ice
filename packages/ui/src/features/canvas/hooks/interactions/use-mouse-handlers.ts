@@ -388,7 +388,7 @@ export function useMouseHandlers(deps: UseMouseHandlersDeps): UseMouseHandlersRe
 
       onViewportChange({ x: newX, y: newY, zoom: newZoom });
     },
-    [svgRef, viewportRef, SCALE_MIN, SCALE_MAX, onViewportChange],
+    [svgRef, viewportRef, onViewportChange],
   );
 
   // Aux click — prevent middle-click auto-scroll

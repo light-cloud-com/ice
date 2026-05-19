@@ -93,9 +93,7 @@ export const FolderRow: React.FC<FolderRowProps> = (props) => {
         onContextMenu={(e) => onContextMenu(e, 'folder', folder.id)}
         className={cn(
           'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
-          isDragTarget
-            ? 'bg-green-500/15 text-green-400'
-            : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
+          isDragTarget ? 'bg-green-500/15 text-green-400' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
         )}
         style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
       >

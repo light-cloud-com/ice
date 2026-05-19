@@ -39,11 +39,7 @@
 
 import { match_handler_prefix } from './predicates';
 import type { ResourceChange } from '../../diff/types';
-import type {
-  NodeStatusEvent,
-  NodeTerminalStatus,
-  ResourceDeployResult,
-} from '../types';
+import type { NodeStatusEvent, NodeTerminalStatus, ResourceDeployResult } from '../types';
 import type { NodeRecord, SchedulerContext, SchedulerPhase } from './types';
 
 /**

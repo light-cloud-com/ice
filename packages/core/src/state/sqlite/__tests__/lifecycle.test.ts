@@ -52,9 +52,9 @@ describe('lifecycle_initialize', () => {
   it('creates the four tables (resources, deployments, locks, snapshots)', async () => {
     const ctx = makeCtx();
     await lifecycle_initialize(ctx, memoryOptions);
-    const tables = ctx
-      .db!.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
-      .all() as { name: string }[];
+    const tables = ctx.db!.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all() as {
+      name: string;
+    }[];
     expect(tables.map((t) => t.name)).toEqual(['deployments', 'locks', 'resources', 'snapshots']);
     await lifecycle_close(ctx);
   });
@@ -253,7 +253,6 @@ describe('lifecycle_close error paths', () => {
     const ctx = makeCtx();
     ctx.db = {
       close: () => {
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw 'plain string error';
       },
     } as unknown as Database;

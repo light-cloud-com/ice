@@ -6,12 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  get_ice_type,
-  is_type_supported,
-  get_supported_types,
-  map_properties,
-} from '../type-mapper';
+import { get_ice_type, is_type_supported, get_supported_types, map_properties } from '../type-mapper';
 
 describe('get_ice_type', () => {
   // The TYPE_MAP table is the source of truth for "supported" Azure types.

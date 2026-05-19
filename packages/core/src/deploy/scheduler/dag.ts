@@ -15,9 +15,9 @@
  * consistent text from both schedulers.
  */
 
-import type { Graph } from '../../types/graph';
-import type { ResourceChange } from '../../diff/types';
 import type { NodeRecord, SchedulerPhase } from './types';
+import type { ResourceChange } from '../../diff/types';
+import type { Graph } from '../../types/graph';
 
 /**
  * Build the per-node DAG from the input changes and engine graph.
@@ -36,11 +36,7 @@ import type { NodeRecord, SchedulerPhase } from './types';
  *
  * Cycle detection is fail-loud (matches existing engine).
  */
-export function build_dag(
-  changes: ResourceChange[],
-  phase: SchedulerPhase,
-  graph: Graph,
-): Map<string, NodeRecord> {
+export function build_dag(changes: ResourceChange[], phase: SchedulerPhase, graph: Graph): Map<string, NodeRecord> {
   // Fast-lookup: change.id → change.
   const change_by_id = new Map<string, ResourceChange>();
   // The engine graph keys nodes by `${type}:${name}`; we also need a
@@ -115,9 +111,7 @@ export function assert_no_cycle(records: Map<string, NodeRecord>): void {
   }
 
   if (visited !== records.size) {
-    const stranded = [...in_degree.entries()]
-      .filter(([, deg]) => deg > 0)
-      .map(([id]) => records.get(id)!.change.name);
+    const stranded = [...in_degree.entries()].filter(([, deg]) => deg > 0).map(([id]) => records.get(id)!.change.name);
     throw new Error(
       `Cycle detected in deployment graph. ${stranded.length} node(s) participate in a cycle: ` +
         `${stranded.join(', ')}. Review the canvas edges to break the loop before deploying.`,

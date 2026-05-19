@@ -62,10 +62,7 @@ beforeEach(() => {
   h.expandCalls.length = 0;
 });
 
-function setBlueprint(
-  iceType: string,
-  partial: Partial<{ name: string; providers: string[] }> = {},
-) {
+function setBlueprint(iceType: string, partial: Partial<{ name: string; providers: string[] }> = {}) {
   h.blueprints.set(iceType, {
     iceType,
     name: partial.name ?? iceType,
@@ -153,9 +150,7 @@ describe('expandComposedTemplate — block expansion', () => {
   it('keeps blueprint name when label is empty (truthy-only override)', () => {
     setBlueprint('Compute.Bar', { name: 'Default Name' });
     const tpl = makeTemplate({
-      blocks: [
-        { iceType: 'Compute.Bar', label: '', position: { x: 0, y: 0 } },
-      ],
+      blocks: [{ iceType: 'Compute.Bar', label: '', position: { x: 0, y: 0 } }],
     });
 
     const { nodes } = expandComposedTemplate(tpl);
@@ -165,9 +160,7 @@ describe('expandComposedTemplate — block expansion', () => {
   it('does not merge data when block.data is missing', () => {
     setBlueprint('Compute.Baz');
     const tpl = makeTemplate({
-      blocks: [
-        { iceType: 'Compute.Baz', label: 'Baz', position: { x: 0, y: 0 } },
-      ],
+      blocks: [{ iceType: 'Compute.Baz', label: 'Baz', position: { x: 0, y: 0 } }],
     });
 
     const { nodes } = expandComposedTemplate(tpl);
@@ -347,9 +340,7 @@ describe('expandComposedTemplate — groups', () => {
     const [vpc, subnet] = containers;
     expect((subnet as any).parentId).toBe(vpc.id);
     // VPC → Subnet contain-edge expected
-    const containEdge = edges.find(
-      (e) => e.source === vpc.id && e.target === subnet.id,
-    );
+    const containEdge = edges.find((e) => e.source === vpc.id && e.target === subnet.id);
     expect(containEdge?.data?.relationship).toBe('contains');
   });
 
@@ -429,9 +420,7 @@ describe('expandComposedTemplate — connections', () => {
         { iceType: 'Compute.A', label: 'A', position: { x: 0, y: 0 } },
         { iceType: 'Compute.B', label: 'B', position: { x: 100, y: 0 } },
       ],
-      connections: [
-        { fromBlock: 0, toBlock: 1, relationship: 'connects_to' },
-      ],
+      connections: [{ fromBlock: 0, toBlock: 1, relationship: 'connects_to' }],
     });
 
     const { nodes, edges } = expandComposedTemplate(tpl);
@@ -450,9 +439,7 @@ describe('expandComposedTemplate — connections', () => {
         { iceType: 'Compute.A', label: 'A', position: { x: 0, y: 0 } },
         { iceType: 'Compute.B', label: 'B', position: { x: 100, y: 0 } },
       ],
-      connections: [
-        { fromBlock: 0, toBlock: 1, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
-      ],
+      connections: [{ fromBlock: 0, toBlock: 1, relationship: 'depends_on', protocol: 'TCP', port: 5432 }],
     });
 
     const { edges } = expandComposedTemplate(tpl);
@@ -468,9 +455,7 @@ describe('expandComposedTemplate — connections', () => {
         { iceType: 'Compute.A', label: 'A', position: { x: 0, y: 0 } },
         { iceType: 'Compute.B', label: 'B', position: { x: 100, y: 0 } },
       ],
-      connections: [
-        { fromBlock: 0, toBlock: 1, relationship: 'connects_to' },
-      ],
+      connections: [{ fromBlock: 0, toBlock: 1, relationship: 'connects_to' }],
     });
 
     const { edges } = expandComposedTemplate(tpl);
@@ -486,9 +471,7 @@ describe('expandComposedTemplate — connections', () => {
         { iceType: 'Compute.A', label: 'A', position: { x: 0, y: 0 } },
         { iceType: 'Compute.B', label: 'B', position: { x: 100, y: 0 } },
       ],
-      connections: [
-        { fromBlock: 0, toBlock: 1, relationship: 'connects_to', port: 0 },
-      ],
+      connections: [{ fromBlock: 0, toBlock: 1, relationship: 'connects_to', port: 0 }],
     });
 
     const { edges } = expandComposedTemplate(tpl);

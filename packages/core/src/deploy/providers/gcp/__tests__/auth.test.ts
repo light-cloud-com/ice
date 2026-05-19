@@ -24,12 +24,7 @@ vi.mock('../sdk-loader', () => ({
   load_sdk: (...args: unknown[]) => sdkBag.load_sdk(...args),
 }));
 
-import {
-  get_gcp_credentials,
-  validate_gcp_credentials,
-  list_gcp_projects,
-  type GCPAuthConfig,
-} from '../auth';
+import { get_gcp_credentials, validate_gcp_credentials, list_gcp_projects, type GCPAuthConfig } from '../auth';
 
 // =============================================================================
 // Helpers
@@ -43,12 +38,14 @@ import {
  * invoked with `new` and will surface as "X is not a constructor" wrapped into
  * the SDK init error. See `gcp-importer coverage` learning anchor.
  */
-function makeSdk(opts: {
-  authClient?: any;
-  oauthClient?: any;
-  credentials?: any;
-  authClientThrows?: boolean;
-} = {}) {
+function makeSdk(
+  opts: {
+    authClient?: any;
+    oauthClient?: any;
+    credentials?: any;
+    authClientThrows?: boolean;
+  } = {},
+) {
   const defaultAuthClient = opts.authClient ?? {
     getAccessToken: vi.fn().mockResolvedValue({ token: 'access-token' }),
     request: vi.fn().mockResolvedValue({ data: {} }),
@@ -72,9 +69,9 @@ function makeSdk(opts: {
       this.getClient = opts.authClientThrows
         ? vi.fn().mockRejectedValue(new Error('boom'))
         : vi.fn().mockResolvedValue(defaultAuthClient);
-      this.getCredentials = vi.fn().mockResolvedValue(
-        opts.credentials === undefined ? { client_email: 'svc@p.iam' } : opts.credentials,
-      );
+      this.getCredentials = vi
+        .fn()
+        .mockResolvedValue(opts.credentials === undefined ? { client_email: 'svc@p.iam' } : opts.credentials);
       googleAuthInstances.push(this);
     }
   }

@@ -140,7 +140,7 @@ describe('LanguageSwitch — closed state', () => {
     expect(text).toContain('fr');
   });
 
-  it('renders the current locale\'s nativeLabel as the title attribute', () => {
+  it("renders the current locale's nativeLabel as the title attribute", () => {
     mocks.locale = 'es';
     const tree = render();
     const btn = findFirst(tree, (el) => el.type === 'button');
@@ -210,9 +210,11 @@ describe('LanguageSwitch — onBlur', () => {
   it('closes the dropdown when blur target is outside the container', () => {
     const tree = render();
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    const onBlur = (btn.props as {
-      onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void;
-    }).onBlur;
+    const onBlur = (
+      btn.props as {
+        onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void;
+      }
+    ).onBlur;
     // containerRef.current is null in our useRef stub, so .contains(...)
     // would throw — but the optional chain returns undefined → !undefined
     // → enters the close branch.
@@ -232,9 +234,11 @@ describe('LanguageSwitch — onBlur', () => {
     useRefSpy.mockReturnValueOnce({ current: containerStub });
     const tree = render();
     const btn = findFirst(tree, (el) => el.type === 'button')!;
-    const onBlur = (btn.props as {
-      onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void;
-    }).onBlur;
+    const onBlur = (
+      btn.props as {
+        onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void;
+      }
+    ).onBlur;
     onBlur({ relatedTarget: { x: 1 } } as unknown as React.FocusEvent<HTMLButtonElement>);
     expect(containerStub.contains).toHaveBeenCalledWith({ x: 1 });
     expect(mocks.setOpenSpy).not.toHaveBeenCalled();

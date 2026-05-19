@@ -41,13 +41,9 @@ vi.mock('../gcp/credential-resolver', () => ({
   },
 }));
 
-import {
-  CREDENTIAL_RESOLVERS,
-  resolveProviderAuth,
-  cleanupProviderAuth,
-} from '../registry';
 import { awsCredentialResolver } from '../aws/credential-resolver';
 import { gcpCredentialResolver } from '../gcp/credential-resolver';
+import { CREDENTIAL_RESOLVERS, resolveProviderAuth, cleanupProviderAuth } from '../registry';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -93,24 +89,22 @@ describe('resolveProviderAuth', () => {
   });
 
   it('throws a clear "not supported yet" error for an unregistered provider', async () => {
-    await expect(
-      resolveProviderAuth('azure', { orgId: 'org-1', credentials: {} }),
-    ).rejects.toThrow(/Provider 'azure' is not supported yet/);
+    await expect(resolveProviderAuth('azure', { orgId: 'org-1', credentials: {} })).rejects.toThrow(
+      /Provider 'azure' is not supported yet/,
+    );
   });
 
   it('throws for an empty provider string', async () => {
-    await expect(
-      resolveProviderAuth('', { orgId: 'org-1', credentials: {} }),
-    ).rejects.toThrow(/Provider '' is not supported yet/);
+    await expect(resolveProviderAuth('', { orgId: 'org-1', credentials: {} })).rejects.toThrow(
+      /Provider '' is not supported yet/,
+    );
   });
 
   it('propagates errors thrown by the underlying resolver', async () => {
     const original = new Error('upstream auth blew up');
     (gcpCredentialResolver.resolve as ReturnType<typeof vi.fn>).mockRejectedValueOnce(original);
 
-    await expect(
-      resolveProviderAuth('gcp', { orgId: 'org-1', credentials: {} }),
-    ).rejects.toBe(original);
+    await expect(resolveProviderAuth('gcp', { orgId: 'org-1', credentials: {} })).rejects.toBe(original);
   });
 });
 

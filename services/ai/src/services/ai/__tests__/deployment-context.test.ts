@@ -8,8 +8,8 @@
  * typecheck stays green.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import prisma from '@ice/db';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { buildDeploymentContext, formatAge } from '../deployment-context';
 
 vi.mock('@ice/db', () => ({
@@ -194,9 +194,7 @@ describe('buildDeploymentContext', () => {
       region: 'us-east-1',
       environment: 'staging',
       results: {
-        resources: [
-          { name: 'svc-c', type: 'Y', action: 'create', success: true },
-        ],
+        resources: [{ name: 'svc-c', type: 'Y', action: 'create', success: true }],
       },
     });
 

@@ -32,7 +32,6 @@ import {
   Server,
   Zap,
 } from 'lucide-react';
-
 import type { CategoryDef } from '../types';
 
 interface CategoryBase {
@@ -45,20 +44,104 @@ interface CategoryBase {
 
 /** Static layout data — id, icon, color, translation keys. No locale. */
 const CATEGORY_BASES: CategoryBase[] = [
-  { id: 'Compute', icon: Server, color: '#22c55e', labelKey: 'blocks.categories.compute.label', tooltipKey: 'blocks.categories.compute.tooltip' },
-  { id: 'Scheduler', icon: Clock, color: '#eab308', labelKey: 'blocks.categories.scheduler.label', tooltipKey: 'blocks.categories.scheduler.tooltip' },
-  { id: 'Frontend', icon: Globe, color: '#3b82f6', labelKey: 'blocks.categories.frontend.label', tooltipKey: 'blocks.categories.frontend.tooltip' },
-  { id: 'Network', icon: GitBranch, color: '#06b6d4', labelKey: 'blocks.categories.network.label', tooltipKey: 'blocks.categories.network.tooltip' },
-  { id: 'Database', icon: Database, color: '#f59e0b', labelKey: 'blocks.categories.database.label', tooltipKey: 'blocks.categories.database.tooltip' },
-  { id: 'Cache', icon: Zap, color: '#ef4444', labelKey: 'blocks.categories.cache.label', tooltipKey: 'blocks.categories.cache.tooltip' },
-  { id: 'Messaging', icon: List, color: '#8b5cf6', labelKey: 'blocks.categories.messaging.label', tooltipKey: 'blocks.categories.messaging.tooltip' },
-  { id: 'Storage', icon: HardDrive, color: '#64748b', labelKey: 'blocks.categories.storage.label', tooltipKey: 'blocks.categories.storage.tooltip' },
-  { id: 'Security', icon: Key, color: '#ec4899', labelKey: 'blocks.categories.security.label', tooltipKey: 'blocks.categories.security.tooltip' },
-  { id: 'AI', icon: Brain, color: '#a855f7', labelKey: 'blocks.categories.ai.label', tooltipKey: 'blocks.categories.ai.tooltip' },
-  { id: 'Analytics', icon: BarChart3, color: '#14b8a6', labelKey: 'blocks.categories.analytics.label', tooltipKey: 'blocks.categories.analytics.tooltip' },
-  { id: 'Monitoring', icon: FileText, color: '#f97316', labelKey: 'blocks.categories.monitoring.label', tooltipKey: 'blocks.categories.monitoring.tooltip' },
-  { id: 'Source', icon: GitBranch, color: '#6366f1', labelKey: 'blocks.categories.source.label', tooltipKey: 'blocks.categories.source.tooltip' },
-  { id: 'Config', icon: Cog, color: '#78716c', labelKey: 'blocks.categories.config.label', tooltipKey: 'blocks.categories.config.tooltip' },
+  {
+    id: 'Compute',
+    icon: Server,
+    color: '#22c55e',
+    labelKey: 'blocks.categories.compute.label',
+    tooltipKey: 'blocks.categories.compute.tooltip',
+  },
+  {
+    id: 'Scheduler',
+    icon: Clock,
+    color: '#eab308',
+    labelKey: 'blocks.categories.scheduler.label',
+    tooltipKey: 'blocks.categories.scheduler.tooltip',
+  },
+  {
+    id: 'Frontend',
+    icon: Globe,
+    color: '#3b82f6',
+    labelKey: 'blocks.categories.frontend.label',
+    tooltipKey: 'blocks.categories.frontend.tooltip',
+  },
+  {
+    id: 'Network',
+    icon: GitBranch,
+    color: '#06b6d4',
+    labelKey: 'blocks.categories.network.label',
+    tooltipKey: 'blocks.categories.network.tooltip',
+  },
+  {
+    id: 'Database',
+    icon: Database,
+    color: '#f59e0b',
+    labelKey: 'blocks.categories.database.label',
+    tooltipKey: 'blocks.categories.database.tooltip',
+  },
+  {
+    id: 'Cache',
+    icon: Zap,
+    color: '#ef4444',
+    labelKey: 'blocks.categories.cache.label',
+    tooltipKey: 'blocks.categories.cache.tooltip',
+  },
+  {
+    id: 'Messaging',
+    icon: List,
+    color: '#8b5cf6',
+    labelKey: 'blocks.categories.messaging.label',
+    tooltipKey: 'blocks.categories.messaging.tooltip',
+  },
+  {
+    id: 'Storage',
+    icon: HardDrive,
+    color: '#64748b',
+    labelKey: 'blocks.categories.storage.label',
+    tooltipKey: 'blocks.categories.storage.tooltip',
+  },
+  {
+    id: 'Security',
+    icon: Key,
+    color: '#ec4899',
+    labelKey: 'blocks.categories.security.label',
+    tooltipKey: 'blocks.categories.security.tooltip',
+  },
+  {
+    id: 'AI',
+    icon: Brain,
+    color: '#a855f7',
+    labelKey: 'blocks.categories.ai.label',
+    tooltipKey: 'blocks.categories.ai.tooltip',
+  },
+  {
+    id: 'Analytics',
+    icon: BarChart3,
+    color: '#14b8a6',
+    labelKey: 'blocks.categories.analytics.label',
+    tooltipKey: 'blocks.categories.analytics.tooltip',
+  },
+  {
+    id: 'Monitoring',
+    icon: FileText,
+    color: '#f97316',
+    labelKey: 'blocks.categories.monitoring.label',
+    tooltipKey: 'blocks.categories.monitoring.tooltip',
+  },
+  {
+    id: 'Source',
+    icon: GitBranch,
+    color: '#6366f1',
+    labelKey: 'blocks.categories.source.label',
+    tooltipKey: 'blocks.categories.source.tooltip',
+  },
+  {
+    id: 'Config',
+    icon: Cog,
+    color: '#78716c',
+    labelKey: 'blocks.categories.config.label',
+    tooltipKey: 'blocks.categories.config.tooltip',
+  },
 ];
 
 export const CATEGORY_ORDER = CATEGORY_BASES.map((c) => c.id);

@@ -25,12 +25,7 @@ import type { CanvasNode } from '../../types';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -44,10 +39,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -140,9 +132,7 @@ describe('NodeLiftWrapper — lifted only', () => {
     expect(gs).toHaveLength(1);
     const g = gs[0];
     expect(g.key).toBe('node-1');
-    expect((g.props as { filter?: string; opacity?: number }).filter).toBe(
-      'url(#shift-drag-shadow)',
-    );
+    expect((g.props as { filter?: string; opacity?: number }).filter).toBe('url(#shift-drag-shadow)');
     expect((g.props as { opacity?: number }).opacity).toBe(0.9);
 
     const rects = findByPredicate(g, (el) => el.type === 'rect');

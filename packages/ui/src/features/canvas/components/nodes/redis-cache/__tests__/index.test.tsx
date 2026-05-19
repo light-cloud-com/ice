@@ -21,13 +21,7 @@ vi.mock('lucide-react', () => ({
   Zap: ((_p: Record<string, unknown>) => null) as React.FC,
 }));
 
-import {
-  SvgRedisCacheNode,
-  computeRedisCacheHeight,
-  DB_HEADER_HEIGHT,
-  DB_BODY_HEIGHT,
-  DB_PADDING,
-} from '..';
+import { SvgRedisCacheNode, computeRedisCacheHeight, DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING } from '..';
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import type { CanvasNode } from '../../../svg-canvas';
 
@@ -43,9 +37,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgRedisCacheNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgRedisCacheNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgRedisCacheNode> = {
     node: makeNode(),
     isSelected: false,
@@ -76,9 +68,7 @@ describe('SvgRedisCacheNode', () => {
         data: { version: '7', memoryMb: 1024, eviction: 'allkeys-lru', persistence: true },
       }),
     });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe(
-      'Redis 7 · 1 GB · allkeys-lru · persistent',
-    );
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('Redis 7 · 1 GB · allkeys-lru · persistent');
   });
 
   it('formats memory under 1024 as MB', () => {

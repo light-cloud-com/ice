@@ -13,17 +13,13 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import {
-  finishDeploySnapshot,
-  releaseTempDir,
-  startDeploySnapshot,
-} from './deploy-locks';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
+import { acquireWriteLock } from './deploy-lock-wrapper';
+import { finishDeploySnapshot, releaseTempDir, startDeploySnapshot } from './deploy-locks';
+import { createDeployer } from './deployer-factory';
+import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner';
 import { removeResourceMapping } from './resource-mapping.service';
 import { resolveProviderAuth } from '../providers/registry';
-import { createDeployer } from './deployer-factory';
-import { acquireWriteLock } from './deploy-lock-wrapper';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
-import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner';
 
 export async function destroyDeployment(cardId: string, orgId: string, userId?: string) {
   // Per-card lock — no concurrent destroys on the same card.

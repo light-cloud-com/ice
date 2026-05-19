@@ -30,8 +30,8 @@
  *    no dedup applied.
  */
 
-import type { MutableGraph } from '../mutable-graph';
 import type { NodeId, TopologicalSortResult } from '../../types/graph';
+import type { MutableGraph } from '../mutable-graph';
 
 // =============================================================================
 // Topological Sort

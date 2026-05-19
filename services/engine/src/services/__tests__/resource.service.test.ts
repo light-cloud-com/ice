@@ -41,7 +41,12 @@ afterEach(() => {
 });
 
 const sampleResources = [
-  { id: 'compute.container', name: 'Container', description: 'Run images', implementations: [{ id: 'gcp.run' }, { id: 'aws.fargate' }] },
+  {
+    id: 'compute.container',
+    name: 'Container',
+    description: 'Run images',
+    implementations: [{ id: 'gcp.run' }, { id: 'aws.fargate' }],
+  },
   { id: 'data.postgres', name: 'Postgres', description: 'SQL database', implementations: [{ id: 'gcp.cloudsql' }] },
   { id: 'storage.bucket', name: 'Bucket' /* no description or implementations */ },
 ];

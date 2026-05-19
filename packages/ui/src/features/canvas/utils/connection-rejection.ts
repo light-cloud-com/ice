@@ -28,11 +28,7 @@ function humanizeIceType(iceType: string): string {
   return tail.replace(/([a-z])([A-Z])(?=[a-z])/g, '$1 $2');
 }
 
-export function buildRejectionMessage(
-  srcIceType: string,
-  tgtIceType: string,
-  cause: RejectionCause,
-): string {
+export function buildRejectionMessage(srcIceType: string, tgtIceType: string, cause: RejectionCause): string {
   if (cause.kind === 'validation-error') return cause.message;
   if (cause.kind === 'special-conflict') {
     return t('canvas.rejection.specialConflict', { label: cause.label });

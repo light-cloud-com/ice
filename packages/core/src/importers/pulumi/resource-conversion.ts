@@ -7,8 +7,8 @@
  * dependency aggregation (explicit deps + parent).
  */
 
-import { get_ice_type, get_provider_from_type, parse_urn } from './type-mapper';
 import { extract_name_from_urn, is_secret_value, unwrap_secret } from './parsing';
+import { get_ice_type, get_provider_from_type, parse_urn } from './type-mapper';
 import type { PulumiImportOptions } from './state-importer';
 import type { PulumiResource, PulumiImportedResource, PulumiImportWarning } from './types';
 
@@ -25,10 +25,7 @@ type ResolvedOptions = Required<Omit<PulumiImportOptions, 'target_graph'>>;
  *
  * Pure: no side effects, no graph mutation.
  */
-export function process_properties(
-  props: Record<string, unknown>,
-  options: ResolvedOptions,
-): Record<string, unknown> {
+export function process_properties(props: Record<string, unknown>, options: ResolvedOptions): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(props)) {

@@ -22,7 +22,6 @@
  * See docs/backlog/concepts-palette.md for the full rationale.
  */
 
-import type React from 'react';
 import {
   Activity,
   Bell,
@@ -42,8 +41,8 @@ import {
   Waypoints,
   Zap,
 } from 'lucide-react';
-
 import type { ComponentDef, RuntimeOption } from '../types';
+import type React from 'react';
 
 type Translator = (key: string) => string;
 

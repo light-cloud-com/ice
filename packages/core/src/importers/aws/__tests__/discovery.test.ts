@@ -310,10 +310,7 @@ describe('discover_with_config — paginated success', () => {
 
   it('skips entries whose JSON.parse returns null (malformed Config rows)', async () => {
     const send = vi.fn(async () => ({
-      Results: [
-        'not-json',
-        JSON.stringify({ arn: 'arn:aws:s3:::ok', resourceType: 'AWS::S3::Bucket' }),
-      ],
+      Results: ['not-json', JSON.stringify({ arn: 'arn:aws:s3:::ok', resourceType: 'AWS::S3::Bucket' })],
       NextToken: undefined,
     }));
     const sdk = { ...mock_sdk, ConfigService: { send } };

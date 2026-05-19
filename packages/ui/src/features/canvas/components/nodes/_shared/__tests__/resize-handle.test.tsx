@@ -23,9 +23,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof ResizeHandle>): React.ReactElement => {
-  const Inner = (ResizeHandle as unknown as {
-    type: (p: React.ComponentProps<typeof ResizeHandle>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    ResizeHandle as unknown as {
+      type: (p: React.ComponentProps<typeof ResizeHandle>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

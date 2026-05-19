@@ -10,10 +10,10 @@
 import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Database } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import { formatStorage, renderDbIdentityBody } from '../postgres';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING };
 
@@ -79,9 +79,7 @@ export const SvgMongodbNode: React.FC<SvgCompactNodeProps> = ({
       headerHeight={DB_HEADER_HEIGHT}
     >
       {renderDbIdentityBody({
-        engineLabel: version
-          ? `${t('canvas.blocks.titles.mongodb')} ${version}`
-          : t('canvas.blocks.titles.mongodb'),
+        engineLabel: version ? `${t('canvas.blocks.titles.mongodb')} ${version}` : t('canvas.blocks.titles.mongodb'),
         storage,
         badges,
         testId: `mongo-body-${node.id}`,

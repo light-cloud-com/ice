@@ -8,11 +8,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-import { diff_graphs, format_plan } from '../diff';
-import type { DiffResult, ResourceChange } from '../types';
 import { create_node_id, create_graph_id } from '../../types/graph';
+import { diff_graphs, format_plan } from '../diff';
 import type { Edge, EdgeId, Graph, GraphMetadata, Node, NodeId } from '../../types/graph';
+import type { DiffResult, ResourceChange } from '../types';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -98,9 +97,7 @@ describe('diff_graphs', () => {
   });
 
   it('marks resources present in desired but missing from current as create', () => {
-    const desired = make_graph([
-      make_node({ type: 'S3.Bucket', name: 'logs', properties: { region: 'us-east-1' } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'S3.Bucket', name: 'logs', properties: { region: 'us-east-1' } })]);
     const current = make_graph([]);
 
     const result = diff_graphs(desired, current, 'aws');
@@ -191,12 +188,8 @@ describe('diff_graphs', () => {
   });
 
   it('keeps no_change records when changes_only is disabled (default)', () => {
-    const desired = make_graph([
-      make_node({ type: 'S3.Bucket', name: 'a', properties: { region: 'us-east-1' } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'S3.Bucket', name: 'a', properties: { region: 'us-east-1' } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'S3.Bucket', name: 'a', properties: { region: 'us-east-1' } })]);
+    const current = make_graph([make_node({ type: 'S3.Bucket', name: 'a', properties: { region: 'us-east-1' } })]);
 
     const result = diff_graphs(desired, current, 'aws');
 
@@ -365,18 +358,12 @@ describe('diff_graphs property comparison', () => {
     const result = diff_graphs(desired, current, 'aws');
 
     const change = find_change(result, 'x')!;
-    expect(change.property_changes).toEqual([
-      { path: 'tags.env', old_value: 'staging', new_value: 'prod' },
-    ]);
+    expect(change.property_changes).toEqual([{ path: 'tags.env', old_value: 'staging', new_value: 'prod' }]);
   });
 
   it('reports the whole nested object as a single change when detailed is false', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: { env: 'prod' } } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: { env: 'staging' } } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: { env: 'prod' } } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: { env: 'staging' } } })]);
 
     const result = diff_graphs(desired, current, 'aws', { detailed: false });
 
@@ -450,27 +437,17 @@ describe('diff_graphs property comparison', () => {
   });
 
   it('treats arrays of primitives as a single field — element-by-element compared', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b', 'c'] } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b', 'c'] } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } })]);
 
     const result = diff_graphs(desired, current, 'aws');
     const change = find_change(result, 'x')!;
-    expect(change.property_changes).toEqual([
-      { path: 'tags', old_value: ['a', 'b'], new_value: ['a', 'b', 'c'] },
-    ]);
+    expect(change.property_changes).toEqual([{ path: 'tags', old_value: ['a', 'b'], new_value: ['a', 'b', 'c'] }]);
   });
 
   it('treats equal arrays as no change', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b'] } })]);
     const result = diff_graphs(desired, current, 'aws');
     expect(find_change(result, 'x')!.change_type).toBe('no_change');
   });
@@ -498,29 +475,21 @@ describe('diff_graphs property comparison', () => {
   });
 
   it('detects fields added on desired and reports old_value as undefined', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { region: 'us', extra: 'new' } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { region: 'us', extra: 'new' } })]);
     const current = make_graph([make_node({ type: 'A', name: 'x', properties: { region: 'us' } })]);
 
     const result = diff_graphs(desired, current, 'aws');
     const change = find_change(result, 'x')!;
-    expect(change.property_changes).toEqual([
-      { path: 'extra', old_value: undefined, new_value: 'new' },
-    ]);
+    expect(change.property_changes).toEqual([{ path: 'extra', old_value: undefined, new_value: 'new' }]);
   });
 
   it('detects fields removed from desired and reports new_value as undefined', () => {
     const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { region: 'us' } })]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { region: 'us', stale: 'value' } }),
-    ]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { region: 'us', stale: 'value' } })]);
 
     const result = diff_graphs(desired, current, 'aws');
     const change = find_change(result, 'x')!;
-    expect(change.property_changes).toEqual([
-      { path: 'stale', old_value: 'value', new_value: undefined },
-    ]);
+    expect(change.property_changes).toEqual([{ path: 'stale', old_value: 'value', new_value: undefined }]);
   });
 
   it('treats mismatched scalar types as a real change (string vs number)', () => {
@@ -576,12 +545,8 @@ describe('diff_graphs property comparison', () => {
   });
 
   it('treats objects with a different number of keys as different even if shared keys match', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { spec: { a: 1, b: 2 } } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { spec: { a: 1 } } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { spec: { a: 1, b: 2 } } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { spec: { a: 1 } } })]);
 
     const result = diff_graphs(desired, current, 'aws');
     const change = find_change(result, 'x')!;
@@ -612,9 +577,7 @@ describe('diff_graphs provider_id', () => {
 
   it('falls back to _gcp_id for gcp when self_link is missing', () => {
     const desired = make_graph([]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { _gcp_id: 'fallback-id' } }),
-    ]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { _gcp_id: 'fallback-id' } })]);
 
     const result = diff_graphs(desired, current, 'gcp');
     expect(find_change(result, 'x')!.provider_id).toBe('fallback-id');
@@ -632,9 +595,7 @@ describe('diff_graphs provider_id', () => {
 
   it('returns undefined provider_id for unknown providers', () => {
     const desired = make_graph([]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { some_key: 'value' } }),
-    ]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { some_key: 'value' } })]);
 
     const result = diff_graphs(desired, current, 'kubernetes');
     expect(find_change(result, 'x')!.provider_id).toBeUndefined();
@@ -756,12 +717,8 @@ describe('format_plan', () => {
   });
 
   it('serializes object property values as JSON when detailed mode is off', () => {
-    const desired = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: { env: 'prod' } } }),
-    ]);
-    const current = make_graph([
-      make_node({ type: 'A', name: 'x', properties: { tags: { env: 'staging' } } }),
-    ]);
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: { env: 'prod' } } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { tags: { env: 'staging' } } })]);
 
     const text = format_plan(diff_graphs(desired, current, 'aws', { detailed: false }));
 

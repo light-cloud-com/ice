@@ -16,15 +16,15 @@ beforeEach(() => {
 
 describe('awsCredentialResolver.resolve', () => {
   it('throws a connect-prompt error when credentials are missing', async () => {
-    await expect(
-      awsCredentialResolver.resolve({ orgId: 'org-1', credentials: undefined }),
-    ).rejects.toThrow(/AWS provider not connected/);
+    await expect(awsCredentialResolver.resolve({ orgId: 'org-1', credentials: undefined })).rejects.toThrow(
+      /AWS provider not connected/,
+    );
   });
 
   it('throws a connect-prompt error when credentials are explicitly null', async () => {
-    await expect(
-      awsCredentialResolver.resolve({ orgId: 'org-1', credentials: null }),
-    ).rejects.toThrow(/AWS provider not connected/);
+    await expect(awsCredentialResolver.resolve({ orgId: 'org-1', credentials: null })).rejects.toThrow(
+      /AWS provider not connected/,
+    );
   });
 
   it('throws when access_key_id is missing', async () => {

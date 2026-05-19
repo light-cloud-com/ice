@@ -187,27 +187,23 @@ describe('ps_consume', () => {
     expect(s.errors).toEqual([]);
   });
 
-  it(
-    'RISK #1 — on mismatch, calls ps_add_error AND returns ps_current ' +
-      'WITHOUT advancing',
-    () => {
-      const s = make_parser_state(eof(tk('IDENTIFIER', 'a')));
-      const tok = ps_consume(s, 'STRING', 'expected string');
+  it('RISK #1 — on mismatch, calls ps_add_error AND returns ps_current ' + 'WITHOUT advancing', () => {
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'a')));
+    const tok = ps_consume(s, 'STRING', 'expected string');
 
-      // Cursor stays put.
-      expect(s.pos).toBe(0);
+    // Cursor stays put.
+    expect(s.pos).toBe(0);
 
-      // Returned token is the un-consumed current token, not the
-      // expected token. Consumers rely on this to make recovery
-      // decisions.
-      expect(tok.value).toBe('a');
-      expect(tok.type).toBe('IDENTIFIER');
+    // Returned token is the un-consumed current token, not the
+    // expected token. Consumers rely on this to make recovery
+    // decisions.
+    expect(tok.value).toBe('a');
+    expect(tok.type).toBe('IDENTIFIER');
 
-      // Error is recorded with the message verbatim.
-      expect(s.errors).toHaveLength(1);
-      expect(s.errors[0]?.message).toBe('expected string');
-    },
-  );
+    // Error is recorded with the message verbatim.
+    expect(s.errors).toHaveLength(1);
+    expect(s.errors[0]?.message).toBe('expected string');
+  });
 });
 
 describe('ps_is_at_end', () => {
@@ -266,28 +262,13 @@ describe('ps_synchronize', () => {
     // `bad RESOURCE foo { } EOF` — sync from `bad` should land on
     // RESOURCE. The unconditional first advance moves past `bad`,
     // then the keyword check fires.
-    const s = make_parser_state(
-      eof(
-        tk('IDENTIFIER', 'bad'),
-        tk('RESOURCE', 'resource'),
-        tk('TYPE_IDENTIFIER', 'Foo'),
-      ),
-    );
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'bad'), tk('RESOURCE', 'resource'), tk('TYPE_IDENTIFIER', 'Foo')));
     ps_synchronize(s);
     expect(ps_current(s).type).toBe('RESOURCE');
   });
 
   it('exits on each of the 8 statement-start keywords', () => {
-    const keywords: TokenType[] = [
-      'RESOURCE',
-      'DATA',
-      'VARIABLE',
-      'OUTPUT',
-      'PROVIDER',
-      'MODULE',
-      'LOCALS',
-      'IMPORT',
-    ];
+    const keywords: TokenType[] = ['RESOURCE', 'DATA', 'VARIABLE', 'OUTPUT', 'PROVIDER', 'MODULE', 'LOCALS', 'IMPORT'];
     for (const kw of keywords) {
       const s = make_parser_state(eof(tk('IDENTIFIER', 'bad'), tk(kw)));
       ps_synchronize(s);
@@ -295,24 +276,14 @@ describe('ps_synchronize', () => {
     }
   });
 
-  it(
-    'RISK #2b — exits when previous token is RIGHT_BRACE ' +
-      '(post-block recovery)',
-    () => {
-      // `bad } more EOF` — sync from `bad` should consume `bad` and
-      // `}` and then exit because previous == RIGHT_BRACE.
-      const s = make_parser_state(
-        eof(
-          tk('IDENTIFIER', 'bad'),
-          tk('RIGHT_BRACE', '}'),
-          tk('IDENTIFIER', 'more'),
-        ),
-      );
-      ps_synchronize(s);
-      expect(ps_current(s).value).toBe('more');
-      expect(ps_previous(s).type).toBe('RIGHT_BRACE');
-    },
-  );
+  it('RISK #2b — exits when previous token is RIGHT_BRACE ' + '(post-block recovery)', () => {
+    // `bad } more EOF` — sync from `bad` should consume `bad` and
+    // `}` and then exit because previous == RIGHT_BRACE.
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'bad'), tk('RIGHT_BRACE', '}'), tk('IDENTIFIER', 'more')));
+    ps_synchronize(s);
+    expect(ps_current(s).value).toBe('more');
+    expect(ps_previous(s).type).toBe('RIGHT_BRACE');
+  });
 
   it('always advances at least once (cannot stall on a keyword at start)', () => {
     // If sync is called WITH the cursor sitting on a keyword (which
@@ -327,9 +298,7 @@ describe('ps_synchronize', () => {
   });
 
   it('advances to EOF when no keyword and no RIGHT_BRACE found', () => {
-    const s = make_parser_state(
-      eof(tk('IDENTIFIER', 'a'), tk('PLUS', '+'), tk('NUMBER', '1')),
-    );
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'a'), tk('PLUS', '+'), tk('NUMBER', '1')));
     ps_synchronize(s);
     expect(ps_is_at_end(s)).toBe(true);
   });

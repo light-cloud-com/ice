@@ -167,13 +167,27 @@ vi.mock('@ui/shared/api/axios-instance', () => ({
 }));
 
 vi.mock('@ui/shared/components/ui/search-input', () => ({
-  SearchInput: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
+  SearchInput: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+  }) => (
     <input data-stub="SearchInput" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
   ),
 }));
 
 vi.mock('../components/template-card', () => ({
-  TemplateCard: ({ template, onSelect }: { template: { id: string; name: string }; onSelect: (t: { id: string }) => void }) => (
+  TemplateCard: ({
+    template,
+    onSelect,
+  }: {
+    template: { id: string; name: string };
+    onSelect: (t: { id: string }) => void;
+  }) => (
     <button data-stub="TemplateCard" data-template-id={template.id} onClick={() => onSelect(template)}>
       {template.name}
     </button>
@@ -181,7 +195,15 @@ vi.mock('../components/template-card', () => ({
 }));
 
 vi.mock('../components/template-detail', () => ({
-  TemplateDetail: ({ template, onClose, onUse }: { template: { id: string }; onClose: () => void; onUse: (t: { id: string }) => void }) => (
+  TemplateDetail: ({
+    template,
+    onClose,
+    onUse,
+  }: {
+    template: { id: string };
+    onClose: () => void;
+    onUse: (t: { id: string }) => void;
+  }) => (
     <div data-stub="TemplateDetail" data-template-id={template.id}>
       <button data-stub="close" onClick={onClose}>
         close
@@ -194,8 +216,23 @@ vi.mock('../components/template-detail', () => ({
 }));
 
 vi.mock('../components/filter-chip', () => ({
-  FilterChip: ({ label, active, onClick, count }: { label: string; active: boolean; onClick: () => void; count?: number }) => (
-    <button data-stub="FilterChip" data-active={String(active)} data-count={count != null ? String(count) : ''} onClick={onClick}>
+  FilterChip: ({
+    label,
+    active,
+    onClick,
+    count,
+  }: {
+    label: string;
+    active: boolean;
+    onClick: () => void;
+    count?: number;
+  }) => (
+    <button
+      data-stub="FilterChip"
+      data-active={String(active)}
+      data-count={count != null ? String(count) : ''}
+      onClick={onClick}
+    >
       {label}
     </button>
   ),
@@ -241,10 +278,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -288,7 +322,8 @@ describe('TemplateGalleryPage — root structure', () => {
     const tree = render();
     const searchInputs = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'SearchInput',
     );
     expect(searchInputs).toHaveLength(1);
@@ -317,7 +352,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     // 1 'all' + 2 non-empty categories (web,ai) + 3 providers (gcp,aws,azure) + 4 difficulties = 10
@@ -328,7 +364,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     const categoryChipLabels = chips.map((c) => (c.props as { children: unknown }).children);
@@ -340,7 +377,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     const labels = chips.map((c) => (c.props as { children: unknown }).children);
@@ -353,7 +391,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     const labels = chips.map((c) => (c.props as { children: unknown }).children);
@@ -368,10 +407,13 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
-    const allChip = chips.find((c) => (c.props as { children: unknown }).children === 'templates.gallery.allCategories');
+    const allChip = chips.find(
+      (c) => (c.props as { children: unknown }).children === 'templates.gallery.allCategories',
+    );
     expect((allChip!.props as { ['data-active']: string })['data-active']).toBe('true');
   });
 
@@ -380,7 +422,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     const aiChip = chips.find((c) => (c.props as { children: unknown }).children === 'templates.categories.ai.label');
@@ -392,7 +435,8 @@ describe('TemplateGalleryPage — filter chips', () => {
     const tree = render();
     const chips = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'FilterChip',
     );
     const awsChip = chips.find((c) => (c.props as { children: unknown }).children === 'AWS');
@@ -436,7 +480,8 @@ describe('TemplateGalleryPage — grid', () => {
     const tree = render();
     const cards = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateCard',
     );
     expect(cards.length).toBeGreaterThanOrEqual(2);
@@ -499,7 +544,8 @@ describe('TemplateGalleryPage — detail panel', () => {
     const tree = render();
     const details = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateDetail',
     );
     expect(details).toHaveLength(0);
@@ -511,7 +557,8 @@ describe('TemplateGalleryPage — detail panel', () => {
     const tree = render();
     const details = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateDetail',
     );
     expect(details).toHaveLength(1);

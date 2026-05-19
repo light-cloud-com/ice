@@ -43,19 +43,14 @@ function rec(
   };
 }
 
-function ctx(
-  records: NodeRecord[],
-  overrides: Partial<SchedulerContext> = {},
-): SchedulerContext {
+function ctx(records: NodeRecord[], overrides: Partial<SchedulerContext> = {}): SchedulerContext {
   const records_map = new Map<string, NodeRecord>();
   for (const r of records) records_map.set(r.change.id, r);
   const default_per_handler_caps: Record<string, number> = {
     'gcp.sql.': 1,
     'gcp.redis.': 1,
   };
-  const default_handler_cap_prefixes = Object.keys(default_per_handler_caps).sort(
-    (a, b) => b.length - a.length,
-  );
+  const default_handler_cap_prefixes = Object.keys(default_per_handler_caps).sort((a, b) => b.length - a.length);
   return {
     changes: records.map((r) => r.change),
     phase: 'create',
@@ -258,10 +253,6 @@ describe('collect_ready', () => {
   it('preserves Map insertion order in the output', () => {
     const records = ['z', 'a', 'm'].map((n) => rec(n, 'gcp.storage.bucket'));
     const c = ctx(records);
-    expect(collect_ready(c)).toEqual([
-      'gcp.storage.bucket:z',
-      'gcp.storage.bucket:a',
-      'gcp.storage.bucket:m',
-    ]);
+    expect(collect_ready(c)).toEqual(['gcp.storage.bucket:z', 'gcp.storage.bucket:a', 'gcp.storage.bucket:m']);
   });
 });

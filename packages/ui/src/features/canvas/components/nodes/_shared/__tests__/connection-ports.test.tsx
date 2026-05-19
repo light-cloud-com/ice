@@ -30,14 +30,15 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof ConnectionPorts>): React.ReactElement => {
-  const Inner = (ConnectionPorts as unknown as {
-    type: (p: React.ComponentProps<typeof ConnectionPorts>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    ConnectionPorts as unknown as {
+      type: (p: React.ComponentProps<typeof ConnectionPorts>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 
-const findCircles = (tree: React.ReactNode) =>
-  [...walk(tree)].filter((el) => el.type === 'circle');
+const findCircles = (tree: React.ReactNode) => [...walk(tree)].filter((el) => el.type === 'circle');
 
 describe('ConnectionPorts', () => {
   it('renders four circles by default (all four sides)', () => {

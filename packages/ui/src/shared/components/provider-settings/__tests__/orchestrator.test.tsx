@@ -92,8 +92,7 @@ vi.mock('react-dom', () => ({
 
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({
-    t: (key: string, vars?: Record<string, string | number>) =>
-      vars ? `${key}:${JSON.stringify(vars)}` : key,
+    t: (key: string, vars?: Record<string, string | number>) => (vars ? `${key}:${JSON.stringify(vars)}` : key),
   }),
 }));
 
@@ -108,7 +107,10 @@ vi.mock('../hooks/use-provider-handlers', () => ({
 vi.mock('../sections/provider-card', () => ({
   ProviderCard: vi.fn((props: Record<string, unknown>) => {
     mocks.cardCalls.push(props);
-    return React.createElement('section', { 'data-stub': 'ProviderCard', 'data-id': (props.provider as { id: string }).id });
+    return React.createElement('section', {
+      'data-stub': 'ProviderCard',
+      'data-id': (props.provider as { id: string }).id,
+    });
   }),
 }));
 
@@ -147,10 +149,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -180,9 +179,7 @@ function drainCardCalls(tree: React.ReactNode): Array<Record<string, unknown>> {
   return snap;
 }
 
-const renderModal = (
-  props: ProviderSettingsProps = { isOpen: true, onClose: () => undefined },
-): React.ReactNode => {
+const renderModal = (props: ProviderSettingsProps = { isOpen: true, onClose: () => undefined }): React.ReactNode => {
   mocks.__resetUseState();
   mocks.effects.length = 0;
   return (ProviderSettings as unknown as (p: ProviderSettingsProps) => React.ReactNode)(props);

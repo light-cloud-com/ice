@@ -59,10 +59,7 @@ describe('extract_cloud_run_properties', () => {
   });
 
   it('passes through port, min_instances, max_instances', () => {
-    const result = extract_cloud_run_properties(
-      { port: 3000, minInstances: 1, maxInstances: 10 },
-      'us-east1',
-    );
+    const result = extract_cloud_run_properties({ port: 3000, minInstances: 1, maxInstances: 10 }, 'us-east1');
     expect(result.port).toBe(3000);
     expect(result.min_instances).toBe(1);
     expect(result.max_instances).toBe(10);
@@ -118,10 +115,7 @@ describe('extract_cloud_run_job_properties', () => {
   });
 
   it('passes through cpu, memory, timeout', () => {
-    const result = extract_cloud_run_job_properties(
-      { cpu: '4', memory: '2Gi', timeout: '1800s' },
-      'us-central1',
-    );
+    const result = extract_cloud_run_job_properties({ cpu: '4', memory: '2Gi', timeout: '1800s' }, 'us-central1');
     expect(result.cpu).toBe('4');
     expect(result.memory).toBe('2Gi');
     expect(result.timeout).toBe('1800s');
@@ -237,10 +231,7 @@ describe('extract_cloud_scheduler_properties', () => {
   });
 
   it('passes through a custom cron string unchanged when not a known key', () => {
-    const result = extract_cloud_scheduler_properties(
-      { schedule: '*/5 * * * *' },
-      'us-central1',
-    );
+    const result = extract_cloud_scheduler_properties({ schedule: '*/5 * * * *' }, 'us-central1');
     expect(result.schedule).toBe('*/5 * * * *');
   });
 

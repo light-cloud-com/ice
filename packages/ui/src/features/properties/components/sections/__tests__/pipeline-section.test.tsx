@@ -194,12 +194,7 @@ import { PipelineSection } from '../pipeline-section';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -213,10 +208,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -286,12 +278,14 @@ const makeEvent = (overrides: Record<string, unknown> = {}): Record<string, unkn
   ...overrides,
 });
 
-const renderSection = (props: {
-  cardId?: string;
-  nodeId?: string;
-  nodeRepo?: string;
-  activeCard?: any;
-} = {}): React.ReactElement | null => {
+const renderSection = (
+  props: {
+    cardId?: string;
+    nodeId?: string;
+    nodeRepo?: string;
+    activeCard?: any;
+  } = {},
+): React.ReactElement | null => {
   // Reset useState queue + spy state for each render.
   (mocks as unknown as { __resetUseState: () => void }).__resetUseState();
   mocks.MockSection.mockClear();
@@ -343,9 +337,7 @@ describe('PipelineSection', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0][0]).toEqual({ cardId: 'c-XYZ', nodeId: 'n-ABC' });
     // The action object dispatched is the tagged thunk-result.
-    expect(mocks.dispatchSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'pipeline/fetchRulesForNode' }),
-    );
+    expect(mocks.dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/fetchRulesForNode' }));
   });
 
   it('mount fires dispatch(fetchEventsForNode({ cardId, nodeId })) once', () => {
@@ -368,10 +360,7 @@ describe('PipelineSection', () => {
   });
 
   it('does NOT fire fetchGitHubBranches when branches are already loaded for the repo', () => {
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     renderSection({ nodeRepo: 'owner/repo' });
     expect(mocks.fetchGitHubBranchesSpy).not.toHaveBeenCalled();
   });
@@ -417,9 +406,7 @@ describe('PipelineSection', () => {
       // edges intentionally missing
     } as unknown as { id: string; nodes: unknown[]; edges: unknown[] };
     // Must not throw — repo-resolution branch hits the `|| []` fallback for edges.
-    expect(() =>
-      renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' }),
-    ).not.toThrow();
+    expect(() => renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' })).not.toThrow();
   });
 
   it('handles activeCard with no nodes array (|| [] fallback)', () => {
@@ -427,9 +414,7 @@ describe('PipelineSection', () => {
       // nodes intentionally missing
       edges: [{ source: 'a', target: 'node-1' }],
     } as unknown as { id: string; nodes: unknown[]; edges: unknown[] };
-    expect(() =>
-      renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' }),
-    ).not.toThrow();
+    expect(() => renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' })).not.toThrow();
   });
 
   it('skips repo resolution when the connected node is missing in nodes list', () => {
@@ -489,26 +474,16 @@ describe('PipelineSection', () => {
 
   it('auto-create picks "master" when no "main" but "master" is in branches', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'master' },
-      { name: 'feature' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'master' }, { name: 'feature' }];
     renderSection();
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ branchPattern: 'master' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ branchPattern: 'master' }));
   });
 
   it('auto-create falls back to first branch when neither "main" nor "master" exists', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'feature-1' },
-      { name: 'feature-2' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'feature-1' }, { name: 'feature-2' }];
     renderSection();
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ branchPattern: 'feature-1' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ branchPattern: 'feature-1' }));
   });
 
   it('does NOT auto-create when autoCreated ref is already true', () => {
@@ -537,10 +512,7 @@ describe('PipelineSection', () => {
       // Flush microtasks so the .catch runs.
       await new Promise((r) => setTimeout(r, 0));
       await new Promise((r) => setTimeout(r, 0));
-      expect(errSpy).toHaveBeenCalledWith(
-        '[Pipeline] Auto-create failed:',
-        expect.any(Error),
-      );
+      expect(errSpy).toHaveBeenCalledWith('[Pipeline] Auto-create failed:', expect.any(Error));
     } finally {
       errSpy.mockRestore();
     }
@@ -592,13 +564,8 @@ describe('PipelineSection', () => {
   // ── Add-rule button ───────────────────────────────────────────────────────
 
   it('clicking Add-trigger button dispatches createPipelineRule with an unused branch', () => {
-    mocks.state.pipeline.rules['card-1:node-1'] = [
-      makeRule({ branch_pattern: 'main', environment: 'production' }),
-    ];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ branch_pattern: 'main', environment: 'production' })];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     const tree = renderSection();
     // Find the add-trigger <button> (className contains 'hover:text-blue-400').
     const buttons = findByPredicate(
@@ -621,9 +588,7 @@ describe('PipelineSection', () => {
   });
 
   it('Add-trigger picks env=production when the chosen branch is main/master', () => {
-    mocks.state.pipeline.rules['card-1:node-1'] = [
-      makeRule({ branch_pattern: 'develop' }),
-    ];
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ branch_pattern: 'develop' })];
     mocks.state.integrations.github.branches['owner/repo'] = [
       { name: 'main' }, // unused
       { name: 'develop' },
@@ -643,9 +608,7 @@ describe('PipelineSection', () => {
   });
 
   it('Add-trigger picks env=staging when the branch name contains "stag"', () => {
-    mocks.state.pipeline.rules['card-1:node-1'] = [
-      makeRule({ branch_pattern: 'main' }),
-    ];
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ branch_pattern: 'main' })];
     mocks.state.integrations.github.branches['owner/repo'] = [
       { name: 'main' },
       { name: 'staging-2' }, // unused, contains 'stag'
@@ -704,10 +667,7 @@ describe('PipelineSection', () => {
 
   it('changing the branch <select> dispatches updatePipelineRule with branchPattern', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ id: 'r-Br' })];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     const tree = renderSection();
     // Find selects — there are two per rule (branch + env). Branch has font-mono className.
     const selects = findByPredicate(
@@ -749,9 +709,7 @@ describe('PipelineSection', () => {
   });
 
   it('clicking the delete <button> dispatches deletePipelineRule with cardId/nodeId/ruleId', () => {
-    mocks.state.pipeline.rules['card-1:node-1'] = [
-      makeRule({ id: 'r-D', card_id: 'card-1', node_id: 'node-1' }),
-    ];
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ id: 'r-D', card_id: 'card-1', node_id: 'node-1' })];
     const tree = renderSection();
     // Delete button has 'ml-auto' + 'hover:text-red-400'.
     const deleteBtns = findByPredicate(
@@ -880,10 +838,7 @@ describe('PipelineSection', () => {
 
   it('clicking an event header dispatches expandedSetter with that ev.id', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-X' }),
-      makeEvent({ id: 'ev-Y' }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-X' }), makeEvent({ id: 'ev-Y' })];
     mocks.expandedEventIdRef.current = null;
     const tree = renderSection();
     const headers = findByPredicate(
@@ -938,9 +893,7 @@ describe('PipelineSection', () => {
     mocks.state.pipeline.history['card-1:node-1'] = [
       makeEvent({
         id: 'ev-OK',
-        deployment_logs: [
-          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' },
-        ],
+        deployment_logs: [{ step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' }],
       }),
     ];
     mocks.expandedEventIdRef.current = 'ev-OK';
@@ -953,9 +906,7 @@ describe('PipelineSection', () => {
     mocks.state.pipeline.history['card-1:node-1'] = [
       makeEvent({
         id: 'ev-FAIL',
-        deployment_logs: [
-          { step: 'build', status: 'failed', message: 'broken', timestamp: 'T:1' },
-        ],
+        deployment_logs: [{ step: 'build', status: 'failed', message: 'broken', timestamp: 'T:1' }],
       }),
     ];
     mocks.expandedEventIdRef.current = 'ev-FAIL';
@@ -977,9 +928,7 @@ describe('PipelineSection', () => {
     mocks.state.pipeline.history['card-1:node-1'] = [
       makeEvent({
         id: 'ev-RUN',
-        deployment_logs: [
-          { step: 'deploy', status: 'running', message: 'in progress', timestamp: 'T:1' },
-        ],
+        deployment_logs: [{ step: 'deploy', status: 'running', message: 'in progress', timestamp: 'T:1' }],
       }),
     ];
     mocks.expandedEventIdRef.current = 'ev-RUN';
@@ -1000,9 +949,7 @@ describe('PipelineSection', () => {
     mocks.state.pipeline.history['card-1:node-1'] = [
       makeEvent({
         id: 'ev-DUR',
-        deployment_logs: [
-          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1', duration_ms: 1500 },
-        ],
+        deployment_logs: [{ step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1', duration_ms: 1500 }],
       }),
     ];
     mocks.expandedEventIdRef.current = 'ev-DUR';
@@ -1066,9 +1013,7 @@ describe('PipelineSection', () => {
     mocks.state.pipeline.history['card-1:node-1'] = [
       makeEvent({
         id: 'ev-NODUR',
-        deployment_logs: [
-          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' },
-        ],
+        deployment_logs: [{ step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' }],
       }),
     ];
     mocks.expandedEventIdRef.current = 'ev-NODUR';
@@ -1087,9 +1032,7 @@ describe('PipelineSection', () => {
 
   it('expanded row with empty logs shows the "no logs" placeholder', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-EMPTY', deployment_logs: [] }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-EMPTY', deployment_logs: [] })];
     mocks.expandedEventIdRef.current = 'ev-EMPTY';
     const tree = renderSection();
     expect(collectText(tree)).toContain('t:pipeline.noLogs');
@@ -1097,9 +1040,7 @@ describe('PipelineSection', () => {
 
   it('expanded row with error renders the error block', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-ERR', error: 'permission denied' }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-ERR', error: 'permission denied' })];
     mocks.expandedEventIdRef.current = 'ev-ERR';
     const tree = renderSection();
     expect(collectText(tree)).toContain('permission denied');
@@ -1107,9 +1048,7 @@ describe('PipelineSection', () => {
 
   it('expanded row formats duration in seconds when < 60s', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-D1', duration_seconds: 42 }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-D1', duration_seconds: 42 })];
     mocks.expandedEventIdRef.current = 'ev-D1';
     const tree = renderSection();
     expect(collectText(tree)).toContain('42s');
@@ -1117,9 +1056,7 @@ describe('PipelineSection', () => {
 
   it('expanded row formats duration in m + s when >= 60s', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-D2', duration_seconds: 125 }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-D2', duration_seconds: 125 })];
     mocks.expandedEventIdRef.current = 'ev-D2';
     const tree = renderSection();
     expect(collectText(tree)).toContain('2m 5s');
@@ -1129,9 +1066,7 @@ describe('PipelineSection', () => {
 
   it('failed-status expanded row renders the Retry button', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-RETRY', status: 'failed' }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-RETRY', status: 'failed' })];
     mocks.expandedEventIdRef.current = 'ev-RETRY';
     const tree = renderSection();
     const retryBtns = findByPredicate(
@@ -1147,9 +1082,7 @@ describe('PipelineSection', () => {
 
   it('non-failed status does NOT render a Retry button', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-OK', status: 'success' }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-OK', status: 'success' })];
     mocks.expandedEventIdRef.current = 'ev-OK';
     const tree = renderSection();
     const retryBtns = findByPredicate(
@@ -1164,9 +1097,7 @@ describe('PipelineSection', () => {
 
   it('Retry click resolves both dynamic imports → calls retryDeploy(eventId) → dispatches fetchEventsForNode', async () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
-    mocks.state.pipeline.history['card-1:node-1'] = [
-      makeEvent({ id: 'ev-RETRY', status: 'failed' }),
-    ];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-RETRY', status: 'failed' })];
     mocks.expandedEventIdRef.current = 'ev-RETRY';
     mocks.retryDeploySpy.mockResolvedValueOnce(undefined);
     const tree = renderSection();

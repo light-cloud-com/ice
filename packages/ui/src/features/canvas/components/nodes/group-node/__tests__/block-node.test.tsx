@@ -54,10 +54,7 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   for (const el of walk(tree)) if (el && el.type === type) out.push(el);
   return out;
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -93,12 +90,12 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderBN = (
-  props: Partial<React.ComponentProps<typeof BlockNode>> = {},
-): React.ReactElement => {
-  const Inner = (BlockNode as unknown as {
-    type: (p: React.ComponentProps<typeof BlockNode>) => React.ReactElement;
-  }).type;
+const renderBN = (props: Partial<React.ComponentProps<typeof BlockNode>> = {}): React.ReactElement => {
+  const Inner = (
+    BlockNode as unknown as {
+      type: (p: React.ComponentProps<typeof BlockNode>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof BlockNode> = {
     node: makeNode(),
     x: 0,

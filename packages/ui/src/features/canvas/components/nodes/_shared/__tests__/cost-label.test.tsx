@@ -26,9 +26,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 
 function renderInner(props: React.ComponentProps<typeof CostLabel>): React.ReactElement {
   // CostLabel is React.memo-wrapped; reach into .type for the inner FC.
-  const Inner = (CostLabel as unknown as {
-    type: (p: React.ComponentProps<typeof CostLabel>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    CostLabel as unknown as {
+      type: (p: React.ComponentProps<typeof CostLabel>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 }
 

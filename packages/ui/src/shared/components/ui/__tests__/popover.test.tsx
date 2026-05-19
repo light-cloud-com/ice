@@ -132,9 +132,7 @@ describe('PopoverContent', () => {
 
   it('is a forwardRef component (exposes render fn)', () => {
     expect(typeof (PopoverContent as unknown as { render: unknown }).render).toBe('function');
-    expect((PopoverContent as unknown as { $$typeof: symbol }).$$typeof.toString()).toContain(
-      'react.forward_ref',
-    );
+    expect((PopoverContent as unknown as { $$typeof: symbol }).$$typeof.toString()).toContain('react.forward_ref');
   });
 
   it('passes through arbitrary props (side, children)', () => {
@@ -144,8 +142,6 @@ describe('PopoverContent', () => {
   });
 
   it('has a displayName matching the Radix Content primitive', () => {
-    expect(PopoverContent.displayName).toBe(
-      (mocks.Content as unknown as { displayName: string }).displayName,
-    );
+    expect(PopoverContent.displayName).toBe((mocks.Content as unknown as { displayName: string }).displayName);
   });
 });

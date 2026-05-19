@@ -33,10 +33,7 @@ import type { AppDispatch, RootState } from '../../../store';
  *   `in_sync`             -> set node `status` to `'active'`
  *   anything else         -> no dispatch
  */
-export function applyDriftStatus(
-  driftResults: Array<{ nodeId: string; status: string }>,
-  dispatch: AppDispatch,
-): void {
+export function applyDriftStatus(driftResults: Array<{ nodeId: string; status: string }>, dispatch: AppDispatch): void {
   for (const result of driftResults) {
     if (result.status === 'drifted' || result.status === 'missing') {
       // Per the `one-status-source-deploy-status` learning: drift state is
@@ -56,10 +53,7 @@ export function applyDriftStatus(
  *   - `checkDrift`: fires a POST to `/canvas/deploy/drift-check` with `{ cardId, nodes }`
  *     and dispatches the resulting drift state plus per-node status overlays.
  */
-export function useDriftCheck(
-  cardId: string,
-  nodes: any[],
-): { isLoading: boolean; checkDrift: () => Promise<void> } {
+export function useDriftCheck(cardId: string, nodes: any[]): { isLoading: boolean; checkDrift: () => Promise<void> } {
   const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
 

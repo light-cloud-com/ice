@@ -18,17 +18,17 @@
  * Both paths and the unknown-branch injection are pinned.
  */
 
+import { Trash2, ArrowRight } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { Trash2, ArrowRight } from 'lucide-react';
 
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
 import { TriggerRow } from '../trigger-row';
-import type { TriggerRowProps, BranchInfo } from '../trigger-row';
 import type { DeploymentRule } from '../../../../store/slices/pipeline-slice';
+import type { TriggerRowProps, BranchInfo } from '../trigger-row';
 
 function render(props: TriggerRowProps): React.ReactElement {
   return (TriggerRow as unknown as (p: TriggerRowProps) => React.ReactElement)(props);

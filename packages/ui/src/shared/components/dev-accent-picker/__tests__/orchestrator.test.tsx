@@ -41,7 +41,11 @@ const mocks = vi.hoisted(() => ({
     },
   } as unknown as { classList: { contains: ReturnType<typeof vi.fn> } },
   localStorageMap: new Map<string, string>(),
-  observerInstances: [] as Array<{ observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; cb: MutationCallback }>,
+  observerInstances: [] as Array<{
+    observe: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+    cb: MutationCallback;
+  }>,
   windowListeners: [] as Array<{ event: string; handler: EventListener }>,
   fixtureT: [
     {
@@ -50,18 +54,44 @@ const mocks = vi.hoisted(() => ({
       description: 'Clean white and navy',
       preview: ['#3b82f6', '#0c1118', '#ffffff'] as [string, string, string],
       light: {
-        base: '#fff', surface: '#eee', raised: '#ddd', overlay: '#ccc',
-        hover: 'rgba(0,0,0,0.04)', active: 'rgba(0,0,0,0.08)', toolbar: '#bbb',
-        border: '#aaa', borderStrong: '#999', text1: '#000', text2: '#222', text3: '#444',
-        accent: '#3b82f6', accentHover: '#2563eb', accentMuted: 'rgba(37,99,235,0.12)',
-        green: '#16a34a', red: '#dc2626', yellow: '#b45309',
+        base: '#fff',
+        surface: '#eee',
+        raised: '#ddd',
+        overlay: '#ccc',
+        hover: 'rgba(0,0,0,0.04)',
+        active: 'rgba(0,0,0,0.08)',
+        toolbar: '#bbb',
+        border: '#aaa',
+        borderStrong: '#999',
+        text1: '#000',
+        text2: '#222',
+        text3: '#444',
+        accent: '#3b82f6',
+        accentHover: '#2563eb',
+        accentMuted: 'rgba(37,99,235,0.12)',
+        green: '#16a34a',
+        red: '#dc2626',
+        yellow: '#b45309',
       },
       dark: {
-        base: '#0c1118', surface: '#151d2a', raised: '#1e2838', overlay: '#222e40',
-        hover: 'rgba(255,255,255,0.06)', active: 'rgba(255,255,255,0.09)', toolbar: '#111923',
-        border: '#1f2c3e', borderStrong: '#2e3f55', text1: '#e1e7ef', text2: '#8b9ab5',
-        text3: '#576579', accent: '#4c9aff', accentHover: '#6bb0ff',
-        accentMuted: 'rgba(76,154,255,0.15)', green: '#34d399', red: '#f87171', yellow: '#fbbf24',
+        base: '#0c1118',
+        surface: '#151d2a',
+        raised: '#1e2838',
+        overlay: '#222e40',
+        hover: 'rgba(255,255,255,0.06)',
+        active: 'rgba(255,255,255,0.09)',
+        toolbar: '#111923',
+        border: '#1f2c3e',
+        borderStrong: '#2e3f55',
+        text1: '#e1e7ef',
+        text2: '#8b9ab5',
+        text3: '#576579',
+        accent: '#4c9aff',
+        accentHover: '#6bb0ff',
+        accentMuted: 'rgba(76,154,255,0.15)',
+        green: '#34d399',
+        red: '#f87171',
+        yellow: '#fbbf24',
       },
     },
     {
@@ -70,18 +100,44 @@ const mocks = vi.hoisted(() => ({
       description: 'Tan parchment',
       preview: ['#ef9995', '#2E282A', '#ece3ca'] as [string, string, string],
       light: {
-        base: '#ece3ca', surface: '#e4d8b4', raised: '#EDE6D4', overlay: '#f5efe0',
-        hover: 'rgba(40,36,37,0.07)', active: 'rgba(40,36,37,0.14)', toolbar: '#DBCA9A',
-        border: '#c8b888', borderStrong: '#a89868', text1: '#282425', text2: '#4a4540', text3: '#706860',
-        accent: '#ef9995', accentHover: '#e07a76', accentMuted: 'rgba(239,153,149,0.22)',
-        green: '#a4cbb4', red: '#ef9995', yellow: '#DC8850',
+        base: '#ece3ca',
+        surface: '#e4d8b4',
+        raised: '#EDE6D4',
+        overlay: '#f5efe0',
+        hover: 'rgba(40,36,37,0.07)',
+        active: 'rgba(40,36,37,0.14)',
+        toolbar: '#DBCA9A',
+        border: '#c8b888',
+        borderStrong: '#a89868',
+        text1: '#282425',
+        text2: '#4a4540',
+        text3: '#706860',
+        accent: '#ef9995',
+        accentHover: '#e07a76',
+        accentMuted: 'rgba(239,153,149,0.22)',
+        green: '#a4cbb4',
+        red: '#ef9995',
+        yellow: '#DC8850',
       },
       dark: {
-        base: '#1C1918', surface: '#2E282A', raised: '#443C3E', overlay: '#584E50',
-        hover: 'rgba(237,230,212,0.08)', active: 'rgba(237,230,212,0.15)', toolbar: '#252122',
-        border: '#584E50', borderStrong: '#706260', text1: '#EDE6D4', text2: '#c8b888', text3: '#907860',
-        accent: '#ef9995', accentHover: '#f5b5b2', accentMuted: 'rgba(239,153,149,0.22)',
-        green: '#a4cbb4', red: '#ef9995', yellow: '#DC8850',
+        base: '#1C1918',
+        surface: '#2E282A',
+        raised: '#443C3E',
+        overlay: '#584E50',
+        hover: 'rgba(237,230,212,0.08)',
+        active: 'rgba(237,230,212,0.15)',
+        toolbar: '#252122',
+        border: '#584E50',
+        borderStrong: '#706260',
+        text1: '#EDE6D4',
+        text2: '#c8b888',
+        text3: '#907860',
+        accent: '#ef9995',
+        accentHover: '#f5b5b2',
+        accentMuted: 'rgba(239,153,149,0.22)',
+        green: '#a4cbb4',
+        red: '#ef9995',
+        yellow: '#DC8850',
       },
     },
   ],
@@ -170,10 +226,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -195,9 +248,7 @@ function collectText(tree: React.ReactNode): string {
   return s;
 }
 
-const renderPicker = (
-  props: { children?: React.ReactNode } = {},
-): React.ReactNode => {
+const renderPicker = (props: { children?: React.ReactNode } = {}): React.ReactNode => {
   mocks.__resetUseState();
   mocks.effects.length = 0;
   return (DevAccentPicker as unknown as (p: { children?: React.ReactNode }) => React.ReactNode)(props);
@@ -425,9 +476,11 @@ describe('DevAccentPicker — open (open=true)', () => {
         (el.props as { className: string }).className.includes('py-2.5'),
     );
     const target = { style: { background: 'transparent' } };
-    (themeButtons[0].props as {
-      onMouseEnter: (e: { currentTarget: typeof target }) => void;
-    }).onMouseEnter({ currentTarget: target });
+    (
+      themeButtons[0].props as {
+        onMouseEnter: (e: { currentTarget: typeof target }) => void;
+      }
+    ).onMouseEnter({ currentTarget: target });
     expect(target.style.background).toBe('var(--ice-bg-hover)');
   });
 
@@ -446,9 +499,11 @@ describe('DevAccentPicker — open (open=true)', () => {
         (el.props as { className: string }).className.includes('py-2.5'),
     );
     const target = { style: { background: 'var(--ice-bg-hover)' } };
-    (themeButtons[0].props as {
-      onMouseLeave: (e: { currentTarget: typeof target }) => void;
-    }).onMouseLeave({ currentTarget: target });
+    (
+      themeButtons[0].props as {
+        onMouseLeave: (e: { currentTarget: typeof target }) => void;
+      }
+    ).onMouseLeave({ currentTarget: target });
     expect(target.style.background).toBe('transparent');
   });
 
@@ -468,13 +523,17 @@ describe('DevAccentPicker — open (open=true)', () => {
     );
     // First button is active (activeId === 'default'); enter/leave should no-op.
     const target = { style: { background: 'var(--ice-bg-active)' } };
-    (themeButtons[0].props as {
-      onMouseEnter: (e: { currentTarget: typeof target }) => void;
-    }).onMouseEnter({ currentTarget: target });
+    (
+      themeButtons[0].props as {
+        onMouseEnter: (e: { currentTarget: typeof target }) => void;
+      }
+    ).onMouseEnter({ currentTarget: target });
     expect(target.style.background).toBe('var(--ice-bg-active)');
-    (themeButtons[0].props as {
-      onMouseLeave: (e: { currentTarget: typeof target }) => void;
-    }).onMouseLeave({ currentTarget: target });
+    (
+      themeButtons[0].props as {
+        onMouseLeave: (e: { currentTarget: typeof target }) => void;
+      }
+    ).onMouseLeave({ currentTarget: target });
     expect(target.style.background).toBe('var(--ice-bg-active)');
   });
 });

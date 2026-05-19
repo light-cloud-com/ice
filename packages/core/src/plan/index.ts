@@ -5,13 +5,7 @@
  */
 
 // Export diff utilities
-export {
-  diff_properties,
-  deep_equal,
-  is_destructive_change,
-  summarize_changes,
-  format_property_change,
-} from './diff';
+export { diff_properties, deep_equal, is_destructive_change, summarize_changes, format_property_change } from './diff';
 
 // Export plan engine
 export {

@@ -13,25 +13,14 @@
  * rf-vval-1/2/3/4 (P3 cohort 6).
  */
 
+import { TypeValidator, PropertyValidator } from './validators/schema';
+import { SensitiveDataValidator, BestPracticesValidator } from './validators/security';
+import { CycleValidator, ReferenceValidator, NamingValidator, ConnectivityValidator } from './validators/structure';
 import type { Validator } from './base-validator';
 import type { SchemaProvider } from '../../schema/schema-provider';
 
-import {
-  CycleValidator,
-  ReferenceValidator,
-  NamingValidator,
-  ConnectivityValidator,
-} from './validators/structure';
-import { TypeValidator, PropertyValidator } from './validators/schema';
-import { SensitiveDataValidator, BestPracticesValidator } from './validators/security';
-
 // Public API re-exports (consumed by `validator/index.ts` and the `core/src/index.ts` barrel).
-export {
-  CycleValidator,
-  ReferenceValidator,
-  NamingValidator,
-  ConnectivityValidator,
-} from './validators/structure';
+export { CycleValidator, ReferenceValidator, NamingValidator, ConnectivityValidator } from './validators/structure';
 export { TypeValidator, PropertyValidator } from './validators/schema';
 export { SensitiveDataValidator, BestPracticesValidator } from './validators/security';
 

@@ -16,8 +16,8 @@
  * `@ice/db` since `requireProjectAccess` and `requireOrgRole` lazy-import it.
  */
 
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 beforeAll(() => {
   process.env.NODE_ENV = 'test';
@@ -505,9 +505,7 @@ describe('requireProjectAccess', () => {
     // gate effectively auth-required-only. The current code throws at
     // handler-build time so a misconfigured route can never silently
     // admit unauthorized callers. See findings.md #2.
-    expect(() => requireProjectAccess('non-existent-role' as any)).toThrow(
-      /unknown minRole 'non-existent-role'/,
-    );
+    expect(() => requireProjectAccess('non-existent-role' as any)).toThrow(/unknown minRole 'non-existent-role'/);
   });
 });
 

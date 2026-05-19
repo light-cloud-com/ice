@@ -79,12 +79,7 @@ import type { NodeDeployState } from '../../../../store/slices/deploy-slice';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -108,10 +103,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -157,9 +149,11 @@ function collectText(tree: React.ReactNode): string {
 // `React.memo(Inner)` returns `{ $$typeof: Symbol(react.memo), type: Inner, compare }`.
 // To invoke the inner render under the tree-walker, reach for `.type`.
 const renderRow = (node: NodeDeployState): React.ReactElement => {
-  const Inner = (DeployNodeRow as unknown as {
-    type: (props: { node: NodeDeployState }) => React.ReactElement;
-  }).type;
+  const Inner = (
+    DeployNodeRow as unknown as {
+      type: (props: { node: NodeDeployState }) => React.ReactElement;
+    }
+  ).type;
   return Inner({ node });
 };
 
@@ -351,9 +345,7 @@ describe('DeployNodeRow — action-aware destroy label override', () => {
   });
 
   it('action=delete + unknown status → no badge (baseBadge null short-circuits the override)', () => {
-    const tree = renderRow(
-      baseNode({ status: 'unknown-status' as NodeDeployState['status'], action: 'delete' }),
-    );
+    const tree = renderRow(baseNode({ status: 'unknown-status' as NodeDeployState['status'], action: 'delete' }));
     expect(findBadgeSpan(tree)).toBeNull();
   });
 });
@@ -374,12 +366,7 @@ describe('DeployNodeRow — muted opacity', () => {
   });
 
   it('does NOT apply opacity-60 for applying / succeeded / failed / queued statuses', () => {
-    const statuses: Array<NodeDeployState['status']> = [
-      'applying',
-      'succeeded',
-      'failed',
-      'queued',
-    ];
+    const statuses: Array<NodeDeployState['status']> = ['applying', 'succeeded', 'failed', 'queued'];
     for (const status of statuses) {
       const tree = renderRow(baseNode({ status }));
       const li = findLi(tree);
@@ -491,9 +478,7 @@ describe('DeployNodeRow — resource type display', () => {
 
 describe('DeployNodeRow — step indicator', () => {
   it('renders the step indicator when status=applying and step is set', () => {
-    const tree = renderRow(
-      baseNode({ status: 'applying', step: { label: 'create-bucket', index: 2, total: 5 } }),
-    );
+    const tree = renderRow(baseNode({ status: 'applying', step: { label: 'create-bucket', index: 2, total: 5 } }));
     const step = findStepDiv(tree);
     expect(step).not.toBeNull();
     const text = collectText(step!);
@@ -508,23 +493,17 @@ describe('DeployNodeRow — step indicator', () => {
   });
 
   it('does NOT render step indicator when step is set but status != applying', () => {
-    const tree = renderRow(
-      baseNode({ status: 'queued', step: { label: 'will-run', index: 1, total: 3 } }),
-    );
+    const tree = renderRow(baseNode({ status: 'queued', step: { label: 'will-run', index: 1, total: 3 } }));
     expect(findStepDiv(tree)).toBeNull();
   });
 
   it('does NOT render step indicator when status=succeeded (terminal) even if step is set', () => {
-    const tree = renderRow(
-      baseNode({ status: 'succeeded', step: { label: 'done', index: 5, total: 5 } }),
-    );
+    const tree = renderRow(baseNode({ status: 'succeeded', step: { label: 'done', index: 5, total: 5 } }));
     expect(findStepDiv(tree)).toBeNull();
   });
 
   it('does NOT render step indicator when status=failed even if step is set', () => {
-    const tree = renderRow(
-      baseNode({ status: 'failed', step: { label: 'failing', index: 3, total: 5 } }),
-    );
+    const tree = renderRow(baseNode({ status: 'failed', step: { label: 'failing', index: 3, total: 5 } }));
     expect(findStepDiv(tree)).toBeNull();
   });
 });
@@ -548,9 +527,7 @@ describe('DeployNodeRow — error message', () => {
   });
 
   it('does NOT render error block when status=failed but error.message is empty', () => {
-    const tree = renderRow(
-      baseNode({ status: 'failed', error: { code: 'X', message: '' } }),
-    );
+    const tree = renderRow(baseNode({ status: 'failed', error: { code: 'X', message: '' } }));
     expect(findErrorDiv(tree)).toBeNull();
   });
 
@@ -593,9 +570,7 @@ describe('DeployNodeRow — React.memo boundary', () => {
   });
 
   it('preserves the displayName "DeployNodeRow" on the memo wrapper', () => {
-    expect((DeployNodeRow as unknown as { displayName: string }).displayName).toBe(
-      'DeployNodeRow',
-    );
+    expect((DeployNodeRow as unknown as { displayName: string }).displayName).toBe('DeployNodeRow');
   });
 });
 

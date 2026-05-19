@@ -30,9 +30,7 @@ const EDITABLE_TAGS: readonly string[] = ['INPUT', 'TEXTAREA', 'SELECT'];
 
 function isEditableActive(): boolean {
   if (typeof document === 'undefined') return false;
-  const el = document.activeElement as
-    | (Element & { isContentEditable?: boolean })
-    | null;
+  const el = document.activeElement as (Element & { isContentEditable?: boolean }) | null;
   if (!el) return false;
   if (EDITABLE_TAGS.includes(el.tagName)) return true;
   // contentEditable surfaces (rich-text editors).

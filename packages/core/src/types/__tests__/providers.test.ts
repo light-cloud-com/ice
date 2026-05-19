@@ -17,14 +17,10 @@ describe('create_provider_id', () => {
   });
 
   it('appends account when provided', () => {
-    expect(create_provider_id({ name: 'aws', account: '123456789012' })).toBe(
-      'aws:123456789012',
-    );
+    expect(create_provider_id({ name: 'aws', account: '123456789012' })).toBe('aws:123456789012');
   });
 
   it('joins name + region + account with colons', () => {
-    expect(create_provider_id({ name: 'aws', region: 'us-east-1', account: '12345' })).toBe(
-      'aws:us-east-1:12345',
-    );
+    expect(create_provider_id({ name: 'aws', region: 'us-east-1', account: '12345' })).toBe('aws:us-east-1:12345');
   });
 });

@@ -66,9 +66,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgGithubRepoNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgGithubRepoNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgGithubRepoNode> = {
     node: makeNode(),
     isSelected: false,
@@ -104,7 +102,8 @@ describe('normaliseRepoIdentifier', () => {
 
 describe('computeGithubRepoHeight', () => {
   it('sums header + padding*2 + body + footer', () => {
-    const expected = COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
+    const expected =
+      COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeGithubRepoHeight()).toBe(expected);
   });
 });

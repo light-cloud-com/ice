@@ -13,10 +13,10 @@
  * `NavigateFunction` from `react-router-dom` matches the runner's mount
  * point inside `<BrowserRouter>` (see blueprint §2.1).
  */
-import type React from 'react';
-import type { NavigateFunction } from 'react-router-dom';
 import type { AppDispatch } from '../../store';
 import type { UserProfile } from '../../store/slices/account-slice';
+import type React from 'react';
+import type { NavigateFunction } from 'react-router-dom';
 
 /**
  * Spotlight side relative to the resolved target. `'auto'` defers to the

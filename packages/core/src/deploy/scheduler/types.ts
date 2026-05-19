@@ -18,12 +18,7 @@
 
 import type { ResourceChange } from '../../diff/types';
 import type { Graph } from '../../types/graph';
-import type {
-  DeployOptions,
-  NodeTerminalStatus,
-  ProviderDeployer,
-  ResourceDeployResult,
-} from '../types';
+import type { DeployOptions, NodeTerminalStatus, ProviderDeployer, ResourceDeployResult } from '../types';
 
 /**
  * Default per-handler concurrency caps. Cloud SQL and Memorystore Redis

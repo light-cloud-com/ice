@@ -74,6 +74,6 @@ export interface ProviderSettingsProps {
   // The imported graph is provider-shaped JSON whose schema lives outside
   // this file. Preserved as `any` from the source to avoid widening the
   // implicit boundary contract.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onImportComplete?: (graph: any) => void;
 }

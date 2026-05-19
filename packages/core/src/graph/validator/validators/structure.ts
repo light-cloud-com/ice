@@ -7,8 +7,8 @@
  */
 
 import { has_cycle, find_cycles } from '../../algorithms';
-import type { Validator, ValidationIssue } from '../base-validator';
 import type { MutableGraph } from '../../mutable-graph';
+import type { Validator, ValidationIssue } from '../base-validator';
 
 /**
  * Validates that the graph has no cycles.

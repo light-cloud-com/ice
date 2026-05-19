@@ -75,7 +75,8 @@ const renderInner = (
 
 describe('computeServerlessFunctionHeight', () => {
   it('sums header + padding*2 + body + footer', () => {
-    const expected = COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
+    const expected =
+      COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeServerlessFunctionHeight()).toBe(expected);
   });
 });

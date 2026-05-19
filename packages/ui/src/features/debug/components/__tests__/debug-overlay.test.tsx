@@ -6,7 +6,6 @@
  * pulls the next initial value.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -47,7 +46,7 @@ vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
     const next = mocks.useStateQueue.shift();
-    return [(next === undefined ? init : (next as T)), vi.fn()];
+    return [next === undefined ? init : (next as T), vi.fn()];
   });
   const useEffect = vi.fn((cb: () => void | (() => void), deps?: unknown[]) => {
     mocks.effects.push({ cb, deps });

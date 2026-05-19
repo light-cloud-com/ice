@@ -13,15 +13,10 @@
  *  - to_validation_error proxy
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { ResourceValidator, create_resource_validator } from '../resource-validator';
 import { ValidationError } from '../../types/errors';
 import { failure, success } from '../../types/result';
-import type {
-  IceType,
-  PropertySchema,
-  ResourceSchema,
-  SchemaProvider,
-} from '../schema-provider';
+import { ResourceValidator, create_resource_validator } from '../resource-validator';
+import type { IceType, PropertySchema, ResourceSchema, SchemaProvider } from '../schema-provider';
 
 function prop(over: Partial<PropertySchema> = {}): PropertySchema {
   return {
@@ -83,14 +78,9 @@ describe('ResourceValidator.validate', () => {
 
   it('returns valid result when no issues found on a populated payload', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name', required: true })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name', required: true })] }))),
     });
-    const r = await new ResourceValidator(provider).validate(
-      'aws.ec2.instance' as IceType,
-      { name: 'instance-1' },
-    );
+    const r = await new ResourceValidator(provider).validate('aws.ec2.instance' as IceType, { name: 'instance-1' });
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.value.valid).toBe(true);
@@ -104,14 +94,9 @@ describe('ResourceValidator.validate', () => {
 
   it('returns invalid result when a required property is missing', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name', required: true })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name', required: true })] }))),
     });
-    const r = await new ResourceValidator(provider).validate(
-      'aws.ec2.instance' as IceType,
-      {},
-    );
+    const r = await new ResourceValidator(provider).validate('aws.ec2.instance' as IceType, {});
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.value.valid).toBe(false);
@@ -125,10 +110,7 @@ describe('ResourceValidator.validate', () => {
       get_schema: vi.fn(async () =>
         success(
           schema({
-            properties: [
-              prop({ name: 'a', required: true }),
-              prop({ name: 'b', required: true }),
-            ],
+            properties: [prop({ name: 'a', required: true }), prop({ name: 'b', required: true })],
           }),
         ),
       ),
@@ -148,9 +130,7 @@ describe('ResourceValidator.validate', () => {
 
   it('emits warnings for unknown properties in strict mode', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name' })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name' })] }))),
     });
     const r = await new ResourceValidator(provider).validate(
       'aws.ec2.instance' as IceType,
@@ -169,9 +149,7 @@ describe('ResourceValidator.validate', () => {
 
   it('does not flag skipped properties as unknown in strict mode', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name' })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name' })] }))),
     });
     const r = await new ResourceValidator(provider).validate(
       'aws.ec2.instance' as IceType,
@@ -186,23 +164,19 @@ describe('ResourceValidator.validate', () => {
 
   it('does not run unknown-property check when strict is false', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name' })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name' })] }))),
     });
-    const r = await new ResourceValidator(provider).validate(
-      'aws.ec2.instance' as IceType,
-      { name: 'x', extra: 'whatever' },
-    );
+    const r = await new ResourceValidator(provider).validate('aws.ec2.instance' as IceType, {
+      name: 'x',
+      extra: 'whatever',
+    });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value.warnings).toEqual([]);
   });
 
   it('drops warnings from issues when include_warnings is false', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name' })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name' })] }))),
     });
     const r = await new ResourceValidator(provider).validate(
       'aws.ec2.instance' as IceType,
@@ -237,28 +211,20 @@ describe('ResourceValidator.validate', () => {
 describe('ResourceValidator.is_valid', () => {
   it('returns true when validation passes', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name' })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name' })] }))),
     });
-    expect(
-      await new ResourceValidator(provider).is_valid('x' as IceType, { name: 'a' }),
-    ).toBe(true);
+    expect(await new ResourceValidator(provider).is_valid('x' as IceType, { name: 'a' })).toBe(true);
   });
 
   it('returns false when validation reports errors', async () => {
     const provider = makeProvider({
-      get_schema: vi.fn(async () =>
-        success(schema({ properties: [prop({ name: 'name', required: true })] })),
-      ),
+      get_schema: vi.fn(async () => success(schema({ properties: [prop({ name: 'name', required: true })] }))),
     });
     expect(await new ResourceValidator(provider).is_valid('x' as IceType, {})).toBe(false);
   });
 
   it('returns false when schema lookup fails', async () => {
-    expect(
-      await new ResourceValidator(makeProvider()).is_valid('x' as IceType, {}),
-    ).toBe(false);
+    expect(await new ResourceValidator(makeProvider()).is_valid('x' as IceType, {})).toBe(false);
   });
 });
 
@@ -267,11 +233,7 @@ describe('ResourceValidator.validate_property_value', () => {
     const provider = makeProvider({
       get_property_schema: vi.fn(() => undefined),
     });
-    const issues = await new ResourceValidator(provider).validate_property_value(
-      'x' as IceType,
-      'missing',
-      'value',
-    );
+    const issues = await new ResourceValidator(provider).validate_property_value('x' as IceType, 'missing', 'value');
     expect(issues).toHaveLength(1);
     expect(issues[0]?.code).toBe('UNKNOWN_PROPERTY');
     expect(issues[0]?.path).toBe('missing');
@@ -294,11 +256,7 @@ describe('ResourceValidator.validate_property_value', () => {
     const provider = makeProvider({
       get_property_schema: vi.fn(() => prop({ name: 'name', type: 'string' })),
     });
-    const issues = await new ResourceValidator(provider).validate_property_value(
-      'x' as IceType,
-      'name',
-      'ok',
-    );
+    const issues = await new ResourceValidator(provider).validate_property_value('x' as IceType, 'name', 'ok');
     expect(issues).toEqual([]);
   });
 });

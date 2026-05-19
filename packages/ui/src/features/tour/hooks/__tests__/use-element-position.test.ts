@@ -63,8 +63,10 @@ const mocks = vi.hoisted(() => ({
   // only track the listeners themselves — the capture/passive flags are
   // not relevant for round-tripping in tests.
   windowListeners: new Map<string, Set<EventListener>>(),
-  addEventListenerSpy: vi.fn<(type: string, listener: EventListener, options?: AddEventListenerOptions | boolean) => void>(),
-  removeEventListenerSpy: vi.fn<(type: string, listener: EventListener, options?: EventListenerOptions | boolean) => void>(),
+  addEventListenerSpy:
+    vi.fn<(type: string, listener: EventListener, options?: AddEventListenerOptions | boolean) => void>(),
+  removeEventListenerSpy:
+    vi.fn<(type: string, listener: EventListener, options?: EventListenerOptions | boolean) => void>(),
   // useState/useEffect plumbing.
   // The hook owns one state slot (the rect); we mirror it with a mutable
   // ref the useState mock reads on every call, plus a setter spy so
@@ -93,7 +95,7 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
     ...actual,
-    useState: vi.fn(<T,>(initial: T | (() => T)) => {
+    useState: vi.fn(<T>(initial: T | (() => T)) => {
       // Lazy initializer: call it once, but don't store — the hook only
       // reads state via the returned tuple, and rectRef.current acts as
       // the persistent store. The initializer ALSO calls
@@ -115,7 +117,7 @@ vi.mock('react', async (importOriginal) => {
         cleanup: typeof cleanup === 'function' ? (cleanup as () => void) : undefined,
       });
     }),
-    useRef: vi.fn(<T,>(initial: T) => {
+    useRef: vi.fn(<T>(initial: T) => {
       const idx = mocks.refSlotIndex.i++;
       if (!mocks.refSlots[idx]) {
         mocks.refSlots[idx] = { current: initial };
@@ -220,20 +222,24 @@ interface FakeElement {
   scrollIntoView?: (arg?: ScrollIntoViewOptions | boolean) => void;
 }
 
-const makeRect = (overrides: Partial<DOMRect> = {}): DOMRect => ({
-  x: 0,
-  y: 0,
-  top: 0,
-  left: 0,
-  right: 100,
-  bottom: 50,
-  width: 100,
-  height: 50,
-  toJSON: () => ({}),
-  ...overrides,
-}) as DOMRect;
+const makeRect = (overrides: Partial<DOMRect> = {}): DOMRect =>
+  ({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: 100,
+    bottom: 50,
+    width: 100,
+    height: 50,
+    toJSON: () => ({}),
+    ...overrides,
+  }) as DOMRect;
 
-const makeElement = (id: string, rectFactory: () => DOMRect = () => makeRect()): FakeElement & { scrollIntoViewSpy: ReturnType<typeof vi.fn> } => {
+const makeElement = (
+  id: string,
+  rectFactory: () => DOMRect = () => makeRect(),
+): FakeElement & { scrollIntoViewSpy: ReturnType<typeof vi.fn> } => {
   const scrollIntoViewSpy = vi.fn();
   return {
     __id: id,
@@ -258,10 +264,7 @@ interface RenderResult {
   rect: DOMRect | null;
 }
 
-const renderHook = (
-  element: Element | null,
-  options?: UseElementPositionOptions,
-): RenderResult => {
+const renderHook = (element: Element | null, options?: UseElementPositionOptions): RenderResult => {
   // Reset useRef slot index before each render so refs persist by call
   // order across re-renders within the same test.
   mocks.refSlotIndex.i = 0;

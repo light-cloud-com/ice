@@ -329,10 +329,7 @@ describe('MainLayout — orientation', () => {
     setPortrait();
     const tree = render();
     // Portrait wraps everything in a ResizablePanelGroup direction="horizontal".
-    const group = findFirst(
-      tree,
-      (el) => el.type === mocks.ResizablePanelGroup && el.props.direction === 'horizontal',
-    );
+    const group = findFirst(tree, (el) => el.type === mocks.ResizablePanelGroup && el.props.direction === 'horizontal');
     expect(group).toBeDefined();
   });
 });
@@ -466,9 +463,7 @@ describe('MainLayout — right strip + sidebar', () => {
   it('clicking the deploy tab dispatches openDeployPanel when closed', () => {
     mocks.state.deploy.isOpen = false;
     const tree = render({ view: 'canvas' });
-    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find(
-      (s) => s.props.side === 'right',
-    )!;
+    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find((s) => s.props.side === 'right')!;
     const tabs = right.props.tabs as Array<{ id: string; onClick: () => void }>;
     tabs.find((t) => t.id === 'deploy')!.onClick();
     expect(mocks.openDeployPanel).toHaveBeenCalled();
@@ -478,9 +473,7 @@ describe('MainLayout — right strip + sidebar', () => {
   it('clicking the deploy tab dispatches closeDeployPanel when open', () => {
     mocks.state.deploy.isOpen = true;
     const tree = render({ view: 'canvas' });
-    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find(
-      (s) => s.props.side === 'right',
-    )!;
+    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find((s) => s.props.side === 'right')!;
     const tabs = right.props.tabs as Array<{ id: string; onClick: () => void }>;
     tabs.find((t) => t.id === 'deploy')!.onClick();
     expect(mocks.closeDeployPanel).toHaveBeenCalled();
@@ -488,9 +481,7 @@ describe('MainLayout — right strip + sidebar', () => {
 
   it('clicking each right-strip toggle dispatches the matching action', () => {
     const tree = render({ view: 'canvas' });
-    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find(
-      (s) => s.props.side === 'right',
-    )!;
+    const right = findAll(tree, (el) => el.type === mocks.SidebarStrip).find((s) => s.props.side === 'right')!;
     const tabs = right.props.tabs as Array<{ id: string; onClick: () => void }>;
     tabs.find((t) => t.id === 'properties')!.onClick();
     expect(mocks.toggleProperties).toHaveBeenCalled();

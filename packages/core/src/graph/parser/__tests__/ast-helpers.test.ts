@@ -212,13 +212,7 @@ describe('visit_ast — composite nodes', () => {
     };
     const visited: string[] = [];
     visit_ast(node, (n) => visited.push(n.kind));
-    expect(visited).toEqual([
-      'ObjectExpression',
-      'StringLiteral',
-      'NumberLiteral',
-      'StringLiteral',
-      'NumberLiteral',
-    ]);
+    expect(visited).toEqual(['ObjectExpression', 'StringLiteral', 'NumberLiteral', 'StringLiteral', 'NumberLiteral']);
   });
 
   it('visits PropertyAccess object + property', () => {

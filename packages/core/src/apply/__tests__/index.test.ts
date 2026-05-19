@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as apply from '../index';
+import * as apply from '..';
 
 describe('apply barrel', () => {
   it('re-exports the apply engine entry points', () => {

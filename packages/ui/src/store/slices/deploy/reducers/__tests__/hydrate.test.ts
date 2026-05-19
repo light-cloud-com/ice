@@ -100,18 +100,15 @@ describe('hydrateDeployFromHistory', () => {
     expect(next.status).toBe('success');
   });
 
-  it.each(['partial', 'failed', 'cancelled'])(
-    "maps DB status='%s' → slice status='error' (red header)",
-    (dbStatus) => {
-      const next = produce(makeState({ status: 'idle' }), (draft) => {
-        hydrateReducers.hydrateDeployFromHistory(draft, {
-          type: 'deploy/hydrateDeployFromHistory',
-          payload: { cardId: 'c1', status: dbStatus },
-        } as PayloadAction<Payload>);
-      });
-      expect(next.status).toBe('error');
-    },
-  );
+  it.each(['partial', 'failed', 'cancelled'])("maps DB status='%s' → slice status='error' (red header)", (dbStatus) => {
+    const next = produce(makeState({ status: 'idle' }), (draft) => {
+      hydrateReducers.hydrateDeployFromHistory(draft, {
+        type: 'deploy/hydrateDeployFromHistory',
+        payload: { cardId: 'c1', status: dbStatus },
+      } as PayloadAction<Payload>);
+    });
+    expect(next.status).toBe('error');
+  });
 
   it('writes lastResetCardId to suppress the setActiveCard reset', () => {
     const next = produce(makeState(), (draft) => {
@@ -149,7 +146,7 @@ describe('hydrateDeployFromHistory', () => {
     expect(next.results).toEqual([]);
   });
 
-  it("writes a known environment value", () => {
+  it('writes a known environment value', () => {
     const next = produce(makeState({ environment: 'development' }), (draft) => {
       hydrateReducers.hydrateDeployFromHistory(draft, {
         type: 'deploy/hydrateDeployFromHistory',
@@ -159,7 +156,7 @@ describe('hydrateDeployFromHistory', () => {
     expect(next.environment).toBe('production');
   });
 
-  it("ignores an unknown environment value (whitelist guard)", () => {
+  it('ignores an unknown environment value (whitelist guard)', () => {
     const next = produce(makeState({ environment: 'development' }), (draft) => {
       hydrateReducers.hydrateDeployFromHistory(draft, {
         type: 'deploy/hydrateDeployFromHistory',

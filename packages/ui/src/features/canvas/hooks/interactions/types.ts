@@ -68,18 +68,9 @@ export interface UseCanvasInteractionsOptions {
   onSelect?: (ids: string[]) => void;
   onToggleSelect?: (id: string) => void;
   onBoxSelect?: (rect: { x: number; y: number; width: number; height: number } | null) => void;
-  onContextMenu?: (
-    position: { x: number; y: number },
-    type: 'canvas' | 'node' | 'edge',
-    targetId?: string,
-  ) => void;
+  onContextMenu?: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
   onDelete?: () => void;
-  onDragOverGroup?: (
-    groupId: string | null,
-    draggedNodeId?: string | null,
-    centerX?: number,
-    centerY?: number,
-  ) => void;
+  onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => void;
   onDragEnd?: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
   gridSize?: number;
   locked?: boolean;

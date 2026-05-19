@@ -31,12 +31,7 @@ import type { CanvasNode } from '../../types';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -50,10 +45,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -262,12 +254,6 @@ describe('ParentClipDefs — clipPath inner <rect> attributes', () => {
     const tree = renderDefs(nodes);
     const clips = findByType(tree, 'clipPath');
     const ids = clips.map((c) => (c.props as { id?: string }).id);
-    expect(ids).toEqual([
-      'parent-clip-a',
-      'parent-clip-b',
-      'parent-clip-c',
-      'parent-clip-d',
-      'parent-clip-e',
-    ]);
+    expect(ids).toEqual(['parent-clip-a', 'parent-clip-b', 'parent-clip-c', 'parent-clip-d', 'parent-clip-e']);
   });
 });

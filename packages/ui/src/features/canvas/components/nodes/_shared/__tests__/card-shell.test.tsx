@@ -74,11 +74,9 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
-const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) =>
-  [...walk(tree)].filter(p);
+const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) => [...walk(tree)].filter(p);
 
 const FakeIcon: LucideIcon = (() => null) as unknown as LucideIcon;
 
@@ -185,7 +183,7 @@ describe('CardShell', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { style?: Record<string, string | number> }).style?.fontSize === 11),
+        (el.props as { style?: Record<string, string | number> }).style?.fontSize === 11,
     );
     expect(possibleMeta).toHaveLength(0);
   });
@@ -230,9 +228,7 @@ describe('CardShell', () => {
     const tree = renderInner({ node: makeNode({ data: { deploy_status: 'active' } }) });
     const footerSpans = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        (el.props as { style?: Record<string, string | number> }).style?.fontSize === 10,
+      (el) => el.type === 'span' && (el.props as { style?: Record<string, string | number> }).style?.fontSize === 10,
     );
     expect(footerSpans.length).toBeGreaterThan(0);
   });
@@ -385,9 +381,7 @@ describe('CardShell', () => {
     const tree = renderInner({ onNodeHover });
     const inner = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { onMouseEnter?: unknown }).onMouseEnter === 'function',
+      (el) => el.type === 'div' && typeof (el.props as { onMouseEnter?: unknown }).onMouseEnter === 'function',
     )[0];
     const handler = (inner.props as { onMouseEnter: () => void }).onMouseEnter;
     handler();
@@ -400,9 +394,7 @@ describe('CardShell', () => {
     const tree = renderInner({ onNodeHover });
     const inner = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { onMouseLeave?: unknown }).onMouseLeave === 'function',
+      (el) => el.type === 'div' && typeof (el.props as { onMouseLeave?: unknown }).onMouseLeave === 'function',
     )[0];
     (inner.props as { onMouseLeave: () => void }).onMouseLeave();
     expect(mocks.setHoverSpy).toHaveBeenCalledWith(false);
@@ -413,9 +405,7 @@ describe('CardShell', () => {
     const tree = renderInner();
     const inner = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { onMouseEnter?: unknown }).onMouseEnter === 'function',
+      (el) => el.type === 'div' && typeof (el.props as { onMouseEnter?: unknown }).onMouseEnter === 'function',
     )[0];
     expect(() => (inner.props as { onMouseEnter: () => void }).onMouseEnter()).not.toThrow();
     expect(() => (inner.props as { onMouseLeave: () => void }).onMouseLeave()).not.toThrow();
@@ -456,19 +446,13 @@ describe('CardShell', () => {
   it('renders the headerTrailing slot in the header', () => {
     const trailing = React.createElement('span', { 'data-stub': 'trailing' });
     const tree = renderInner({ headerTrailing: trailing });
-    const hits = findByPredicate(
-      tree,
-      (el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'trailing',
-    );
+    const hits = findByPredicate(tree, (el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'trailing');
     expect(hits).toHaveLength(1);
   });
 
   it('renders the body children inside the body slot', () => {
     const tree = renderInner({ children: React.createElement('p', { 'data-stub': 'body-p' }) });
-    const hits = findByPredicate(
-      tree,
-      (el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'body-p',
-    );
+    const hits = findByPredicate(tree, (el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'body-p');
     expect(hits).toHaveLength(1);
   });
 
@@ -476,9 +460,7 @@ describe('CardShell', () => {
     const tree = renderInner({ headerHeight: 60 });
     const header = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: Record<string, string | number> }).style?.minHeight === 60,
+      (el) => el.type === 'div' && (el.props as { style?: Record<string, string | number> }).style?.minHeight === 60,
     );
     expect(header.length).toBeGreaterThan(0);
   });
@@ -487,9 +469,7 @@ describe('CardShell', () => {
     const tree = renderInner();
     const header = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: Record<string, string | number> }).style?.minHeight === 48,
+      (el) => el.type === 'div' && (el.props as { style?: Record<string, string | number> }).style?.minHeight === 48,
     );
     expect(header.length).toBeGreaterThan(0);
   });

@@ -92,6 +92,9 @@ describe('useReducedMotion', () => {
       const captured: { current?: boolean } = {};
       const Probe: React.FC = () => {
         try {
+          // Intentionally wrapped — the test covers the SSR/no-window
+          // branch where the hook may throw before any other hook runs.
+          // eslint-disable-next-line react-hooks/rules-of-hooks
           captured.current = useReducedMotion();
         } catch {
           captured.current = false;

@@ -120,12 +120,12 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderLN = (
-  props: Partial<React.ComponentProps<typeof SvgLogNode>> = {},
-): React.ReactElement => {
-  const Inner = (SvgLogNode as unknown as {
-    type: (p: React.ComponentProps<typeof SvgLogNode>) => React.ReactElement;
-  }).type;
+const renderLN = (props: Partial<React.ComponentProps<typeof SvgLogNode>> = {}): React.ReactElement => {
+  const Inner = (
+    SvgLogNode as unknown as {
+      type: (p: React.ComponentProps<typeof SvgLogNode>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof SvgLogNode> = {
     node: makeNode(),
     isSelected: false,
@@ -295,10 +295,16 @@ describe('SvgLogNode — placeholder + log mapping', () => {
 
   it('error: uses lastError when present, fallback otherwise', () => {
     mocks.state.logStream = { entries: [], status: 'error', lastError: 'boom' };
-    expect(((findByType(renderLN(), MockLogContent)[0].props as { visibleLogs: Array<{ message: string }> })).visibleLogs[0].message).toBe('boom');
+    expect(
+      (findByType(renderLN(), MockLogContent)[0].props as { visibleLogs: Array<{ message: string }> }).visibleLogs[0]
+        .message,
+    ).toBe('boom');
     mocks.state.pinnedSlots = [];
     mocks.state.logStream = { entries: [], status: 'error', lastError: null };
-    expect(((findByType(renderLN(), MockLogContent)[0].props as { visibleLogs: Array<{ message: string }> })).visibleLogs[0].message).toBe('Connection error. Retrying.');
+    expect(
+      (findByType(renderLN(), MockLogContent)[0].props as { visibleLogs: Array<{ message: string }> }).visibleLogs[0]
+        .message,
+    ).toBe('Connection error. Retrying.');
   });
 
   it('placeholder default branch: empty string for unknown status', () => {
@@ -322,7 +328,9 @@ describe('SvgLogNode — placeholder + log mapping', () => {
     };
     const tree = renderLN();
     const lc = findByType(tree, MockLogContent)[0];
-    const logs = (lc.props as { visibleLogs: Array<{ level: string; timestamp: string; message: string; service: string }> }).visibleLogs;
+    const logs = (
+      lc.props as { visibleLogs: Array<{ level: string; timestamp: string; message: string; service: string }> }
+    ).visibleLogs;
     expect(logs.map((l) => l.level)).toEqual(['info', 'info', 'warn', 'error', 'debug']);
     expect(logs[0].timestamp).toBe('12:34:56');
     expect(logs[0].message).toBe('a');
@@ -348,7 +356,7 @@ describe('SvgLogNode — placeholder + log mapping', () => {
     };
     const tree = renderLN();
     const lc = findByType(tree, MockLogContent)[0];
-    expect(((lc.props as { visibleLogs: Array<{ timestamp: string }> }).visibleLogs[0].timestamp)).toBe('12:34:56');
+    expect((lc.props as { visibleLogs: Array<{ timestamp: string }> }).visibleLogs[0].timestamp).toBe('12:34:56');
   });
 
   it('formatTs: empty / non-string ts becomes empty string', () => {
@@ -422,7 +430,14 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     const writes: string[] = [];
     const original = (globalThis as unknown as { navigator?: unknown }).navigator;
     Object.defineProperty(globalThis, 'navigator', {
-      value: { clipboard: { writeText: (t: string) => { writes.push(t); return Promise.resolve(); } } },
+      value: {
+        clipboard: {
+          writeText: (t: string) => {
+            writes.push(t);
+            return Promise.resolve();
+          },
+        },
+      },
       configurable: true,
       writable: true,
     });
@@ -471,7 +486,14 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     const writes: string[] = [];
     const original = (globalThis as unknown as { navigator?: unknown }).navigator;
     Object.defineProperty(globalThis, 'navigator', {
-      value: { clipboard: { writeText: (t: string) => { writes.push(t); return Promise.resolve(); } } },
+      value: {
+        clipboard: {
+          writeText: (t: string) => {
+            writes.push(t);
+            return Promise.resolve();
+          },
+        },
+      },
       configurable: true,
       writable: true,
     });
@@ -479,11 +501,17 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     try {
       const tree = renderLN();
       const lc = findByType(tree, MockLogContent)[0];
-      const onCopyLine = (lc.props as { onCopyLine: (log: { id: string; timestamp: string; level: string; message: string }, e: React.MouseEvent) => void }).onCopyLine;
-      onCopyLine(
-        { id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' },
-        { stopPropagation: () => {} } as React.MouseEvent,
-      );
+      const onCopyLine = (
+        lc.props as {
+          onCopyLine: (
+            log: { id: string; timestamp: string; level: string; message: string },
+            e: React.MouseEvent,
+          ) => void;
+        }
+      ).onCopyLine;
+      onCopyLine({ id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' }, {
+        stopPropagation: () => {},
+      } as React.MouseEvent);
       expect(writes).toEqual(['12:34:56 [INFO] hi']);
       // Slot 4 is copiedLine.
       expect(mocks.state.stateSetters[4]).toHaveBeenCalledWith('l1');
@@ -498,7 +526,12 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
 
   it('onWheel: scroll up sets isAutoScroll=false and clamps offset', () => {
     mocks.state.logStream = {
-      entries: Array.from({ length: 30 }, (_, i) => ({ insertId: `i${i}`, ts: '2025-04-27T12:34:56.000Z', level: 'info', message: `m${i}` })),
+      entries: Array.from({ length: 30 }, (_, i) => ({
+        insertId: `i${i}`,
+        ts: '2025-04-27T12:34:56.000Z',
+        level: 'info',
+        message: `m${i}`,
+      })),
       status: 'streaming',
       lastError: null,
     };
@@ -519,7 +552,12 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
 
   it('onWheel: scroll down decrements offset', () => {
     mocks.state.logStream = {
-      entries: Array.from({ length: 30 }, (_, i) => ({ insertId: `i${i}`, ts: '2025-04-27T12:34:56.000Z', level: 'info', message: `m${i}` })),
+      entries: Array.from({ length: 30 }, (_, i) => ({
+        insertId: `i${i}`,
+        ts: '2025-04-27T12:34:56.000Z',
+        level: 'info',
+        message: `m${i}`,
+      })),
       status: 'streaming',
       lastError: null,
     };

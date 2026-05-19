@@ -13,8 +13,8 @@
  * about the composition.
  */
 
-import { describe, expect, it } from 'vitest';
 import { CATEGORY_COLORS, DEFAULT_ENV_VARS, DEFAULT_PORTS } from '@ice/constants';
+import { describe, expect, it } from 'vitest';
 import {
   canConnect,
   findConnectionRule,
@@ -238,12 +238,7 @@ describe('getValidTargetIds', () => {
   });
 
   it('returns [] when the source is a container', () => {
-    const ids = getValidTargetIds(
-      'Network.VPC',
-      undefined,
-      [{ id: 'svc', iceType: 'Compute.Backend' }],
-      'vpc',
-    );
+    const ids = getValidTargetIds('Network.VPC', undefined, [{ id: 'svc', iceType: 'Compute.Backend' }], 'vpc');
     expect(ids).toEqual([]);
   });
 

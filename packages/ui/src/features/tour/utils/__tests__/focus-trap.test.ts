@@ -25,7 +25,6 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { getFocusableElements, installFocusTrap } from '../focus-trap';
 
 // ─── Mock DOM harness ──────────────────────────────────────────────
@@ -149,9 +148,7 @@ function makeContainer(doc: FakeDocument, children: FakeElement[]): FakeContaine
       // declares no selectors so it's never returned (matches source
       // behavior — the selector itself excludes [tabindex="-1"]).
       const requested = selector.split(',').map((s) => s.trim());
-      const matches = c.children.filter((child) =>
-        child.matchableSelectors.some((sel) => requested.includes(sel)),
-      );
+      const matches = c.children.filter((child) => child.matchableSelectors.some((sel) => requested.includes(sel)));
       return Array.from(matches as unknown as T[]) as unknown as NodeListOf<T>;
     },
   });
@@ -196,14 +193,14 @@ describe('focus-trap', () => {
     // Source falls back to a global `document` when an element has no
     // ownerDocument. Stub it so the `??` branch resolves to the test
     // doc instead of the real (undefined in node) `document`.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     originalDocument = (globalThis as any).document;
     vi.stubGlobal('document', doc);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (globalThis as any).document = originalDocument;
   });
 

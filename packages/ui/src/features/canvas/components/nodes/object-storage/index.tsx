@@ -7,16 +7,11 @@
  * the live-config footer.
  */
 
-import {
-  BUCKET_BODY_HEIGHT,
-  BUCKET_HEADER_HEIGHT,
-  BUCKET_PADDING,
-  CARD_FOOTER_HEIGHT,
-} from '@ice/constants';
+import { BUCKET_BODY_HEIGHT, BUCKET_HEADER_HEIGHT, BUCKET_PADDING, CARD_FOOTER_HEIGHT } from '@ice/constants';
 import { Folder, Globe, Lock } from 'lucide-react';
 import React from 'react';
-import { CardShell } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { BUCKET_HEADER_HEIGHT, BUCKET_BODY_HEIGHT, BUCKET_PADDING };

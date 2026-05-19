@@ -37,8 +37,8 @@ import {
   type DeployResourceResult,
   type DeployState,
 } from '../../../store/slices/deploy-slice';
-import type { Card } from '../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../store';
+import type { Card } from '../../../store/slices/cards-slice';
 
 export interface UseDeployActionsArgs {
   activeCard: Card | null | undefined;
@@ -205,8 +205,16 @@ export function useDeployActions(args: UseDeployActionsArgs): UseDeployActionsRe
         if (partialFailures) {
           // Server returned 200 but some resources failed — surface as
           // an error so the red banner + Copy errors button appear.
-          const failedSummary = apiResources!.filter((r) => !r.success).map((r) => `${r.type}/${r.name}`).join(', ');
-          dispatch(deployError({ error: `${apiResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`, results: apiResources }));
+          const failedSummary = apiResources!
+            .filter((r) => !r.success)
+            .map((r) => `${r.type}/${r.name}`)
+            .join(', ');
+          dispatch(
+            deployError({
+              error: `${apiResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`,
+              results: apiResources,
+            }),
+          );
         } else {
           dispatch(deploySuccess({ duration_ms: result.duration_ms || 0, results: apiResources }));
         }
@@ -236,8 +244,16 @@ export function useDeployActions(args: UseDeployActionsArgs): UseDeployActionsRe
             const retryResources = (retry as { result?: { resources?: DeployResourceResult[] } })?.result?.resources;
             const retryPartial = Array.isArray(retryResources) && retryResources.some((r) => !r.success);
             if (retryPartial) {
-              const failedSummary = retryResources!.filter((r) => !r.success).map((r) => `${r.type}/${r.name}`).join(', ');
-              dispatch(deployError({ error: `${retryResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`, results: retryResources }));
+              const failedSummary = retryResources!
+                .filter((r) => !r.success)
+                .map((r) => `${r.type}/${r.name}`)
+                .join(', ');
+              dispatch(
+                deployError({
+                  error: `${retryResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`,
+                  results: retryResources,
+                }),
+              );
             } else {
               dispatch(deploySuccess({ duration_ms: retry.duration_ms || 0, results: retryResources }));
             }
@@ -260,15 +276,7 @@ export function useDeployActions(args: UseDeployActionsArgs): UseDeployActionsRe
       const msg = err?.response?.data?.error || err?.message || 'Deployment failed';
       dispatch(deployError(msg));
     }
-  }, [
-    activeCard,
-    deploy.provider,
-    deploy.gcpProject,
-    deploy.region,
-    deploy.environment,
-    dispatch,
-    handleAuthenticate,
-  ]);
+  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, dispatch, handleAuthenticate]);
 
   // ─── Close ──────────────────────────────────────────────────────────
 

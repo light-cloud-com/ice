@@ -275,9 +275,7 @@ describe('runTick — candidate selection', () => {
   it('skips rows whose requirement id is unknown (no matching definition)', async () => {
     vi.useFakeTimers();
     mocks.requirementsRef.current = [makeDef({ id: 'public-endpoint-domain' })];
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ requirement_id: 'unknown-thing' }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ requirement_id: 'unknown-thing' })]);
 
     startRequirementPoller();
     await runOneTick();
@@ -301,9 +299,7 @@ describe('runTick — candidate selection', () => {
     mocks.requirementsRef.current = [makeDef({ verifyPollIntervalMs: undefined })];
     // last_checked_at "now" — even after the 30s timer-tick the age is still
     // only 30s, well below the default 60s interval, so the row is skipped.
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(Date.now()) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(Date.now()) })]);
 
     startRequirementPoller();
     await runOneTick();
@@ -316,9 +312,7 @@ describe('runTick — candidate selection', () => {
     // 90s interval, last_checked_at 5s in the past pre-tick → 35s after the
     // 30s tick advance, well below the 90s threshold.
     mocks.requirementsRef.current = [makeDef({ verifyPollIntervalMs: 90_000 })];
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(Date.now() - 5_000) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(Date.now() - 5_000) })]);
 
     startRequirementPoller();
     await runOneTick();
@@ -346,9 +340,7 @@ describe('runTick — candidate selection', () => {
     });
     mocks.requirementsRef.current = [def];
 
-    const rows = Array.from({ length: 12 }, (_, i) =>
-      makeRow({ id: `row-${i}`, card_id: `card-${i}` }),
-    );
+    const rows = Array.from({ length: 12 }, (_, i) => makeRow({ id: `row-${i}`, card_id: `card-${i}` }));
     mocks.findManyStatus.mockResolvedValue(rows);
     mocks.findUniqueCard.mockImplementation(async ({ where }: any) => ({
       id: where.id,
@@ -388,9 +380,7 @@ describe('checkOne — happy path & flip emit', () => {
 
     // Push last_checked_at far enough back that age > default 60s interval
     // even at the post-tick wall clock.
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(startWall.getTime() - 5 * 60_000) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(startWall.getTime() - 5 * 60_000) })]);
     mocks.findUniqueCard.mockResolvedValue({
       id: 'card-1',
       project_id: 'project-1',
@@ -401,7 +391,11 @@ describe('checkOne — happy path & flip emit', () => {
       new Map([
         [
           'node-1',
-          { name: 'forwarding-rule-x', type: 'gcp.compute.forwardingRule', providerId: 'projects/lc-ice/regions/us-central1/forwardingRules/forwarding-rule-x' },
+          {
+            name: 'forwarding-rule-x',
+            type: 'gcp.compute.forwardingRule',
+            providerId: 'projects/lc-ice/regions/us-central1/forwardingRules/forwarding-rule-x',
+          },
         ],
       ]),
     );
@@ -459,9 +453,7 @@ describe('checkOne — happy path & flip emit', () => {
     });
     mocks.requirementsRef.current = [def];
 
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ status: 'unmet', verified_at: priorVerifiedAt }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ status: 'unmet', verified_at: priorVerifiedAt })]);
     mocks.findUniqueCard.mockResolvedValue({
       id: 'card-1',
       project_id: 'project-1',
@@ -681,9 +673,7 @@ describe('checkOne — verifyTimeoutMs path', () => {
     const def = makeDef({ verifyTimeoutMs: 5 * 60_000 }); // 5 minutes
     mocks.requirementsRef.current = [def];
     // last_checked_at is 1 hour ago — way past the 5-minute timeout window
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) })]);
     mocks.findUniqueCard.mockResolvedValue({
       id: 'card-1',
       project_id: 'project-1',
@@ -706,9 +696,7 @@ describe('checkOne — verifyTimeoutMs path', () => {
     vi.useFakeTimers();
     const def = makeDef({ verifyTimeoutMs: 5 * 60_000 });
     mocks.requirementsRef.current = [def];
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) })]);
     mocks.findUniqueCard.mockResolvedValue({
       id: 'card-1',
       project_id: 'project-1',
@@ -726,9 +714,7 @@ describe('checkOne — verifyTimeoutMs path', () => {
     vi.useFakeTimers();
     const def = makeDef({ verifyTimeoutMs: undefined });
     mocks.requirementsRef.current = [def];
-    mocks.findManyStatus.mockResolvedValue([
-      makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) }),
-    ]);
+    mocks.findManyStatus.mockResolvedValue([makeRow({ last_checked_at: new Date(Date.now() - 60 * 60_000) })]);
     mocks.findUniqueCard.mockResolvedValue({
       id: 'card-1',
       project_id: 'project-1',
@@ -779,7 +765,6 @@ describe('checkOne — error handling on check()', () => {
     vi.useFakeTimers();
     const def = makeDef({
       check: vi.fn(async () => {
-        // eslint-disable-next-line no-throw-literal
         throw 'resolver vomited a string';
       }),
     });
@@ -843,7 +828,16 @@ describe('extractProject (via providerId in context)', () => {
     });
     mocks.findUniqueProject.mockResolvedValue({ organisation_id: 'org-1' });
     mocks.getResourceMap.mockResolvedValue(
-      new Map([['node-1', { name: 'cert-x', type: 'gcp.compute.sslCertificate', providerId: 'projects/my-proj/global/sslCertificates/cert-x' }]]),
+      new Map([
+        [
+          'node-1',
+          {
+            name: 'cert-x',
+            type: 'gcp.compute.sslCertificate',
+            providerId: 'projects/my-proj/global/sslCertificates/cert-x',
+          },
+        ],
+      ]),
     );
 
     startRequirementPoller();

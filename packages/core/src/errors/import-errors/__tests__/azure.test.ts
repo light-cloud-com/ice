@@ -34,33 +34,29 @@ describe('classifyAzureError — credentials missing', () => {
 });
 
 describe('classifyAzureError — authorization failures', () => {
-  it.each([
-    { code: 'AuthorizationFailed' },
-    { code: 'Forbidden' },
-    { statusCode: 403 },
-  ])('classifies %j as AUTH_INSUFFICIENT_PERMISSIONS', (input) => {
-    const result = classifyAzureError(input);
-    expect(result.code).toBe(ImportErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
-    expect(result.action?.type).toBe('grant_permission');
-  });
+  it.each([{ code: 'AuthorizationFailed' }, { code: 'Forbidden' }, { statusCode: 403 }])(
+    'classifies %j as AUTH_INSUFFICIENT_PERMISSIONS',
+    (input) => {
+      const result = classifyAzureError(input);
+      expect(result.code).toBe(ImportErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
+      expect(result.action?.type).toBe('grant_permission');
+    },
+  );
 });
 
 describe('classifyAzureError — subscription not found', () => {
-  it.each([
-    { code: 'SubscriptionNotFound' },
-    { message: 'subscription was not found' },
-  ])('classifies %j as RESOURCE_NOT_FOUND', (input) => {
-    const result = classifyAzureError(input);
-    expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
-    expect(result.recoverable).toBe(false);
-  });
+  it.each([{ code: 'SubscriptionNotFound' }, { message: 'subscription was not found' }])(
+    'classifies %j as RESOURCE_NOT_FOUND',
+    (input) => {
+      const result = classifyAzureError(input);
+      expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
+      expect(result.recoverable).toBe(false);
+    },
+  );
 });
 
 describe('classifyAzureError — rate limiting', () => {
-  it.each([
-    { code: 'TooManyRequests' },
-    { statusCode: 429 },
-  ])('classifies %j as API_RATE_LIMITED', (input) => {
+  it.each([{ code: 'TooManyRequests' }, { statusCode: 429 }])('classifies %j as API_RATE_LIMITED', (input) => {
     const result = classifyAzureError(input);
     expect(result.code).toBe(ImportErrorCode.API_RATE_LIMITED);
     expect(result.action?.type).toBe('retry');
@@ -68,14 +64,14 @@ describe('classifyAzureError — rate limiting', () => {
 });
 
 describe('classifyAzureError — resource not found', () => {
-  it.each([
-    { code: 'ResourceNotFound' },
-    { statusCode: 404 },
-  ])('classifies %j as RESOURCE_NOT_FOUND (generic)', (input) => {
-    const result = classifyAzureError(input);
-    expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
-    expect(result.message).toBe('Resource not found.');
-  });
+  it.each([{ code: 'ResourceNotFound' }, { statusCode: 404 }])(
+    'classifies %j as RESOURCE_NOT_FOUND (generic)',
+    (input) => {
+      const result = classifyAzureError(input);
+      expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
+      expect(result.message).toBe('Resource not found.');
+    },
+  );
 });
 
 describe('classifyAzureError — fallback', () => {

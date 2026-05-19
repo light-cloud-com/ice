@@ -26,7 +26,6 @@
  *  - `window.confirm` stubbed per-test for the remove-user guard.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Hoisted mocks ─────────────────────────────────────────────────────────
@@ -52,12 +51,8 @@ const mocks = vi.hoisted(() => ({
   // Redux state
   state: {
     account: {
-      selectedOrg: { id: 'org-1', name: 'Acme', role: 'owner' } as
-        | { id: string; name: string; role: string }
-        | null,
-      user: { id: 'user-1', email: 'me@example.com', name: 'Me' } as
-        | { id: string; email: string; name: string }
-        | null,
+      selectedOrg: { id: 'org-1', name: 'Acme', role: 'owner' } as { id: string; name: string; role: string } | null,
+      user: { id: 'user-1', email: 'me@example.com', name: 'Me' } as { id: string; email: string; name: string } | null,
     },
   },
   // axios spies
@@ -110,8 +105,7 @@ vi.mock('react-redux', () => ({
 
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({
-    t: (k: string, vars?: Record<string, string | number>) =>
-      vars ? `${k}:${JSON.stringify(vars)}` : k,
+    t: (k: string, vars?: Record<string, string | number>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),
   }),
 }));
 

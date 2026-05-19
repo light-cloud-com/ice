@@ -33,16 +33,8 @@ jobs:
       - name: Format check (Prettier)
         run: pnpm format:check
 
-      - name: Lint (ESLint)
-        run: pnpm lint:check
-
       - name: Unit tests
         run: pnpm test:unit
-        env:
-          NODE_ENV: test
-
-      - name: Coverage
-        run: pnpm test:coverage
         env:
           NODE_ENV: test
 

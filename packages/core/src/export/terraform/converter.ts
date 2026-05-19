@@ -38,10 +38,6 @@ import { sanitize_name } from './case-utils';
 import { to_hcl, to_json } from './hcl-formatter';
 import { fallback_type_mapping } from './type-mapping';
 import { format_dependencies, map_properties } from './value-transform';
-import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
-import type { MutableGraph } from '../../graph/mutable-graph';
-import type { IceType } from '../../schema/schema-provider';
-import type { Node } from '../../types/graph';
 import type {
   TerraformBlock,
   TerraformConfig,
@@ -50,6 +46,10 @@ import type {
   TerraformProviderConfig,
   TerraformResource,
 } from './types';
+import type { MutableGraph } from '../../graph/mutable-graph';
+import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
+import type { IceType } from '../../schema/schema-provider';
+import type { Node } from '../../types/graph';
 
 /**
  * Build a `node.id -> node.id[]` dependency map from a graph's edges.
@@ -101,11 +101,7 @@ export async function node_to_resource(
   unmapped?: boolean;
 }> {
   // Look up Terraform type from schema
-  const impl = schema_provider.get_implementation(
-    node.type as IceType,
-    'terraform',
-    options.provider,
-  );
+  const impl = schema_provider.get_implementation(node.type as IceType, 'terraform', options.provider);
 
   if (!impl) {
     // Try fallback mapping

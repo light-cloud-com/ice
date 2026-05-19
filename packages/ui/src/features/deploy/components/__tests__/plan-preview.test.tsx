@@ -27,18 +27,12 @@ import { describe, it, expect, vi } from 'vitest';
 // stubs ARE invoked during the FC walk — they render a recognizable `<span>`
 // so `expect(text).toContain('Plus')` style assertions can hit them too.
 const mocks = vi.hoisted(() => ({
-  Eye: vi.fn((_props: { className?: string }) =>
-    React.createElement('span', { 'data-icon': 'Eye' }, 'Eye'),
-  ),
-  Plus: vi.fn((_props: { className?: string }) =>
-    React.createElement('span', { 'data-icon': 'Plus' }, 'Plus'),
-  ),
+  Eye: vi.fn((_props: { className?: string }) => React.createElement('span', { 'data-icon': 'Eye' }, 'Eye')),
+  Plus: vi.fn((_props: { className?: string }) => React.createElement('span', { 'data-icon': 'Plus' }, 'Plus')),
   RefreshCw: vi.fn((_props: { className?: string }) =>
     React.createElement('span', { 'data-icon': 'RefreshCw' }, 'RefreshCw'),
   ),
-  Trash2: vi.fn((_props: { className?: string }) =>
-    React.createElement('span', { 'data-icon': 'Trash2' }, 'Trash2'),
-  ),
+  Trash2: vi.fn((_props: { className?: string }) => React.createElement('span', { 'data-icon': 'Trash2' }, 'Trash2')),
 }));
 
 vi.mock('lucide-react', () => ({
@@ -51,8 +45,7 @@ vi.mock('lucide-react', () => ({
 // `useTranslation` mock: t(key, opts) shape per unit brief.
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: { total?: number }) =>
-      opts?.total != null ? `${key}:total=${opts.total}` : key,
+    t: (key: string, opts?: { total?: number }) => (opts?.total != null ? `${key}:total=${opts.total}` : key),
   }),
 }));
 
@@ -69,12 +62,7 @@ import type { DeployPlan } from '../../../../store/slices/deploy-slice';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -96,10 +84,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -144,10 +129,7 @@ const renderPlan = (plan: Partial<DeployPlan> | Record<string, unknown>): React.
   });
 };
 
-const findElementsByKey = (
-  tree: React.ReactNode,
-  prefix: string,
-): React.ReactElement[] =>
+const findElementsByKey = (tree: React.ReactNode, prefix: string): React.ReactElement[] =>
   findByPredicate(tree, (el) => typeof el.key === 'string' && el.key.startsWith(prefix));
 
 // ─── Tests ──────────────────────────────────────────────────────────────────

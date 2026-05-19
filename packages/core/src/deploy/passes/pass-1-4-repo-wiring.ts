@@ -7,8 +7,8 @@
  * docstring on `wire_source_repositories` below for the full contract.
  */
 
-import type { CardEdgeInput, CardNodeInput } from '../card-translator';
 import type { MutableGraph } from '../../graph/mutable-graph';
+import type { CardEdgeInput, CardNodeInput } from '../card-translator';
 
 /**
  * Pass 1.4 — Source.Repository → compute block wiring.

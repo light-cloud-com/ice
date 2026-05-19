@@ -300,12 +300,7 @@ describe('buildFromSource: install step', () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
     const onLine = vi.fn();
 
-    const result = await buildFromSource(
-      { ...baseConfig, installCommand: 'npm ci' },
-      'u',
-      onLog,
-      onLine,
-    );
+    const result = await buildFromSource({ ...baseConfig, installCommand: 'npm ci' }, 'u', onLog, onLine);
 
     expect(result.success).toBe(true);
     expect(spawnMock).toHaveBeenCalledWith('npm', ['ci'], expect.objectContaining({ shell: false }));
@@ -403,11 +398,7 @@ describe('buildFromSource: install step', () => {
   it('rejects a command containing shell metacharacters', async () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
 
-    const result = await buildFromSource(
-      { ...baseConfig, installCommand: 'npm install; rm -rf /' },
-      'u',
-      onLog,
-    );
+    const result = await buildFromSource({ ...baseConfig, installCommand: 'npm install; rm -rf /' }, 'u', onLog);
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('disallowed shell metacharacter');
@@ -427,27 +418,15 @@ describe('buildFromSource: install step', () => {
   it('parses quoted arguments without splitting on internal whitespace', async () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
 
-    await buildFromSource(
-      { ...baseConfig, installCommand: 'npm run "build with spaces"' },
-      'u',
-      onLog,
-    );
+    await buildFromSource({ ...baseConfig, installCommand: 'npm run "build with spaces"' }, 'u', onLog);
 
-    expect(spawnMock).toHaveBeenCalledWith(
-      'npm',
-      ['run', 'build with spaces'],
-      expect.any(Object),
-    );
+    expect(spawnMock).toHaveBeenCalledWith('npm', ['run', 'build with spaces'], expect.any(Object));
   });
 
   it('parses single-quoted arguments', async () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
 
-    await buildFromSource(
-      { ...baseConfig, installCommand: "npm run 'with single'" },
-      'u',
-      onLog,
-    );
+    await buildFromSource({ ...baseConfig, installCommand: "npm run 'with single'" }, 'u', onLog);
 
     expect(spawnMock).toHaveBeenCalledWith('npm', ['run', 'with single'], expect.any(Object));
   });
@@ -455,17 +434,9 @@ describe('buildFromSource: install step', () => {
   it('strips an absolute path prefix when checking the allowlist', async () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
 
-    await buildFromSource(
-      { ...baseConfig, installCommand: '/usr/local/bin/npm install' },
-      'u',
-      onLog,
-    );
+    await buildFromSource({ ...baseConfig, installCommand: '/usr/local/bin/npm install' }, 'u', onLog);
 
-    expect(spawnMock).toHaveBeenCalledWith(
-      '/usr/local/bin/npm',
-      ['install'],
-      expect.any(Object),
-    );
+    expect(spawnMock).toHaveBeenCalledWith('/usr/local/bin/npm', ['install'], expect.any(Object));
   });
 
   it('forwards onLine even when no callback was supplied (silent run)', async () => {
@@ -487,12 +458,7 @@ describe('buildFromSource: install step', () => {
       throw new Error('consumer blew up');
     });
 
-    const result = await buildFromSource(
-      { ...baseConfig, installCommand: 'npm ci' },
-      'u',
-      onLog,
-      onLine,
-    );
+    const result = await buildFromSource({ ...baseConfig, installCommand: 'npm ci' }, 'u', onLog, onLine);
 
     expect(result.success).toBe(true);
     expect(onLine).toHaveBeenCalled();
@@ -505,12 +471,7 @@ describe('buildFromSource: install step', () => {
       throw new Error('consumer blew up');
     });
 
-    const result = await buildFromSource(
-      { ...baseConfig, installCommand: 'npm ci' },
-      'u',
-      onLog,
-      onLine,
-    );
+    const result = await buildFromSource({ ...baseConfig, installCommand: 'npm ci' }, 'u', onLog, onLine);
 
     expect(result.success).toBe(true);
     expect(onLine).toHaveBeenCalled();
@@ -569,9 +530,7 @@ describe('buildFromSource: node_modules cache', () => {
 
     // The install-started message in this branch is "Running: npm ci" with no
     // suffix.
-    const startedCalls = onLog.mock.calls.filter(
-      (c) => c[0] === 'install' && c[1] === 'started',
-    );
+    const startedCalls = onLog.mock.calls.filter((c) => c[0] === 'install' && c[1] === 'started');
     expect(startedCalls.length).toBe(1);
     expect(startedCalls[0]![2]).toBe('Running: npm ci');
   });
@@ -619,12 +578,7 @@ describe('buildFromSource: build step', () => {
     const onLog = vi.fn().mockResolvedValue(undefined);
     const onLine = vi.fn();
 
-    const result = await buildFromSource(
-      { ...baseConfig, buildCommand: 'npm run build' },
-      'u',
-      onLog,
-      onLine,
-    );
+    const result = await buildFromSource({ ...baseConfig, buildCommand: 'npm run build' }, 'u', onLog, onLine);
 
     expect(result.success).toBe(true);
     expect(spawnMock).toHaveBeenCalledWith('npm', ['run', 'build'], expect.any(Object));
@@ -647,11 +601,7 @@ describe('buildFromSource: build step', () => {
     spawnMock.mockImplementation(() => makeFakeChild({ exitCode: 2, stderr: 'TS2304\n' }));
     const onLog = vi.fn().mockResolvedValue(undefined);
 
-    const result = await buildFromSource(
-      { ...baseConfig, buildCommand: 'npm run build' },
-      'u',
-      onLog,
-    );
+    const result = await buildFromSource({ ...baseConfig, buildCommand: 'npm run build' }, 'u', onLog);
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('exited with code 2');

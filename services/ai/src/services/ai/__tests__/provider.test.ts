@@ -21,11 +21,7 @@ vi.mock('@ice/ai', () => ({
   getProvider: mocks.getProvider,
 }));
 
-import {
-  getAiProvider,
-  getAiProviderSync,
-  _resetProviderCacheForTests,
-} from '../provider';
+import { getAiProvider, getAiProviderSync, _resetProviderCacheForTests } from '../provider';
 
 describe('getAiProvider', () => {
   beforeEach(() => {

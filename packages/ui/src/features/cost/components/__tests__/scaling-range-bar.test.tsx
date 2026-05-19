@@ -13,7 +13,6 @@ vi.mock('../../../../i18n', () => ({
   t: (k: string) => `[t:${k}]`,
 }));
 
-// eslint-disable-next-line import/first
 import { ScalingRangeBar, type ScalingRangeBarProps } from '../scaling-range-bar';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
@@ -46,10 +45,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -140,9 +136,7 @@ describe('ScalingRangeBar — position math', () => {
     const tree = render({ range: { minCost: 0, currentCost: 50, maxCost: 100 } });
     const handle = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        ((el.props as { style?: { left?: string } }).style?.left ?? '').startsWith('calc('),
+      (el) => el.type === 'div' && ((el.props as { style?: { left?: string } }).style?.left ?? '').startsWith('calc('),
     );
     expect(handle).toHaveLength(1);
     expect((handle[0].props as { style: { left: string } }).style.left).toBe('calc(50% - 6px)');
@@ -164,9 +158,7 @@ describe('ScalingRangeBar — footer', () => {
     expect(emeraldSpans.length).toBeGreaterThanOrEqual(1);
     const redSpans = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        ((el.props as { className?: string }).className ?? '').includes('text-red-400'),
+      (el) => el.type === 'span' && ((el.props as { className?: string }).className ?? '').includes('text-red-400'),
     );
     expect(redSpans.length).toBeGreaterThanOrEqual(1);
   });

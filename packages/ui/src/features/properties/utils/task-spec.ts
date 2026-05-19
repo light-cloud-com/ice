@@ -55,14 +55,12 @@ export function parseTask(raw: string): TaskSpec {
         id: typeof parsed.id === 'string' && parsed.id ? parsed.id : makeTaskId(),
         name: typeof parsed.name === 'string' ? parsed.name : '',
         frequency: typeof parsed.frequency === 'string' ? parsed.frequency : '',
-        schedule_expression:
-          typeof parsed.schedule_expression === 'string' ? parsed.schedule_expression : undefined,
+        schedule_expression: typeof parsed.schedule_expression === 'string' ? parsed.schedule_expression : undefined,
         action_type: actionType,
         action_target_node_id:
           typeof parsed.action_target_node_id === 'string' ? parsed.action_target_node_id : undefined,
         action_url: typeof parsed.action_url === 'string' ? parsed.action_url : undefined,
-        action_http_method:
-          typeof parsed.action_http_method === 'string' ? parsed.action_http_method : undefined,
+        action_http_method: typeof parsed.action_http_method === 'string' ? parsed.action_http_method : undefined,
       };
     }
   } catch {
@@ -80,13 +78,9 @@ export function stringifyTask(t: TaskSpec): string {
     frequency: t.frequency,
     ...(t.schedule_expression ? { schedule_expression: t.schedule_expression } : {}),
     action_type: actionType,
-    ...(actionType === 'block' && t.action_target_node_id
-      ? { action_target_node_id: t.action_target_node_id }
-      : {}),
+    ...(actionType === 'block' && t.action_target_node_id ? { action_target_node_id: t.action_target_node_id } : {}),
     ...(actionType === 'http' && t.action_url ? { action_url: t.action_url } : {}),
-    ...(actionType === 'http' && t.action_http_method
-      ? { action_http_method: t.action_http_method }
-      : {}),
+    ...(actionType === 'http' && t.action_http_method ? { action_http_method: t.action_http_method } : {}),
   });
 }
 

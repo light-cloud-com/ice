@@ -16,12 +16,7 @@ export { validateDeployability } from './deploy-rules';
 export { validateArchitecture } from './architecture-rules';
 
 // Schema bridge utilities
-export {
-  getResourceForIceType,
-  getPropertiesForIceType,
-  getSupportedProviders,
-  isKnownIceType,
-} from './schema-bridge';
+export { getResourceForIceType, getPropertiesForIceType, getSupportedProviders, isKnownIceType } from './schema-bridge';
 
 // Template validation
 export { validateTemplate } from './template-validator';

@@ -58,12 +58,8 @@ import prismaModule from '@ice/db';
 import * as credentialsModule from '@ice/service-credentials';
 
 const findManyMock = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<typeof vi.fn>;
-const getDecryptedCredentialsMock = (credentialsModule as any).getDecryptedCredentials as ReturnType<
-  typeof vi.fn
->;
-const getValidGCPAccessTokenMock = (credentialsModule as any).getValidGCPAccessToken as ReturnType<
-  typeof vi.fn
->;
+const getDecryptedCredentialsMock = (credentialsModule as any).getDecryptedCredentials as ReturnType<typeof vi.fn>;
+const getValidGCPAccessTokenMock = (credentialsModule as any).getValidGCPAccessToken as ReturnType<typeof vi.fn>;
 
 /**
  * Build a Response-like that the SUT's `gcpFetch` consumes. Only the
@@ -122,9 +118,7 @@ describe('cleanupOrphanedIceResources', () => {
     it('throws when getDecryptedCredentials returns null', async () => {
       getDecryptedCredentialsMock.mockResolvedValueOnce(null);
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('uses oauth path and token from getValidGCPAccessToken', async () => {
@@ -151,9 +145,7 @@ describe('cleanupOrphanedIceResources', () => {
     it('throws when oauth token resolution returns null', async () => {
       getValidGCPAccessTokenMock.mockResolvedValueOnce(null);
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('falls through to service-account branch when _auth_type is not oauth (string key parsed via JSON)', async () => {
@@ -215,9 +207,7 @@ describe('cleanupOrphanedIceResources', () => {
         project_id: 'sa-project',
       });
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('throws when GoogleAuth.getClient throws (caught + null returned)', async () => {
@@ -227,9 +217,7 @@ describe('cleanupOrphanedIceResources', () => {
         project_id: 'sa-project',
       });
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('throws when getAccessToken returns no token (tokenRes?.token || null falls to null)', async () => {
@@ -242,9 +230,7 @@ describe('cleanupOrphanedIceResources', () => {
         getAccessToken: vi.fn().mockResolvedValue(null),
       });
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('throws when project_id is missing on credentials AND no gcpProject argument given', async () => {
@@ -253,9 +239,7 @@ describe('cleanupOrphanedIceResources', () => {
         // No project_id field.
       });
 
-      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(
-        /GCP credentials not found/,
-      );
+      await expect(cleanupOrphanedIceResources('org-1')).rejects.toThrow(/GCP credentials not found/);
     });
 
     it('uses the gcpProject argument when supplied (overrides credentials.project_id)', async () => {
@@ -397,9 +381,7 @@ describe('cleanupOrphanedIceResources', () => {
     });
 
     it('mixed: deletes orphans and skips active references in one scan', async () => {
-      findManyMock.mockResolvedValueOnce([
-        { resource_type: 'gcp.compute.backendBucket', resource_name: 'ice-active' },
-      ]);
+      findManyMock.mockResolvedValueOnce([{ resource_type: 'gcp.compute.backendBucket', resource_name: 'ice-active' }]);
       fetchMock.mockResolvedValueOnce(
         mockResponse({
           ok: true,
@@ -443,9 +425,7 @@ describe('cleanupOrphanedIceResources', () => {
 
       const report = await cleanupOrphanedIceResources('org-1');
 
-      expect(report.deleted).toEqual([
-        { type: 'sslCertificates', name: 'ice-cert-drop' },
-      ]);
+      expect(report.deleted).toEqual([{ type: 'sslCertificates', name: 'ice-cert-drop' }]);
       expect(report.skipped.map((s) => s.name)).toEqual(['ice-cert-keep']);
       const deleteCall = fetchMock.mock.calls.find(([, init]) => init.method === 'DELETE')!;
       expect(String(deleteCall[0])).toContain('/sslCertificates/ice-cert-drop');
@@ -627,9 +607,7 @@ describe('cleanupOrphanedIceResources', () => {
           jsonBody: { items: [{ name: 'ice-bad', labels: { 'ice-managed': 'true' } }] },
         }),
       );
-      fetchMock.mockResolvedValueOnce(
-        mockResponse({ ok: false, status: 500, textBody: 'internal' }),
-      );
+      fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 500, textBody: 'internal' }));
       for (let i = 0; i < 6; i++) fetchMock.mockResolvedValueOnce(emptyListing());
 
       const report = await cleanupOrphanedIceResources('org-1');

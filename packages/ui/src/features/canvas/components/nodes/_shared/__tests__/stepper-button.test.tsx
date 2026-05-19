@@ -8,9 +8,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { StepperButton } from '../stepper-button';
 
 const renderInner = (props: React.ComponentProps<typeof StepperButton>): React.ReactElement => {
-  const Inner = (StepperButton as unknown as {
-    type: (p: React.ComponentProps<typeof StepperButton>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    StepperButton as unknown as {
+      type: (p: React.ComponentProps<typeof StepperButton>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

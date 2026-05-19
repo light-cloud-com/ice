@@ -30,13 +30,7 @@ vi.mock('../../_shared', () => ({
 }));
 
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
-import {
-  SvgSecretStoreNode,
-  computeSecretStoreHeight,
-  SS_HEADER_HEIGHT,
-  SS_PADDING,
-  SS_ROW_HEIGHT,
-} from '..';
+import { SvgSecretStoreNode, computeSecretStoreHeight, SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '..';
 import type { CanvasNode } from '../../../svg-canvas';
 
 type ReactNodeLike = React.ReactNode;

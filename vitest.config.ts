@@ -24,7 +24,14 @@ export default defineConfig({
     ],
     // `.int.test.ts` files are integration tests that require a live SQLite DB
     // (via `pnpm dev:setup`). Run them with `pnpm test:int` instead.
-    exclude: ['**/node_modules/**', '**/dist/**', '**/*.int.test.ts', '**/*.int.test.tsx', '**/*.svg'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'packages/core/src/schemas/generated/**',
+      '**/*.int.test.ts',
+      '**/*.int.test.tsx',
+      '**/*.svg',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],

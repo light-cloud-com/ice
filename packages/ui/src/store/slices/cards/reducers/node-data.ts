@@ -39,9 +39,9 @@
  * @see rf-cards-9
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CardsState } from '../types';
 import { pushSnapshot } from '../snapshot';
+import type { CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const nodeDataReducers = {
   // Toggle node fold state in active card.
@@ -61,10 +61,7 @@ export const nodeDataReducers = {
   // undo/redo deep-clone (`JSON.parse(JSON.stringify(...))`) round-trips
   // a "no parent" node as a node with no `parentId` key, matching the
   // type's optional-field contract (`parentId?: string`).
-  updateCardNodeParent: (
-    state: CardsState,
-    action: PayloadAction<{ nodeId: string; parentId: string | null }>,
-  ) => {
+  updateCardNodeParent: (state: CardsState, action: PayloadAction<{ nodeId: string; parentId: string | null }>) => {
     pushSnapshot(state);
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {
@@ -82,10 +79,7 @@ export const nodeDataReducers = {
   // Update a node's data fields (label, groupColor, streamingMode, etc.).
   // Shallow-merges the patch onto existing `node.data` via spread; sibling
   // fields not in the patch are preserved.
-  updateCardNodeData: (
-    state: CardsState,
-    action: PayloadAction<{ nodeId: string; data: Record<string, unknown> }>,
-  ) => {
+  updateCardNodeData: (state: CardsState, action: PayloadAction<{ nodeId: string; data: Record<string, unknown> }>) => {
     pushSnapshot(state);
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {

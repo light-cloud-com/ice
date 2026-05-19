@@ -10,16 +10,11 @@
  * (legacy blueprint default).
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Brain } from 'lucide-react';
 import React from 'react';
-import { CardShell } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
@@ -59,7 +54,8 @@ function resolveModelRows(data: Record<string, unknown> | undefined): ModelRow[]
 }
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
-  const rate = data?.rateLimitPerMin != null ? t('canvas.blocks.llm.rpm', { n: data.rateLimitPerMin as string | number }) : '';
+  const rate =
+    data?.rateLimitPerMin != null ? t('canvas.blocks.llm.rpm', { n: data.rateLimitPerMin as string | number }) : '';
   const quota = (data?.quotas as string) || '';
   const fallbacksOn = !!(data?.fallbackModel || (Array.isArray(data?.fallbackModels) && data.fallbackModels.length));
   const parts = [rate, quota, fallbacksOn ? t('canvas.blocks.llm.fallbackOn') : ''].filter(Boolean) as string[];

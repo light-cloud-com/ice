@@ -1,9 +1,5 @@
 import prisma from '@ice/db';
-import {
-  setSnapshotPersister,
-  getDeploySnapshot,
-  type DeployProgressSnapshot,
-} from './deploy-locks';
+import { setSnapshotPersister, getDeploySnapshot, type DeployProgressSnapshot } from './deploy-locks';
 
 // ── Snapshot persistence ─────────────────────────────────────────────────────
 //

@@ -19,18 +19,17 @@
  *   - `../sections/blocks-section.tsx` — BlocksSection (rf-rpal-7)
  */
 
+import { isCategoryEnabledForProvider, type CategoryId } from '@ice/constants';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-
-import { isCategoryEnabledForProvider, type CategoryId } from '@ice/constants';
 import { ENABLED_PROVIDER_IDS } from '../../../config/providers';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
-import { useTranslation } from '../../../i18n';
 import { getCategoryMap, CATEGORY_ORDER } from '../data/categories';
 import { getComponents } from '../data/components';
 import { PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
@@ -112,8 +111,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
         // enabled AND the concept's palette category is enabled for it.
         const effectiveProviders = c.providers.filter(
           (p: string) =>
-            ENABLED_PROVIDER_IDS.has(p) &&
-            isCategoryEnabledForProvider(c.category as CategoryId, p as Provider),
+            ENABLED_PROVIDER_IDS.has(p) && isCategoryEnabledForProvider(c.category as CategoryId, p as Provider),
         );
         if (effectiveProviders.length === 0) return false;
 
@@ -121,8 +119,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
           !localSearch.trim() ||
           c.name.toLowerCase().includes(localSearch.toLowerCase()) ||
           c.description.toLowerCase().includes(localSearch.toLowerCase());
-        const matchesProvider =
-          selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
+        const matchesProvider = selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
         return matchesSearch && matchesProvider;
       }),
     [components, localSearch, selectedProvider],
@@ -232,4 +229,3 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
     </TooltipProvider>
   );
 };
-

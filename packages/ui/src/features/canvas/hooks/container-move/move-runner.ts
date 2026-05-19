@@ -18,8 +18,8 @@
 
 import { walkAncestorsAndExpand } from './ancestor-expansion';
 import { clampDraggedNodeToParent, detectExitingGroupId } from './clamp';
-import type { CanvasNode } from '../../components/types';
 import type { PositionUpdate, SizeUpdate } from './types';
+import type { CanvasNode } from '../../components/types';
 
 /**
  * Result of running a node-move pass. The orchestrator dispatches the

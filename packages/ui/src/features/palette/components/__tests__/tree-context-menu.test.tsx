@@ -13,7 +13,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { TreeContextMenu, type TreeContextMenuProps } from '../tree-context-menu';
 import type { Project, ProjectFolder } from '../../../../store/slices/projects-slice';
 
@@ -60,10 +59,7 @@ const baseProps = (overrides: Partial<TreeContextMenuProps> = {}): TreeContextMe
 const render = (overrides: Partial<TreeContextMenuProps> = {}): React.ReactElement =>
   (TreeContextMenu as unknown as Fn)(baseProps(overrides));
 
-function findAll(
-  el: unknown,
-  pred: (e: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findAll(el: unknown, pred: (e: React.ReactElement) => boolean): React.ReactElement[] {
   if (el == null || typeof el !== 'object') return [];
   if (Array.isArray(el)) {
     const out: React.ReactElement[] = [];
@@ -81,9 +77,7 @@ function findAll(
   return out;
 }
 
-const collectText = (
-  el: React.ReactElement | string | number | boolean | null | undefined,
-): string => {
+const collectText = (el: React.ReactElement | string | number | boolean | null | undefined): string => {
   if (el == null || typeof el === 'boolean') return '';
   if (typeof el === 'string' || typeof el === 'number') return String(el);
   const children = (el as React.ReactElement).props?.children;
@@ -91,8 +85,7 @@ const collectText = (
   return arr.map((c) => collectText(c)).join('');
 };
 
-const buttons = (tree: React.ReactElement): React.ReactElement[] =>
-  findAll(tree, (el) => el.type === 'button');
+const buttons = (tree: React.ReactElement): React.ReactElement[] => findAll(tree, (el) => el.type === 'button');
 
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -160,9 +153,7 @@ describe('TreeContextMenu — Move to Top Level', () => {
     });
     const btns = buttons(tree);
     // Order: Rename, Move-to-Top-Level, Delete
-    const moveBtn = btns.find((b) =>
-      collectText(b).includes('projectTree.contextMoveToTopLevel'),
-    );
+    const moveBtn = btns.find((b) => collectText(b).includes('projectTree.contextMoveToTopLevel'));
     expect(moveBtn).toBeDefined();
     (moveBtn!.props.onClick as () => void)();
     expect(setContextMenu).toHaveBeenCalledWith(null);
@@ -180,9 +171,7 @@ describe('TreeContextMenu — Move to Top Level', () => {
       setContextMenu,
       dispatch: dispatch as unknown as TreeContextMenuProps['dispatch'],
     });
-    const moveBtn = buttons(tree).find((b) =>
-      collectText(b).includes('projectTree.contextMoveToTopLevel'),
-    );
+    const moveBtn = buttons(tree).find((b) => collectText(b).includes('projectTree.contextMoveToTopLevel'));
     expect(moveBtn).toBeDefined();
     (moveBtn!.props.onClick as () => void)();
     expect(setContextMenu).toHaveBeenCalledWith(null);
@@ -226,9 +215,7 @@ describe('TreeContextMenu — New Subfolder', () => {
       setNewFolderName,
       t: t as unknown as TreeContextMenuProps['t'],
     });
-    const subBtn = buttons(tree).find((b) =>
-      collectText(b).includes('projectTree.contextNewSubfolder'),
-    );
+    const subBtn = buttons(tree).find((b) => collectText(b).includes('projectTree.contextNewSubfolder'));
     (subBtn!.props.onClick as () => void)();
     expect(setContextMenu).toHaveBeenCalledWith(null);
     expect(setCreatingFolder).toHaveBeenCalledWith('f-root');
@@ -248,9 +235,7 @@ describe('TreeContextMenu — Delete action', () => {
       contextMenu: { x: 0, y: 0, type: 'project', id: 'p-X' },
       onDelete,
     });
-    const delBtn = buttons(tree).find((b) =>
-      collectText(b).includes('projectTree.contextDelete'),
-    );
+    const delBtn = buttons(tree).find((b) => collectText(b).includes('projectTree.contextDelete'));
     (delBtn!.props.onClick as () => void)();
     expect(onDelete).toHaveBeenCalledWith('project', 'p-X');
   });

@@ -71,10 +71,7 @@ describe('parseOpenAIStream', () => {
   });
 
   it('treats missing delta.content as empty string', async () => {
-    const res = makeWebResponse([
-      'data: {"choices":[{"delta":{},"finish_reason":null}]}\n\n',
-      'data: [DONE]\n\n',
-    ]);
+    const res = makeWebResponse(['data: {"choices":[{"delta":{},"finish_reason":null}]}\n\n', 'data: [DONE]\n\n']);
     const chunks = [];
     for await (const chunk of parseOpenAIStream(res)) chunks.push(chunk);
     expect(chunks).toEqual([{ content: '', finishReason: null }]);
@@ -117,9 +114,7 @@ describe('parseNodeStream', () => {
 
   it('drops malformed JSON payloads silently', async () => {
     const chunks = [];
-    for await (const c of parseNodeStream(
-      nodeStreamFrom(['data: junk\n\n', delta('ok'), 'data: [DONE]\n\n']),
-    )) {
+    for await (const c of parseNodeStream(nodeStreamFrom(['data: junk\n\n', delta('ok'), 'data: [DONE]\n\n']))) {
       chunks.push(c);
     }
     expect(chunks.map((c) => c.content).join('')).toBe('ok');

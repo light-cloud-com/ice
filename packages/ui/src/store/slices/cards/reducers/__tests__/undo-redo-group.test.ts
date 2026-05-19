@@ -55,10 +55,10 @@
 
 import { produce } from 'immer';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import { undoRedoGroupReducers } from '../undo-redo-group';
 import { pushSnapshot } from '../../snapshot';
+import { undoRedoGroupReducers } from '../undo-redo-group';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 // -----------------------------------------------------------------------------
 // Fixture builders
@@ -88,7 +88,9 @@ function makeCard(id: string, overrides: Partial<Card> = {}): Card {
   };
 }
 
-function makeState(opts: { cards?: Card[]; activeCardId?: string | null; history?: CardsState['history'] } = {}): CardsState {
+function makeState(
+  opts: { cards?: Card[]; activeCardId?: string | null; history?: CardsState['history'] } = {},
+): CardsState {
   return {
     cards: opts.cards ?? [makeCard('c1')],
     activeCardId: opts.activeCardId === undefined ? 'c1' : opts.activeCardId,
@@ -329,10 +331,7 @@ describe('groupSelectedNodes', () => {
     const state = makeState({
       cards: [
         makeCard('c1', {
-          nodes: [
-            makeNode('a', { position: { x: 10, y: 20 } }),
-            makeNode('b', { position: { x: 300, y: 200 } }),
-          ],
+          nodes: [makeNode('a', { position: { x: 10, y: 20 } }), makeNode('b', { position: { x: 300, y: 200 } })],
         }),
       ],
       activeCardId: 'c1',
@@ -402,10 +401,7 @@ describe('groupSelectedNodes', () => {
     const state = makeState({
       cards: [
         makeCard('c1', {
-          nodes: [
-            makeNode('a', { position: { x: 0, y: 0 } }),
-            makeNode('b', { position: { x: 300, y: 0 } }),
-          ],
+          nodes: [makeNode('a', { position: { x: 0, y: 0 } }), makeNode('b', { position: { x: 300, y: 0 } })],
         }),
       ],
       activeCardId: 'c1',

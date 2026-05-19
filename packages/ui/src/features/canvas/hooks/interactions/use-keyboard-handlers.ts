@@ -51,8 +51,7 @@ interface UseKeyboardHandlersDeps {
 }
 
 export function useKeyboardHandlers(deps: UseKeyboardHandlersDeps): void {
-  const { viewportRef, lockedRef, spaceHeldRef, onViewportChangeRef, onDeleteRef, onSelectRef, onSelectAllRef } =
-    deps;
+  const { viewportRef, lockedRef, spaceHeldRef, onViewportChangeRef, onDeleteRef, onSelectRef, onSelectAllRef } = deps;
 
   // Hook-private refs.
   const pressedKeysRef = useRef<Set<string>>(new Set());

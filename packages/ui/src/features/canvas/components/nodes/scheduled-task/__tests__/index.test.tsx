@@ -104,9 +104,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgScheduledTaskNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgScheduledTaskNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgScheduledTaskNode> = {
     node: makeNode(),
     isSelected: false,
@@ -210,9 +208,9 @@ describe('resolveSchedule', () => {
   });
 
   it('schedule_expression takes priority over frequency and legacy schedule', () => {
-    expect(
-      resolveSchedule({ schedule_expression: '15 4 * * *', frequency: 'Every hour', schedule: '0 0 * * *' }),
-    ).toBe('15 4 * * *');
+    expect(resolveSchedule({ schedule_expression: '15 4 * * *', frequency: 'Every hour', schedule: '0 0 * * *' })).toBe(
+      '15 4 * * *',
+    );
   });
 
   it('falls through to frequency when schedule_expression is empty', () => {
@@ -337,7 +335,6 @@ describe('computeCronJobHeight', () => {
     );
   });
 });
-
 
 // ─── SvgScheduledTaskNode — surface ───────────────────────────────────────
 
@@ -527,7 +524,6 @@ describe('SvgScheduledTaskNode — surface', () => {
     expect((tree.props as { headerHeight: number }).headerHeight).toBe(CRON_HEADER_HEIGHT);
   });
 });
-
 
 // ─── SvgScheduledTaskNode — multi-task body ──────────────────────────────
 

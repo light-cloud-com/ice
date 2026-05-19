@@ -25,7 +25,7 @@ const makeArgs = (overrides: Partial<UseRenderCtxArgs> = {}): UseRenderCtxArgs =
   selectedNodes: ['sel-1'],
   lod: 2,
   zoom: 1.5,
-  pipelineNodeStatus: { 'a': 'idle' as never },
+  pipelineNodeStatus: { a: 'idle' as never },
   dragOverGroupId: 'g-x',
   exitingGroupId: 'g-y',
   renamingNodeId: null,
@@ -73,17 +73,13 @@ describe('useRenderCtx', () => {
 
   it('binds getConnectedPipelineStatuses with (node, card, pipelineNodeStatus)', () => {
     const args = makeArgs({
-      pipelineNodeStatus: { 'b': 'building' as never },
+      pipelineNodeStatus: { b: 'building' as never },
       card: { id: 'card-x' } as never,
     });
     const ctx = useRenderCtx(args);
     const node = { id: 'node-1' } as never;
     ctx.getConnectedPipelineStatuses(node);
-    expect(mocks.getConnectedPipelineStatuses).toHaveBeenCalledWith(
-      node,
-      args.card,
-      args.pipelineNodeStatus,
-    );
+    expect(mocks.getConnectedPipelineStatuses).toHaveBeenCalledWith(node, args.card, args.pipelineNodeStatus);
   });
 
   it('returns the underlying util output verbatim', () => {

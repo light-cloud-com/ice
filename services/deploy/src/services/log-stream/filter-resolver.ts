@@ -121,10 +121,7 @@ export function resolveLogFilter(ctx: SourceContext): ResolvedFilter | null {
 }
 
 function cloudRunRevisionFilter(serviceName: string, region: string | undefined): string {
-  const parts = [
-    'resource.type="cloud_run_revision"',
-    `resource.labels.service_name="${serviceName}"`,
-  ];
+  const parts = ['resource.type="cloud_run_revision"', `resource.labels.service_name="${serviceName}"`];
   if (region) {
     parts.push(`resource.labels.location="${region}"`);
   }
@@ -132,10 +129,7 @@ function cloudRunRevisionFilter(serviceName: string, region: string | undefined)
 }
 
 function cloudRunJobFilter(jobName: string, region: string | undefined): string {
-  const parts = [
-    'resource.type="cloud_run_job"',
-    `resource.labels.job_name="${jobName}"`,
-  ];
+  const parts = ['resource.type="cloud_run_job"', `resource.labels.job_name="${jobName}"`];
   if (region) {
     parts.push(`resource.labels.location="${region}"`);
   }
@@ -146,17 +140,13 @@ function cloudSqlDatabaseFilter(projectId: string, instanceName: string): string
   // GCP convention: database_id is `<projectId>:<instanceName>`. Don't
   // double-prefix; the caller already knows the project from the canvas
   // environment.
-  return [
-    'resource.type="cloudsql_database"',
-    `resource.labels.database_id="${projectId}:${instanceName}"`,
-  ].join(' AND ');
+  return ['resource.type="cloudsql_database"', `resource.labels.database_id="${projectId}:${instanceName}"`].join(
+    ' AND ',
+  );
 }
 
 function redisInstanceFilter(instanceName: string, region: string | undefined): string {
-  const parts = [
-    'resource.type="redis_instance"',
-    `resource.labels.instance_id="${instanceName}"`,
-  ];
+  const parts = ['resource.type="redis_instance"', `resource.labels.instance_id="${instanceName}"`];
   if (region) {
     parts.push(`resource.labels.region="${region}"`);
   }
@@ -164,8 +154,5 @@ function redisInstanceFilter(instanceName: string, region: string | undefined): 
 }
 
 function gceInstanceFilter(instanceName: string): string {
-  return [
-    'resource.type="gce_instance"',
-    `resource.labels.instance_id="${instanceName}"`,
-  ].join(' AND ');
+  return ['resource.type="gce_instance"', `resource.labels.instance_id="${instanceName}"`].join(' AND ');
 }

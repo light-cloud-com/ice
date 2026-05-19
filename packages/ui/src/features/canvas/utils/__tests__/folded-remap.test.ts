@@ -13,14 +13,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
+import { buildFoldedRemap, descendants, hasCollapsedAncestor, isNodeFolded } from '../folded-remap';
 import type { CanvasNode } from '../../components/types';
-import {
-  buildFoldedRemap,
-  descendants,
-  hasCollapsedAncestor,
-  isNodeFolded,
-} from '../folded-remap';
 
 /** Minimal CanvasNode factory — only the fields these utils read. */
 function node(overrides: Partial<CanvasNode> & Pick<CanvasNode, 'id'>): CanvasNode {
@@ -56,16 +50,18 @@ describe('isNodeFolded', () => {
   it('returns false when data is missing entirely', () => {
     // The util uses optional chaining (`node?.data?.folded`); a missing
     // data object must NOT throw and must NOT be treated as folded.
-    const nodes: CanvasNode[] = [{
-      id: 'a',
-      type: 'block',
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-      label: 'a',
-      data: undefined as unknown as Record<string, unknown>,
-    }];
+    const nodes: CanvasNode[] = [
+      {
+        id: 'a',
+        type: 'block',
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        label: 'a',
+        data: undefined as unknown as Record<string, unknown>,
+      },
+    ];
     expect(isNodeFolded(nodes, 'a')).toBe(false);
   });
 
@@ -94,10 +90,7 @@ describe('hasCollapsedAncestor', () => {
   });
 
   it('returns true when the direct parent is folded', () => {
-    const nodes = [
-      node({ id: 'parent', data: { folded: true } }),
-      node({ id: 'child', parentId: 'parent' }),
-    ];
+    const nodes = [node({ id: 'parent', data: { folded: true } }), node({ id: 'child', parentId: 'parent' })];
     expect(hasCollapsedAncestor(nodes, 'child')).toBe(true);
   });
 
@@ -121,10 +114,7 @@ describe('hasCollapsedAncestor', () => {
 
   it('does NOT count the node itself being folded as having a collapsed ancestor', () => {
     // The predicate is about ancestors, not the node itself.
-    const nodes = [
-      node({ id: 'parent' }),
-      node({ id: 'child', parentId: 'parent', data: { folded: true } }),
-    ];
+    const nodes = [node({ id: 'parent' }), node({ id: 'child', parentId: 'parent', data: { folded: true } })];
     expect(hasCollapsedAncestor(nodes, 'child')).toBe(false);
   });
 
@@ -140,19 +130,13 @@ describe('hasCollapsedAncestor', () => {
 
 describe('buildFoldedRemap', () => {
   it('returns empty Map when no nodes are folded', () => {
-    const nodes = [
-      node({ id: 'p' }),
-      node({ id: 'c', parentId: 'p' }),
-    ];
+    const nodes = [node({ id: 'p' }), node({ id: 'c', parentId: 'p' })];
     const remap = buildFoldedRemap(nodes, nodes);
     expect(remap.size).toBe(0);
   });
 
   it('remaps a hidden child to its folded parent (first visible ancestor)', () => {
-    const nodes = [
-      node({ id: 'p', data: { folded: true } }),
-      node({ id: 'c', parentId: 'p' }),
-    ];
+    const nodes = [node({ id: 'p', data: { folded: true } }), node({ id: 'c', parentId: 'p' })];
     const remap = buildFoldedRemap(nodes, nodes);
     expect(remap.get('c')).toBe('p');
     expect(remap.size).toBe(1);
@@ -206,9 +190,7 @@ describe('buildFoldedRemap', () => {
     // Easier: use the original loop's `if (ancestorId)` guard. After
     // the while-loop falls off the top (`ancestorId = null`), the entry
     // is skipped.
-    const canvasNodes = [
-      node({ id: 'lost', parentId: 'phantom' }),
-    ];
+    const canvasNodes = [node({ id: 'lost', parentId: 'phantom' })];
     const visibleNodes = [
       // Make `lost` look hidden: its parent IS folded, but the parent
       // doesn't exist in the canvas at all.
@@ -238,10 +220,7 @@ describe('buildFoldedRemap', () => {
     // does not. We simulate that with a self-folding root: the
     // visibleNodes copy gives `a` a parentId pointing at a folded `x`
     // that does not exist in canvasNodes.
-    const canvasNodes2: CanvasNode[] = [
-      node({ id: 'a', parentId: 'x' }),
-      node({ id: 'b', parentId: 'a' }),
-    ];
+    const canvasNodes2: CanvasNode[] = [node({ id: 'a', parentId: 'x' }), node({ id: 'b', parentId: 'a' })];
     const visibleNodes2: CanvasNode[] = [
       node({ id: 'a', parentId: 'x' }),
       node({ id: 'b', parentId: 'a' }),
@@ -271,10 +250,7 @@ describe('buildFoldedRemap', () => {
     // returns the node, parentId is undefined (canvasNodes has no link
     // to y) => ancestorId becomes null => loop exits with
     // ancestorId=null => `if (ancestorId)` is falsy => entry skipped.
-    const canvasNodes3: CanvasNode[] = [
-      node({ id: 'a', data: { folded: true } }),
-      node({ id: 'b', parentId: 'a' }),
-    ];
+    const canvasNodes3: CanvasNode[] = [node({ id: 'a', data: { folded: true } }), node({ id: 'b', parentId: 'a' })];
     const visibleNodes3: CanvasNode[] = [
       // visibleNodes pretends a has a folded ancestor too:
       node({ id: 'a', parentId: 'y', data: { folded: true } }),
@@ -339,10 +315,7 @@ describe('descendants', () => {
   });
 
   it('does not include the parent itself in the result', () => {
-    const nodes = [
-      node({ id: 'p' }),
-      node({ id: 'c', parentId: 'p' }),
-    ];
+    const nodes = [node({ id: 'p' }), node({ id: 'c', parentId: 'p' })];
     expect(descendants(nodes, 'p')).not.toContain('p');
   });
 

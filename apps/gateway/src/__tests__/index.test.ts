@@ -28,7 +28,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Server as HttpServerType, IncomingMessage, ServerResponse } from 'http';
+import type { Server as HttpServerType } from 'http';
 
 // ─── Hoisted bag of captured state ──────────────────────────────────────
 
@@ -212,9 +212,7 @@ const h = vi.hoisted(() => {
   const serviceIamMod = { createIamRouter: vi.fn(() => makeNoopRouter()) };
   const sharedMod = {
     setupSocketService: vi.fn((io: any) => bag.setupSocketServiceCalls.push(io)),
-    setDesktopUser: vi.fn((userId: string, orgId: string) =>
-      bag.setDesktopUserCalls.push({ userId, orgId }),
-    ),
+    setDesktopUser: vi.fn((userId: string, orgId: string) => bag.setDesktopUserCalls.push({ userId, orgId })),
     ensureLocalSecrets: vi.fn(() => ({ path: '/fake/secrets.json', generated: false })),
   };
   const aiMod = {
@@ -538,11 +536,7 @@ describe('apps/gateway/src/index.ts', () => {
       process.env.FRONTEND_URL = 'http://a.test,  http://b.test ,,, http://c.test';
       await bootGateway();
       const corsConfig = h.bag.socketIoConstructorArgs[1]?.cors;
-      expect(corsConfig.origin).toEqual([
-        'http://a.test',
-        'http://b.test',
-        'http://c.test',
-      ]);
+      expect(corsConfig.origin).toEqual(['http://a.test', 'http://b.test', 'http://c.test']);
     });
   });
 
@@ -898,7 +892,7 @@ describe('apps/gateway/src/index.ts', () => {
     pathPredicate: (path: string) => boolean,
   ): null | ((req: any, res: any, next: any) => void) {
     const app: any = h.bag.capturedAppListener;
-    const stack: any[] = (app._router?.stack ?? app.router?.stack) ?? [];
+    const stack: any[] = app._router?.stack ?? app.router?.stack ?? [];
     for (const layer of stack) {
       if (!layer.route) continue;
       const path = layer.route.path;
@@ -933,18 +927,12 @@ describe('apps/gateway/src/index.ts', () => {
       expect(handler).not.toBeNull();
       const res = makeFakeRes();
       const next = vi.fn();
-      handler!(
-        { method: 'GET', path: '/dashboard', url: '/dashboard' } as any,
-        res as any,
-        next,
-      );
+      handler!({ method: 'GET', path: '/dashboard', url: '/dashboard' } as any, res as any, next);
       // sendFile('index.html') and Cache-Control header.
       expect(res.sendFileCalls.length).toBe(1);
       expect(res.sendFileCalls[0]).toMatch(/index\.html$/);
       expect(
-        res.setHeaderCalls.some(
-          (h) => h.name === 'Cache-Control' && h.value === 'no-store, must-revalidate',
-        ),
+        res.setHeaderCalls.some((h) => h.name === 'Cache-Control' && h.value === 'no-store, must-revalidate'),
       ).toBe(true);
       expect(next).not.toHaveBeenCalled();
     });
@@ -957,11 +945,7 @@ describe('apps/gateway/src/index.ts', () => {
       expect(handler).not.toBeNull();
       const res = makeFakeRes();
       const next = vi.fn();
-      handler!(
-        { method: 'GET', path: '/api/health', url: '/api/health' } as any,
-        res as any,
-        next,
-      );
+      handler!({ method: 'GET', path: '/api/health', url: '/api/health' } as any, res as any, next);
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.sendFileCalls.length).toBe(0);
     });
@@ -974,11 +958,7 @@ describe('apps/gateway/src/index.ts', () => {
       expect(handler).not.toBeNull();
       const res = makeFakeRes();
       const next = vi.fn();
-      handler!(
-        { method: 'GET', path: '/socket.io/whatever', url: '/socket.io/whatever' } as any,
-        res as any,
-        next,
-      );
+      handler!({ method: 'GET', path: '/socket.io/whatever', url: '/socket.io/whatever' } as any, res as any, next);
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.sendFileCalls.length).toBe(0);
     });
@@ -1031,9 +1011,7 @@ describe('apps/gateway/src/index.ts', () => {
       const setHeaders = h.bag.expressStaticSetHeaders!;
       const res = makeFakeRes();
       setHeaders(res as any, '/some/dist/path/index.html');
-      expect(res.setHeaderCalls).toEqual([
-        { name: 'Cache-Control', value: 'no-store, must-revalidate' },
-      ]);
+      expect(res.setHeaderCalls).toEqual([{ name: 'Cache-Control', value: 'no-store, must-revalidate' }]);
     });
 
     it('static-serve setHeaders does NOT set Cache-Control for non-index files', async () => {
@@ -1092,14 +1070,9 @@ describe('apps/gateway/src/index.ts', () => {
       const stack = (app._router?.stack ?? app.router?.stack) as any[];
       // Find the error-handling middleware — express recognizes it by
       // function arity 4.
-      const errLayer = stack.find((l) => l.handle && (l.handle as Function).length === 4);
+      const errLayer = stack.find((l) => l.handle && (l.handle as (...a: unknown[]) => unknown).length === 4);
       expect(errLayer).toBeDefined();
-      const errHandler = errLayer!.handle as (
-        err: any,
-        req: any,
-        res: any,
-        next: any,
-      ) => void;
+      const errHandler = errLayer!.handle as (err: any, req: any, res: any, next: any) => void;
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const res = makeFakeRes();
       errHandler(new Error('boom'), {} as any, res as any, vi.fn());
@@ -1113,13 +1086,8 @@ describe('apps/gateway/src/index.ts', () => {
       await bootGateway();
       const app: any = h.bag.capturedAppListener;
       const stack = (app._router?.stack ?? app.router?.stack) as any[];
-      const errLayer = stack.find((l) => l.handle && (l.handle as Function).length === 4);
-      const errHandler = errLayer!.handle as (
-        err: any,
-        req: any,
-        res: any,
-        next: any,
-      ) => void;
+      const errLayer = stack.find((l) => l.handle && (l.handle as (...a: unknown[]) => unknown).length === 4);
+      const errHandler = errLayer!.handle as (err: any, req: any, res: any, next: any) => void;
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const res = makeFakeRes();
       errHandler({ status: 418, message: "I'm a teapot" }, {} as any, res as any, vi.fn());
@@ -1132,13 +1100,8 @@ describe('apps/gateway/src/index.ts', () => {
       await bootGateway();
       const app: any = h.bag.capturedAppListener;
       const stack = (app._router?.stack ?? app.router?.stack) as any[];
-      const errLayer = stack.find((l) => l.handle && (l.handle as Function).length === 4);
-      const errHandler = errLayer!.handle as (
-        err: any,
-        req: any,
-        res: any,
-        next: any,
-      ) => void;
+      const errLayer = stack.find((l) => l.handle && (l.handle as (...a: unknown[]) => unknown).length === 4);
+      const errHandler = errLayer!.handle as (err: any, req: any, res: any, next: any) => void;
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const res = makeFakeRes();
       errHandler({}, {} as any, res as any, vi.fn());
@@ -1284,9 +1247,7 @@ describe('apps/gateway/src/index.ts', () => {
     });
 
     it('schedules a 30s force-exit timer that calls process.exit(1)', async () => {
-      const exitSpy = vi
-        .spyOn(process, 'exit')
-        .mockImplementation(((_code?: number) => undefined) as any);
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => undefined) as any);
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       await bootGateway();
       const sigterm = h.bag.processListeners.SIGTERM![0]!;
@@ -1308,9 +1269,7 @@ describe('apps/gateway/src/index.ts', () => {
   describe('uncaughtException', () => {
     it('logs the error, runs cleanup, and exits the process', async () => {
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const exitSpy = vi
-        .spyOn(process, 'exit')
-        .mockImplementation(((_code?: number) => undefined) as any);
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => undefined) as any);
       await bootGateway();
       const handler = h.bag.processListeners.uncaughtException![0]!;
       handler(new Error('uncaught boom'));
@@ -1324,9 +1283,7 @@ describe('apps/gateway/src/index.ts', () => {
     it('still exits when cleanupAllTempDirs throws inside the uncaughtException handler', async () => {
       h.bag.cleanupThrows = true;
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const exitSpy = vi
-        .spyOn(process, 'exit')
-        .mockImplementation(((_code?: number) => undefined) as any);
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => undefined) as any);
       await bootGateway();
       const handler = h.bag.processListeners.uncaughtException![0]!;
       handler(new Error('uncaught with cleanup-boom'));

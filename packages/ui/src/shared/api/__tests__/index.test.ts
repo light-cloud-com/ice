@@ -36,24 +36,24 @@ vi.mock('socket.io-client', () => ({
 
 describe('shared/api — public barrel', () => {
   it('re-exports the api-adapter slot helpers', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(typeof mod.getApi).toBe('function');
     expect(typeof mod.setApiAdapter).toBe('function');
   });
 
   it('re-exports createHttpApiAdapter and emitMenuAction', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(typeof mod.createHttpApiAdapter).toBe('function');
     expect(typeof mod.emitMenuAction).toBe('function');
   });
 
   it('re-exports the axios instance under axiosInstance', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(mod.axiosInstance).toBeDefined();
   });
 
   it('re-exports every auth helper', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(typeof mod.isAuthenticated).toBe('function');
     expect(typeof mod.getCurrentUser).toBe('function');
     expect(typeof mod.logout).toBe('function');

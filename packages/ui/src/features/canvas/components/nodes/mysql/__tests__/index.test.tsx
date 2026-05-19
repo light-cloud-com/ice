@@ -59,9 +59,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgMysqlNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgMysqlNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgMysqlNode> = {
     node: makeNode(),
     isSelected: false,

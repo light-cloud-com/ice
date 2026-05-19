@@ -109,10 +109,7 @@ describe('BLOCK_TEMPLATES — assembled list', () => {
   });
 
   it('total template count equals the sum of category bundle sizes', () => {
-    const totalCategoryTemplates = CATEGORY_BUNDLES.reduce(
-      (acc, { list }) => acc + list.length,
-      0,
-    );
+    const totalCategoryTemplates = CATEGORY_BUNDLES.reduce((acc, { list }) => acc + list.length, 0);
     expect(BLOCK_TEMPLATES).toHaveLength(totalCategoryTemplates);
   });
 

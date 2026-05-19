@@ -27,12 +27,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import {
-  FIREBASE_HOSTING_API,
-  FIREBASE_MGMT_API,
-  restRequest,
-  type RestResponse,
-} from '../rest-client';
+import { FIREBASE_HOSTING_API, FIREBASE_MGMT_API, restRequest, type RestResponse } from '../rest-client';
 import type { GCPHandlerContext } from '../../../types';
 
 /**
@@ -163,13 +158,9 @@ describe('firebase-hosting/rest-client', () => {
     it('forwards `contentType` (used by binary uploads) into requestRaw', async () => {
       const requestRaw = vi.fn().mockResolvedValue({ status: 200, data: {}, headers: {} });
       const ctx = makeCtx(requestRaw);
-      await restRequest(
-        ctx,
-        'POST',
-        'https://upload',
-        Buffer.from([0x1f, 0x8b]),
-        { contentType: 'application/octet-stream' },
-      );
+      await restRequest(ctx, 'POST', 'https://upload', Buffer.from([0x1f, 0x8b]), {
+        contentType: 'application/octet-stream',
+      });
 
       const opts = requestRaw.mock.calls[0]![0] as any;
       expect(opts.contentType).toBe('application/octet-stream');
@@ -307,9 +298,7 @@ describe('firebase-hosting/rest-client', () => {
       // fail loud rather than silently fall back to a different code
       // path.
       const ctx = makeCtx(undefined);
-      await expect(restRequest(ctx, 'GET', 'https://example/api')).rejects.toThrow(
-        /requires the extended rest_client/,
-      );
+      await expect(restRequest(ctx, 'GET', 'https://example/api')).rejects.toThrow(/requires the extended rest_client/);
     });
 
     it('handles an empty acceptStatuses array as no-extra-allowed (still gates on < 300)', async () => {

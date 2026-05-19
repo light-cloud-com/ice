@@ -64,7 +64,9 @@ describe('enableGcpApi', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
-    expect(url).toBe('https://serviceusage.googleapis.com/v1/projects/proj-xyz/services/firebase.googleapis.com:enable');
+    expect(url).toBe(
+      'https://serviceusage.googleapis.com/v1/projects/proj-xyz/services/firebase.googleapis.com:enable',
+    );
     expect(init.method).toBe('POST');
     expect(init.headers.Authorization).toBe('Bearer mytoken');
     expect(init.headers['Content-Type']).toBe('application/json');
@@ -145,9 +147,7 @@ describe('autoEnableGCPApis', () => {
     }
 
     // Logs: announce → per-API success → final propagation wait message.
-    expect(log).toHaveBeenCalledWith(
-      `Enabling ${BASE_APIS.length} required GCP API(s): ${BASE_APIS.join(', ')}`,
-    );
+    expect(log).toHaveBeenCalledWith(`Enabling ${BASE_APIS.length} required GCP API(s): ${BASE_APIS.join(', ')}`);
     for (const api of BASE_APIS) {
       expect(log).toHaveBeenCalledWith(`  Enabled ${api}`);
     }
@@ -187,9 +187,7 @@ describe('autoEnableGCPApis', () => {
       .slice(1) // skip listing call
       .map((call) => call[0] as string);
     for (const api of expectedUnique) {
-      expect(enableUrls).toContain(
-        `https://serviceusage.googleapis.com/v1/projects/proj-2/services/${api}:enable`,
-      );
+      expect(enableUrls).toContain(`https://serviceusage.googleapis.com/v1/projects/proj-2/services/${api}:enable`);
     }
   });
 
@@ -270,9 +268,7 @@ describe('autoEnableGCPApis', () => {
         'Cannot enable cloudresourcemanager.googleapis.com: Billing is not enabled for this project',
       ),
     );
-    expect(log).toHaveBeenCalledWith(
-      'Enabled 1/2 APIs. Some may need manual enabling.',
-    );
+    expect(log).toHaveBeenCalledWith('Enabled 1/2 APIs. Some may need manual enabling.');
   });
 
   it('routes non-billing failures to a generic "Failed to enable" log line', async () => {
@@ -284,9 +280,7 @@ describe('autoEnableGCPApis', () => {
 
     await autoEnableGCPApis('proj-8', 'tok', [], log);
 
-    expect(log).toHaveBeenCalledWith(
-      '  Failed to enable cloudresourcemanager.googleapis.com: permission denied',
-    );
+    expect(log).toHaveBeenCalledWith('  Failed to enable cloudresourcemanager.googleapis.com: permission denied');
   });
 
   it('catches per-API enable rejections and records them via the log callback', async () => {
@@ -296,9 +290,7 @@ describe('autoEnableGCPApis', () => {
 
     await autoEnableGCPApis('proj-9', 'tok', [], log);
 
-    expect(log).toHaveBeenCalledWith(
-      '  Failed to enable cloudresourcemanager.googleapis.com: socket hang up',
-    );
+    expect(log).toHaveBeenCalledWith('  Failed to enable cloudresourcemanager.googleapis.com: socket hang up');
     // 1 succeeded out of 2 → partial-success summary.
     expect(log).toHaveBeenCalledWith('Enabled 1/2 APIs. Some may need manual enabling.');
   });
@@ -336,9 +328,7 @@ describe('autoEnableGCPApis', () => {
     // `s.config?.name || ''` then `.filter(Boolean)` strips the empty
     // strings, so an entry with no `config.name` contributes nothing to
     // the enabled set.
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: true, jsonBody: { services: [{ config: {} }, {}] } }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: true, jsonBody: { services: [{ config: {} }, {}] } }));
     fetchMock.mockResolvedValueOnce(mockResponse({ ok: true, textBody: '{}' }));
     fetchMock.mockResolvedValueOnce(mockResponse({ ok: true, textBody: '{}' }));
 
@@ -354,22 +344,14 @@ describe('autoEnableGCPApis', () => {
     // hits neither the partial nor the all-success branch, so neither summary
     // log fires. The per-API "Failed to enable" lines DO fire.
     fetchMock.mockResolvedValueOnce(listingResponse([])); // none enabled
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 500, textBody: 'server error' }),
-    );
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ ok: false, status: 500, textBody: 'server error' }),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 500, textBody: 'server error' }));
+    fetchMock.mockResolvedValueOnce(mockResponse({ ok: false, status: 500, textBody: 'server error' }));
 
     await autoEnableGCPApis('proj-13', 'tok', [], log);
 
     // Per-API failure lines fired, but no rolled-up summary log.
-    expect(log).toHaveBeenCalledWith(
-      '  Failed to enable serviceusage.googleapis.com: server error',
-    );
-    expect(log).toHaveBeenCalledWith(
-      '  Failed to enable cloudresourcemanager.googleapis.com: server error',
-    );
+    expect(log).toHaveBeenCalledWith('  Failed to enable serviceusage.googleapis.com: server error');
+    expect(log).toHaveBeenCalledWith('  Failed to enable cloudresourcemanager.googleapis.com: server error');
     expect(log).not.toHaveBeenCalledWith(expect.stringContaining('Some may need manual enabling'));
     expect(log).not.toHaveBeenCalledWith(expect.stringContaining('Waiting for propagation'));
   });
@@ -377,10 +359,7 @@ describe('autoEnableGCPApis', () => {
 
 describe('exported constants', () => {
   it('BASE_APIS contains the two service-management APIs every GCP deploy needs', () => {
-    expect(BASE_APIS).toEqual([
-      'serviceusage.googleapis.com',
-      'cloudresourcemanager.googleapis.com',
-    ]);
+    expect(BASE_APIS).toEqual(['serviceusage.googleapis.com', 'cloudresourcemanager.googleapis.com']);
   });
 
   it('ICE_TYPE_API_MAP keys each map a canvas iceType to a non-empty list of googleapis.com hostnames', () => {

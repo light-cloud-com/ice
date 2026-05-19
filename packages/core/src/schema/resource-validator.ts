@@ -21,11 +21,7 @@ export type {
   ValidationResult,
   ValidationSeverity,
 } from './resource-validator-types';
-import type {
-  ValidationIssue,
-  ValidationOptions,
-  ValidationResult,
-} from './resource-validator-types';
+import type { ValidationIssue, ValidationOptions, ValidationResult } from './resource-validator-types';
 
 // =============================================================================
 // Resource Validator

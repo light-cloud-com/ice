@@ -111,7 +111,9 @@ const PrivateNetworkPolicySection: React.FC<PolicySectionProps> = ({
               : t('canvas.properties.privateNetwork.allowedDestinations')}
           </div>
           {allowlist.length === 0 && (
-            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">{t('canvas.properties.privateNetwork.noEntries')}</div>
+            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">
+              {t('canvas.properties.privateNetwork.noEntries')}
+            </div>
           )}
           {allowlist.map((entry, i) => (
             <div key={i} className="flex items-center gap-1">

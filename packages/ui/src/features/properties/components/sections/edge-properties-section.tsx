@@ -38,10 +38,10 @@ import {
   type CardEdge,
 } from '../../../../store/slices/cards-slice';
 import { toggleProperties } from '../../../../store/slices/ui-slice';
-import type { AppDispatch } from '../../../../store';
 import { computeEdgeWarnings } from '../../utils/edge-warnings';
 import { normalizeSubdomain, validateSubdomain } from '../../utils/normalize-subdomain';
 import { Section, TextField } from '../fields';
+import type { AppDispatch } from '../../../../store';
 
 // ─── Edge Properties Section ────────────────────────────────────────────────
 
@@ -105,8 +105,7 @@ export const EdgePropertiesSection: React.FC<{
             </div>
             {((edgeData.connectionCategory as string) || (edgeData.relationship as string)) && (
               <span className="text-ice-2xs text-ice-text-3 font-mono">
-                {(edgeData.connectionCategory as string) ||
-                  ((edgeData.relationship as string) || '').replace('_', ' ')}
+                {(edgeData.connectionCategory as string) || ((edgeData.relationship as string) || '').replace('_', ' ')}
               </span>
             )}
           </div>
@@ -157,9 +156,7 @@ export const EdgePropertiesSection: React.FC<{
                   placeholder="api (leave blank for root)"
                   className={cn(
                     'w-full px-1.5 py-1.5 text-ice-sm rounded border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1',
-                    validationError
-                      ? 'border-red-500/50 focus:ring-red-500'
-                      : 'border-ice-border focus:ring-blue-500',
+                    validationError ? 'border-red-500/50 focus:ring-red-500' : 'border-ice-border focus:ring-blue-500',
                   )}
                 />
                 {validationError ? (

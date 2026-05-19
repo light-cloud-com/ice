@@ -52,8 +52,7 @@ export const ResultsSummary: React.FC<{
   // easier to paste into a bug report than scraping individual rows.
   // rf-pdpl-4: extracted to utils/results-summary-text.ts. Closure shim kept
   // so the `copy` call site below stays unchanged.
-  const buildSummaryText = (errorsOnly: boolean) =>
-    buildResultsSummaryText(results, { errorsOnly });
+  const buildSummaryText = (errorsOnly: boolean) => buildResultsSummaryText(results, { errorsOnly });
 
   const copy = (errorsOnly: boolean) => {
     navigator.clipboard.writeText(buildSummaryText(errorsOnly)).catch(() => undefined);
@@ -71,9 +70,7 @@ export const ResultsSummary: React.FC<{
           <span className={allOk ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}>
             {allOk ? 'Deploy succeeded' : 'Deploy finished with errors'}
           </span>
-          <span className="ml-auto text-xs text-muted-foreground font-normal">
-            {(totalMs / 1000).toFixed(1)}s
-          </span>
+          <span className="ml-auto text-xs text-muted-foreground font-normal">{(totalMs / 1000).toFixed(1)}s</span>
         </div>
         <div className="flex items-center gap-3 text-xs">
           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">

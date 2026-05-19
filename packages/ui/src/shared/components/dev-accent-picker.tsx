@@ -17,11 +17,10 @@
 
 import { X, Sun, Moon, Palette } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
-
 import { ThemePickerContext } from './dev-accent-picker/context';
 import { T } from './dev-accent-picker/data/themes';
-import type { ColorTheme } from './dev-accent-picker/types';
 import { applyPalette, clearOverrides } from './dev-accent-picker/utils/apply-palette';
+import type { ColorTheme } from './dev-accent-picker/types';
 
 // Public re-export so the canonical import path `'@ui/shared/components/dev-accent-picker'`
 // continues to expose `useThemePicker` (used by app-settings.tsx).

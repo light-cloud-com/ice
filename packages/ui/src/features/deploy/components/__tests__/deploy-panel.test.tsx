@@ -240,7 +240,7 @@ function findAll(tree: unknown, pred: (el: ElLike) => boolean): ElLike[] {
 const renderPanel = (): React.ReactElement | null => {
   const tree = (DeployPanel as unknown as () => React.ReactElement | null)();
   // Walk to invoke nested FCs so mock components record their props.
-  if (tree) [...walk(tree)];
+  if (tree) void [...walk(tree)];
   return tree;
 };
 

@@ -24,11 +24,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  publishVersion,
-  publishPlaceholderVersion,
-  parseRepository,
-} from '../version-publisher';
+import { publishVersion, publishPlaceholderVersion, parseRepository } from '../version-publisher';
 import type { GCPHandlerContext } from '../../../types';
 
 // Hoisted mocks: vitest hoists `vi.hoisted` and the `vi.mock` blocks
@@ -317,9 +313,7 @@ describe('firebase-hosting/version-publisher', () => {
 
       // Step 2: populateFiles
       expect(calls[1]![1]).toBe('POST');
-      expect(calls[1]![2]).toBe(
-        `${mocks.FIREBASE_HOSTING_API}/sites/my-site/versions/v1:populateFiles`,
-      );
+      expect(calls[1]![2]).toBe(`${mocks.FIREBASE_HOSTING_API}/sites/my-site/versions/v1:populateFiles`);
       expect(calls[1]![3]).toEqual({
         files: { '/a.html': HASH_A, '/b.html': HASH_B },
       });
@@ -334,9 +328,7 @@ describe('firebase-hosting/version-publisher', () => {
 
       // Step 4: PATCH FINALIZED
       expect(calls[4]![1]).toBe('PATCH');
-      expect(calls[4]![2]).toBe(
-        `${mocks.FIREBASE_HOSTING_API}/sites/my-site/versions/v1?update_mask=status`,
-      );
+      expect(calls[4]![2]).toBe(`${mocks.FIREBASE_HOSTING_API}/sites/my-site/versions/v1?update_mask=status`);
       expect(calls[4]![3]).toEqual({ status: 'FINALIZED' });
 
       // Step 5: POST release
@@ -458,9 +450,7 @@ describe('firebase-hosting/version-publisher', () => {
       // 5 total: create + populate + 1 upload + finalize + release.
       expect(mocks.restRequest).toHaveBeenCalledTimes(5);
       // Confirm the third call is the upload of file B (not A).
-      expect(mocks.restRequest.mock.calls[2]![2]).toBe(
-        `https://upload.firebase/v1/${HASH_B}`,
-      );
+      expect(mocks.restRequest.mock.calls[2]![2]).toBe(`https://upload.firebase/v1/${HASH_B}`);
     });
 
     it('handles an empty uploadRequiredHashes (everything cached)', async () => {
@@ -482,9 +472,7 @@ describe('firebase-hosting/version-publisher', () => {
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} })
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out).toEqual({ ok: true, defaultUrl: 'https://s.web.app' });
       // 4 total: create + populate + finalize + release. No uploads.
@@ -508,9 +496,7 @@ describe('firebase-hosting/version-publisher', () => {
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} })
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out.ok).toBe(true);
       expect(mocks.restRequest).toHaveBeenCalledTimes(4);
@@ -531,9 +517,7 @@ describe('firebase-hosting/version-publisher', () => {
 
       const messages = onLog.mock.calls.map((c) => String(c[0]));
       expect(
-        messages.find((m) =>
-          m.includes('Created version sites/my-site/versions/v1 for my-site with 2 file(s)'),
-        ),
+        messages.find((m) => m.includes('Created version sites/my-site/versions/v1 for my-site with 2 file(s)')),
       ).toBeDefined();
     });
 
@@ -565,9 +549,7 @@ describe('firebase-hosting/version-publisher', () => {
 
       const messages = onLog.mock.calls.map((c) => String(c[0]));
       // 1 required, 2 cached.
-      expect(
-        messages.find((m) => m.includes('1 file(s) need upload (2 cached server-side)')),
-      ).toBeDefined();
+      expect(messages.find((m) => m.includes('1 file(s) need upload (2 cached server-side)'))).toBeDefined();
     });
 
     it('does not throw when ctx.on_log is undefined', async () => {
@@ -594,9 +576,7 @@ describe('firebase-hosting/version-publisher', () => {
         data: { error: { message: 'Quota exceeded' } },
       });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out).toEqual({
         ok: false,
@@ -616,14 +596,10 @@ describe('firebase-hosting/version-publisher', () => {
         data: { unexpected: 'shape' },
       });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out.ok).toBe(false);
-      expect(out.error).toBe(
-        `Failed to create version: ${JSON.stringify({ unexpected: 'shape' })}`,
-      );
+      expect(out.error).toBe(`Failed to create version: ${JSON.stringify({ unexpected: 'shape' })}`);
     });
 
     it('returns ok:false when step 2 (populateFiles) fails', async () => {
@@ -639,9 +615,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { error: { message: 'Invalid files map' } },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out).toEqual({
         ok: false,
@@ -663,9 +637,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { weird: true },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out.ok).toBe(false);
       expect(out.error).toBe(`Failed to populate files: ${JSON.stringify({ weird: true })}`);
@@ -721,9 +693,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { transient: true },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/x.html', bytes: Buffer.from([0x01, 0x01]) },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/x.html', bytes: Buffer.from([0x01, 0x01]) }]);
 
       expect(out.ok).toBe(false);
       expect(out.error).toBe(`Failed to upload /x.html: ${JSON.stringify({ transient: true })}`);
@@ -747,9 +717,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { error: { message: 'Cannot finalize empty version' } },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out).toEqual({
         ok: false,
@@ -777,9 +745,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { code: 'X' },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out.ok).toBe(false);
       expect(out.error).toBe(`Failed to finalize version: ${JSON.stringify({ code: 'X' })}`);
@@ -804,9 +770,7 @@ describe('firebase-hosting/version-publisher', () => {
           data: { error: { message: 'Release service unavailable' } },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out).toEqual({
         ok: false,
@@ -835,14 +799,10 @@ describe('firebase-hosting/version-publisher', () => {
           data: { transient: 'failure' },
         });
 
-      const out = await publishVersion(makeCtx(), 's', [
-        { hostingPath: '/a.html', bytes: Buffer.from('a') },
-      ]);
+      const out = await publishVersion(makeCtx(), 's', [{ hostingPath: '/a.html', bytes: Buffer.from('a') }]);
 
       expect(out.ok).toBe(false);
-      expect(out.error).toBe(
-        `Failed to release version: ${JSON.stringify({ transient: 'failure' })}`,
-      );
+      expect(out.error).toBe(`Failed to release version: ${JSON.stringify({ transient: 'failure' })}`);
     });
 
     it('returns the siteId in the defaultUrl (lowercase as-passed)', async () => {
@@ -883,11 +843,7 @@ describe('firebase-hosting/version-publisher', () => {
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} })
         .mockResolvedValueOnce({ ok: true, status: 200, data: {} });
 
-      const out = await publishPlaceholderVersion(
-        makeCtx(),
-        'my-site',
-        '<!doctype>',
-      );
+      const out = await publishPlaceholderVersion(makeCtx(), 'my-site', '<!doctype>');
 
       expect(out).toEqual({ ok: true, defaultUrl: 'https://my-site.web.app' });
 

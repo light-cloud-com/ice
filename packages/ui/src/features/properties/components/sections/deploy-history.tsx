@@ -36,8 +36,8 @@ import React, { useEffect, useState } from 'react';
 import { t } from '../../../../i18n';
 import { getApi } from '../../../../shared/api/api-adapter';
 import { cn } from '../../../../shared/utils/cn';
-import { Section } from '../fields';
 import { formatDeployRow } from '../../utils/deploy-history-format';
+import { Section } from '../fields';
 
 // ─── Deploy History ──────────────────────────────────────────────────────────
 
@@ -74,7 +74,8 @@ export const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
     <Section title={t('properties.deploy.history')}>
       <div className="space-y-0.5">
         {visible.map((d, i) => {
-          const { time, duration, isSuccess, isFailed, isPartial, isPending, actionLabel, actionColor, summaryText } = formatDeployRow(d);
+          const { time, duration, isSuccess, isFailed, isPartial, isPending, actionLabel, actionColor, summaryText } =
+            formatDeployRow(d);
           const isExpanded = expanded.has(d.id);
           return (
             <div key={d.id || i} className="text-ice-xs">

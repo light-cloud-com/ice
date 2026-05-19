@@ -57,12 +57,10 @@ import { useTranslation } from '../../../../i18n';
 import { PanelHeader } from '../../../../shared/components/ui/panel-header';
 import { DesignRequirements } from '../design-requirements';
 import { Section } from '../fields';
-import { PropertyFields } from '../fields/render-property-field';
 import { ConnectionCard } from './connection-card';
 import { CustomDomainBanner } from './custom-domain-banner';
-import { DeployTabBody } from './deploy-tab-body';
-import { PropertiesTabBar } from './properties-tab-bar';
 import { CustomDomainPanel } from './custom-domain-panel';
+import { DeployTabBody } from './deploy-tab-body';
 import { DeploymentTargetCard } from './deployment-target-card';
 import { PublicEndpointDomainSection } from './domain-section';
 import { EnvVarsEditor } from './env-vars-editor';
@@ -71,23 +69,18 @@ import { MonitoringLogSection } from './monitoring-log-section';
 import { NodeIdentityCard } from './node-identity-card';
 import { PipelineSection } from './pipeline-section';
 import { PrivateNetworkPanel } from './private-network-panel';
+import { PropertiesTabBar } from './properties-tab-bar';
 import { ScalingSection } from './scaling-section';
 import { ServiceSourceSection } from './service-source-section';
 import { SourceRepositorySection } from './source-repository-section';
-import {
-  updateCardNodeData,
-  type Card,
-  type CardNode,
-} from '../../../../store/slices/cards-slice';
+import { updateCardNodeData, type Card, type CardNode } from '../../../../store/slices/cards-slice';
 import { toggleProperties } from '../../../../store/slices/ui-slice';
-import type { AppDispatch } from '../../../../store';
-import type { ResourceDef } from '../../hooks/use-resource-map';
-import type { CanvasIssue } from '../../../../store/slices/validation-slice';
-import {
-  nodeHasSourceTab,
-  resolveNodeIconUrl,
-} from '../../utils/node-properties-derivations';
 import { buildVisibleTabs } from '../../utils/build-visible-tabs';
+import { nodeHasSourceTab, resolveNodeIconUrl } from '../../utils/node-properties-derivations';
+import { PropertyFields } from '../fields/render-property-field';
+import type { AppDispatch } from '../../../../store';
+import type { CanvasIssue } from '../../../../store/slices/validation-slice';
+import type { ResourceDef } from '../../hooks/use-resource-map';
 
 // ─── Node Properties Section ────────────────────────────────────────────────
 

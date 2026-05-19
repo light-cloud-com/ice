@@ -24,29 +24,35 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
     ...actual,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     useCallback: <F extends (...a: any[]) => any>(fn: F) => fn,
   };
 });
 
-import { useMouseHandlers } from '../use-mouse-handlers';
 import { freshInitialState } from '../state';
-import type {
-  CanvasItem,
-  CanvasViewport,
-  InteractionState,
-  UseCanvasInteractionsOptions,
-} from '../types';
+import { useMouseHandlers } from '../use-mouse-handlers';
+import type { CanvasItem, CanvasViewport, InteractionState, UseCanvasInteractionsOptions } from '../types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const mkRef = <T,>(value: T): MutableRefObject<T> => ({ current: value });
+const mkRef = <T>(value: T): MutableRefObject<T> => ({ current: value });
 
 const mkSvgRef = (rect: { left: number; top: number } | null): RefObject<SVGSVGElement | null> => {
   if (rect === null) return { current: null };
   // Minimal SVGSVGElement-shaped object with getBoundingClientRect.
   const el = {
-    getBoundingClientRect: () => ({ left: rect.left, top: rect.top, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect,
+    getBoundingClientRect: () =>
+      ({
+        left: rect.left,
+        top: rect.top,
+        right: 0,
+        bottom: 0,
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect,
   };
   return { current: el as unknown as SVGSVGElement };
 };
@@ -95,10 +101,7 @@ interface SetupOpts {
   callbacks?: Partial<UseCanvasInteractionsOptions>;
   // Custom screenToCanvas / findItemAtPosition (defaults pass-through)
   screenToCanvas?: (sx: number, sy: number) => { x: number; y: number };
-  findItemAtPosition?: (
-    cx: number,
-    cy: number,
-  ) => { item: CanvasItem | null; isResize: boolean };
+  findItemAtPosition?: (cx: number, cy: number) => { item: CanvasItem | null; isResize: boolean };
 }
 
 const setupHandlers = (opts: SetupOpts = {}) => {
@@ -263,9 +266,7 @@ describe('rf-canvint-3 — handleMouseDown', () => {
     ctx.handlers.handleMouseDown(mkEvent({ clientX: 50, clientY: 30 }) as never);
     // Without Ctrl, this would select+drag; verify ctrl path
     ctx.refs.stateRef.current = freshInitialState();
-    ctx.handlers.handleMouseDown(
-      mkEvent({ clientX: 50, clientY: 30, ctrlKey: true }) as never,
-    );
+    ctx.handlers.handleMouseDown(mkEvent({ clientX: 50, clientY: 30, ctrlKey: true }) as never);
     expect(ctx.spies.onToggleSelect).toHaveBeenCalledWith('a');
     expect(ctx.refs.stateRef.current.mode).toBe('none');
   });
@@ -712,18 +713,14 @@ describe('rf-canvint-3 — handleWheel', () => {
     ctx.handlers.handleWheel(ev);
     expect(ev.preventDefault).toHaveBeenCalled();
     // 1 * 1.05 = 1.05
-    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(
-      expect.objectContaining({ zoom: 1.05 }),
-    );
+    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1.05 }));
   });
 
   it('zooms out on positive deltaY', () => {
     const ctx = setupHandlers({ viewport: { x: 0, y: 0, zoom: 1 } });
     const ev = { deltaY: 1, clientX: 0, clientY: 0, preventDefault: vi.fn() } as unknown as React.WheelEvent;
     ctx.handlers.handleWheel(ev);
-    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(
-      expect.objectContaining({ zoom: 0.95 }),
-    );
+    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 0.95 }));
   });
 
   it('clamps to maxZoom', () => {
@@ -731,9 +728,7 @@ describe('rf-canvint-3 — handleWheel', () => {
     const ev = { deltaY: -1, clientX: 0, clientY: 0, preventDefault: vi.fn() } as unknown as React.WheelEvent;
     ctx.handlers.handleWheel(ev);
     // 1.99 * 1.05 = 2.0895 → clamped to 2
-    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(
-      expect.objectContaining({ zoom: 2 }),
-    );
+    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 2 }));
   });
 
   it('clamps to minZoom', () => {
@@ -741,9 +736,7 @@ describe('rf-canvint-3 — handleWheel', () => {
     const ctx = setupHandlers({ viewport: { x: 0, y: 0, zoom: 0.105 }, minZoom: 0.1 });
     const ev = { deltaY: 1, clientX: 0, clientY: 0, preventDefault: vi.fn() } as unknown as React.WheelEvent;
     ctx.handlers.handleWheel(ev);
-    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(
-      expect.objectContaining({ zoom: 0.1 }),
-    );
+    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 0.1 }));
   });
 
   it('returns early if svgRef.current is null (no zoom)', () => {
@@ -760,9 +753,7 @@ describe('rf-canvint-3 — handleWheel', () => {
     const ctx = setupHandlers({ viewport: { x: 0, y: 0, zoom: 1 } });
     const ev = { deltaY: -1, clientX: 100, clientY: 0, preventDefault: vi.fn() } as unknown as React.WheelEvent;
     ctx.handlers.handleWheel(ev);
-    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(
-      expect.objectContaining({ x: -5, y: 0 }),
-    );
+    expect(ctx.spies.onViewportChange).toHaveBeenCalledWith(expect.objectContaining({ x: -5, y: 0 }));
   });
 });
 
@@ -852,9 +843,7 @@ describe('rf-canvint-3 — handleMouseDown: stale selection id is skipped (L178)
 
 describe('rf-canvint-3 — handleMouseMove: grid snap applies to multi-drag siblings (L272-273)', () => {
   it('snaps each sibling position to the grid increment', () => {
-    const offsets = new Map([
-      ['b', { dx: 23, dy: 47, startX: 23, startY: 47 }],
-    ]);
+    const offsets = new Map([['b', { dx: 23, dy: 47, startX: 23, startY: 47 }]]);
     const ctx = setupHandlers({
       state: {
         ...freshInitialState(),

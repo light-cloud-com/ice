@@ -65,9 +65,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgPostgresNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgPostgresNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgPostgresNode> = {
     node: makeNode(),
     isSelected: false,

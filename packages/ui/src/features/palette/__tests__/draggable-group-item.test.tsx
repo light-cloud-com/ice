@@ -26,11 +26,7 @@ vi.mock('../../../config/color-palette', () => ({
   GROUP_COLOR_PRESETS: ['#aa0000', '#00aa00', '#0000aa'],
 }));
 
-import {
-  DraggableGroupItem,
-  nextGroupColor,
-  __resetGroupColorIndex,
-} from '../components/draggable-group-item';
+import { DraggableGroupItem, nextGroupColor, __resetGroupColorIndex } from '../components/draggable-group-item';
 
 // ─── Tree-walker ───────────────────────────────────────────────────────────
 
@@ -60,10 +56,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -104,8 +97,7 @@ function collectText(tree: React.ReactNode): string {
   return parts.join('');
 }
 
-const renderItem = () =>
-  (DraggableGroupItem as unknown as () => React.ReactElement)();
+const renderItem = () => (DraggableGroupItem as unknown as () => React.ReactElement)();
 
 beforeEach(() => {
   __resetGroupColorIndex();
@@ -243,10 +235,13 @@ describe('DraggableGroupItem — handleDragStart', () => {
         }),
       },
     });
-    vi.stubGlobal('setTimeout', vi.fn((fn: () => void) => {
-      fn();
-      return 0;
-    }));
+    vi.stubGlobal(
+      'setTimeout',
+      vi.fn((fn: () => void) => {
+        fn();
+        return 0;
+      }),
+    );
     return { created, appended, removed };
   }
 

@@ -8,12 +8,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  createProvider,
-  createProviderAsync,
-  getProvider,
-  resetProvider,
-} from '../create-provider';
+import { createProvider, createProviderAsync, getProvider, resetProvider } from '../create-provider';
 import { AnthropicProvider } from '../providers/anthropic';
 import { OpenAICompatProvider } from '../providers/openai-compat';
 import { NullProvider } from '../types';
@@ -101,9 +96,7 @@ describe('createProvider (sync)', () => {
   it('returns NullProvider and warns when provider=anthropic but no API key is available', () => {
     const p = createProvider({ provider: 'anthropic' });
     expect(p).toBeInstanceOf(NullProvider);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ANTHROPIC_API_KEY not set'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ANTHROPIC_API_KEY not set'));
   });
 
   it('threads anthropicModel through to the AnthropicProvider', () => {
@@ -244,9 +237,7 @@ describe('createProviderAsync', () => {
     const p = await createProviderAsync();
     expect(p).toBeInstanceOf(OpenAICompatProvider);
     expect(healthSpy).toHaveBeenCalled();
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Auto-detected OpenAI-compatible server'),
-    );
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Auto-detected OpenAI-compatible server'));
     healthSpy.mockRestore();
   });
 

@@ -36,7 +36,10 @@ import { acquireWriteLock } from '../deploy-lock-wrapper';
 import * as deployLocks from '../deploy-locks';
 
 const acquireDeployLockMock = (deployLocks as any).acquireDeployLock as ReturnType<typeof vi.fn>;
-const MockDeployLockError = (deployLocks as any).DeployLockError as new (code: string, message: string) => Error & { code: string };
+const MockDeployLockError = (deployLocks as any).DeployLockError as new (
+  code: string,
+  message: string,
+) => Error & { code: string };
 
 describe('acquireWriteLock', () => {
   beforeEach(() => {

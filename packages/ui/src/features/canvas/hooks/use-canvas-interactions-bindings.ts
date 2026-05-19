@@ -19,25 +19,21 @@
  */
 
 import { useDispatch } from 'react-redux';
-
+import { useCanvasInteractions } from './use-canvas-interactions';
+import { GRID_SIZE } from '../../../config/canvas-constants';
 import {
   setSelectedNodes,
   setSelectedEdges,
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
-import { GRID_SIZE } from '../../../config/canvas-constants';
-import { useCanvasInteractions } from './use-canvas-interactions';
 import type { AppDispatch } from '../../../store';
 
 type UseCanvasInteractionsArgs = Parameters<typeof useCanvasInteractions>[0];
 
 /** Subset of `useCanvasInteractions` args the orchestrator owns directly
  *  (i.e. not derived from selection-slice / snapToGrid). */
-type PassThroughArgs = Omit<
-  UseCanvasInteractionsArgs,
-  'onSelect' | 'onToggleSelect' | 'onBoxSelect' | 'gridSize'
->;
+type PassThroughArgs = Omit<UseCanvasInteractionsArgs, 'onSelect' | 'onToggleSelect' | 'onBoxSelect' | 'gridSize'>;
 
 export interface UseCanvasInteractionsBindingsArgs extends PassThroughArgs {
   /** Whether the user has snap-to-grid enabled in the toolbar. When

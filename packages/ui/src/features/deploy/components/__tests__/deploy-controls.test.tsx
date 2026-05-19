@@ -59,12 +59,7 @@ import { DeployControls, type DeployControlsProps } from '../deploy-controls';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -88,10 +83,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -101,10 +93,7 @@ function findByPredicate(
 
 // `findById` — convenience for the 5 E2E selector-id buttons.
 function findById(tree: React.ReactNode, id: string): React.ReactElement | undefined {
-  return findByPredicate(
-    tree,
-    (el) => typeof el.type === 'string' && (el.props as { id?: string }).id === id,
-  )[0];
+  return findByPredicate(tree, (el) => typeof el.type === 'string' && (el.props as { id?: string }).id === id)[0];
 }
 
 // `findIconByClassName` — lucide icons are forwardRef objects whose
@@ -230,9 +219,7 @@ describe('DeployControls — Stop button', () => {
   it('click → fetches /api/canvas/deploy/cancel with cardId, then onAppendLog(success-msg)', async () => {
     const onAppendLog = vi.fn();
     mocks.fetchSpy.mockResolvedValueOnce({ ok: true });
-    const tree = renderControls(
-      makeProps({ status: 'deploying', activeCardId: 'card-42', onAppendLog }),
-    );
+    const tree = renderControls(makeProps({ status: 'deploying', activeCardId: 'card-42', onAppendLog }));
     const btn = findById(tree, 'ice-deploy-btn-stop')!;
     const onClick = (btn.props as { onClick?: () => Promise<void> }).onClick!;
     await onClick();
@@ -244,17 +231,13 @@ describe('DeployControls — Stop button', () => {
       body: JSON.stringify({ cardId: 'card-42' }),
     });
     expect(onAppendLog).toHaveBeenCalledTimes(1);
-    expect(onAppendLog).toHaveBeenCalledWith(
-      'Stop requested — deploy will wind down after the current resource.',
-    );
+    expect(onAppendLog).toHaveBeenCalledWith('Stop requested — deploy will wind down after the current resource.');
   });
 
   it('fetch rejects with Error → onAppendLog("Cancel failed: <err.message>")', async () => {
     const onAppendLog = vi.fn();
     mocks.fetchSpy.mockRejectedValueOnce(new Error('connection refused'));
-    const tree = renderControls(
-      makeProps({ status: 'deploying', activeCardId: 'card-1', onAppendLog }),
-    );
+    const tree = renderControls(makeProps({ status: 'deploying', activeCardId: 'card-1', onAppendLog }));
     const btn = findById(tree, 'ice-deploy-btn-stop')!;
     const onClick = (btn.props as { onClick?: () => Promise<void> }).onClick!;
     await onClick();
@@ -267,9 +250,7 @@ describe('DeployControls — Stop button', () => {
     // The source uses `err?.message || err`. A bare-string rejection has no
     // `.message`, so the fallback is the string itself.
     mocks.fetchSpy.mockRejectedValueOnce('boom');
-    const tree = renderControls(
-      makeProps({ status: 'deploying', activeCardId: 'card-1', onAppendLog }),
-    );
+    const tree = renderControls(makeProps({ status: 'deploying', activeCardId: 'card-1', onAppendLog }));
     const btn = findById(tree, 'ice-deploy-btn-stop')!;
     const onClick = (btn.props as { onClick?: () => Promise<void> }).onClick!;
     await onClick();
@@ -278,9 +259,7 @@ describe('DeployControls — Stop button', () => {
 
   it('activeCardId === null → click is no-op (no fetch, no log)', async () => {
     const onAppendLog = vi.fn();
-    const tree = renderControls(
-      makeProps({ status: 'deploying', activeCardId: null, onAppendLog }),
-    );
+    const tree = renderControls(makeProps({ status: 'deploying', activeCardId: null, onAppendLog }));
     const btn = findById(tree, 'ice-deploy-btn-stop')!;
     const onClick = (btn.props as { onClick?: () => Promise<void> }).onClick!;
     await onClick();
@@ -434,32 +413,44 @@ describe('DeployControls — Deploy button', () => {
   // Disabled-gates: 8 sources combine via OR.
   it('disabled when !gcpProject', () => {
     const tree = renderControls(makeProps({ gcpProject: '' }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when gcpNodesCount === 0', () => {
     const tree = renderControls(makeProps({ gcpNodesCount: 0 }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when status === "deploying"', () => {
     const tree = renderControls(makeProps({ status: 'deploying' }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when status === "destroying"', () => {
     const tree = renderControls(makeProps({ status: 'destroying' }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when status === "planning"', () => {
     const tree = renderControls(makeProps({ status: 'planning' }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when status === "authenticating"', () => {
     const tree = renderControls(makeProps({ status: 'authenticating' }));
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('disabled when hasBlockingUnmet (some requirement is blocking + status !== met/verified)', () => {
@@ -477,7 +468,9 @@ describe('DeployControls — Deploy button', () => {
         ],
       }),
     );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('NOT blocked by met requirements', () => {
@@ -495,7 +488,9 @@ describe('DeployControls — Deploy button', () => {
         ],
       }),
     );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(false);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(false);
   });
 
   it('NOT blocked by verified requirements', () => {
@@ -513,7 +508,9 @@ describe('DeployControls — Deploy button', () => {
         ],
       }),
     );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(false);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(false);
   });
 
   it('NOT blocked by non-blocking unmet requirements', () => {
@@ -531,28 +528,30 @@ describe('DeployControls — Deploy button', () => {
         ],
       }),
     );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(false);
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(false);
   });
 
   it('disabled when blockedByCritical (preDeployHasCritical && !criticalAcknowledged)', () => {
-    const tree = renderControls(
-      makeProps({ preDeployHasCritical: true, criticalAcknowledged: false }),
-    );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(true);
+    const tree = renderControls(makeProps({ preDeployHasCritical: true, criticalAcknowledged: false }));
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(true);
   });
 
   it('NOT blocked when preDeployHasCritical && criticalAcknowledged', () => {
-    const tree = renderControls(
-      makeProps({ preDeployHasCritical: true, criticalAcknowledged: true }),
-    );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(false);
+    const tree = renderControls(makeProps({ preDeployHasCritical: true, criticalAcknowledged: true }));
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(false);
   });
 
   it('NOT blocked when !preDeployHasCritical regardless of criticalAcknowledged', () => {
-    const tree = renderControls(
-      makeProps({ preDeployHasCritical: false, criticalAcknowledged: false }),
-    );
-    expect(((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled).toBe(false);
+    const tree = renderControls(makeProps({ preDeployHasCritical: false, criticalAcknowledged: false }));
+    expect(
+      ((findById(tree, 'ice-deploy-btn-apply') as React.ReactElement).props as { disabled?: boolean }).disabled,
+    ).toBe(false);
   });
 
   // Title-text: 7 branches.
@@ -565,17 +564,13 @@ describe('DeployControls — Deploy button', () => {
   it('title=`Add at least one ${provider.toUpperCase()} resource block to deploy` when gcpNodesCount === 0', () => {
     const tree = renderControls(makeProps({ gcpNodesCount: 0, provider: 'gcp' }));
     const btn = findById(tree, 'ice-deploy-btn-apply')!;
-    expect((btn.props as { title?: string }).title).toBe(
-      'Add at least one GCP resource block to deploy',
-    );
+    expect((btn.props as { title?: string }).title).toBe('Add at least one GCP resource block to deploy');
   });
 
   it('uppercases the provider in the no-nodes title (provider="aws" → "AWS")', () => {
     const tree = renderControls(makeProps({ gcpNodesCount: 0, provider: 'aws' }));
     const btn = findById(tree, 'ice-deploy-btn-apply')!;
-    expect((btn.props as { title?: string }).title).toBe(
-      'Add at least one AWS resource block to deploy',
-    );
+    expect((btn.props as { title?: string }).title).toBe('Add at least one AWS resource block to deploy');
   });
 
   it('title="Deploy in progress — click Stop to cancel" when status === "deploying"', () => {

@@ -7,22 +7,6 @@
 
 import { InternalError } from '../types/errors';
 import { success, failure } from '../types/result';
-import type {
-  IceType,
-  PropertySchema,
-  ProviderImplementation,
-  ProviderInfo,
-  ResourceSchema,
-  SchemaEventListener,
-  SchemaEventType,
-  SchemaQuery,
-  SchemaQueryResult,
-  SchemaStats,
-  ObservableSchemaProvider,
-} from './schema-provider';
-import type { IceError } from '../types/errors';
-import type { Result } from '../types/result';
-import type { SqliteSchemaRegistry } from './embedded/sqlite-types';
 import {
   add_listener,
   emit_event as emit_schema_event,
@@ -50,6 +34,22 @@ import {
   query_schemas as q_query_schemas,
   type QueryCache,
 } from './embedded/queries';
+import type {
+  IceType,
+  PropertySchema,
+  ProviderImplementation,
+  ProviderInfo,
+  ResourceSchema,
+  SchemaEventListener,
+  SchemaEventType,
+  SchemaQuery,
+  SchemaQueryResult,
+  SchemaStats,
+  ObservableSchemaProvider,
+} from './schema-provider';
+import type { IceError } from '../types/errors';
+import type { Result } from '../types/result';
+import type { SqliteSchemaRegistry } from './embedded/sqlite-types';
 
 // =============================================================================
 // Extended Schema Provider Interface

@@ -17,7 +17,6 @@
  *   - close button dispatches toggleAiChat
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {
@@ -305,9 +304,7 @@ describe('AiChatPanel — header actions', () => {
     // walk through `actions` to find PanelHeaderAction FCs.
     const actionFCs = findAll(actions, (el) => typeof el.type === 'function');
     // Find one labelled with newChat key.
-    const newChat = actionFCs.find(
-      (el) => (el.props as { label?: string }).label === '[t:ai.chat.newChat]',
-    );
+    const newChat = actionFCs.find((el) => (el.props as { label?: string }).label === '[t:ai.chat.newChat]');
     expect(newChat).toBeDefined();
     (newChat!.props.onClick as () => void)();
     expect(mocks.chatHandlers.startNewConversation).toHaveBeenCalled();
@@ -402,8 +399,7 @@ describe('AiChatPanel — body sections', () => {
     // EmptyState is a function component imported as `EmptyState`.
     const empty = findFirst(
       tree,
-      (el) => typeof el.type === 'function' &&
-        (el.type as { name?: string }).name === 'EmptyState',
+      (el) => typeof el.type === 'function' && (el.type as { name?: string }).name === 'EmptyState',
     );
     expect(empty).toBeDefined();
   });
@@ -415,8 +411,7 @@ describe('AiChatPanel — body sections', () => {
     const tree = render();
     const empty = findFirst(
       tree,
-      (el) => typeof el.type === 'function' &&
-        (el.type as { name?: string }).name === 'EmptyState',
+      (el) => typeof el.type === 'function' && (el.type as { name?: string }).name === 'EmptyState',
     );
     expect(empty).toBeUndefined();
   });
@@ -427,8 +422,7 @@ describe('AiChatPanel — body sections', () => {
     const tree = render();
     const empty = findFirst(
       tree,
-      (el) => typeof el.type === 'function' &&
-        (el.type as { name?: string }).name === 'EmptyState',
+      (el) => typeof el.type === 'function' && (el.type as { name?: string }).name === 'EmptyState',
     );
     expect(empty).toBeUndefined();
   });
@@ -503,9 +497,11 @@ describe('AiChatPanel — input wiring', () => {
       tree,
       (el) => el.type === 'textarea' && (el.props as { id?: string }).id === 'ice-ai-input-message',
     )!;
-    const onChange = (textarea.props as {
-      onChange: (e: { target: { value: string; style: { height: string }; scrollHeight: number } }) => void;
-    }).onChange;
+    const onChange = (
+      textarea.props as {
+        onChange: (e: { target: { value: string; style: { height: string }; scrollHeight: number } }) => void;
+      }
+    ).onChange;
     const fakeEl = { value: 'new', style: { height: '' }, scrollHeight: 200 };
     onChange({ target: fakeEl });
     expect(mocks.useStateSetters[0]).toHaveBeenCalledWith('new');
@@ -519,9 +515,11 @@ describe('AiChatPanel — input wiring', () => {
       tree,
       (el) => el.type === 'textarea' && (el.props as { id?: string }).id === 'ice-ai-input-message',
     )!;
-    const onChange = (textarea.props as {
-      onChange: (e: { target: { value: string; style: { height: string }; scrollHeight: number } }) => void;
-    }).onChange;
+    const onChange = (
+      textarea.props as {
+        onChange: (e: { target: { value: string; style: { height: string }; scrollHeight: number } }) => void;
+      }
+    ).onChange;
     const fakeEl = { value: 'short', style: { height: '' }, scrollHeight: 60 };
     onChange({ target: fakeEl });
     expect(fakeEl.style.height).toBe('60px');
@@ -686,8 +684,7 @@ describe('AiChatPanel — history sidebar', () => {
     const tree = render();
     const sidebar = findFirst(
       tree,
-      (el) =>
-        typeof el.type === 'function' && (el.type as { name?: string }).name === 'ConversationHistorySidebar',
+      (el) => typeof el.type === 'function' && (el.type as { name?: string }).name === 'ConversationHistorySidebar',
     )!;
     expect((sidebar.props as { show: boolean }).show).toBe(true);
     expect((sidebar.props as { conversationId: string }).conversationId).toBe('cid');

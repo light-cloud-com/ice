@@ -6,9 +6,9 @@
  * the runtime barrel — `TEMPLATE_CATEGORIES` reaching consumers.
  */
 
+import { TEMPLATE_CATEGORIES as ConstantsTemplateCategories } from '@ice/constants';
 import { describe, expect, it } from 'vitest';
 import { TEMPLATE_CATEGORIES } from '../types';
-import { TEMPLATE_CATEGORIES as ConstantsTemplateCategories } from '@ice/constants';
 
 describe('types runtime barrel', () => {
   it('re-exports TEMPLATE_CATEGORIES sourced from @ice/constants', () => {

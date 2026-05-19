@@ -20,10 +20,10 @@ vi.mock('../iam', () => ({
   grant_public_access: vi.fn().mockResolvedValue(undefined),
 }));
 
+import { create_service } from '../create-service';
+import { grant_public_access } from '../iam';
 import { resolve_image } from '../image-resolver';
 import { fetch_service_outputs } from '../utils';
-import { grant_public_access } from '../iam';
-import { create_service } from '../create-service';
 import type { GCPHandlerContext } from '../../../types';
 
 function clientWithCreate(operation: any) {
@@ -122,13 +122,7 @@ describe('cloud-run/create-service', () => {
     const op = { promise: vi.fn().mockResolvedValue(undefined) };
     const services = clientWithCreate(op);
     const ctx = ctxWith(services);
-    await create_service(
-      'x',
-      { image: 'gcr.io/p/x:1', allow_unauthenticated: false },
-      'us',
-      ctx,
-      Date.now(),
-    );
+    await create_service('x', { image: 'gcr.io/p/x:1', allow_unauthenticated: false }, 'us', ctx, Date.now());
     const call = services.createService.mock.calls[0][0] as any;
     expect(call.service.invokerIamDisabled).toBe(false);
   });
@@ -139,7 +133,11 @@ describe('cloud-run/create-service', () => {
     const ctx = ctxWith(services);
     await create_service('x', { image: 'i' }, 'us', ctx, Date.now());
     expect(ctx.on_step).toHaveBeenCalledWith('x', { label: 'Deploying revision', index: 3, total: 4 });
-    expect(ctx.on_step).toHaveBeenCalledWith('x', { label: 'Waiting for revision to serve traffic', index: 4, total: 4 });
+    expect(ctx.on_step).toHaveBeenCalledWith('x', {
+      label: 'Waiting for revision to serve traffic',
+      index: 4,
+      total: 4,
+    });
   });
 
   it('awaits the operation.promise() before returning', async () => {

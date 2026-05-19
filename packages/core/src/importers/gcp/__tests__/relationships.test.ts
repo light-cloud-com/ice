@@ -162,8 +162,7 @@ describe('infer_relationships — partial-fallback after exact-link miss', () =>
     // The target's self_link is a "v2" host, the reference uses "v1" — exact miss.
     // But `extract_partial_self_link` reduces both to the same `projects/...` form.
     const target = res({
-      gcp_self_link:
-        'https://compute.googleapis.com/compute/v2/projects/p/zones/us-central1-a/instances/special',
+      gcp_self_link: 'https://compute.googleapis.com/compute/v2/projects/p/zones/us-central1-a/instances/special',
     });
     const owner = res({
       gcp_self_link: 'https://compute.googleapis.com/compute/v1/projects/p/owner',

@@ -260,4 +260,3 @@ export const load_balancer_handler: GCPResourceHandler = {
     }
   },
 };
-

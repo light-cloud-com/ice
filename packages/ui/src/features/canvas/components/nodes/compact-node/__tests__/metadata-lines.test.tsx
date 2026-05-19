@@ -85,10 +85,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -114,12 +111,12 @@ function collectText(tree: React.ReactNode): string {
   return parts.join('');
 }
 
-const renderML = (
-  props: Partial<React.ComponentProps<typeof MetadataLines>> = {},
-): React.ReactElement => {
-  const Inner = (MetadataLines as unknown as {
-    type: (p: React.ComponentProps<typeof MetadataLines>) => React.ReactElement;
-  }).type;
+const renderML = (props: Partial<React.ComponentProps<typeof MetadataLines>> = {}): React.ReactElement => {
+  const Inner = (
+    MetadataLines as unknown as {
+      type: (p: React.ComponentProps<typeof MetadataLines>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof MetadataLines> = {
     metaLines: [],
     repoLineIndex: -1,
@@ -152,11 +149,17 @@ describe('MetadataLines — regular lines', () => {
   it('renders each metaLine in a div, italics for placeholder', () => {
     const tree = renderML({ metaLines: ['regular', ' placeholder'], repoLineIndex: -1 });
     // Find divs containing the line text.
-    const realLine = findByPredicate(tree, (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'regular');
+    const realLine = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'regular',
+    );
     expect(realLine).toHaveLength(1);
     expect((realLine[0].props as { style: { fontStyle: string } }).style.fontStyle).toBe('normal');
 
-    const phLine = findByPredicate(tree, (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'placeholder');
+    const phLine = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'placeholder',
+    );
     expect(phLine).toHaveLength(1);
     expect((phLine[0].props as { style: { fontStyle: string } }).style.fontStyle).toBe('italic');
     expect((phLine[0].props as { style: { opacity: number } }).style.opacity).toBe(0.45);
@@ -195,7 +198,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSourceRepo: true,
     });
     // Falls back to the regular line div (not span with onClick).
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello');
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    );
     expect(span).toHaveLength(0);
   });
 
@@ -206,7 +212,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSelected: true,
       isSourceRepo: false,
     });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello');
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    );
     expect(span).toHaveLength(0);
   });
 
@@ -225,8 +234,14 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSourceRepo: true,
       isHovered: false,
     });
-    const hSpan = findByPredicate(hovered, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello')[0];
-    const iSpan = findByPredicate(idle, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello')[0];
+    const hSpan = findByPredicate(
+      hovered,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    )[0];
+    const iSpan = findByPredicate(
+      idle,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    )[0];
     expect((hSpan.props as { style: { opacity: number } }).style.opacity).toBe(0.85);
     expect((iSpan.props as { style: { opacity: number } }).style.opacity).toBe(0.7);
   });
@@ -239,7 +254,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSourceRepo: true,
       isHovered: true,
     });
-    const pencil = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎');
+    const pencil = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎',
+    );
     expect(pencil).toHaveLength(1);
   });
 
@@ -251,7 +269,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSourceRepo: true,
       isHovered: false,
     });
-    const pencil = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎');
+    const pencil = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎',
+    );
     expect(pencil).toHaveLength(0);
   });
 
@@ -262,7 +283,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSelected: true,
       isSourceRepo: true,
     });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello')[0];
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    )[0];
     const stops: string[] = [];
     (span.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('s'),
@@ -279,7 +303,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSourceRepo: true,
       isHovered: true,
     });
-    const pencil = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎')[0];
+    const pencil = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '✎',
+    )[0];
     const stops: string[] = [];
     (pencil.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('s'),
@@ -296,7 +323,10 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
       isSelected: true,
       isSourceRepo: true,
     });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello')[0];
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'octocat/hello',
+    )[0];
     (span.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => {},
     } as React.MouseEvent);
@@ -403,9 +433,7 @@ describe('MetadataLines — RepoSelector dropdown', () => {
     mocks.state.repoSelectorOpen = true;
     const tree = renderML({ isSelected: true, isSourceRepo: true, onUpdateData: undefined });
     const selector = findByType(tree, MockRepoSelector)[0];
-    expect(() =>
-      (selector.props as { onChange: (s: string) => void }).onChange('foo/bar'),
-    ).not.toThrow();
+    expect(() => (selector.props as { onChange: (s: string) => void }).onChange('foo/bar')).not.toThrow();
   });
 
   it('RepoSelector container stops propagation on onClick / onMouseDown (avoid drag-start)', () => {

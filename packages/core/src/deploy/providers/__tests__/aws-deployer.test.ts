@@ -41,12 +41,7 @@ const original_function = globalThis.Function;
 
 function install_dynamic_import_stub(registry: FakeImportRegistry): void {
   const stub = function (...args: unknown[]) {
-    if (
-      args.length === 2 &&
-      args[0] === 'm' &&
-      typeof args[1] === 'string' &&
-      args[1].includes('return import')
-    ) {
+    if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
       return (module_name: string) => {
         const mod = (registry as Record<string, unknown>)[module_name];
         if (mod === undefined) {
@@ -408,12 +403,7 @@ describe('initialize', () => {
     // expects an awaitable rejection; a synchronous throw inside Function()
     // bubbles up to the outer try/catch.
     const stub = function (...args: unknown[]) {
-      if (
-        args.length === 2 &&
-        args[0] === 'm' &&
-        typeof args[1] === 'string' &&
-        args[1].includes('return import')
-      ) {
+      if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
         return () => {
           throw new Error('boom-sync');
         };
@@ -440,12 +430,7 @@ describe('initialize', () => {
     // bubbles to the outer try. To make this concrete, we throw before
     // returning the resolver function.
     const stub = function (...args: unknown[]) {
-      if (
-        args.length === 2 &&
-        args[0] === 'm' &&
-        typeof args[1] === 'string' &&
-        args[1].includes('return import')
-      ) {
+      if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
         // Throw synchronously when the SUT calls `Function('m', 'return import(m)')`
         // — this lands in the per-arm try/catch.
         throw new Error('outer-init-failure');
@@ -730,12 +715,7 @@ describe('create', () => {
     lambda.send.mockResolvedValueOnce({ FunctionArn: 'arn' });
 
     const base64Body = Buffer.from('hello-zip').toString('base64');
-    await d.create(
-      'aws.lambda.function',
-      'f1',
-      { role: 'r', zip_file: base64Body },
-      {},
-    );
+    await d.create('aws.lambda.function', 'f1', { role: 'r', zip_file: base64Body }, {});
 
     const cmd = lambda.send.mock.calls[0][0];
     expect(Buffer.isBuffer(cmd.input.Code.ZipFile)).toBe(true);
@@ -819,14 +799,7 @@ describe('update', () => {
     const { d, ec2 } = await deployerWithFullSdk();
     const provider_id = 'arn:aws:ec2:us-east-1:*:instance/i-1234';
 
-    const out = await d.update(
-      'aws.ec2.instance',
-      'vm1',
-      provider_id,
-      { tags: { Env: 'prod' } },
-      {},
-      {},
-    );
+    const out = await d.update('aws.ec2.instance', 'vm1', provider_id, { tags: { Env: 'prod' } }, {}, {});
 
     expect(out).toMatchObject({ success: true, action: 'update', provider_id });
     const cmd = ec2.send.mock.calls[0][0];
@@ -838,14 +811,7 @@ describe('update', () => {
   it('skips the EC2 tag-update call when properties.tags is absent', async () => {
     const { d, ec2 } = await deployerWithFullSdk();
 
-    const out = await d.update(
-      'aws.ec2.instance',
-      'vm1',
-      'arn:aws:ec2:us-east-1:*:instance/i-1234',
-      {},
-      {},
-      {},
-    );
+    const out = await d.update('aws.ec2.instance', 'vm1', 'arn:aws:ec2:us-east-1:*:instance/i-1234', {}, {}, {});
 
     expect(out.success).toBe(true);
     expect(ec2.send).not.toHaveBeenCalled();
@@ -889,14 +855,7 @@ describe('update', () => {
   it('skips the S3 tag-update call when properties.tags is absent', async () => {
     const { d, s3 } = await deployerWithFullSdk();
 
-    const out = await d.update(
-      'aws.s3.bucket',
-      'my-bucket',
-      'arn:aws:s3:::my-bucket',
-      {},
-      {},
-      {},
-    );
+    const out = await d.update('aws.s3.bucket', 'my-bucket', 'arn:aws:s3:::my-bucket', {}, {}, {});
 
     expect(out.success).toBe(true);
     expect(s3.send).not.toHaveBeenCalled();
@@ -952,14 +911,7 @@ describe('update', () => {
   it('omits Environment on Lambda update when environment is absent', async () => {
     const { d, lambda } = await deployerWithFullSdk();
 
-    await d.update(
-      'aws.lambda.function',
-      'f1',
-      'arn:aws:lambda:us-east-1:1:function:f1',
-      {},
-      {},
-      {},
-    );
+    await d.update('aws.lambda.function', 'f1', 'arn:aws:lambda:us-east-1:1:function:f1', {}, {}, {});
 
     expect(lambda.sendCalls[0].input.Environment).toBeUndefined();
   });
@@ -985,14 +937,7 @@ describe('update', () => {
   it('skips UpdateFunctionCode when only s3_bucket is provided', async () => {
     const { d, lambda } = await deployerWithFullSdk();
 
-    await d.update(
-      'aws.lambda.function',
-      'f1',
-      'arn:aws:lambda:us-east-1:1:function:f1',
-      { s3_bucket: 'pkg' },
-      {},
-      {},
-    );
+    await d.update('aws.lambda.function', 'f1', 'arn:aws:lambda:us-east-1:1:function:f1', { s3_bucket: 'pkg' }, {}, {});
 
     expect(lambda.sendCalls).toHaveLength(1);
     expect(lambda.sendCalls[0].__cmd).toBe('UpdateFunctionConfiguration');
@@ -1001,14 +946,7 @@ describe('update', () => {
   it('skips UpdateFunctionCode when only s3_key is provided', async () => {
     const { d, lambda } = await deployerWithFullSdk();
 
-    await d.update(
-      'aws.lambda.function',
-      'f1',
-      'arn:aws:lambda:us-east-1:1:function:f1',
-      { s3_key: 'v2.zip' },
-      {},
-      {},
-    );
+    await d.update('aws.lambda.function', 'f1', 'arn:aws:lambda:us-east-1:1:function:f1', { s3_key: 'v2.zip' }, {}, {});
 
     expect(lambda.sendCalls).toHaveLength(1);
   });
@@ -1018,14 +956,7 @@ describe('update', () => {
     const d = new AWSDeployer();
     await d.initialize({ provider: 'aws' });
 
-    const out = await d.update(
-      'aws.lambda.function',
-      'f',
-      'arn:aws:lambda:us-east-1:1:function:f',
-      {},
-      {},
-      {},
-    );
+    const out = await d.update('aws.lambda.function', 'f', 'arn:aws:lambda:us-east-1:1:function:f', {}, {}, {});
 
     expect(out.success).toBe(false);
     expect(out.error).toBe('Lambda SDK not available');
@@ -1062,14 +993,7 @@ describe('update', () => {
     const { d, lambda } = await deployerWithFullSdk();
     lambda.send.mockRejectedValueOnce(404);
 
-    const out = await d.update(
-      'aws.lambda.function',
-      'f',
-      'arn:aws:lambda:us-east-1:1:function:f',
-      {},
-      {},
-      {},
-    );
+    const out = await d.update('aws.lambda.function', 'f', 'arn:aws:lambda:us-east-1:1:function:f', {}, {}, {});
 
     expect(out.error).toBe('404');
   });
@@ -1163,12 +1087,7 @@ describe('delete', () => {
   it('deletes a Lambda function via DeleteFunctionCommand', async () => {
     const { d, lambda } = await deployerWithFullSdk();
 
-    const out = await d.delete(
-      'aws.lambda.function',
-      'f1',
-      'arn:aws:lambda:us-east-1:1:function:f1',
-      {},
-    );
+    const out = await d.delete('aws.lambda.function', 'f1', 'arn:aws:lambda:us-east-1:1:function:f1', {});
 
     expect(out.success).toBe(true);
     expect(lambda.sendCalls[0].__cmd).toBe('DeleteFunction');
@@ -1201,12 +1120,7 @@ describe('delete', () => {
     const { d, lambda } = await deployerWithFullSdk();
     lambda.send.mockRejectedValueOnce(new Error('not found'));
 
-    const out = await d.delete(
-      'aws.lambda.function',
-      'f',
-      'arn:aws:lambda:us-east-1:1:function:f',
-      {},
-    );
+    const out = await d.delete('aws.lambda.function', 'f', 'arn:aws:lambda:us-east-1:1:function:f', {});
 
     expect(out).toMatchObject({ success: false, error: 'not found', action: 'delete' });
   });

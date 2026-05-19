@@ -11,11 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  VALID_GROUP_TYPES,
-  VALID_OPS,
-  validateOperations,
-} from '../operation-validation';
+import { VALID_GROUP_TYPES, VALID_OPS, validateOperations } from '../operation-validation';
 
 describe('VALID_OPS', () => {
   it('contains the expected closed set of op types', () => {
@@ -32,7 +28,7 @@ describe('VALID_OPS', () => {
     expect(VALID_OPS.has('addBlueprint')).toBe(true);
   });
 
-  it('rejects look-alike op types that aren\'t in the closed set', () => {
+  it("rejects look-alike op types that aren't in the closed set", () => {
     expect(VALID_OPS.has('addNodes')).toBe(false);
     expect(VALID_OPS.has('createNode')).toBe(false);
     expect(VALID_OPS.has('removeEdge')).toBe(false);
@@ -138,10 +134,7 @@ describe('validateOperations', () => {
     });
 
     it('rejects an addBlueprint with empty-string iceType (the !iceType guard)', () => {
-      const out = validateOperations(
-        [{ op: 'addBlueprint', iceType: '' }],
-        new Set(['Database.PostgreSQL']),
-      );
+      const out = validateOperations([{ op: 'addBlueprint', iceType: '' }], new Set(['Database.PostgreSQL']));
       expect(out).toEqual([]);
       expect(warnSpy).toHaveBeenCalledWith('[AI] Rejected unknown iceType: ""');
     });
@@ -220,12 +213,7 @@ describe('validateOperations', () => {
     ];
     const out = validateOperations(ops, new Set(['Database.PostgreSQL']));
 
-    expect(out.map((o) => (o as { op: string }).op)).toEqual([
-      'autoOrganize',
-      'deleteEdge',
-      'addBlueprint',
-      'addNode',
-    ]);
+    expect(out.map((o) => (o as { op: string }).op)).toEqual(['autoOrganize', 'deleteEdge', 'addBlueprint', 'addNode']);
     expect(warnSpy).toHaveBeenCalledTimes(2);
     expect(warnSpy).toHaveBeenNthCalledWith(1, '[AI] Rejected unknown iceType: "BadOne"');
     expect(warnSpy).toHaveBeenNthCalledWith(2, '[AI] Rejected unknown group iceType: "Group.Bogus"');

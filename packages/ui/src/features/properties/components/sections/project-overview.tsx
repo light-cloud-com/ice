@@ -35,12 +35,12 @@ import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { t } from '../../../../i18n';
 import { PanelHeader } from '../../../../shared/components/ui/panel-header';
-import { analyzeCanvasPatterns } from '../../../canvas/utils/connection-rules';
 import { toggleProperties } from '../../../../store/slices/ui-slice';
-import type { Card } from '../../../../store/slices/cards-slice';
-import type { AppDispatch } from '../../../../store';
-import { Section } from '../fields';
+import { analyzeCanvasPatterns } from '../../../canvas/utils/connection-rules';
 import { parseCostRange, formatCost } from '../../../cost/utils/cost-calculator';
+import { Section } from '../fields';
+import type { AppDispatch } from '../../../../store';
+import type { Card } from '../../../../store/slices/cards-slice';
 
 // ─── Project Overview ───────────────────────────────────────────────────────
 

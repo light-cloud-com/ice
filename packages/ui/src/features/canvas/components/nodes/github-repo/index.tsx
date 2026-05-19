@@ -9,17 +9,12 @@
  * status footer. Validated block — visuals change, schema preserved.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { GitBranch } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -95,9 +90,7 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
   lod,
   pipelineStatus,
 }) => {
-  const repository = normaliseRepoIdentifier(
-    (node.data?.repository as string) || (node.data?.repo as string) || '',
-  );
+  const repository = normaliseRepoIdentifier((node.data?.repository as string) || (node.data?.repo as string) || '');
   const branch = (node.data?.branch as string) || 'main';
   const path = (node.data?.path as string) || '/';
   const liveConfig = buildLiveConfig(node.data);

@@ -3,18 +3,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  extract_name_from_arn,
-  extract_account_from_arn,
-  extract_region_from_arn,
-  parse_tags,
-} from '../arn-helpers';
+import { extract_name_from_arn, extract_account_from_arn, extract_region_from_arn, parse_tags } from '../arn-helpers';
 
 describe('extract_name_from_arn', () => {
   it('extracts the trailing /-separated name', () => {
-    expect(extract_name_from_arn('arn:aws:ec2:us-east-1:123456789:vpc/vpc-12345678')).toBe(
-      'vpc-12345678',
-    );
+    expect(extract_name_from_arn('arn:aws:ec2:us-east-1:123456789:vpc/vpc-12345678')).toBe('vpc-12345678');
   });
 
   it('extracts the trailing :-separated name', () => {
@@ -42,9 +35,7 @@ describe('extract_name_from_arn', () => {
 
 describe('extract_account_from_arn', () => {
   it('returns the 5th segment as the account id', () => {
-    expect(extract_account_from_arn('arn:aws:ec2:us-east-1:123456789:vpc/vpc-1')).toBe(
-      '123456789',
-    );
+    expect(extract_account_from_arn('arn:aws:ec2:us-east-1:123456789:vpc/vpc-1')).toBe('123456789');
   });
 
   it('returns empty string for an empty account slot', () => {

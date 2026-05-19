@@ -10,8 +10,7 @@ interface ElLike {
   props: { className?: string; [k: string]: unknown };
 }
 
-const render = (props: Record<string, unknown>): ElLike =>
-  (ResizeBar as unknown as (p: unknown) => ElLike)(props);
+const render = (props: Record<string, unknown>): ElLike => (ResizeBar as unknown as (p: unknown) => ElLike)(props);
 
 describe('ResizeBar', () => {
   it('renders a div', () => {

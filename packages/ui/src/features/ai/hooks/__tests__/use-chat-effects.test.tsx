@@ -20,10 +20,10 @@
  *     (rf-pdpl-21)
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React, { useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -444,9 +444,7 @@ describe('effect 4: AI-finished handler', () => {
       operations: [],
       suggestions: [],
     };
-    const messages: ChatMessage[] = [
-      { id: 'last', role: 'assistant', content: 'prev', timestamp: 0 },
-    ];
+    const messages: ChatMessage[] = [{ id: 'last', role: 'assistant', content: 'prev', timestamp: 0 }];
     captureHook({
       store,
       isProcessing: false,

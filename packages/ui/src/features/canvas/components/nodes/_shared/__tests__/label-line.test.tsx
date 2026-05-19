@@ -48,9 +48,7 @@ describe('LabelLine', () => {
   it('value styling switches to italic + tertiary tone when value is empty', () => {
     const tree = LabelLine({ label: 'X', value: '' });
     const els = [...walk(tree)];
-    const valueDiv = els.find(
-      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === '—',
-    )!;
+    const valueDiv = els.find((el) => el.type === 'div' && (el.props as { children?: unknown }).children === '—')!;
     const style = (valueDiv.props as { style: Record<string, string | number> }).style;
     expect(style.fontStyle).toBe('italic');
     expect(style.opacity).toBe(0.6);
@@ -60,9 +58,7 @@ describe('LabelLine', () => {
   it('value styling becomes primary tone + non-italic when a value is present', () => {
     const tree = LabelLine({ label: 'X', value: 'set' });
     const els = [...walk(tree)];
-    const valueDiv = els.find(
-      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'set',
-    )!;
+    const valueDiv = els.find((el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'set')!;
     const style = (valueDiv.props as { style: Record<string, string | number> }).style;
     expect(style.fontStyle).toBe('normal');
     expect(style.opacity).toBe(1);

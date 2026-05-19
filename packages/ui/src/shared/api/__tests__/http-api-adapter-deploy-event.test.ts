@@ -10,8 +10,8 @@
  * silently drops every event; this test is the safety net.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DEPLOY_EVENT_CHANNEL } from '@ice/types';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Stub the browser globals the adapter touches at module load time.
 // Vitest defaults to a node env; the adapter reads `window.location.origin`

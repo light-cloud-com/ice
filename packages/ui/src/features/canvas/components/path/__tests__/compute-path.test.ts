@@ -91,7 +91,15 @@ describe('rf-conpath-7: computePath — edgeStyle dispatch', () => {
   });
 
   it('rectangular with valid routePoints dispatches buildDagreRoutedPath', () => {
-    const c = conn({ data: { routePoints: [{ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 200, y: 100 }] } });
+    const c = conn({
+      data: {
+        routePoints: [
+          { x: 0, y: 0 },
+          { x: 100, y: 100 },
+          { x: 200, y: 100 },
+        ],
+      },
+    });
     const out = computePath(baseArgs({ edgeStyle: 'rectangular', connection: c }));
     expect(out).not.toBeNull();
     // Dagre routed inserts an elbow at (100, 25) for our start (100,25).
@@ -99,7 +107,14 @@ describe('rf-conpath-7: computePath — edgeStyle dispatch', () => {
   });
 
   it('rectangular falls through to buildRectangularPath when routePoints < 3', () => {
-    const c = conn({ data: { routePoints: [{ x: 0, y: 0 }, { x: 200, y: 100 }] } });
+    const c = conn({
+      data: {
+        routePoints: [
+          { x: 0, y: 0 },
+          { x: 200, y: 100 },
+        ],
+      },
+    });
     const out = computePath(baseArgs({ edgeStyle: 'rectangular', connection: c }));
     expect(out).not.toBeNull();
     // Same shape as the no-routePoints case — dagre returned null,

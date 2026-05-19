@@ -45,9 +45,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgObjectStorageNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgObjectStorageNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgObjectStorageNode> = {
     node: makeNode(),
     isSelected: false,

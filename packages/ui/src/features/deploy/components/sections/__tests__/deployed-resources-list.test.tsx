@@ -24,11 +24,7 @@ import { describe, it, expect, vi } from 'vitest';
 // preserves the `className` prop so we can assert on the size + color tokens.
 const mocks = vi.hoisted(() => ({
   CheckCircle: vi.fn((props: { className?: string }) =>
-    React.createElement(
-      'span',
-      { 'data-icon': 'CheckCircle', className: props.className },
-      'CheckCircle',
-    ),
+    React.createElement('span', { 'data-icon': 'CheckCircle', className: props.className }, 'CheckCircle'),
   ),
 }));
 
@@ -47,12 +43,7 @@ import { DeployedResourcesList } from '../deployed-resources-list';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -72,10 +63,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -145,10 +133,7 @@ const findRowDivs = (tree: React.ReactNode): React.ReactElement[] => {
     if (el.type !== 'div') return false;
     const cn = (el.props as { className?: string }).className;
     return (
-      typeof cn === 'string' &&
-      cn.includes('divide-y') &&
-      cn.includes('max-h-32') &&
-      cn.includes('overflow-y-auto')
+      typeof cn === 'string' && cn.includes('divide-y') && cn.includes('max-h-32') && cn.includes('overflow-y-auto')
     );
   });
   expect(bodies).toHaveLength(1);
@@ -161,8 +146,7 @@ const findRowDivs = (tree: React.ReactNode): React.ReactElement[] => {
     return [children as React.ReactElement];
   }
   return (children as React.ReactNode[]).filter(
-    (c): c is React.ReactElement =>
-      c != null && typeof c === 'object' && (c as React.ReactElement).type === 'div',
+    (c): c is React.ReactElement => c != null && typeof c === 'object' && (c as React.ReactElement).type === 'div',
   );
 };
 
@@ -325,10 +309,7 @@ describe('DeployedResourcesList — body rows', () => {
       if (el.type !== 'span') return false;
       const cn = (el.props as { className?: string }).className;
       return (
-        typeof cn === 'string' &&
-        cn.includes('ml-auto') &&
-        cn.includes('truncate') &&
-        cn.includes('max-w-[250px]')
+        typeof cn === 'string' && cn.includes('ml-auto') && cn.includes('truncate') && cn.includes('max-w-[250px]')
       );
     });
     expect(providerSpans).toHaveLength(1);
@@ -358,9 +339,7 @@ describe('DeployedResourcesList — body rows', () => {
     // The original used `{r.provider_id && (...)}` truthiness — empty string
     // is falsy, so even a present-but-empty provider_id should NOT render
     // the right-side span. Lock that branch.
-    const tree = renderList([
-      { name: 'my-service', type: 'cloud-run.service', provider_id: '' },
-    ]);
+    const tree = renderList([{ name: 'my-service', type: 'cloud-run.service', provider_id: '' }]);
     const rows = findRowDivs(tree);
     const providerSpans = findByPredicate(rows[0], (el) => {
       if (el.type !== 'span') return false;

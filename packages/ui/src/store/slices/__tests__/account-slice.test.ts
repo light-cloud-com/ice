@@ -146,10 +146,7 @@ describe('fetchProfile lifecycle', () => {
   });
 
   it('writes the rejected error message', () => {
-    const s = accountReducer(
-      init(),
-      fetchProfile.rejected(new Error('boom'), 'r-1', undefined),
-    );
+    const s = accountReducer(init(), fetchProfile.rejected(new Error('boom'), 'r-1', undefined));
     expect(s.loading).toBe(false);
     expect(s.error).toBe('boom');
   });
@@ -173,10 +170,7 @@ describe('switchOrganisation lifecycle', () => {
 
   it('still updates selectedOrg from meta.arg on rejected (UX consistency)', () => {
     const org = makeOrg('target');
-    const s = accountReducer(
-      init(),
-      switchOrganisation.rejected(new Error('x'), 'r-1', org),
-    );
+    const s = accountReducer(init(), switchOrganisation.rejected(new Error('x'), 'r-1', org));
     expect(s.selectedOrg).toEqual(org);
   });
 });

@@ -8,16 +8,11 @@
  * land in the live-config footer.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Radio } from 'lucide-react';
 import React from 'react';
-import { CardShell } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
@@ -49,8 +44,7 @@ function getRetentionLabel(k: string): string {
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const sizeRaw = (data?.size as string) || '';
   const retentionRaw = ((data?.retention as string) || '').trim();
-  const retention =
-    retentionRaw || (data?.retentionHours != null ? `${data.retentionHours}h` : '');
+  const retention = retentionRaw || (data?.retentionHours != null ? `${data.retentionHours}h` : '');
   const retentionLabel = retention ? getRetentionLabel(retention.toLowerCase()) : '';
   const partitions =
     data?.partitionCount != null ? t('canvas.blocks.stream.partitions', { n: Number(data.partitionCount) }) : '';

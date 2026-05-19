@@ -48,28 +48,28 @@ export const DeployInFlightPanel: React.FC<{
         <span className="flex items-center gap-1.5 text-muted-foreground">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           <span>
-            {empty
-              ? status === 'destroying'
-                ? 'Preparing destroy…'
-                : t('deploy.progress.deploying')
-              : (
-                <>
-                  <span className="text-blue-600 dark:text-blue-400">{rollup.applying}</span> in flight
-                  {' · '}
-                  <span className="text-emerald-600 dark:text-emerald-400">{rollup.succeeded}</span> done
-                  {rollup.failed > 0 && (
-                    <>
-                      {' · '}
-                      <span className="text-red-600 dark:text-red-400">{rollup.failed}</span> failed
-                    </>
-                  )}
-                </>
-              )}
+            {empty ? (
+              status === 'destroying' ? (
+                'Preparing destroy…'
+              ) : (
+                t('deploy.progress.deploying')
+              )
+            ) : (
+              <>
+                <span className="text-blue-600 dark:text-blue-400">{rollup.applying}</span> in flight
+                {' · '}
+                <span className="text-emerald-600 dark:text-emerald-400">{rollup.succeeded}</span> done
+                {rollup.failed > 0 && (
+                  <>
+                    {' · '}
+                    <span className="text-red-600 dark:text-red-400">{rollup.failed}</span> failed
+                  </>
+                )}
+              </>
+            )}
           </span>
         </span>
-        <span className="font-mono text-xs tabular-nums">
-          {empty ? '' : `${rollup.terminal} of ${rollup.total}`}
-        </span>
+        <span className="font-mono text-xs tabular-nums">{empty ? '' : `${rollup.terminal} of ${rollup.total}`}</span>
       </div>
       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
         <div

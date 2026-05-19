@@ -9,7 +9,7 @@ export {
 } from './auth/middleware';
 export type { AuthRequest } from './auth/middleware';
 export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto';
-export { ensureLocalSecrets } from './local-secrets/index';
+export { ensureLocalSecrets } from './local-secrets';
 export {
   setupSocketService,
   getSocketServer,

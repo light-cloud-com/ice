@@ -17,9 +17,7 @@ export interface DifficultyTier {
   dots: number;
 }
 
-export function getDifficultyLabels(
-  t: (key: string) => string,
-): Record<string, DifficultyTier> {
+export function getDifficultyLabels(t: (key: string) => string): Record<string, DifficultyTier> {
   return {
     starter: { label: t('templates.gallery.difficultyStarter'), dots: 1 },
     intermediate: { label: t('templates.gallery.difficultyIntermediate'), dots: 2 },

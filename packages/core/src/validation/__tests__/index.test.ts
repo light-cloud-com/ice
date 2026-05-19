@@ -19,7 +19,7 @@ import {
   getSupportedProviders,
   isKnownIceType,
   validateTemplate,
-} from '../index';
+} from '..';
 
 describe('validation index re-exports', () => {
   it('exports every public function with the correct callable signature', () => {

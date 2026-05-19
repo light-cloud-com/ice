@@ -19,18 +19,10 @@
  * sub-second of subscribe — a 2s wait would feel broken.
  */
 
-import {
-  mapEntry,
-  probeErrorMessage,
-} from './entry-mapping';
+import { mapEntry, probeErrorMessage } from './entry-mapping';
 import { emitToRoom, rememberInsertId } from './registry';
 import { stopUnderlyingStream } from './stream-lifecycle';
-import {
-  MAX_CONSECUTIVE_ERRORS_POLLING,
-  POLL_INTERVAL_MS,
-  POLL_PAGE_SIZE,
-  type ActiveStream,
-} from './types';
+import { MAX_CONSECUTIVE_ERRORS_POLLING, POLL_INTERVAL_MS, POLL_PAGE_SIZE, type ActiveStream } from './types';
 
 export function startPolling(stream: ActiveStream): void {
   // Tick immediately, then every POLL_INTERVAL_MS.
@@ -42,9 +34,7 @@ export function startPolling(stream: ActiveStream): void {
 
 export async function pollOnce(stream: ActiveStream): Promise<void> {
   if (stream.stopped) return;
-  const filter = stream.lastTs
-    ? `${stream.filter} AND timestamp > "${stream.lastTs}"`
-    : stream.filter;
+  const filter = stream.lastTs ? `${stream.filter} AND timestamp > "${stream.lastTs}"` : stream.filter;
   try {
     const [entries] = (await stream.loggingClient.getEntries({
       filter,

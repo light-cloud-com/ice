@@ -63,10 +63,7 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
  * function. Idempotent — calling the returned function more than once
  * is safe (subsequent calls are no-ops).
  */
-export function installFocusTrap(
-  container: HTMLElement,
-  options: FocusTrapOptions = {},
-): () => void {
+export function installFocusTrap(container: HTMLElement, options: FocusTrapOptions = {}): () => void {
   const { initialFocus, returnFocus } = options;
 
   // Initial focus: explicit override > first focusable. If neither

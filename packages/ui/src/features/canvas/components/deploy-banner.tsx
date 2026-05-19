@@ -48,7 +48,6 @@
 
 import React, { useMemo } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
-
 import { useTranslation } from '../../../i18n';
 import { deriveRollup, deriveRollupPercentage, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import type { RootState } from '../../../store';
@@ -69,14 +68,8 @@ export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }
   // so we keep structural equality on the selector.
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
-  const deployNodesById = useSelector(
-    (state: RootState) => state.deploy.nodesById,
-    shallowEqual,
-  );
-  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(
-    () => deriveRollup(deployNodesById),
-    [deployNodesById],
-  );
+  const deployNodesById = useSelector((state: RootState) => state.deploy.nodesById, shallowEqual);
+  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(() => deriveRollup(deployNodesById), [deployNodesById]);
   // Pick the most recently-updated applying node to display as the
   // "what's happening right now" line. `last_at` is ISO-8601 so lex sort
   // is fine; ties resolve to insertion order which is stable enough.

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as Constants from '../index';
+import * as Constants from '..';
 
 describe('@ice/constants — barrel export shape', () => {
   it('exposes provider arrays and metadata', () => {

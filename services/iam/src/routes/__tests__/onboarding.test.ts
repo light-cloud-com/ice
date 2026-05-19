@@ -5,9 +5,9 @@
  * Prisma + auth middleware are mocked at the module boundary.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks ─────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ async function request(method: string, path: string, body?: unknown) {
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -521,10 +521,7 @@ describe('PUT /api/onboarding/completed-tours/:id — append', () => {
 
     expect(a.status).toBe(200);
     expect(b.status).toBe(200);
-    const all = new Set<string>([
-      ...(a.body.completedTours as string[]),
-      ...(b.body.completedTours as string[]),
-    ]);
+    const all = new Set<string>([...(a.body.completedTours as string[]), ...(b.body.completedTours as string[])]);
     expect(all.has('canvas-tour')).toBe(true);
     expect(all.has('palette-tour')).toBe(true);
     // Both PUTs trigger a write because each sees an empty state.

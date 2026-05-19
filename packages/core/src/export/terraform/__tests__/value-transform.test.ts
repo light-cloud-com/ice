@@ -6,11 +6,7 @@
  * `terraform-exporter.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  format_dependencies,
-  map_properties,
-  transform_value,
-} from '../value-transform';
+import { format_dependencies, map_properties, transform_value } from '../value-transform';
 
 describe('map_properties', () => {
   it('passes through ordinary keys verbatim (snake_case preserved)', () => {
@@ -89,7 +85,12 @@ describe('transform_value', () => {
   });
 
   it('recursively transforms nested arrays', () => {
-    expect(transform_value([[1, 2], [3, null]])).toEqual([
+    expect(
+      transform_value([
+        [1, 2],
+        [3, null],
+      ]),
+    ).toEqual([
       [1, 2],
       [3, null],
     ]);

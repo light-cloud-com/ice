@@ -177,8 +177,7 @@ describe('createProject', () => {
   it('throws "Parent folder not found" when parentId references a missing/non-folder row', async () => {
     projectFindFirst.mockResolvedValue(null);
 
-    await expect(createProject('org-1', 'u-1', 'X', 'project', 'missing'))
-      .rejects.toThrow('Parent folder not found');
+    await expect(createProject('org-1', 'u-1', 'X', 'project', 'missing')).rejects.toThrow('Parent folder not found');
     expect(projectCreate).not.toHaveBeenCalled();
   });
 
@@ -454,9 +453,7 @@ describe('moveProject', () => {
       return [];
     });
 
-    await expect(moveProject('p1', 'p2', 'org-1')).rejects.toThrow(
-      'Cannot move folder into its own descendant',
-    );
+    await expect(moveProject('p1', 'p2', 'org-1')).rejects.toThrow('Cannot move folder into its own descendant');
     expect(projectUpdate).not.toHaveBeenCalled();
   });
 
@@ -469,9 +466,7 @@ describe('moveProject', () => {
       return [];
     });
 
-    await expect(moveProject('p1', 'p3', 'org-1')).rejects.toThrow(
-      'Cannot move folder into its own descendant',
-    );
+    await expect(moveProject('p1', 'p3', 'org-1')).rejects.toThrow('Cannot move folder into its own descendant');
   });
 
   it('continues iterating siblings when an earlier child sub-walk returns false', async () => {
@@ -485,9 +480,7 @@ describe('moveProject', () => {
       return [];
     });
 
-    await expect(moveProject('p1', 'target', 'org-1')).rejects.toThrow(
-      'Cannot move folder into its own descendant',
-    );
+    await expect(moveProject('p1', 'target', 'org-1')).rejects.toThrow('Cannot move folder into its own descendant');
   });
 
   it('successfully moves to a non-descendant folder', async () => {

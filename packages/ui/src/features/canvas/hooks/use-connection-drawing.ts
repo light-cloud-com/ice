@@ -75,10 +75,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addEdgeToCard, type Card, type CardEdge } from '../../../store/slices/cards-slice';
-import { findExistingLogSource, findExistingSpecialConnection } from '../utils/connection-special-rules';
-import { buildRejectionMessage } from '../utils/connection-rejection';
 import { t } from '../../../i18n';
+import { addEdgeToCard, type Card, type CardEdge } from '../../../store/slices/cards-slice';
+import { buildRejectionMessage } from '../utils/connection-rejection';
 import {
   inferConnectionMeta,
   validateConnection,
@@ -86,9 +85,10 @@ import {
   canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
+import { findExistingLogSource, findExistingSpecialConnection } from '../utils/connection-special-rules';
 import type { AppDispatch } from '../../../store';
-import type { CanvasNode } from '../components/types';
 import type { ConnectionRejection } from '../components/connection-rejection-overlay';
+import type { CanvasNode } from '../components/types';
 
 /** Drag descriptor stored in state while a port drag is in progress. */
 export interface DrawingConnectionState {
@@ -314,9 +314,7 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
           );
           if (specialType && conflict) {
             const label =
-              specialType === 'source'
-                ? t('canvas.rejection.githubRepoLabel')
-                : t('canvas.rejection.envVarsLabel');
+              specialType === 'source' ? t('canvas.rejection.githubRepoLabel') : t('canvas.rejection.envVarsLabel');
             // Keep the console.warn alongside showRejection — devs
             // inspecting the console still see what was rejected; users
             // see the inline tooltip near the cursor.
@@ -337,11 +335,7 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
           // A log block streams a single Cloud Logging sink — wiring a
           // second source would scramble timestamps, so block the drag
           // and tell the user to drop another Log block instead.
-          const { conflict: logConflict } = findExistingLogSource(
-            sourceNode,
-            targetNode,
-            card.edges as CardEdge[],
-          );
+          const { conflict: logConflict } = findExistingLogSource(sourceNode, targetNode, card.edges as CardEdge[]);
           if (logConflict) {
             const message = t('canvas.rejection.logHasSource');
             console.warn(`[Canvas] ${message}`);

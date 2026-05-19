@@ -47,9 +47,7 @@ describe('get_ice_type', () => {
 
 describe('get_ice_provider', () => {
   it('parses URN', () => {
-    expect(get_ice_provider('urn:pulumi:dev::myproject::aws:s3/bucket:Bucket::my-bucket')).toBe(
-      'aws',
-    );
+    expect(get_ice_provider('urn:pulumi:dev::myproject::aws:s3/bucket:Bucket::my-bucket')).toBe('aws');
   });
 
   it('parses raw type string', () => {
@@ -136,9 +134,7 @@ describe('get_supported_ice_types', () => {
 
 describe('get_name_from_urn', () => {
   it('extracts name from standard URN', () => {
-    expect(
-      get_name_from_urn('urn:pulumi:dev::myproject::aws:s3/bucket:Bucket::my-bucket'),
-    ).toBe('my-bucket');
+    expect(get_name_from_urn('urn:pulumi:dev::myproject::aws:s3/bucket:Bucket::my-bucket')).toBe('my-bucket');
   });
 
   it('falls back to last :: segment for malformed URN', () => {

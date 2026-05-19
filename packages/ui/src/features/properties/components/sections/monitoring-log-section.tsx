@@ -24,16 +24,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { t } from '../../../../i18n';
-import {
-  selectActiveCard,
-  updateCardNodeData,
-  type CardNode,
-} from '../../../../store/slices/cards-slice';
-import {
-  selectLogStream,
-  type LogStreamMode,
-  type LogStreamStatus,
-} from '../../../../store/slices/logs-slice';
+import { selectActiveCard, updateCardNodeData, type CardNode } from '../../../../store/slices/cards-slice';
+import { selectLogStream, type LogStreamMode, type LogStreamStatus } from '../../../../store/slices/logs-slice';
 import type { AppDispatch, RootState } from '../../../../store';
 
 // ─── LT-2 supported source iceTypes ─────────────────────────────────────────
@@ -193,7 +185,9 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
 
   return (
     <div className="pt-3 pb-2 px-3" data-testid="monitoring-log-section">
-      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">{t('canvas.properties.log.sectionTitle')}</div>
+      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">
+        {t('canvas.properties.log.sectionTitle')}
+      </div>
 
       {/* Connection status pill */}
       <div className="flex items-center gap-2 mb-2">
@@ -252,7 +246,9 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
           />
           <div className="flex-1 min-w-0">
             <div className="text-ice-xs text-ice-text-1">{t('canvas.properties.log.modePolling')}</div>
-            <div className="text-ice-2xs text-ice-text-3 leading-snug">{t('canvas.properties.log.modePollingHint')}</div>
+            <div className="text-ice-2xs text-ice-text-3 leading-snug">
+              {t('canvas.properties.log.modePollingHint')}
+            </div>
           </div>
         </label>
         <label
@@ -286,13 +282,13 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
             <select
               data-testid="monitoring-log-source-select"
               value={sourceNodeIdOverride === '' ? CLEAR_OVERRIDE_SENTINEL : sourceNodeIdOverride}
-              onChange={(e) =>
-                handleOverrideChange(e.target.value === CLEAR_OVERRIDE_SENTINEL ? '' : e.target.value)
-              }
+              onChange={(e) => handleOverrideChange(e.target.value === CLEAR_OVERRIDE_SENTINEL ? '' : e.target.value)}
               className="w-full px-1.5 py-1 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value={CLEAR_OVERRIDE_SENTINEL}>
-                {sourceNodeIdOverride ? t('canvas.properties.log.clearOverride') : t('canvas.properties.log.selectSource')}
+                {sourceNodeIdOverride
+                  ? t('canvas.properties.log.clearOverride')
+                  : t('canvas.properties.log.selectSource')}
               </option>
               {candidates.map((c) => (
                 <option key={c.nodeId} value={c.nodeId}>

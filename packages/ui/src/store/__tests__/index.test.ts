@@ -64,7 +64,7 @@ afterEach(() => {
 
 describe('store — module load smoke', () => {
   it('exports the configured store, RootState, AppDispatch types', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(mod.store).toBeDefined();
     expect(typeof mod.store.dispatch).toBe('function');
     expect(typeof mod.store.getState).toBe('function');
@@ -72,7 +72,7 @@ describe('store — module load smoke', () => {
   });
 
   it('the initial state has all expected slice keys', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     const state = mod.store.getState();
     expect(state).toHaveProperty('graph');
     expect(state).toHaveProperty('ui');
@@ -86,7 +86,7 @@ describe('store — module load smoke', () => {
 
 describe('store — actionLoggerMiddleware', () => {
   it('forwards a logged-prefix action to logStateChange', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     const payload = {
       id: 'u1',
       email: 'a@x.com',
@@ -99,20 +99,20 @@ describe('store — actionLoggerMiddleware', () => {
   });
 
   it('does NOT log actions with a non-matching prefix', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mocks.logStateChange.mockClear();
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     expect(mocks.logStateChange).not.toHaveBeenCalled();
   });
 
   it('handles an action with no payload field', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'deploy/somethingHappened' });
     expect(mocks.logStateChange).toHaveBeenCalledWith('deploy/somethingHappened', undefined);
   });
 
   it('handles an action with no type field (action.type defaults to empty string)', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // Redux Toolkit normally throws on actions without type, but the
     // middleware itself handles `action?.type || ''` defensively. We
     // bypass through dispatch which throws. Instead, we exercise the path
@@ -127,7 +127,7 @@ describe('store — actionLoggerMiddleware', () => {
 
 describe('store — card persistence subscriber', () => {
   it('does nothing when activeCardId is null after the debounce', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // No card created → activeCardId stays null → setTimeout body returns early.
     // Schedule a state change that triggers the subscriber.
     mod.store.dispatch({ type: 'ui/openDialog', payload: 'projectWizard' });
@@ -138,7 +138,7 @@ describe('store — card persistence subscriber', () => {
   });
 
   it('persists active-card snapshot to localStorage when a card exists', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({
       type: 'cards/createCard',
       payload: { id: 'c1', name: 'Test' },
@@ -151,7 +151,7 @@ describe('store — card persistence subscriber', () => {
   });
 
   it('skips the localStorage write when the card hash is unchanged', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
@@ -166,14 +166,12 @@ describe('store — card persistence subscriber', () => {
   });
 
   it('still completes when localStorage.setItem throws (quota error swallowed)', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
-    (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mockImplementationOnce(
-      () => {
-        throw new Error('quota');
-      },
-    );
+    (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mockImplementationOnce(() => {
+      throw new Error('quota');
+    });
     let threw: unknown = null;
     try {
       await vi.advanceTimersByTimeAsync(2100);
@@ -185,7 +183,7 @@ describe('store — card persistence subscriber', () => {
 
   it('calls api.graph.save when isAuthenticated returns true', async () => {
     mocks.isAuthenticated.mockReturnValue(true);
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
@@ -199,7 +197,7 @@ describe('store — card persistence subscriber', () => {
 
   it('does NOT call api.graph.save when isAuthenticated returns false', async () => {
     mocks.isAuthenticated.mockReturnValue(false);
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
@@ -213,7 +211,7 @@ describe('store — card persistence subscriber', () => {
   it('swallows backend save errors', async () => {
     mocks.isAuthenticated.mockReturnValue(true);
     mocks.graphSave.mockRejectedValueOnce(new Error('network'));
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     let threw: unknown = null;
@@ -230,7 +228,7 @@ describe('store — card persistence subscriber', () => {
   });
 
   it('debounces multiple rapid dispatches into one persisted snapshot', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     // Fire several updates quickly
@@ -247,7 +245,7 @@ describe('store — card persistence subscriber', () => {
 
 describe('store — UI persistence subscriber', () => {
   it('writes splitView to localStorage after the 300ms debounce', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // The first dispatch flips splitView identity → triggers the subscriber.
     mod.store.dispatch({
       type: 'ui/openTabInPane',
@@ -260,7 +258,7 @@ describe('store — UI persistence subscriber', () => {
   });
 
   it('skips the write when splitView identity is unchanged', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // First change → write
     mod.store.dispatch({
       type: 'ui/openTabInPane',
@@ -279,7 +277,7 @@ describe('store — UI persistence subscriber', () => {
   });
 
   it('swallows localStorage.setItem errors during UI persistence', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mockImplementation(() => {
       throw new Error('quota');
     });
@@ -303,7 +301,7 @@ describe('store — cardHash function', () => {
     // subscriber by ensuring the setTimeout body returns early when no
     // active card exists. The early-return covers the same statements the
     // direct call would.
-    const mod = await import('../index');
+    const mod = await import('..');
     expect(mod.store).toBeDefined();
     // No active card → setTimeout body returns early before invoking cardHash
     await vi.advanceTimersByTimeAsync(2100);
@@ -315,7 +313,7 @@ describe('store — cardHash function', () => {
   });
 
   it('produces different hashes for cards with different node counts', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
@@ -338,7 +336,7 @@ describe('store — cardHash function', () => {
 
 describe('store — defensive branches in card persistence', () => {
   it('returns early when activeCardId is set but the card is not in the cards list', async () => {
-    const mod = await import('../index');
+    const mod = await import('..');
     // The cards slice guards `setActiveCard` against unknown ids, so we
     // can't reach the `if (!activeCard) return;` branch through the public
     // dispatch surface. Inject divergent state via `replaceReducer`: a
@@ -346,10 +344,7 @@ describe('store — defensive branches in card persistence', () => {
     const { combineReducers } = await import('@reduxjs/toolkit');
     const realState = mod.store.getState();
     type AnyAction = { type: string; payload?: unknown };
-    const customCardsReducer = (
-      s = realState.cards,
-      a: AnyAction,
-    ): typeof realState.cards => {
+    const customCardsReducer = (s = realState.cards, a: AnyAction): typeof realState.cards => {
       if (a.type === '__test__/divergeCardsState') {
         return { ...s, activeCardId: 'phantom', cards: [] };
       }
@@ -362,9 +357,7 @@ describe('store — defensive branches in card persistence', () => {
       if (k === 'cards') continue;
       passthroughReducers[k] = (s = realState[k as keyof typeof realState]) => s;
     }
-    mod.store.replaceReducer(
-      combineReducers({ ...passthroughReducers, cards: customCardsReducer }) as never,
-    );
+    mod.store.replaceReducer(combineReducers({ ...passthroughReducers, cards: customCardsReducer }) as never);
     mod.store.dispatch({ type: '__test__/divergeCardsState' });
     await vi.advanceTimersByTimeAsync(2100);
     const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
@@ -376,19 +369,16 @@ describe('store — defensive branches in card persistence', () => {
     // Reach the `card.nodes || []` and `card.edges || []` fallback branches
     // by injecting a card whose nodes/edges fields are missing entirely.
     const { combineReducers } = await import('@reduxjs/toolkit');
-    const mod = await import('../index');
+    const mod = await import('..');
     const realState = mod.store.getState();
     type AnyAction = { type: string; payload?: unknown };
-    const customCardsReducer = (
-      s = realState.cards,
-      a: AnyAction,
-    ): typeof realState.cards => {
+    const customCardsReducer = (s = realState.cards, a: AnyAction): typeof realState.cards => {
       if (a.type === '__test__/sparseCard') {
         // Card without nodes/edges to exercise `card.nodes || []`
         return {
           ...s,
           activeCardId: 'sparse',
-          cards: [{ id: 'sparse', name: 'Sparse' } as unknown as typeof s.cards[number]],
+          cards: [{ id: 'sparse', name: 'Sparse' } as unknown as (typeof s.cards)[number]],
         };
       }
       return s;
@@ -398,9 +388,7 @@ describe('store — defensive branches in card persistence', () => {
       if (k === 'cards') continue;
       passthroughReducers[k] = (s = realState[k as keyof typeof realState]) => s;
     }
-    mod.store.replaceReducer(
-      combineReducers({ ...passthroughReducers, cards: customCardsReducer }) as never,
-    );
+    mod.store.replaceReducer(combineReducers({ ...passthroughReducers, cards: customCardsReducer }) as never);
     mod.store.dispatch({ type: '__test__/sparseCard' });
     await vi.advanceTimersByTimeAsync(2100);
     // Should write to localStorage successfully (no throw on missing fields)
@@ -418,7 +406,7 @@ describe('store — defensive branches in card persistence', () => {
           resolveFirst = res;
         }),
     );
-    const mod = await import('../index');
+    const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);

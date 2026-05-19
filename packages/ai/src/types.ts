@@ -52,13 +52,7 @@ export interface ChatMessage {
  * provider implementations unconditionally returned 'stop', hiding
  * length-cap truncations, content filtering, and tool-call boundaries.
  */
-export type ChatFinishReason =
-  | 'stop'
-  | 'length'
-  | 'content_filter'
-  | 'tool_calls'
-  | 'function_call'
-  | string;
+export type ChatFinishReason = 'stop' | 'length' | 'content_filter' | 'tool_calls' | 'function_call' | string;
 
 export interface ChatChunk {
   /** Token text (may be empty on final chunk) */

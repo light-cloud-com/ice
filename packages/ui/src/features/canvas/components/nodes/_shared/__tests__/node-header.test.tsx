@@ -8,8 +8,8 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { NodeHeader } from '../node-header';
 import { CategoryIcon } from '../category-icon';
+import { NodeHeader } from '../node-header';
 import { NodeLabel } from '../node-label';
 
 type ReactNodeLike = React.ReactNode;
@@ -28,9 +28,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof NodeHeader>): React.ReactElement => {
-  const Inner = (NodeHeader as unknown as {
-    type: (p: React.ComponentProps<typeof NodeHeader>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    NodeHeader as unknown as {
+      type: (p: React.ComponentProps<typeof NodeHeader>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

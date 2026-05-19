@@ -12,10 +12,10 @@
  * `buildResourceMap` instead.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect } from 'vitest';
 import {
   buildResourceMap,
@@ -28,9 +28,7 @@ import {
 
 // ─── Fixture helpers ────────────────────────────────────────────────────────
 
-const mkResource = (
-  overrides: Partial<ResourceDef> & { ice_type: string } & { id?: string },
-): ResourceDef =>
+const mkResource = (overrides: Partial<ResourceDef> & { ice_type: string } & { id?: string }): ResourceDef =>
   ({
     ice_type: overrides.ice_type,
     display_name: overrides.display_name ?? 'Display',
@@ -101,9 +99,7 @@ describe('buildResourceMap', () => {
     expect(flat.get('compute_service')).toBe(r);
 
     // A category list with a `resources` array on data[0] takes the nested branch.
-    const nested = buildResourceMap([
-      { category: 'C', categoryId: 'c', resources: [r] },
-    ]);
+    const nested = buildResourceMap([{ category: 'C', categoryId: 'c', resources: [r] }]);
     expect(nested.get('compute_service')).toBe(r);
   });
 });
@@ -116,16 +112,12 @@ describe('buildPropertyIssuesMap', () => {
   });
 
   it('returns undefined when no issue matches the selected node', () => {
-    const issues = [
-      { nodeId: 'other', propertyPath: 'name', severity: 'error', message: 'msg' },
-    ];
+    const issues = [{ nodeId: 'other', propertyPath: 'name', severity: 'error', message: 'msg' }];
     expect(buildPropertyIssuesMap(issues, 'node-1')).toBeUndefined();
   });
 
   it('builds a map with one entry when one issue matches and has propertyPath', () => {
-    const issues = [
-      { nodeId: 'node-1', propertyPath: 'name', severity: 'error', message: 'required' },
-    ];
+    const issues = [{ nodeId: 'node-1', propertyPath: 'name', severity: 'error', message: 'required' }];
     const result = buildPropertyIssuesMap(issues, 'node-1');
     expect(result?.size).toBe(1);
     expect(result?.get('name')).toEqual({ severity: 'error', message: 'required' });
@@ -193,9 +185,7 @@ const validationSlice = createSlice({
   reducers: {},
 });
 
-const makeStore = (
-  issues: Array<{ nodeId?: string; propertyPath?: string; severity: string; message: string }>,
-) =>
+const makeStore = (issues: Array<{ nodeId?: string; propertyPath?: string; severity: string; message: string }>) =>
   configureStore({
     reducer: { validation: validationSlice.reducer },
     preloadedState: { validation: { issues } },

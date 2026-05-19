@@ -34,7 +34,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import type { NodeDeployState } from '../../../../store/slices/deploy-slice';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
@@ -94,12 +93,7 @@ import { CanvasDeployBanner } from '../deploy-banner';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -113,10 +107,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -193,13 +184,7 @@ describe('CanvasDeployBanner — render gate', () => {
   });
 
   it('renders nothing when status is success / error / planned / cancelled / authenticating', () => {
-    for (const status of [
-      'success',
-      'error',
-      'planned',
-      'cancelled',
-      'authenticating',
-    ] as const) {
+    for (const status of ['success', 'error', 'planned', 'cancelled', 'authenticating'] as const) {
       setState({ status, currentDeployCardId: 'card-1' });
       expect(render('card-1')).toBeNull();
     }
@@ -241,9 +226,7 @@ describe('CanvasDeployBanner — status text', () => {
     // div is the bar wrapper. Walk the tree and assert it's absent.
     const positioned = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
+      (el) => el.type === 'div' && (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
     );
     expect(positioned).toHaveLength(0);
   });
@@ -289,9 +272,7 @@ describe('CanvasDeployBanner — status text', () => {
     expect(text).toContain('1 of 2');
     const positioned = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
+      (el) => el.type === 'div' && (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
     );
     expect(positioned).toHaveLength(1);
   });
@@ -414,9 +395,7 @@ describe('CanvasDeployBanner — bannerPct progress bar width', () => {
     // The inner bar is a child of the bar wrapper (`bottom: 0` div).
     const wrapper = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
+      (el) => el.type === 'div' && (el.props as { style?: { bottom?: number } }).style?.bottom === 0,
     )[0];
     if (!wrapper) return undefined;
     const inner = (wrapper.props as { children?: React.ReactNode }).children;

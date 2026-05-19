@@ -8,12 +8,7 @@
  * silently lose fields.
  */
 import { describe, expect, it } from 'vitest';
-
-import {
-  clampRectToViewport,
-  expandRect,
-  type RectLike,
-} from '../target-rect';
+import { clampRectToViewport, expandRect, type RectLike } from '../target-rect';
 
 const makeInput = (overrides: Partial<RectLike> = {}): RectLike => {
   const x = overrides.x ?? 10;
@@ -88,9 +83,7 @@ describe('expandRect', () => {
   it('toJSON returns a plain object with the eight DOMRect fields', () => {
     const out = expandRect(makeInput(), 4);
     const json = out.toJSON();
-    expect(Object.keys(json).sort()).toEqual(
-      ['bottom', 'height', 'left', 'right', 'top', 'width', 'x', 'y'].sort(),
-    );
+    expect(Object.keys(json).sort()).toEqual(['bottom', 'height', 'left', 'right', 'top', 'width', 'x', 'y'].sort());
     expect(typeof (json as unknown as { toJSON?: () => unknown }).toJSON).toBe('undefined');
   });
 
@@ -105,10 +98,7 @@ describe('expandRect', () => {
 
 describe('clampRectToViewport', () => {
   it('returns the input unchanged when fully inside the viewport', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: 100, y: 50, width: 200, height: 80 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: 100, y: 50, width: 200, height: 80 }), { width: 1024, height: 768 });
     expect(out).toMatchObject({
       x: 100,
       y: 50,
@@ -124,10 +114,10 @@ describe('clampRectToViewport', () => {
   it('clips negative origins to zero and reduces the corresponding extent', () => {
     // x = -50, width = 200 → right = 150 (still inside viewport). After
     // clip, left = 0, width = 150.
-    const out = clampRectToViewport(
-      makeInput({ x: -50, y: -30, width: 200, height: 100 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: -50, y: -30, width: 200, height: 100 }), {
+      width: 1024,
+      height: 768,
+    });
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
     expect(out.width).toBe(150);
@@ -137,10 +127,10 @@ describe('clampRectToViewport', () => {
   });
 
   it('clamps width/height that overflow the viewport on the far edge', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: 800, y: 600, width: 500, height: 400 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: 800, y: 600, width: 500, height: 400 }), {
+      width: 1024,
+      height: 768,
+    });
     // Right would be 1300, clamped to viewport 1024 → width = 224.
     expect(out.x).toBe(800);
     expect(out.width).toBe(224);
@@ -152,10 +142,10 @@ describe('clampRectToViewport', () => {
   });
 
   it('clamps both negative origin AND oversize extent simultaneously', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: -100, y: -100, width: 2000, height: 2000 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: -100, y: -100, width: 2000, height: 2000 }), {
+      width: 1024,
+      height: 768,
+    });
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
     expect(out.width).toBe(1024);
@@ -163,10 +153,10 @@ describe('clampRectToViewport', () => {
   });
 
   it('collapses to zero-area at the right/bottom edge when fully past the viewport', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: 2000, y: 2000, width: 100, height: 100 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: 2000, y: 2000, width: 100, height: 100 }), {
+      width: 1024,
+      height: 768,
+    });
     expect(out.width).toBe(0);
     expect(out.height).toBe(0);
     // The clamp lands the rect against the viewport edge.
@@ -175,10 +165,10 @@ describe('clampRectToViewport', () => {
   });
 
   it('collapses to zero-area at the left/top edge when fully past the negative side', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: -500, y: -300, width: 100, height: 100 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: -500, y: -300, width: 100, height: 100 }), {
+      width: 1024,
+      height: 768,
+    });
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
     expect(out.width).toBe(0);
@@ -186,10 +176,7 @@ describe('clampRectToViewport', () => {
   });
 
   it('handles a zero-area rect at the origin (no-op)', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: 0, y: 0, width: 0, height: 0 }),
-      { width: 1024, height: 768 },
-    );
+    const out = clampRectToViewport(makeInput({ x: 0, y: 0, width: 0, height: 0 }), { width: 1024, height: 768 });
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
     expect(out.width).toBe(0);
@@ -197,10 +184,7 @@ describe('clampRectToViewport', () => {
   });
 
   it('handles a viewport of zero size — every rect collapses to (0,0,0,0)', () => {
-    const out = clampRectToViewport(
-      makeInput({ x: 50, y: 50, width: 100, height: 100 }),
-      { width: 0, height: 0 },
-    );
+    const out = clampRectToViewport(makeInput({ x: 50, y: 50, width: 100, height: 100 }), { width: 0, height: 0 });
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
     expect(out.width).toBe(0);
@@ -210,9 +194,7 @@ describe('clampRectToViewport', () => {
   it('toJSON returns a plain object with the eight DOMRect fields', () => {
     const out = clampRectToViewport(makeInput(), { width: 100, height: 100 });
     const json = out.toJSON();
-    expect(Object.keys(json).sort()).toEqual(
-      ['bottom', 'height', 'left', 'right', 'top', 'width', 'x', 'y'].sort(),
-    );
+    expect(Object.keys(json).sort()).toEqual(['bottom', 'height', 'left', 'right', 'top', 'width', 'x', 'y'].sort());
   });
 
   it('does not mutate the input rect', () => {

@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const stateSlots: unknown[] = [];
-  let useStateIdx = 0;
+  const useStateIdx = 0;
   return {
     stateSlots,
     useStateIdx,
@@ -139,10 +139,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -288,14 +285,9 @@ describe('ConceptInfoModal — header', () => {
     const tree = render();
     const buttons = findByPredicate(tree, (el) => el.type === 'div');
     // The panel is the first descendant div with onKeyDown stop handler.
-    const panel = buttons.find(
-      (el) => typeof (el.props as { onKeyDown?: unknown }).onKeyDown === 'function',
-    );
+    const panel = buttons.find((el) => typeof (el.props as { onKeyDown?: unknown }).onKeyDown === 'function');
     expect(panel).toBeDefined();
-    const props = (panel as React.ReactElement).props as Record<
-      string,
-      (e: { stopPropagation: () => void }) => void
-    >;
+    const props = (panel as React.ReactElement).props as Record<string, (e: { stopPropagation: () => void }) => void>;
     const stop = vi.fn();
     props.onClick({ stopPropagation: stop });
     props.onDoubleClick({ stopPropagation: stop });
@@ -348,9 +340,7 @@ describe('ConceptInfoModal — tab visibility', () => {
     // The header still shows the iceType etc; ensure no Code tab button
     const tabBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('font-medium'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('font-medium'),
     );
     const labels = tabBtns.map((b) => (b.props as { children?: unknown }).children);
     expect(labels).not.toContain('Code');
@@ -363,9 +353,7 @@ describe('ConceptInfoModal — tab visibility', () => {
     const tree = render();
     const tabBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('font-medium'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('font-medium'),
     );
     const labels = tabBtns.map((b) => (b.props as { children?: unknown }).children);
     expect(labels).not.toContain('Links');
@@ -378,9 +366,7 @@ describe('ConceptInfoModal — tab visibility', () => {
     const tree = render();
     const tabBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('font-medium'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('font-medium'),
     );
     // Overview + Compiles = 2; Links absent
     expect(tabBtns.length).toBe(2);
@@ -395,9 +381,7 @@ describe('ConceptInfoModal — tab visibility', () => {
     const tree = render();
     const tabBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('font-medium'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('font-medium'),
     );
     expect(tabBtns).toHaveLength(1);
     expect((tabBtns[0].props as { children: unknown }).children).toBe('Overview');
@@ -407,9 +391,7 @@ describe('ConceptInfoModal — tab visibility', () => {
     const tree = render();
     const tabBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('font-medium'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('font-medium'),
     );
     // Compiles tab is index 1
     expect(typeof (tabBtns[1].props as { onClick: () => void }).onClick).toBe('function');
@@ -469,7 +451,7 @@ describe('ConceptInfoModal — Compiles tab', () => {
 
   it('initial provider is currentProvider when present in compilesTo', () => {
     mocks.stateSlots[0] = 'compiles';
-    const tree = render({ currentProvider: 'gcp' as 'gcp' });
+    const tree = render({ currentProvider: 'gcp' as const });
     // Selected button has 'border-strong' background — find via inline style match
     const text = collectText(tree);
     // GCP's lone primitive should be visible
@@ -479,7 +461,7 @@ describe('ConceptInfoModal — Compiles tab', () => {
 
   it('falls back to first provider when currentProvider is missing from compilesTo', () => {
     mocks.stateSlots[0] = 'compiles';
-    const tree = render({ currentProvider: 'azure' as 'azure' });
+    const tree = render({ currentProvider: 'azure' as const });
     // azure is not a key, so first key (aws) becomes selected; aws primitives render
     const text = collectText(tree);
     expect(text).toContain('VPC');
@@ -514,9 +496,7 @@ describe('ConceptInfoModal — Compiles tab', () => {
     // Provider buttons inside the compiles tab
     const providerBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        ((el.props as { className?: string }).className ?? '').includes('uppercase'),
+      (el) => el.type === 'button' && ((el.props as { className?: string }).className ?? '').includes('uppercase'),
     );
     expect(providerBtns.length).toBe(2);
     (providerBtns[1].props as { onClick: () => void }).onClick();

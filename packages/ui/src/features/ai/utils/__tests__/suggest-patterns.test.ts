@@ -25,10 +25,7 @@ describe('suggestPatterns — empty canvas', () => {
 
 describe('suggestPatterns — backend + database suggestions', () => {
   it('suggests a Redis cache when backend + db exist but no cache', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Database.PostgreSQL' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Database.PostgreSQL' })];
     const out = suggestPatterns(nodes, []);
     const labels = out.map((s) => s.label);
     expect(labels).toContain('Add a Redis cache for performance');
@@ -51,10 +48,7 @@ describe('suggestPatterns — backend + database suggestions', () => {
   });
 
   it('does not suggest monitoring when a Log node already exists', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Monitoring.Log' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Monitoring.Log' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).not.toContain('Add monitoring and logging');
   });
@@ -135,10 +129,7 @@ describe('suggestPatterns — gateway / queue / secrets / repo / VPC', () => {
   });
 
   it('treats Source.Repository as a repo and suppresses the repo suggestion', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Container' }),
-      nodeWith({ iceType: 'Source.Repository' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Container' }), nodeWith({ iceType: 'Source.Repository' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).not.toContain('Connect a GitHub repository for CI/CD');
   });
@@ -192,28 +183,19 @@ describe('suggestPatterns — gateway / queue / secrets / repo / VPC', () => {
 
 describe('suggestPatterns — db-shape predicates', () => {
   it('treats MongoDB as a database', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Database.MongoDB' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Database.MongoDB' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).toContain('Add a Redis cache for performance');
   });
 
   it('treats data warehouses as databases', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Analytics.Warehouse' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Analytics.Warehouse' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).toContain('Add a Redis cache for performance');
   });
 
   it('treats MySQL as a database', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Database.MySQL' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Database.MySQL' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).toContain('Add a Redis cache for performance');
   });
@@ -245,10 +227,7 @@ describe('suggestPatterns — backend-shape predicates', () => {
 
 describe('suggestPatterns — auth / cache / queue / vpc predicate variants', () => {
   it('treats IAM.* as auth', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'IAM.Role' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'IAM.Role' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).not.toContain('Add authentication');
   });
@@ -294,19 +273,13 @@ describe('suggestPatterns — auth / cache / queue / vpc predicate variants', ()
   });
 
   it('treats Observability nodes as monitoring', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Observability.Tracing' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Observability.Tracing' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).not.toContain('Add monitoring and logging');
   });
 
   it('treats nodes with Repository in iceType (not exactly Source.Repository) as repos', () => {
-    const nodes = [
-      nodeWith({ iceType: 'Compute.Function' }),
-      nodeWith({ iceType: 'Custom.Repository' }),
-    ];
+    const nodes = [nodeWith({ iceType: 'Compute.Function' }), nodeWith({ iceType: 'Custom.Repository' })];
     const labels = suggestPatterns(nodes, []).map((s) => s.label);
     expect(labels).not.toContain('Connect a GitHub repository for CI/CD');
   });
@@ -329,10 +302,7 @@ describe('suggestPatterns — top-3 truncation', () => {
 
 describe('suggestPatterns — defensive coalescing', () => {
   it('treats nodes with missing data as having no iceType / behavior', () => {
-    const nodes = [
-      { id: 'n1', type: 'block' } as any,
-      nodeWith({}),
-    ];
+    const nodes = [{ id: 'n1', type: 'block' } as any, nodeWith({})];
     // No backend, no db, no anything. Returns no suggestions because the
     // empty-canvas branch only fires for length-0 arrays.
     const out = suggestPatterns(nodes, []);

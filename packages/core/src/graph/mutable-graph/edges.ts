@@ -11,14 +11,8 @@
  */
 
 import { create_edge_id } from '../../types/graph';
-import type {
-  AddEdgeResult,
-  Edge,
-  EdgeId,
-  EdgeInput,
-  NodeId,
-} from '../../types/graph';
 import type { MutableGraphState } from './types';
+import type { AddEdgeResult, Edge, EdgeId, EdgeInput, NodeId } from '../../types/graph';
 
 /**
  * Resolve a node ID from a string (either ID or name).

@@ -23,17 +23,17 @@ import { describe, it, expect } from 'vitest';
 
 // Canonical path
 import type {
+  CanvasNode as CanvasNodeShim,
+  ViewState as ViewStateShim,
+  CanvasConnection as CanvasConnectionShim,
+} from '../svg-canvas';
+import type {
   CanvasNode as CanvasNodeCanonical,
   ViewState as ViewStateCanonical,
   CanvasConnection as CanvasConnectionCanonical,
 } from '../types';
 
 // Re-export shim path (same names, different module specifier)
-import type {
-  CanvasNode as CanvasNodeShim,
-  ViewState as ViewStateShim,
-  CanvasConnection as CanvasConnectionShim,
-} from '../svg-canvas';
 
 describe('canvas types — import resolution', () => {
   it('CanvasNode resolves from both ../types and ../svg-canvas', () => {

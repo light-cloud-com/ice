@@ -18,13 +18,7 @@ vi.mock('@ice/shared', () => ({
   getSocketServer: () => socketServerImpl,
 }));
 
-import {
-  emitToRoom,
-  rememberInsertId,
-  resetRegistry,
-  streams,
-  subscriptionIndex,
-} from '../log-stream/registry';
+import { emitToRoom, rememberInsertId, resetRegistry, streams, subscriptionIndex } from '../log-stream/registry';
 import { SEEN_INSERT_ID_CAP, type ActiveStream } from '../log-stream/types';
 
 function makeStream(overrides: Partial<ActiveStream> = {}): ActiveStream {

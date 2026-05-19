@@ -5,9 +5,9 @@
  * control `expanded` per test.
  */
 
+import { Server, Package } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Server, Package } from 'lucide-react';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────
 
@@ -30,9 +30,7 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-// eslint-disable-next-line import/first
 import { CategoryRow, type CategoryRowProps } from '../category-row';
-// eslint-disable-next-line import/first
 import type { CategoryCost, NodeCostInfo } from '../../utils/cost-calculator';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
@@ -65,10 +63,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -202,9 +197,7 @@ describe('CategoryRow — percent math', () => {
     });
     const fills = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        ((el.props as { style?: { width?: string } }).style?.width ?? '').endsWith('%'),
+      (el) => el.type === 'div' && ((el.props as { style?: { width?: string } }).style?.width ?? '').endsWith('%'),
     );
     expect(fills).toHaveLength(1);
     expect((fills[0].props as { style: { width: string } }).style.width).toBe('40%');

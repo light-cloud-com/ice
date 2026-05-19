@@ -70,6 +70,7 @@
  *            error messages and downstream AST positions. Both
  *            sites are load-bearing.
  */
+import { is_alpha, is_digit } from './lexer-scanners';
 import {
   type LexerState,
   ls_advance,
@@ -79,7 +80,6 @@ import {
   ls_match,
   ls_peek,
 } from './lexer-state';
-import { is_alpha, is_digit } from './lexer-scanners';
 
 /**
  * Scan a heredoc string. The caller (scan_token's `case '<':` branch)
@@ -87,12 +87,7 @@ import { is_alpha, is_digit } from './lexer-scanners';
  * passes through the start_pos/start_line/start_column captured
  * before the first `<` was consumed.
  */
-export function scan_heredoc(
-  s: LexerState,
-  start_pos: number,
-  start_line: number,
-  start_column: number,
-): void {
+export function scan_heredoc(s: LexerState, start_pos: number, start_line: number, start_column: number): void {
   // Skip optional '-' for indented heredoc
   const indented = ls_match(s, '-');
 
@@ -146,10 +141,7 @@ export function scan_heredoc(
     }
 
     // Check for end of line or file after delimiter
-    if (
-      is_delimiter &&
-      (ls_is_at_end(s) || ls_peek(s) === '\n' || ls_peek(s) === '\r')
-    ) {
+    if (is_delimiter && (ls_is_at_end(s) || ls_peek(s) === '\n' || ls_peek(s) === '\r')) {
       // RISK #8 — content_end is line_start (start of terminator
       // line) BEFORE any whitespace was consumed. The trailing
       // .trimEnd() (below) strips the line-leading whitespace +
@@ -182,13 +174,5 @@ export function scan_heredoc(
   const content = s.source.slice(content_start, content_end);
   const raw = s.source.slice(start_pos, s.pos);
 
-  ls_add_token_with_literal(
-    s,
-    'STRING',
-    raw,
-    start_pos,
-    start_line,
-    start_column,
-    content.trimEnd(),
-  );
+  ls_add_token_with_literal(s, 'STRING', raw, start_pos, start_line, start_column, content.trimEnd());
 }

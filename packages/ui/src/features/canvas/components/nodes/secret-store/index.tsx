@@ -9,8 +9,8 @@
 import { CARD_FOOTER_HEIGHT, SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '@ice/constants';
 import { Lock } from 'lucide-react';
 import React from 'react';
-import { CardShell, EmptyHint, KvLine } from '../_shared';
 import { t } from '../../../../../i18n';
+import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { SS_HEADER_HEIGHT, SS_ROW_HEIGHT, SS_PADDING };

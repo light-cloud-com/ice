@@ -32,21 +32,10 @@
  */
 
 import React from 'react';
+import { Section, SelectField, ListField, QueueListField, TaskListField, PropertyLabel, CustomValueInput } from '.';
 import { t } from '../../../../i18n';
 import { IceSelect } from '../../../../shared/components/ui/ice-select';
 import { cn } from '../../../../shared/utils/cn';
-import {
-  Section,
-  TextField,
-  NumberField,
-  SelectField,
-  ListField,
-  QueueListField,
-  TaskListField,
-  StepperField,
-  PropertyLabel,
-  CustomValueInput,
-} from './index';
 
 // ─── Types from core HIGH_LEVEL_CATEGORIES ──────────────────────────────────
 

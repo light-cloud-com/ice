@@ -162,14 +162,8 @@ describe('projects-slice', () => {
 
     it('keeps active intact when an inactive project is deleted', () => {
       let s = init();
-      s = projectsReducer(
-        s,
-        createProject({ ...project({ id: 'p-a' }), environments: [env({ id: 'e-a' })] } as any),
-      );
-      s = projectsReducer(
-        s,
-        createProject({ ...project({ id: 'p-b' }), environments: [env({ id: 'e-b' })] } as any),
-      );
+      s = projectsReducer(s, createProject({ ...project({ id: 'p-a' }), environments: [env({ id: 'e-a' })] } as any));
+      s = projectsReducer(s, createProject({ ...project({ id: 'p-b' }), environments: [env({ id: 'e-b' })] } as any));
       // Active is p-b. Delete p-a.
       s = projectsReducer(s, deleteProject('p-a'));
       expect(s.activeProjectId).toBe('p-b');
@@ -302,10 +296,7 @@ describe('projects-slice', () => {
     it('respects parentFolderId for nested folders', () => {
       let s = projectsReducer(init(), createFolder({ name: 'F1', organisationId: 'org-1' }));
       const parent = s.folders[0].id;
-      s = projectsReducer(
-        s,
-        createFolder({ name: 'F1.a', organisationId: 'org-1', parentFolderId: parent }),
-      );
+      s = projectsReducer(s, createFolder({ name: 'F1.a', organisationId: 'org-1', parentFolderId: parent }));
       const nested = s.folders.find((f) => f.name === 'F1.a')!;
       expect(nested.parentFolderId).toBe(parent);
       expect(nested.order).toBe(0);
@@ -353,14 +344,8 @@ describe('projects-slice', () => {
       const aId = s.folders[0].id;
       s = projectsReducer(s, createFolder({ name: 'B', organisationId: 'org-1' }));
       const bId = s.folders.find((f) => f.name === 'B')!.id;
-      s = projectsReducer(
-        s,
-        createProject({ ...project({ id: 'in-a', folderId: aId }), environments: [] } as any),
-      );
-      s = projectsReducer(
-        s,
-        createProject({ ...project({ id: 'in-b', folderId: bId }), environments: [] } as any),
-      );
+      s = projectsReducer(s, createProject({ ...project({ id: 'in-a', folderId: aId }), environments: [] } as any));
+      s = projectsReducer(s, createProject({ ...project({ id: 'in-b', folderId: bId }), environments: [] } as any));
       s = projectsReducer(s, deleteFolder(aId));
       // 'in-a' should be re-parented to root.
       expect(s.projects.find((p) => p.id === 'in-a')!.folderId).toBeNull();
@@ -504,10 +489,7 @@ describe('projects-slice', () => {
       expect(selectActiveEnvironmentId({ projects: s })).toBe('e-1');
       // loadedOrgId only set by fetchProjectTree.
       expect(selectLoadedOrgId({ projects: s })).toBeNull();
-      s = projectsReducer(
-        s,
-        fetchProjectTree.fulfilled({ orgId: 'org-x', projects: [], folders: [] }, 'r-1', 'org-x'),
-      );
+      s = projectsReducer(s, fetchProjectTree.fulfilled({ orgId: 'org-x', projects: [], folders: [] }, 'r-1', 'org-x'));
       expect(selectLoadedOrgId({ projects: s })).toBe('org-x');
     });
 

@@ -38,9 +38,9 @@
 import React from 'react';
 import { t } from '../../../../i18n';
 import { cn } from '../../../../shared/utils/cn';
-import type { AppDispatch } from '../../../../store';
 import { normalizeSubdomain } from '../../utils/normalize-subdomain';
 import { Section } from '../fields';
+import type { AppDispatch } from '../../../../store';
 
 export interface CustomDomainRoute {
   id: string;

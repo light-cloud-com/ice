@@ -100,11 +100,7 @@ export function detectDominantProvider(canvas: SerializedCanvas): string {
 // System Prompt Builder
 // =============================================================================
 
-export async function buildSystemPrompt(
-  canvas: SerializedCanvas,
-  intent?: string,
-  cardId?: string,
-): Promise<string> {
+export async function buildSystemPrompt(canvas: SerializedCanvas, intent?: string, cardId?: string): Promise<string> {
   const nodesSummary = formatNodesSummary(canvas);
   const edgesSummary = formatEdgesSummary(canvas);
   const selectedSummary = formatSelectedSummary(canvas);

@@ -11,13 +11,13 @@
  *    these helpers expect the depth as an explicit arg).
  *  - Each row is converted via `convert_resource_to_schema`.
  */
+import { convert_resource_to_schema } from './converters';
 import { InternalError } from '../../types/errors';
 import { failure, success } from '../../types/result';
-import type { IceType, ResourceSchema } from '../schema-provider';
+import type { SqliteSchemaRegistry } from './sqlite-types';
 import type { IceError } from '../../types/errors';
 import type { Result } from '../../types/result';
-import { convert_resource_to_schema } from './converters';
-import type { SqliteSchemaRegistry } from './sqlite-types';
+import type { IceType, ResourceSchema } from '../schema-provider';
 
 export async function get_dependencies(
   registry: SqliteSchemaRegistry | null,

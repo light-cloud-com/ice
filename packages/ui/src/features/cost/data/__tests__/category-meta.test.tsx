@@ -7,19 +7,9 @@
  * Tailwind bg class.
  */
 
+import { Server, Database, MessageSquare, Globe, Shield, Activity, BrainCircuit, Package } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import {
-  Server,
-  Database,
-  MessageSquare,
-  Globe,
-  Shield,
-  Activity,
-  BrainCircuit,
-  Package,
-} from 'lucide-react';
-
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../category-meta';
 
 const EXPECTED_KEYS = [

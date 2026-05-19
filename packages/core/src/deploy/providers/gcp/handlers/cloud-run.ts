@@ -216,4 +216,3 @@ export const cloud_run_handler: GCPResourceHandler = {
     }
   },
 };
-

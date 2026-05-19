@@ -27,8 +27,8 @@ import aiReducer, {
   clearAnimations,
   type AiState,
 } from '../ai-slice';
-import type { AiResponse, AiCanvasOp } from '@ice/types';
 import type { Card } from '../cards-slice';
+import type { AiResponse, AiCanvasOp } from '@ice/types';
 
 function init(): AiState {
   return aiReducer(undefined, { type: '@@INIT' });
@@ -194,10 +194,7 @@ describe('ai-slice', () => {
   describe('addToHistory', () => {
     it('prepends a timestamped entry to the front', () => {
       const before = Date.now();
-      const s = aiReducer(
-        init(),
-        addToHistory({ intent: 'add db', explanation: 'done', operationCount: 2 }),
-      );
+      const s = aiReducer(init(), addToHistory({ intent: 'add db', explanation: 'done', operationCount: 2 }));
       expect(s.history).toHaveLength(1);
       expect(s.history[0].intent).toBe('add db');
       expect(s.history[0].timestamp).toBeGreaterThanOrEqual(before);
@@ -213,10 +210,7 @@ describe('ai-slice', () => {
     it('caps history at 20 entries (FIFO eviction from the tail)', () => {
       let s = init();
       for (let i = 0; i < 25; i++) {
-        s = aiReducer(
-          s,
-          addToHistory({ intent: `intent-${i}`, explanation: '', operationCount: 0 }),
-        );
+        s = aiReducer(s, addToHistory({ intent: `intent-${i}`, explanation: '', operationCount: 0 }));
       }
       expect(s.history).toHaveLength(20);
       // Most recent is intent-24, oldest kept is intent-5.
@@ -265,7 +259,7 @@ describe('ai-slice', () => {
 
   describe('animation reducers', () => {
     it('setAnimatingNodes replaces the record', () => {
-      const s = aiReducer(init(), setAnimatingNodes({ 'a': 0, 'b': 100 }));
+      const s = aiReducer(init(), setAnimatingNodes({ a: 0, b: 100 }));
       expect(s.animatingNodes).toEqual({ a: 0, b: 100 });
     });
 

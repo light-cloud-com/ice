@@ -38,8 +38,8 @@
 
 import { produce } from 'immer';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nodeDataReducers } from '../node-data';
 import { pushSnapshot } from '../../snapshot';
+import { nodeDataReducers } from '../node-data';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 

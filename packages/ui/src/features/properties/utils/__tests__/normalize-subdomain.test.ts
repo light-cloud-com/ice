@@ -17,8 +17,7 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeSubdomain, validateSubdomain } from '../normalize-subdomain';
 
-const ERROR_MESSAGE =
-  'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
+const ERROR_MESSAGE = 'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
 
 describe('normalizeSubdomain', () => {
   it('lowercases uppercase input', () => {

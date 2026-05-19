@@ -31,11 +31,7 @@
 
 import { t } from '../../../../i18n';
 import type { DeployResourceResult, DeployState } from '../types';
-import type {
-  DeployCompleteEvent,
-  DeployNodeProgressEvent,
-  DeployNodeStatusEvent,
-} from '@ice/types';
+import type { DeployCompleteEvent, DeployNodeProgressEvent, DeployNodeStatusEvent } from '@ice/types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const wireEventsReducers = {

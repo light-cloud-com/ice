@@ -15,10 +15,10 @@
  * stays observable end-to-end.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Mock axiosInstance BEFORE the hook import ──────────────────────────────
@@ -60,7 +60,7 @@ describe('applyDriftStatus', () => {
   it('dispatches updateCardNodeData with status=drifted for "drifted"', () => {
     const dispatch = vi.fn() as unknown as AppDispatch;
     applyDriftStatus([{ nodeId: 'n1', status: 'drifted' }], dispatch);
-    expect((dispatch as unknown as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+    expect(dispatch as unknown as ReturnType<typeof vi.fn>).toHaveBeenCalledTimes(1);
     const action = (dispatch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(action.type).toBe('cards/updateCardNodeData');
     expect(action.payload).toEqual({ nodeId: 'n1', data: { deploy_status: 'drifted' } });
@@ -229,9 +229,7 @@ describe('useDriftCheck (smoke + capture, renderToString)', () => {
 
   it('on POST rejection, catch path resets driftCheckLoading to false', async () => {
     const store = makeStore();
-    (axiosInstance.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new Error('network'),
-    );
+    (axiosInstance.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('network'));
 
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const { checkDrift } = captureHook('card-x', [], store);

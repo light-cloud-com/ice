@@ -43,9 +43,7 @@ describe('normalizeIdempotentResultErrors', () => {
     const { normalizeIdempotentResultErrors } = await getHelpers();
     const result = {
       success: false,
-      resources: [
-        { name: 'r1', action: 'delete', success: false, error: 'NOT_FOUND: bucket gone' },
-      ],
+      resources: [{ name: 'r1', action: 'delete', success: false, error: 'NOT_FOUND: bucket gone' }],
       summary: { failed: 1 },
     };
     normalizeIdempotentResultErrors('card-1', result);
@@ -61,9 +59,7 @@ describe('normalizeIdempotentResultErrors', () => {
     const { normalizeIdempotentResultErrors } = await getHelpers();
     const result = {
       success: false,
-      resources: [
-        { name: 'r1', action: 'create', success: false, error: 'ALREADY_EXISTS: already there' },
-      ],
+      resources: [{ name: 'r1', action: 'create', success: false, error: 'ALREADY_EXISTS: already there' }],
       summary: { failed: 1 },
     };
     normalizeIdempotentResultErrors('card-1', result);

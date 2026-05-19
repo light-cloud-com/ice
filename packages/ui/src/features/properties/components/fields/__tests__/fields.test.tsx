@@ -27,15 +27,7 @@ import { describe, it, expect, vi } from 'vitest';
 // Mock IceSelect with a plain <select> so SelectField's behavior can be tested
 // without dragging in Radix UI's DOM dependencies.
 vi.mock('../../../../../shared/components/ui/ice-select', () => ({
-  IceSelect: ({
-    value,
-    onChange,
-    options,
-  }: {
-    value: string;
-    onChange: (v: string) => void;
-    options: string[];
-  }) =>
+  IceSelect: ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) =>
     React.createElement(
       'select',
       {
@@ -43,9 +35,7 @@ vi.mock('../../../../../shared/components/ui/ice-select', () => ({
         value,
         onChange: (e: { target: { value: string } }) => onChange(e.target.value),
       },
-      options.map((opt) =>
-        React.createElement('option', { key: opt, value: opt }, opt),
-      ),
+      options.map((opt) => React.createElement('option', { key: opt, value: opt }, opt)),
     ),
 }));
 
@@ -60,7 +50,7 @@ import {
   PropertyLabel,
   CustomValueInput,
   type CustomInputConfig,
-} from '../index';
+} from '..';
 
 // ─── Tree-walking helpers ───────────────────────────────────────────────────
 
@@ -119,9 +109,7 @@ function invoke<P>(Component: React.FC<P>, props: P): React.ReactElement {
 
 describe('Section', () => {
   it('renders the title and children when title is non-empty', () => {
-    const html = renderToString(
-      React.createElement(Section, { title: 'My Title', children: 'child-content' }),
-    );
+    const html = renderToString(React.createElement(Section, { title: 'My Title', children: 'child-content' }));
     expect(html).toContain('My Title');
     expect(html).toContain('child-content');
   });
@@ -240,10 +228,7 @@ describe('SelectField', () => {
     });
     // The IceSelect wrapper receives onChange as a direct prop. Find the
     // rendered IceSelect element and invoke its onChange to verify wiring.
-    const matches = findByPredicate(
-      tree,
-      (el) => typeof el.props.options !== 'undefined' && el.props.value === 'gold',
-    );
+    const matches = findByPredicate(tree, (el) => typeof el.props.options !== 'undefined' && el.props.value === 'gold');
     expect(matches.length).toBe(1);
     matches[0].props.onChange('platinum');
     expect(onChange).toHaveBeenCalledWith('platinum');
@@ -355,10 +340,7 @@ describe('QueueListField', () => {
     const onChange = vi.fn();
     const tree = invoke(QueueListField, {
       label: 'Queues',
-      value: [
-        '{"name":"orders","fifo":false}',
-        '{"name":"shipments","fifo":true}',
-      ],
+      value: ['{"name":"orders","fifo":false}', '{"name":"shipments","fifo":true}'],
       onChange,
     });
     const buttons = findByType(tree, 'button');
@@ -481,9 +463,7 @@ describe('StepperField', () => {
 
 describe('PropertyLabel', () => {
   it('renders the label without a tooltip when none is supplied', () => {
-    const html = renderToString(
-      React.createElement(PropertyLabel, { label: 'CIDR Block' }),
-    );
+    const html = renderToString(React.createElement(PropertyLabel, { label: 'CIDR Block' }));
     expect(html).toContain('CIDR Block');
     // No Info icon when tooltip is absent
     expect(html).not.toContain('cursor-help');

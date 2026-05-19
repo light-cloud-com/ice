@@ -16,11 +16,7 @@ import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
 import { wireEventsReducers } from '../wire-events';
 import type { DeployState } from '../../types';
-import type {
-  DeployCompleteEvent,
-  DeployNodeProgressEvent,
-  DeployNodeStatusEvent,
-} from '@ice/types';
+import type { DeployCompleteEvent, DeployNodeProgressEvent, DeployNodeStatusEvent } from '@ice/types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 function makeState(overrides: Partial<DeployState> = {}): DeployState {
@@ -84,7 +80,15 @@ describe('applyNodeStatusEvent', () => {
   it('dedups when same-action seq is lower-or-equal — drops the event', () => {
     const before = makeState({
       nodesById: {
-        n1: { node_id: 'n1', status: 'applying', resource_name: 'svc', resource_type: 't', action: 'create', last_at: '', last_seq: 5 },
+        n1: {
+          node_id: 'n1',
+          status: 'applying',
+          resource_name: 'svc',
+          resource_type: 't',
+          action: 'create',
+          last_at: '',
+          last_seq: 5,
+        },
       },
     });
     const next = produce(before, (draft) => {
@@ -103,7 +107,15 @@ describe('applyNodeStatusEvent', () => {
     // independent seq counters must not silently drop each other.
     const before = makeState({
       nodesById: {
-        n1: { node_id: 'n1', status: 'succeeded', resource_name: 'svc', resource_type: 't', action: 'create', last_at: '', last_seq: 9 },
+        n1: {
+          node_id: 'n1',
+          status: 'succeeded',
+          resource_name: 'svc',
+          resource_type: 't',
+          action: 'create',
+          last_at: '',
+          last_seq: 9,
+        },
       },
     });
     const next = produce(before, (draft) => {
@@ -123,7 +135,15 @@ describe('applyNodeStatusEvent', () => {
     // op is starting.
     const before = makeState({
       nodesById: {
-        n1: { node_id: 'n1', status: 'failed', resource_name: 'svc', resource_type: 't', action: 'create', last_at: '', last_seq: 7 },
+        n1: {
+          node_id: 'n1',
+          status: 'failed',
+          resource_name: 'svc',
+          resource_type: 't',
+          action: 'create',
+          last_at: '',
+          last_seq: 7,
+        },
       },
     });
     const next = produce(before, (draft) => {

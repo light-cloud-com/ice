@@ -254,9 +254,7 @@ describe('sync_deploy_result_to_state', () => {
 
   it('upserts an updated resource with status="updated" (action !== "create" branch)', async () => {
     const store = makeStore();
-    const result = makeDeployResult([
-      makeResource({ name: 'web', action: 'update', provider_id: 'svc-existing' }),
-    ]);
+    const result = makeDeployResult([makeResource({ name: 'web', action: 'update', provider_id: 'svc-existing' })]);
 
     await sync_deploy_result_to_state(store, result, 'graph-1');
 
@@ -269,9 +267,7 @@ describe('sync_deploy_result_to_state', () => {
 
   it('calls delete_resource (not upsert) for action="delete" and uses ${type}:${name} as the node id', async () => {
     const store = makeStore();
-    const result = makeDeployResult([
-      makeResource({ name: 'web', type: 'gcp.run.service', action: 'delete' }),
-    ]);
+    const result = makeDeployResult([makeResource({ name: 'web', type: 'gcp.run.service', action: 'delete' })]);
 
     await sync_deploy_result_to_state(store, result, 'graph-1');
 
@@ -281,9 +277,7 @@ describe('sync_deploy_result_to_state', () => {
 
   it('skips resources with success=false (no upsert, no delete)', async () => {
     const store = makeStore();
-    const result = makeDeployResult([
-      makeResource({ name: 'failed-web', action: 'create', success: false }),
-    ]);
+    const result = makeDeployResult([makeResource({ name: 'failed-web', action: 'create', success: false })]);
 
     await sync_deploy_result_to_state(store, result, 'graph-1');
 
@@ -343,9 +337,7 @@ describe('sync_resource_results_to_state', () => {
 
   it('upserts a created resource with status="created"', async () => {
     const store = makeStore();
-    const results = [
-      makeResource({ name: 'web', action: 'create', provider_id: 'svc-new', outputs: { url: 'u' } }),
-    ];
+    const results = [makeResource({ name: 'web', action: 'create', provider_id: 'svc-new', outputs: { url: 'u' } })];
 
     await sync_resource_results_to_state(store, results, 'graph-1');
 
@@ -375,9 +367,7 @@ describe('sync_resource_results_to_state', () => {
 
   it('calls delete_resource for action="delete" with the ${type}:${name} key', async () => {
     const store = makeStore();
-    const results = [
-      makeResource({ name: 'web', type: 'gcp.run.service', action: 'delete' }),
-    ];
+    const results = [makeResource({ name: 'web', type: 'gcp.run.service', action: 'delete' })];
 
     await sync_resource_results_to_state(store, results, 'graph-1');
 

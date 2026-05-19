@@ -6,8 +6,9 @@
  * happy + sad paths.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { setApiAdapter } from '../../../shared/api/api-adapter';
 import pipelineReducer, {
   fetchRulesForNode,
   createPipelineRule,
@@ -17,7 +18,6 @@ import pipelineReducer, {
   detectFramework,
   triggerManualDeploy,
 } from '../pipeline-slice';
-import { setApiAdapter } from '../../../shared/api/api-adapter';
 
 interface PipeStub {
   getRules: ReturnType<typeof vi.fn>;
@@ -81,9 +81,7 @@ describe('pipeline-slice thunks', () => {
     it('fulfils with the cardId:nodeId key + new rule on success', async () => {
       pipe.createRule.mockResolvedValue({ success: true, rule: { id: 'new', card_id: 'c-1', node_id: 'n-1' } });
       const store = makeStore();
-      const action = await store.dispatch(
-        createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }),
-      );
+      const action = await store.dispatch(createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }));
       expect(action.type).toBe(createPipelineRule.fulfilled.type);
       expect(action.payload).toEqual({
         key: 'c-1:n-1',
@@ -94,18 +92,14 @@ describe('pipeline-slice thunks', () => {
     it('rejects with api error on success=false', async () => {
       pipe.createRule.mockResolvedValue({ success: false, error: 'duplicate' });
       const store = makeStore();
-      const action = await store.dispatch(
-        createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }),
-      );
+      const action = await store.dispatch(createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }));
       expect(action.payload).toBe('duplicate');
     });
 
     it('rejects with err.message when api throws', async () => {
       pipe.createRule.mockRejectedValue(new Error('net'));
       const store = makeStore();
-      const action = await store.dispatch(
-        createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }),
-      );
+      const action = await store.dispatch(createPipelineRule({ cardId: 'c-1', nodeId: 'n-1', repository: 'o/r' }));
       expect(action.payload).toBe('net');
     });
   });

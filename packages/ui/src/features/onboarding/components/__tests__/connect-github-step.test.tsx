@@ -2,7 +2,6 @@
  * ConnectGithubStep — onboarding step 4 (PAT + Device flow).
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -35,7 +34,7 @@ vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
     const next = mocks.useStateQueue.shift();
-    return [(next === undefined ? init : (next as T)), vi.fn()];
+    return [next === undefined ? init : (next as T), vi.fn()];
   });
   const useEffect = vi.fn((cb: () => void | (() => void), deps?: unknown[]) => {
     mocks.effects.push({ cb, deps });
@@ -179,9 +178,10 @@ describe('ConnectGithubStep — disconnected', () => {
   it('clicking PAT connect with empty token does not dispatch', () => {
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const patBtn = buttons.find((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    const patBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
     );
     (patBtn?.props.onClick as () => void)?.();
     expect(mocks.connectPATSpy).not.toHaveBeenCalled();
@@ -236,9 +236,10 @@ describe('ConnectGithubStep — disconnected', () => {
     mocks.useStateQueue.push('device');
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const deviceBtn = buttons.find((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('bg-[#24292f]') ?? false),
+    const deviceBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('bg-[#24292f]') ?? false),
     );
     (deviceBtn?.props.onClick as () => void)?.();
     expect(mocks.startDeviceSpy).toHaveBeenCalled();
@@ -249,9 +250,10 @@ describe('ConnectGithubStep — disconnected', () => {
     mocks.useStateQueue.push('  my-token  '); // patToken
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const patBtn = buttons.find((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    const patBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
     );
     (patBtn?.props.onClick as () => void)?.();
     expect(mocks.connectPATSpy).toHaveBeenCalledWith('my-token');
@@ -327,9 +329,10 @@ describe('ConnectGithubStep — copy code', () => {
     installFakeClipboard(writeText);
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const copyBtn = buttons.find((b) =>
-      typeof (b.props as { title?: string }).title === 'string' &&
-      ((b.props as { title: string }).title.includes('copyCode') ?? false),
+    const copyBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { title?: string }).title === 'string' &&
+        ((b.props as { title: string }).title.includes('copyCode') ?? false),
     );
     (copyBtn?.props.onClick as () => void)?.();
     expect(writeText).toHaveBeenCalledWith('COPYME');

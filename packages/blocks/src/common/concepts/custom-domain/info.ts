@@ -26,6 +26,25 @@ If placed **inside a Private Network**, this becomes the only public entry
 point to the sealed network. Outside traffic hits Custom Domain, which routes
 to nested services. The rest of the network stays private.
     `.trim(),
+    markdownZh: `
+# 自定义域名
+
+使用自己的主机名 + HTTPS，连接到一个或多个服务。一个块即可处理 DNS、SSL 证书签发以及子域名路由。
+
+## 功能
+
+- 为域名管理 DNS 记录
+- 自动 SSL/TLS 证书（托管、自动续期）
+- 基于主机名的路由：\`api.example.com\` → 后端，\`example.com\` → 静态站点
+
+## 连接方式
+
+从自定义域名拖一条或多条连接到 **静态站点**、**SSR 站点**、**可扩展后端** 或 **API Gateway**。每条边可以携带一个可选子域名 —— 同一域名下的多个子域名通过共享负载均衡器路由。
+
+## 在私有网络中
+
+若放置在 **私有网络** 内部，它将成为该封闭网络唯一的公网入口。外部流量先打到自定义域名，再由其路由到内嵌的服务。网络其余部分保持私有。
+    `.trim(),
   },
   compilesTo: {
     aws: [

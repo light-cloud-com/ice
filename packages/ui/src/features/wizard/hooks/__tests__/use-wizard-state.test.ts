@@ -19,12 +19,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
-  const useState = vi.fn(<T,>(init: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void] => {
+  const useState = vi.fn(<T>(init: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void] => {
     const initial = typeof init === 'function' ? (init as () => T)() : init;
     if (mocks.state === null) mocks.state = initial;
     return [mocks.state as T, mocks.setState];
   });
-  const useCallback = vi.fn(<T,>(fn: T): T => fn);
+  const useCallback = vi.fn(<T>(fn: T): T => fn);
   return { ...actual, useState, useCallback };
 });
 
@@ -37,7 +37,7 @@ beforeEach(() => {
 
 // Helper: invoke setState's reducer arg with an explicit current state and
 // inspect what it returns.
-const driveReducer = <T,>(prev: T): T => {
+const driveReducer = <T>(prev: T): T => {
   const args = mocks.setState.mock.calls[mocks.setState.mock.calls.length - 1];
   const reducer = args[0] as (s: T) => T;
   return reducer(prev);
@@ -233,9 +233,7 @@ describe('useWizardState — step 2 setters', () => {
 
   it('applyEnvironmentPresets enables matching presets and disables others', () => {
     const out = useWizardState();
-    out.applyEnvironmentPresets([
-      { type: 'production', region: 'eu-west1', securityLevel: 'strict' },
-    ]);
+    out.applyEnvironmentPresets([{ type: 'production', region: 'eu-west1', securityLevel: 'strict' }]);
     const next = driveReducer({
       step: 2,
       projectName: '',
@@ -334,9 +332,7 @@ describe('useWizardState — validation', () => {
       projectName: '',
       projectDescription: '',
       provider: 'aws',
-      environments: [
-        { enabled: false, type: 'production', name: 'P', region: 'us-east1', securityLevel: 'basic' },
-      ],
+      environments: [{ enabled: false, type: 'production', name: 'P', region: 'us-east1', securityLevel: 'basic' }],
       selectedTemplateId: null,
       searchQuery: '',
     };
@@ -388,9 +384,7 @@ describe('useWizardState — canProceed', () => {
       projectName: '',
       projectDescription: '',
       provider: 'aws',
-      environments: [
-        { enabled: true, type: 'production', name: 'P', region: 'us-east1', securityLevel: 'basic' },
-      ],
+      environments: [{ enabled: true, type: 'production', name: 'P', region: 'us-east1', securityLevel: 'basic' }],
       selectedTemplateId: null,
       searchQuery: '',
     };

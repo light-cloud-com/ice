@@ -220,10 +220,7 @@ describe('ui-slice', () => {
     });
 
     it('closes back to defaults', () => {
-      let s = uiReducer(
-        init(),
-        openContextMenu({ position: { x: 1, y: 2 }, type: 'edge', targetId: 'e-1' }),
-      );
+      let s = uiReducer(init(), openContextMenu({ position: { x: 1, y: 2 }, type: 'edge', targetId: 'e-1' }));
       s = uiReducer(s, closeContextMenu());
       expect(s.contextMenu.isOpen).toBe(false);
       expect(s.contextMenu.type).toBeNull();
@@ -282,7 +279,7 @@ describe('ui-slice', () => {
     });
 
     it('closeSplit falls back to first pane when activePaneId no longer matches', () => {
-      let s = uiReducer(init(), splitRight('card-2'));
+      const s = uiReducer(init(), splitRight('card-2'));
       // Manually set activePaneId to something invalid.
       const stale = uiReducer(s, setActivePane('does-not-exist'));
       // setActivePane validates, so stale.activePaneId still equals the

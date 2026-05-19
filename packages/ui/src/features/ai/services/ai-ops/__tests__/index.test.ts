@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as aiOps from '../index';
+import * as aiOps from '..';
 
 describe('ai-ops/index — barrel exports', () => {
   it('exposes all numeric tunables from types', () => {

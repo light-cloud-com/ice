@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { t } from '../../../../../i18n';
 import type { LogStreamStatus } from '../../../../../store/slices/logs-slice';
 
 interface LiveIndicatorProps {
@@ -21,19 +22,19 @@ interface IndicatorSpec {
 function specFor(status: LogStreamStatus): IndicatorSpec {
   switch (status) {
     case 'streaming':
-      return { tone: 'green', label: 'LIVE', pulse: true };
+      return { tone: 'green', label: t('canvas.status.live'), pulse: true };
     case 'connecting':
-      return { tone: 'amber', label: 'CONNECTING', pulse: false };
+      return { tone: 'amber', label: t('canvas.status.connecting'), pulse: false };
     case 'permission-denied':
     case 'error':
-      return { tone: 'red', label: 'ERROR', pulse: false };
+      return { tone: 'red', label: t('canvas.status.error'), pulse: false };
     case 'pre-deploy':
     case 'no-source':
     case 'ambiguous':
     case 'unsupported':
     case 'idle':
     default:
-      return { tone: 'grey', label: 'IDLE', pulse: false };
+      return { tone: 'grey', label: t('canvas.status.idle'), pulse: false };
   }
 }
 

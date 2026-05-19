@@ -4,8 +4,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { import_resource, process_properties } from '../resource-conversion';
-import type { PulumiResource, PulumiImportWarning } from '../types';
 import type { PulumiImportOptions } from '../state-importer';
+import type { PulumiResource, PulumiImportWarning } from '../types';
 
 const SECRET_WRAPPER = {
   '4dabf18193072939515e22aab3b80af9': '1b47061264138c4ac30d75fd1eb44270',
@@ -40,18 +40,12 @@ describe('process_properties', () => {
   });
 
   it('unwraps secret values when include_secrets=true', () => {
-    const result = process_properties(
-      { pwd: SECRET_WRAPPER },
-      { ...default_opts, include_secrets: true },
-    );
+    const result = process_properties({ pwd: SECRET_WRAPPER }, { ...default_opts, include_secrets: true });
     expect(result.pwd).toBe('shh');
   });
 
   it('recurses into nested objects', () => {
-    const result = process_properties(
-      { db: { host: 'h', creds: { token: SECRET_WRAPPER } } },
-      default_opts,
-    );
+    const result = process_properties({ db: { host: 'h', creds: { token: SECRET_WRAPPER } } }, default_opts);
     expect(result).toEqual({ db: { host: 'h', creds: { token: '***SECRET***' } } });
   });
 });
@@ -75,21 +69,13 @@ describe('import_resource', () => {
 
   it('falls back to extract_name_from_urn when parse_urn returns null', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ urn: 'malformed::but::trailing' }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ urn: 'malformed::but::trailing' }), default_opts, warnings);
     expect(result.name).toBe('trailing');
   });
 
   it('applies name_prefix when configured', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource(),
-      { ...default_opts, name_prefix: 'imp_' },
-      warnings,
-    );
+    const result = import_resource(make_resource(), { ...default_opts, name_prefix: 'imp_' }, warnings);
     expect(result.name).toBe('imp_main');
   });
 
@@ -109,11 +95,7 @@ describe('import_resource', () => {
 
   it('falls back to inputs and emits NO_OUTPUTS warning when outputs missing', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ inputs: { cidrBlock: 'a' } }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ inputs: { cidrBlock: 'a' } }), default_opts, warnings);
     expect(result.properties).toEqual({ cidrBlock: 'a' });
     expect(warnings).toHaveLength(1);
     expect(warnings[0]?.code).toBe('NO_OUTPUTS');
@@ -147,11 +129,7 @@ describe('import_resource', () => {
 
   it('mirrors additional_secret_outputs into secret_outputs', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ additional_secret_outputs: ['k1', 'k2'] }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ additional_secret_outputs: ['k1', 'k2'] }), default_opts, warnings);
     expect(result.secret_outputs).toEqual(['k1', 'k2']);
   });
 
@@ -164,32 +142,20 @@ describe('import_resource', () => {
 
   it('preserves protect=true and external=true when set', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ protect: true, external: true }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ protect: true, external: true }), default_opts, warnings);
     expect(result.protect).toBe(true);
     expect(result.external).toBe(true);
   });
 
   it('passes id through verbatim', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ id: 'vpc-12345678' }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ id: 'vpc-12345678' }), default_opts, warnings);
     expect(result.id).toBe('vpc-12345678');
   });
 
   it('masks secrets in nested output properties', () => {
     const warnings: PulumiImportWarning[] = [];
-    const result = import_resource(
-      make_resource({ outputs: { token: SECRET_WRAPPER } }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource(make_resource({ outputs: { token: SECRET_WRAPPER } }), default_opts, warnings);
     expect(result.properties).toEqual({ token: '***SECRET***' });
   });
 });

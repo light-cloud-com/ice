@@ -105,13 +105,12 @@ describe('classifyError — permission-denied', () => {
 // ─── api-not-enabled ───────────────────────────────────────────────────────
 
 describe('classifyError — api-not-enabled', () => {
-  it.each([
-    'SERVICE_DISABLED',
-    'API has not been used in this project',
-    'has not been enabled for this project',
-  ])('matches %s', (msg) => {
-    expect(classifyError(msg)?.id).toBe('api-not-enabled');
-  });
+  it.each(['SERVICE_DISABLED', 'API has not been used in this project', 'has not been enabled for this project'])(
+    'matches %s',
+    (msg) => {
+      expect(classifyError(msg)?.id).toBe('api-not-enabled');
+    },
+  );
 
   it('includes Open API library + Retry deploy actions', () => {
     const r = classifyError('SERVICE_DISABLED');
@@ -128,12 +127,9 @@ describe('classifyError — api-not-enabled', () => {
 // ─── quota-exceeded ────────────────────────────────────────────────────────
 
 describe('classifyError — quota-exceeded', () => {
-  it.each(['QUOTA_EXCEEDED', 'quota was exceeded', 'exceeded quota for region'])(
-    'matches %s',
-    (msg) => {
-      expect(classifyError(msg)?.id).toBe('quota-exceeded');
-    },
-  );
+  it.each(['QUOTA_EXCEEDED', 'quota was exceeded', 'exceeded quota for region'])('matches %s', (msg) => {
+    expect(classifyError(msg)?.id).toBe('quota-exceeded');
+  });
 
   it('only includes the quota-increase action (no retry)', () => {
     const r = classifyError('QUOTA_EXCEEDED');
@@ -149,30 +145,22 @@ describe('classifyError — quota-exceeded', () => {
 // ─── already-exists ────────────────────────────────────────────────────────
 
 describe('classifyError — already-exists', () => {
-  it.each(['ALREADY_EXISTS', 'name is already in use', 'resource already exists'])(
-    'matches %s',
-    (msg) => {
-      expect(classifyError(msg)?.id).toBe('already-exists');
-    },
-  );
+  it.each(['ALREADY_EXISTS', 'name is already in use', 'resource already exists'])('matches %s', (msg) => {
+    expect(classifyError(msg)?.id).toBe('already-exists');
+  });
 
   it('includes a single Open GCP console action', () => {
     const r = classifyError('ALREADY_EXISTS');
-    expect(r?.actions).toEqual([
-      { label: 'Open GCP console', href: 'https://console.cloud.google.com/' },
-    ]);
+    expect(r?.actions).toEqual([{ label: 'Open GCP console', href: 'https://console.cloud.google.com/' }]);
   });
 });
 
 // ─── invalid-argument ──────────────────────────────────────────────────────
 
 describe('classifyError — invalid-argument', () => {
-  it.each(['INVALID_ARGUMENT', 'invalid value provided', 'is not a valid format'])(
-    'matches %s',
-    (msg) => {
-      expect(classifyError(msg)?.id).toBe('invalid-argument');
-    },
-  );
+  it.each(['INVALID_ARGUMENT', 'invalid value provided', 'is not a valid format'])('matches %s', (msg) => {
+    expect(classifyError(msg)?.id).toBe('invalid-argument');
+  });
 
   it('returns no actions (advisory remediation only)', () => {
     expect(classifyError('INVALID_ARGUMENT')?.actions).toEqual([]);
@@ -183,15 +171,11 @@ describe('classifyError — invalid-argument', () => {
 
 describe('classifyError — cert-required', () => {
   it('matches the verbatim cert-map error string', () => {
-    expect(
-      classifyError('Certificate Map or at least 1 SSL certificate must be specified')?.id,
-    ).toBe('cert-required');
+    expect(classifyError('Certificate Map or at least 1 SSL certificate must be specified')?.id).toBe('cert-required');
   });
 
   it('returns no actions for cert-required', () => {
-    expect(
-      classifyError('Certificate Map or at least 1 SSL certificate must be specified')?.actions,
-    ).toEqual([]);
+    expect(classifyError('Certificate Map or at least 1 SSL certificate must be specified')?.actions).toEqual([]);
   });
 
   it('does NOT match if the phrase is fragmented or paraphrased', () => {
@@ -202,17 +186,12 @@ describe('classifyError — cert-required', () => {
 // ─── deadline-exceeded ─────────────────────────────────────────────────────
 
 describe('classifyError — deadline-exceeded', () => {
-  it.each(['DEADLINE_EXCEEDED', 'operation deadline exceeded', 'operation timed out'])(
-    'matches %s',
-    (msg) => {
-      expect(classifyError(msg)?.id).toBe('deadline-exceeded');
-    },
-  );
+  it.each(['DEADLINE_EXCEEDED', 'operation deadline exceeded', 'operation timed out'])('matches %s', (msg) => {
+    expect(classifyError(msg)?.id).toBe('deadline-exceeded');
+  });
 
   it('includes Retry deploy action', () => {
-    expect(classifyError('DEADLINE_EXCEEDED')?.actions).toEqual([
-      { label: 'Retry deploy', onClick: 'retry' },
-    ]);
+    expect(classifyError('DEADLINE_EXCEEDED')?.actions).toEqual([{ label: 'Retry deploy', onClick: 'retry' }]);
   });
 });
 
@@ -230,9 +209,7 @@ describe('classifyError — network-error', () => {
   });
 
   it('includes Retry deploy action', () => {
-    expect(classifyError('ECONNRESET')?.actions).toEqual([
-      { label: 'Retry deploy', onClick: 'retry' },
-    ]);
+    expect(classifyError('ECONNRESET')?.actions).toEqual([{ label: 'Retry deploy', onClick: 'retry' }]);
   });
 });
 
@@ -243,15 +220,11 @@ describe('classifyError — first match in REMEDIATIONS table wins', () => {
     // billing-not-enabled is declared before permission-denied in the
     // table, so a message containing both phrases must classify as the
     // earlier one.
-    expect(
-      classifyError('billing account missing AND PERMISSION_DENIED')?.id,
-    ).toBe('billing-not-enabled');
+    expect(classifyError('billing account missing AND PERMISSION_DENIED')?.id).toBe('billing-not-enabled');
   });
 
   it('permission-denied wins over api-not-enabled when both phrases present', () => {
-    expect(
-      classifyError('PERMISSION_DENIED — also has not been enabled')?.id,
-    ).toBe('permission-denied');
+    expect(classifyError('PERMISSION_DENIED — also has not been enabled')?.id).toBe('permission-denied');
   });
 
   it('quota-exceeded wins over already-exists when both phrases present', () => {

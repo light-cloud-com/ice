@@ -139,11 +139,7 @@ export const DeployControls: React.FC<DeployControlsProps> = ({
             'disabled:opacity-50 disabled:cursor-not-allowed',
           )}
         >
-          {status === 'planning' ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Eye className="w-3.5 h-3.5" />
-          )}
+          {status === 'planning' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
           {t('deploy.buttons.plan')}
         </button>
 
@@ -193,9 +189,7 @@ export const DeployControls: React.FC<DeployControlsProps> = ({
               ) : (
                 <Play className="w-3.5 h-3.5" />
               )}
-              {deployedResourcesCount > 0
-                ? t('deploy.buttons.updateInfrastructure')
-                : t('deploy.buttons.deploy')}
+              {deployedResourcesCount > 0 ? t('deploy.buttons.updateInfrastructure') : t('deploy.buttons.deploy')}
             </button>
           );
         })()}

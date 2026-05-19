@@ -6,12 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { create_mutable_graph } from '../../../mutable-graph';
-import {
-  CycleValidator,
-  ReferenceValidator,
-  NamingValidator,
-  ConnectivityValidator,
-} from '../structure';
+import { CycleValidator, ReferenceValidator, NamingValidator, ConnectivityValidator } from '../structure';
 
 // ─── CycleValidator ──────────────────────────────────────────────────────────
 
@@ -75,13 +70,16 @@ describe('ReferenceValidator', () => {
     const nodes = Array.from(graph.nodes.values());
     // Manually inject an edge with a phantom source via the graph's
     // edges Map. ReferenceValidator just iterates `graph.edges.values()`.
-    graph.edges.set('e1' as any, {
-      id: 'e1',
-      source: 'ghost-source' as any,
-      target: nodes[0].id,
-      relationship: 'depends_on',
-      metadata: { annotations: {}, labels: {}, tags: {} },
-    } as any);
+    graph.edges.set(
+      'e1' as any,
+      {
+        id: 'e1',
+        source: 'ghost-source' as any,
+        target: nodes[0].id,
+        relationship: 'depends_on',
+        metadata: { annotations: {}, labels: {}, tags: {} },
+      } as any,
+    );
 
     const issues = new ReferenceValidator().validate(graph);
     expect(issues.some((i) => i.code === 'INVALID_SOURCE')).toBe(true);
@@ -91,13 +89,16 @@ describe('ReferenceValidator', () => {
     const graph = create_mutable_graph('test');
     graph.add_node({ type: 't', name: 'a', properties: {} });
     const nodes = Array.from(graph.nodes.values());
-    graph.edges.set('e1' as any, {
-      id: 'e1',
-      source: nodes[0].id,
-      target: 'ghost-target' as any,
-      relationship: 'depends_on',
-      metadata: { annotations: {}, labels: {}, tags: {} },
-    } as any);
+    graph.edges.set(
+      'e1' as any,
+      {
+        id: 'e1',
+        source: nodes[0].id,
+        target: 'ghost-target' as any,
+        relationship: 'depends_on',
+        metadata: { annotations: {}, labels: {}, tags: {} },
+      } as any,
+    );
 
     const issues = new ReferenceValidator().validate(graph);
     expect(issues.some((i) => i.code === 'INVALID_TARGET')).toBe(true);

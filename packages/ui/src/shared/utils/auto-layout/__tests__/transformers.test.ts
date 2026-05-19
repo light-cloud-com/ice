@@ -28,17 +28,38 @@ describe('absolutizeEdgeRoutes', () => {
   it('top-level (ownerId=null) routes pass through unmodified', () => {
     const nodeMap = new Map<string, LayoutNode>();
     const result = absolutizeEdgeRoutes(
-      [{ ownerId: null, key: 'a::b', points: [{ x: 10, y: 20 }, { x: 30, y: 40 }] }],
+      [
+        {
+          ownerId: null,
+          key: 'a::b',
+          points: [
+            { x: 10, y: 20 },
+            { x: 30, y: 40 },
+          ],
+        },
+      ],
       nodeMap,
     );
-    expect(result.get('a::b')).toEqual([{ x: 10, y: 20 }, { x: 30, y: 40 }]);
+    expect(result.get('a::b')).toEqual([
+      { x: 10, y: 20 },
+      { x: 30, y: 40 },
+    ]);
   });
 
   it('container-owned routes get offset by owner.x / owner.y', () => {
     const owner = mk('owner', 100, 200);
     const nodeMap = new Map([['owner', owner]]);
     const result = absolutizeEdgeRoutes(
-      [{ ownerId: 'owner', key: 'c1::c2', points: [{ x: 5, y: 5 }, { x: 15, y: 25 }] }],
+      [
+        {
+          ownerId: 'owner',
+          key: 'c1::c2',
+          points: [
+            { x: 5, y: 5 },
+            { x: 15, y: 25 },
+          ],
+        },
+      ],
       nodeMap,
     );
     expect(result.get('c1::c2')).toEqual([
@@ -50,7 +71,10 @@ describe('absolutizeEdgeRoutes', () => {
   it('multiple routes with different owners each offset independently', () => {
     const o1 = mk('o1', 100, 0);
     const o2 = mk('o2', 0, 200);
-    const nodeMap = new Map([['o1', o1], ['o2', o2]]);
+    const nodeMap = new Map([
+      ['o1', o1],
+      ['o2', o2],
+    ]);
     const result = absolutizeEdgeRoutes(
       [
         { ownerId: 'o1', key: 'p::q', points: [{ x: 10, y: 10 }] },
@@ -64,10 +88,7 @@ describe('absolutizeEdgeRoutes', () => {
 
   it('owner missing from nodeMap: route passes through with no offset', () => {
     const nodeMap = new Map<string, LayoutNode>();
-    const result = absolutizeEdgeRoutes(
-      [{ ownerId: 'ghost', key: 'a::b', points: [{ x: 10, y: 20 }] }],
-      nodeMap,
-    );
+    const result = absolutizeEdgeRoutes([{ ownerId: 'ghost', key: 'a::b', points: [{ x: 10, y: 20 }] }], nodeMap);
     expect(result.get('a::b')).toEqual([{ x: 10, y: 20 }]);
   });
 

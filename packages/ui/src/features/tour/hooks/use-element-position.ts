@@ -34,7 +34,6 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 
 export interface UseElementPositionOptions {
@@ -46,14 +45,9 @@ export interface UseElementPositionOptions {
 
 const HIDE_DEBOUNCE_MS = 250;
 
-export function useElementPosition(
-  element: Element | null,
-  options: UseElementPositionOptions = {},
-): DOMRect | null {
+export function useElementPosition(element: Element | null, options: UseElementPositionOptions = {}): DOMRect | null {
   const { observeViewport = true, scrollIntoViewOnHide = true } = options;
-  const [rect, setRect] = useState<DOMRect | null>(() =>
-    element ? element.getBoundingClientRect() : null,
-  );
+  const [rect, setRect] = useState<DOMRect | null>(() => (element ? element.getBoundingClientRect() : null));
 
   // Reduced-motion changes can fire AFTER mount (user toggles the
   // system setting); keep the IO closure reading the freshest value via
@@ -116,7 +110,9 @@ export function useElementPosition(
               // has it in lib.dom.d.ts, but test fixtures often pass a
               // bare-object stub that doesn't, and pseudo-elements (e.g.
               // ::before) wouldn't either if they could be observed.
-              const scrollIntoViewFn = (element as Element & { scrollIntoView?: (arg?: ScrollIntoViewOptions | boolean) => void }).scrollIntoView;
+              const scrollIntoViewFn = (
+                element as Element & { scrollIntoView?: (arg?: ScrollIntoViewOptions | boolean) => void }
+              ).scrollIntoView;
               if (typeof scrollIntoViewFn === 'function') {
                 scrollIntoViewFn.call(element, {
                   behavior: reducedMotionRef.current ? 'auto' : 'smooth',

@@ -26,10 +26,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -52,12 +49,12 @@ function collectText(tree: React.ReactNode): string {
   return parts.join('');
 }
 
-const renderSCL = (
-  props: Partial<React.ComponentProps<typeof StatusCostLine>> = {},
-): React.ReactElement => {
-  const Inner = (StatusCostLine as unknown as {
-    type: (p: React.ComponentProps<typeof StatusCostLine>) => React.ReactElement;
-  }).type;
+const renderSCL = (props: Partial<React.ComponentProps<typeof StatusCostLine>> = {}): React.ReactElement => {
+  const Inner = (
+    StatusCostLine as unknown as {
+      type: (p: React.ComponentProps<typeof StatusCostLine>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof StatusCostLine> = {
     statusLabel: '',
     statusColor: '#22c55e',

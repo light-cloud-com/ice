@@ -91,10 +91,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -333,14 +330,12 @@ describe('TemplateCard — provider + tech strip', () => {
       template: makeTemplate({ providers: ['aws', 'gcp'] as ComposedTemplate['providers'] }),
       onSelect: vi.fn(),
     });
-    const imgs = findByPredicate(
-      tree,
-      (el) =>
-        el.type === 'img' &&
-        typeof (el.props as { src?: string }).src === 'string' &&
-        (el.props as { src: string }).src.startsWith('/icons/aws') === false
-          ? false
-          : el.type === 'img',
+    const imgs = findByPredicate(tree, (el) =>
+      el.type === 'img' &&
+      typeof (el.props as { src?: string }).src === 'string' &&
+      (el.props as { src: string }).src.startsWith('/icons/aws') === false
+        ? false
+        : el.type === 'img',
     );
     // Find aws + gcp imgs
     const allImgs = findByPredicate(tree, (el) => el.type === 'img');

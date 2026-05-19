@@ -87,20 +87,16 @@ const mocks = vi.hoisted(() => ({
 
   // Identity passthrough for cn — joins truthy strings with a space so
   // className walk comparisons stay legible.
-  cnSpy: vi.fn((...args: unknown[]) =>
-    args.filter((a) => typeof a === 'string' && a).join(' '),
-  ),
+  cnSpy: vi.fn((...args: unknown[]) => args.filter((a) => typeof a === 'string' && a).join(' ')),
 
   // Dispatch spy.
   dispatchSpy: vi.fn(),
 
   // Slice spies — return tagged objects so dispatch arg is verifiable.
-  updateCardNodeDataSpy: vi.fn(
-    (arg: { nodeId: string; data: Record<string, unknown> }) => ({
-      type: 'cards/updateCardNodeData',
-      payload: arg,
-    }),
-  ),
+  updateCardNodeDataSpy: vi.fn((arg: { nodeId: string; data: Record<string, unknown> }) => ({
+    type: 'cards/updateCardNodeData',
+    payload: arg,
+  })),
   toggleProperties: vi.fn(() => ({ type: 'ui/toggleProperties' })),
 
   // Icon helpers — return deterministic shapes.
@@ -234,20 +230,15 @@ vi.mock('../../../../../store/slices/ui-slice', () => ({
 
 import { NodePropertiesSection } from '../node-properties-section';
 import type { Card, CardNode, CardEdge } from '../../../../../store/slices/cards-slice';
-import type { ResourceDef } from '../../../hooks/use-resource-map';
 import type { CanvasIssue } from '../../../../../store/slices/validation-slice';
+import type { ResourceDef } from '../../../hooks/use-resource-map';
 
 // ─── Tree-walker (same shape as rf-props-6/9/10/.../22) ──────────────────────
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -261,10 +252,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -272,10 +260,7 @@ function findByPredicate(
   return out;
 }
 
-function findByType(
-  tree: React.ReactNode,
-  type: unknown,
-): React.ReactElement[] {
+function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] {
   return findByPredicate(tree, (el) => el.type === type);
 }
 
@@ -300,11 +285,7 @@ function collectText(tree: React.ReactNode): string {
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
-const makeNode = (
-  id: string,
-  data: Record<string, unknown> = {},
-  overrides: Partial<CardNode> = {},
-): CardNode => ({
+const makeNode = (id: string, data: Record<string, unknown> = {}, overrides: Partial<CardNode> = {}): CardNode => ({
   id,
   type: 'block',
   position: { x: 0, y: 0 },
@@ -456,7 +437,11 @@ describe('NodePropertiesSection', () => {
   });
 
   it('renders GroupColorPicker for container nodes, with onChange wiring updateCardNodeData', () => {
-    const node = makeNode('grp-1', { iceType: 'Container', groupColor: '#ff00ff', groupOpacity: 0.5 }, { type: 'container' });
+    const node = makeNode(
+      'grp-1',
+      { iceType: 'Container', groupColor: '#ff00ff', groupOpacity: 0.5 },
+      { type: 'container' },
+    );
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
     const pickers = findByType(tree, mocks.MockGroupColorPicker);

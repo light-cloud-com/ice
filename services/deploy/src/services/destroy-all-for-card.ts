@@ -13,17 +13,13 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { finishDeploySnapshot, releaseTempDir, startDeploySnapshot } from './deploy-locks';
-import { resolveProviderAuth } from '../providers/registry';
-import { createDeployer } from './deployer-factory';
-import { acquireWriteLock } from './deploy-lock-wrapper';
 import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
-import {
-  collectDestroyAllTargets,
-  orderTargetsForDelete,
-  resolveDestroyAllProject,
-} from './destroy-targets';
+import { acquireWriteLock } from './deploy-lock-wrapper';
+import { finishDeploySnapshot, releaseTempDir, startDeploySnapshot } from './deploy-locks';
+import { createDeployer } from './deployer-factory';
 import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner';
+import { collectDestroyAllTargets, orderTargetsForDelete, resolveDestroyAllProject } from './destroy-targets';
+import { resolveProviderAuth } from '../providers/registry';
 
 /**
  * Destroy EVERY ICE-managed resource for a card across all historical
@@ -65,8 +61,7 @@ export async function destroyAllForCard(
 
     // rf-deploy-11 — 3-tier project priority moved to `./destroy-targets.ts`.
     // The throw stays here because it has to release the deploy lock first.
-    const gcpProject =
-      resolveDestroyAllProject({ options, credentials, targets: targets.values() }) ?? '';
+    const gcpProject = resolveDestroyAllProject({ options, credentials, targets: targets.values() }) ?? '';
     if (!gcpProject) {
       releaseLock();
       throw new Error(

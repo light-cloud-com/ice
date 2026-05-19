@@ -5,7 +5,6 @@
  * drive keydown events without relying on jsdom.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -97,8 +96,8 @@ describe('ViewLevelToggle — render', () => {
     mocks.state.viewLevel = 2;
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    expect((buttons[0].props.className as string)).not.toContain('bg-primary');
-    expect((buttons[1].props.className as string)).toContain('bg-primary');
+    expect(buttons[0].props.className as string).not.toContain('bg-primary');
+    expect(buttons[1].props.className as string).toContain('bg-primary');
   });
 
   it('passes title="<tooltip>\\n<description>" on each button', () => {
@@ -112,7 +111,7 @@ describe('ViewLevelToggle — render', () => {
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
     const innerSpans1 = findAll(buttons[0], (el) => el.type === 'span');
-    expect((innerSpans1[0].props.children as string)).toBe('Architecture');
+    expect(innerSpans1[0].props.children as string).toBe('Architecture');
     expect(innerSpans1[1].props.children).toBe(1);
   });
 });

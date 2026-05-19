@@ -17,18 +17,14 @@
  *  - Array length: only when Array.isArray(value). Inclusive. Uses the
  *    same min_length / max_length fields as strings.
  */
-import type { PropertyValidation } from '../schema-provider';
 import type { ValidationIssue } from '../resource-validator-types';
+import type { PropertyValidation } from '../schema-provider';
 
 /**
  * Run every constraint check applicable to the given value+validation.
  * Returns issues in canonical order: enum, pattern, range, length.
  */
-export function validate_constraints(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue[] {
+export function validate_constraints(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   push_if(issues, check_enum(path, value, validation));
@@ -48,11 +44,7 @@ function push_if(out: ValidationIssue[], maybe: ValidationIssue | null): void {
  * Allowed_values list check. Returns null when allowed_values is empty
  * or when the value is in the list; an issue otherwise.
  */
-export function check_enum(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue | null {
+export function check_enum(path: string, value: unknown, validation: PropertyValidation): ValidationIssue | null {
   if (!validation.allowed_values || validation.allowed_values.length === 0) {
     return null;
   }
@@ -74,11 +66,7 @@ export function check_enum(
  * Invalid regex strings are silently ignored (matches the original
  * try/catch + comment "Invalid regex pattern in schema, skip validation").
  */
-export function check_pattern(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue | null {
+export function check_pattern(path: string, value: unknown, validation: PropertyValidation): ValidationIssue | null {
   if (!validation.pattern || typeof value !== 'string') {
     return null;
   }
@@ -104,11 +92,7 @@ export function check_pattern(
  * Numeric min/max bounds. Only runs on number values. Boundaries are
  * inclusive (`<` for min, `>` for max).
  */
-export function check_numeric_range(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue[] {
+export function check_numeric_range(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   if (typeof value !== 'number') return issues;
   if (validation.min !== undefined && value < validation.min) {
@@ -137,11 +121,7 @@ export function check_numeric_range(
 /**
  * String min_length / max_length bounds. Only runs on string values.
  */
-export function check_string_length(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue[] {
+export function check_string_length(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   if (typeof value !== 'string') return issues;
   if (validation.min_length !== undefined && value.length < validation.min_length) {
@@ -171,11 +151,7 @@ export function check_string_length(
  * Array min_length / max_length bounds. Only runs on array values.
  * Uses the same min_length / max_length fields as the string check.
  */
-export function check_array_length(
-  path: string,
-  value: unknown,
-  validation: PropertyValidation,
-): ValidationIssue[] {
+export function check_array_length(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   if (!Array.isArray(value)) return issues;
   if (validation.min_length !== undefined && value.length < validation.min_length) {

@@ -2,7 +2,6 @@
  * PromoteModal — environment-promotion confirmation modal.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -172,9 +171,7 @@ describe('PromoteModal — diff case', () => {
   beforeEach(() => {
     mocks.state.environments.pendingDiff = {
       added: [{ nodeId: 'n1', label: 'New Block', iceType: 'Compute.X' }],
-      modified: [
-        { nodeId: 'n2', label: 'Updated', iceType: 'Compute.Y', changedFields: ['region', 'tier'] },
-      ],
+      modified: [{ nodeId: 'n2', label: 'Updated', iceType: 'Compute.Y', changedFields: ['region', 'tier'] }],
       removed: [{ nodeId: 'n3', label: 'Gone', iceType: 'Compute.Z' }],
       unchangedCount: 7,
     };
@@ -283,7 +280,10 @@ describe('PromoteModal — singular/plural copy', () => {
 
   it('uses plural "changes" for >1', () => {
     mocks.state.environments.pendingDiff = {
-      added: [{ nodeId: 'n1', label: 'a', iceType: 'X' }, { nodeId: 'n2', label: 'b', iceType: 'X' }],
+      added: [
+        { nodeId: 'n1', label: 'a', iceType: 'X' },
+        { nodeId: 'n2', label: 'b', iceType: 'X' },
+      ],
       modified: [],
       removed: [],
       unchangedCount: 0,

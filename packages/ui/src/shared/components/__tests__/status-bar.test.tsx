@@ -10,7 +10,6 @@
  * directly.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -68,8 +67,7 @@ vi.mock('react-redux', () => ({
 vi.mock('../../../i18n', () => ({
   useTranslation: () => ({
     // Render the key + interpolated values so tests can assert on key+pct.
-    t: (k: string, params?: Record<string, unknown>) =>
-      params ? `${k}:${JSON.stringify(params)}` : k,
+    t: (k: string, params?: Record<string, unknown>) => (params ? `${k}:${JSON.stringify(params)}` : k),
   }),
 }));
 
@@ -157,8 +155,7 @@ function collectText(tree: unknown): string {
   return s;
 }
 
-const callRender = (): unknown =>
-  (StatusBar as unknown as () => unknown)();
+const callRender = (): unknown => (StatusBar as unknown as () => unknown)();
 
 const baseState = () => ({
   graph: { isDirty: false, iceGraph: null },
@@ -298,9 +295,7 @@ describe('StatusBar — cost rollup', () => {
   });
 
   it('sums each node estimatedCost via parseCostRange', () => {
-    (mocks.parseCostRange as any).mockImplementation((s: unknown) =>
-      s === '$10' ? 10 : s === '$5' ? 5 : 0,
-    );
+    (mocks.parseCostRange as any).mockImplementation((s: unknown) => (s === '$10' ? 10 : s === '$5' ? 5 : 0));
     mocks.selectActiveCard.mockReturnValue({
       name: 'C',
       nodes: [
@@ -438,20 +433,14 @@ describe('StatusBar — validation pill', () => {
       summary: { errors: 2, warnings: 0 },
     };
     const tree = callRender();
-    const btn = findFirst(
-      tree,
-      (el) => el.type === 'button' && typeof el.props.onClick === 'function',
-    )!;
+    const btn = findFirst(tree, (el) => el.type === 'button' && typeof el.props.onClick === 'function')!;
     (btn.props.onClick as () => void)();
     expect(mocks.openValidation).toHaveBeenCalled();
   });
 
   it('clicking the validation button when no issues does NOT dispatch openValidation', () => {
     const tree = callRender();
-    const btn = findFirst(
-      tree,
-      (el) => el.type === 'button' && typeof el.props.onClick === 'function',
-    )!;
+    const btn = findFirst(tree, (el) => el.type === 'button' && typeof el.props.onClick === 'function')!;
     (btn.props.onClick as () => void)();
     expect(mocks.openValidation).not.toHaveBeenCalled();
   });

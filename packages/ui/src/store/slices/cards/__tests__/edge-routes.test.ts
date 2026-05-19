@@ -18,7 +18,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import {
   CONTAINER_PADDING,
   HEADER_HEIGHT,
@@ -65,7 +64,12 @@ describe('invalidateEdgeRoutesTouching', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
       }),
     ];
     invalidateEdgeRoutesTouching(edges, 'a');
@@ -78,7 +82,12 @@ describe('invalidateEdgeRoutesTouching', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
       }),
     ];
     invalidateEdgeRoutesTouching(edges, 'b');
@@ -86,7 +95,10 @@ describe('invalidateEdgeRoutesTouching', () => {
   });
 
   it('preserves routePoints when neither endpoint matches nodeId', () => {
-    const route = [{ x: 0, y: 0 }, { x: 10, y: 10 }];
+    const route = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+    ];
     const edges: CardEdge[] = [
       makeEdge({
         id: 'e1',
@@ -106,9 +118,7 @@ describe('invalidateEdgeRoutesTouching', () => {
   });
 
   it('is a no-op on edges with data but absent routePoints', () => {
-    const edges: CardEdge[] = [
-      makeEdge({ id: 'e1', source: 'a', target: 'b', data: { relationship: 'depends-on' } }),
-    ];
+    const edges: CardEdge[] = [makeEdge({ id: 'e1', source: 'a', target: 'b', data: { relationship: 'depends-on' } })];
     invalidateEdgeRoutesTouching(edges, 'a');
     expect(edges[0].data).toEqual({ relationship: 'depends-on' });
     expect(edges[0].data?.routePoints).toBeUndefined();
@@ -116,15 +126,48 @@ describe('invalidateEdgeRoutesTouching', () => {
 
   it('clears routePoints on every incident edge', () => {
     const edges: CardEdge[] = [
-      makeEdge({ id: 'e1', source: 'a', target: 'b', data: { routePoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }] } }),
-      makeEdge({ id: 'e2', source: 'b', target: 'a', data: { routePoints: [{ x: 2, y: 2 }, { x: 3, y: 3 }] } }),
-      makeEdge({ id: 'e3', source: 'c', target: 'd', data: { routePoints: [{ x: 4, y: 4 }, { x: 5, y: 5 }] } }),
+      makeEdge({
+        id: 'e1',
+        source: 'a',
+        target: 'b',
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+          ],
+        },
+      }),
+      makeEdge({
+        id: 'e2',
+        source: 'b',
+        target: 'a',
+        data: {
+          routePoints: [
+            { x: 2, y: 2 },
+            { x: 3, y: 3 },
+          ],
+        },
+      }),
+      makeEdge({
+        id: 'e3',
+        source: 'c',
+        target: 'd',
+        data: {
+          routePoints: [
+            { x: 4, y: 4 },
+            { x: 5, y: 5 },
+          ],
+        },
+      }),
     ];
     invalidateEdgeRoutesTouching(edges, 'a');
     expect(edges[0].data?.routePoints).toBeUndefined();
     expect(edges[1].data?.routePoints).toBeUndefined();
     // Untouched: neither source nor target equals 'a'.
-    expect(edges[2].data?.routePoints).toEqual([{ x: 4, y: 4 }, { x: 5, y: 5 }]);
+    expect(edges[2].data?.routePoints).toEqual([
+      { x: 4, y: 4 },
+      { x: 5, y: 5 },
+    ]);
   });
 
   it('preserves sibling fields on `data` (only routePoints is deleted)', () => {
@@ -133,7 +176,13 @@ describe('invalidateEdgeRoutesTouching', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }], relationship: 'depends-on' },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+          relationship: 'depends-on',
+        },
       }),
     ];
     invalidateEdgeRoutesTouching(edges, 'a');
@@ -159,7 +208,12 @@ describe('applyEdgeRoutes', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
       }),
     ];
     const routes = new Map<string, Array<{ x: number; y: number }>>();
@@ -172,7 +226,14 @@ describe('applyEdgeRoutes', () => {
   it('writes routePoints when the route has length >= 2', () => {
     const edges: CardEdge[] = [makeEdge({ id: 'e1', source: 'a', target: 'b' })];
     const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a::b', [{ x: 5, y: 6 }, { x: 7, y: 8 }, { x: 9, y: 10 }]],
+      [
+        'a::b',
+        [
+          { x: 5, y: 6 },
+          { x: 7, y: 8 },
+          { x: 9, y: 10 },
+        ],
+      ],
     ]);
     applyEdgeRoutes(edges, routes);
     expect(edges[0].data?.routePoints).toEqual([
@@ -188,12 +249,15 @@ describe('applyEdgeRoutes', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
       }),
     ];
-    const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a::b', [{ x: 99, y: 99 }]],
-    ]);
+    const routes = new Map<string, Array<{ x: number; y: number }>>([['a::b', [{ x: 99, y: 99 }]]]);
     applyEdgeRoutes(edges, routes);
     expect(edges[0].data?.routePoints).toBeUndefined();
   });
@@ -204,7 +268,12 @@ describe('applyEdgeRoutes', () => {
         id: 'e1',
         source: 'a',
         target: 'b',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 10, y: 10 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+          ],
+        },
       }),
     ];
     const routes = new Map<string, Array<{ x: number; y: number }>>([['a::b', []]]);
@@ -224,7 +293,13 @@ describe('applyEdgeRoutes', () => {
   it('initialises edge.data and writes routePoints in one call when route is present', () => {
     const edges: CardEdge[] = [makeEdge({ id: 'e1', source: 'a', target: 'b' })];
     const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a::b', [{ x: 1, y: 2 }, { x: 3, y: 4 }]],
+      [
+        'a::b',
+        [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+      ],
     ]);
     applyEdgeRoutes(edges, routes);
     expect(edges[0].data?.routePoints).toEqual([
@@ -241,16 +316,30 @@ describe('applyEdgeRoutes', () => {
         id: 'e3',
         source: 'x',
         target: 'y',
-        data: { routePoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }] },
+        data: {
+          routePoints: [
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+          ],
+        },
       }),
     ];
     const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a::b', [{ x: 10, y: 10 }, { x: 20, y: 20 }]],
+      [
+        'a::b',
+        [
+          { x: 10, y: 10 },
+          { x: 20, y: 20 },
+        ],
+      ],
       // 'c::d' missing → e2 gets no routePoints.
       // 'x::y' missing → e3's existing routePoints get cleared.
     ]);
     applyEdgeRoutes(edges, routes);
-    expect(edges[0].data?.routePoints).toEqual([{ x: 10, y: 10 }, { x: 20, y: 20 }]);
+    expect(edges[0].data?.routePoints).toEqual([
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+    ]);
     expect(edges[1].data?.routePoints).toBeUndefined();
     expect(edges[2].data?.routePoints).toBeUndefined();
   });
@@ -258,7 +347,13 @@ describe('applyEdgeRoutes', () => {
   it('keys routes by `${source}::${target}` exactly (different separators do NOT match)', () => {
     const edges: CardEdge[] = [makeEdge({ id: 'e1', source: 'a', target: 'b' })];
     const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a:b', [{ x: 0, y: 0 }, { x: 1, y: 1 }]], // single colon → no match
+      [
+        'a:b',
+        [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      ], // single colon → no match
     ]);
     applyEdgeRoutes(edges, routes);
     expect(edges[0].data?.routePoints).toBeUndefined();
@@ -295,7 +390,13 @@ describe('applyEdgeRoutes', () => {
       }),
     ];
     const routes = new Map<string, Array<{ x: number; y: number }>>([
-      ['a::b', [{ x: 1, y: 2 }, { x: 3, y: 4 }]],
+      [
+        'a::b',
+        [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+      ],
     ]);
     applyEdgeRoutes(edges, routes);
     expect(edges[0].data?.relationship).toBe('depends-on');

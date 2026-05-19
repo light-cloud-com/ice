@@ -9,7 +9,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { InMemoryQueue, InMemoryWorker } from '../memory-queue';
 
 /** Tick the microtask queue so the queue's `processNext()` chain unwinds. */
@@ -279,21 +278,21 @@ describe('InMemoryWorker', () => {
 
   describe('on', () => {
     it('registers a completed handler', () => {
-      const worker = new InMemoryWorker('q', (vi.fn() as any));
+      const worker = new InMemoryWorker('q', vi.fn() as any);
       const handler = vi.fn();
       worker.on('completed', handler);
       expect((worker as any)._onCompleted).toBe(handler);
     });
 
     it('registers a failed handler', () => {
-      const worker = new InMemoryWorker('q', (vi.fn() as any));
+      const worker = new InMemoryWorker('q', vi.fn() as any);
       const handler = vi.fn();
       worker.on('failed', handler);
       expect((worker as any)._onFailed).toBe(handler);
     });
 
     it('ignores unknown event names without registering a handler or throwing', () => {
-      const worker = new InMemoryWorker('q', (vi.fn() as any));
+      const worker = new InMemoryWorker('q', vi.fn() as any);
       const handler = vi.fn();
       // Unknown event — exercises the unmatched-branch path in `on`.
       worker.on('unknown' as any, handler);
@@ -334,7 +333,7 @@ describe('InMemoryWorker', () => {
 
   describe('close', () => {
     it('resolves without rejecting', async () => {
-      const worker = new InMemoryWorker('q', (vi.fn() as any));
+      const worker = new InMemoryWorker('q', vi.fn() as any);
       await expect(worker.close()).resolves.toBeUndefined();
     });
   });

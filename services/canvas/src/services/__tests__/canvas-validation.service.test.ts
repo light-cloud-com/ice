@@ -11,7 +11,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { validateCanvas } from '../canvas-validation.service';
 
 vi.mock('@ice/core', () => ({
@@ -101,9 +100,7 @@ describe('validateCanvas', () => {
 
   it('routes warning issues into warnings, not errors (still valid=true)', async () => {
     coreValidateMock.mockReturnValue({
-      issues: [
-        { severity: 'warning', nodeId: 'n9', message: 'consider adding a label' },
-      ],
+      issues: [{ severity: 'warning', nodeId: 'n9', message: 'consider adding a label' }],
     });
 
     const result = await validateCanvas([], []);

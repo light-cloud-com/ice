@@ -25,14 +25,7 @@ import type { CardNode } from './types';
  * Organizational iceTypes that migrated from `Cluster.*` / `Block.*` to
  * `Group.*`. Module-private — only `migrateCardNode` consumes it.
  */
-const BLOCK_TO_GROUP_TYPES = new Set([
-  'Frontend',
-  'Services',
-  'Data',
-  'Messaging',
-  'Monitoring',
-  'External',
-]);
+const BLOCK_TO_GROUP_TYPES = new Set(['Frontend', 'Services', 'Data', 'Messaging', 'Monitoring', 'External']);
 
 /**
  * Migrate a single persisted node:

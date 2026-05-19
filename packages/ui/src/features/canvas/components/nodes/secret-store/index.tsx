@@ -9,6 +9,7 @@
 import { CARD_FOOTER_HEIGHT, SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '@ice/constants';
 import { Lock } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -42,8 +43,8 @@ export const SvgSecretStoreNode: React.FC<SvgCompactNodeProps> = ({
   const autoRotate = !!node.data?.auto_rotate;
   const liveConfig =
     keys.length === 0
-      ? 'No secrets yet'
-      : `${keys.length} ${keys.length === 1 ? 'secret' : 'secrets'}${autoRotate ? ' · auto-rotate' : ''}`;
+      ? t('canvas.blocks.secret.none')
+      : `${keys.length === 1 ? t('canvas.blocks.secret.one') : t('canvas.blocks.secret.many', { n: keys.length })}${autoRotate ? ` · ${t('canvas.blocks.secret.autoRotate')}` : ''}`;
 
   return (
     <CardShell
@@ -55,12 +56,12 @@ export const SvgSecretStoreNode: React.FC<SvgCompactNodeProps> = ({
       lod={lod}
       pipelineStatus={pipelineStatus}
       icon={Lock}
-      title={node.label || 'Secret Store'}
+      title={node.label || t('canvas.blocks.titles.secretStore')}
       liveConfig={liveConfig}
       headerHeight={SS_HEADER_HEIGHT}
     >
       {keys.length === 0 ? (
-        <EmptyHint message="edit in properties →" />
+        <EmptyHint message={t('canvas.blocks.common.editInProperties')} />
       ) : (
         keys.map((k, i) => <KvLine key={i} name={k} bullet />)
       )}

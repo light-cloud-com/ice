@@ -51,10 +51,6 @@ import {
   snapshots_restore,
 } from './sqlite/snapshots';
 import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from './sqlite/types';
-import type { DeploymentId, DeploymentStatus } from '../types/deployment';
-import type { IceError } from '../types/errors';
-import type { NodeId } from '../types/graph';
-import type { Result } from '../types/result';
 import type {
   DeploymentQuery,
   DeploymentRecord,
@@ -65,6 +61,10 @@ import type {
   StateSnapshot,
   StoredResourceState,
 } from './state-store';
+import type { DeploymentId, DeploymentStatus } from '../types/deployment';
+import type { IceError } from '../types/errors';
+import type { NodeId } from '../types/graph';
+import type { Result } from '../types/result';
 
 export type { SqliteStateStoreOptions };
 

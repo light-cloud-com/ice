@@ -50,10 +50,7 @@ export async function ignore_conflict(p: Promise<unknown>): Promise<void> {
  * caller surfaces the message in the deploy result so the user knows
  * the URL map will route to nothing.
  */
-export async function verify_backend_bucket_exists(
-  ctx: GCPHandlerContext,
-  bucketName: string,
-): Promise<string | null> {
+export async function verify_backend_bucket_exists(ctx: GCPHandlerContext, bucketName: string): Promise<string | null> {
   try {
     await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/backendBuckets/${bucketName}`);
     return null;

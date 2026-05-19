@@ -5,7 +5,6 @@
  * SECURITY_LEVEL_COLORS, and getCloudProvider.
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -26,7 +25,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}` }),
+  useTranslation: () => ({
+    t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}`,
+  }),
 }));
 
 vi.mock('../../../../config/templates', () => ({
@@ -79,10 +80,7 @@ function collectText(node: unknown): string {
   }
   return s;
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
@@ -104,8 +102,7 @@ const baseState = (overrides: Partial<WizardState> = {}): WizardState => ({
   ...overrides,
 });
 
-const callRender = (state: WizardState): unknown =>
-  (ReviewStep as (p: { state: WizardState }) => unknown)({ state });
+const callRender = (state: WizardState): unknown => (ReviewStep as (p: { state: WizardState }) => unknown)({ state });
 
 describe('ReviewStep — project summary', () => {
   it('renders the project name', () => {
@@ -162,9 +159,7 @@ describe('ReviewStep — environments summary', () => {
   it('shows "environment" (singular) for exactly 1 enabled env', () => {
     const tree = callRender(
       baseState({
-        environments: [
-          { enabled: true, type: 'production', name: 'Only', region: 'us', securityLevel: 'basic' },
-        ],
+        environments: [{ enabled: true, type: 'production', name: 'Only', region: 'us', securityLevel: 'basic' }],
       }),
     );
     const text = collectText(tree);

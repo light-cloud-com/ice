@@ -29,21 +29,21 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { CategoryRow } from './category-row';
+import { ProjectionRow } from './projection-row';
+import { ScalingRangeBar } from './scaling-range-bar';
+import { Section } from './section';
 import { t } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleCostPanel } from '../../../store/slices/ui-slice';
 import { useCostCalculation } from '../hooks/use-cost-calculation';
+import { EnvironmentComparison } from '../sections/environment-comparison';
 import { formatCostRaw } from '../utils/cost-calculator';
 import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
 import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
-import { EnvironmentComparison } from '../sections/environment-comparison';
-import { CategoryRow } from './category-row';
-import { ProjectionRow } from './projection-row';
-import { ScalingRangeBar } from './scaling-range-bar';
-import { Section } from './section';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
 
@@ -91,7 +91,11 @@ export const CostPanel: React.FC = () => {
 
   if (!activeCard || !hasNodes) {
     return (
-      <div id="ice-cost-panel" className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
+      <div
+        id="ice-cost-panel"
+        className="h-full flex flex-col bg-inherit border-l border-ice-border"
+        data-tour-id="cost-panel-root"
+      >
         <PanelHeader
           icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
           title={t('cost.title')}
@@ -346,4 +350,3 @@ export const CostPanel: React.FC = () => {
     </div>
   );
 };
-

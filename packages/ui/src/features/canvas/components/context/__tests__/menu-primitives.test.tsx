@@ -7,7 +7,6 @@
  * so the FC tree walks deterministically.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -46,15 +45,7 @@ vi.mock('react', async (orig) => {
   };
 });
 
-import {
-  MenuItem,
-  Separator,
-  SubMenu,
-  CategorySubMenu,
-  isMac,
-  modKey,
-  fireKey,
-} from '../menu-primitives';
+import { MenuItem, Separator, SubMenu, CategorySubMenu, isMac, modKey, fireKey } from '../menu-primitives';
 
 // ─── Tree walker ────────────────────────────────────────────────────────────
 
@@ -89,12 +80,9 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
   return undefined;
 }
 
-const renderItem = (props: Parameters<typeof MenuItem>[0]) =>
-  (MenuItem as unknown as (p: unknown) => unknown)(props);
-const renderSep = () =>
-  (Separator as unknown as (p: unknown) => unknown)({});
-const renderSub = (props: Parameters<typeof SubMenu>[0]) =>
-  (SubMenu as unknown as (p: unknown) => unknown)(props);
+const renderItem = (props: Parameters<typeof MenuItem>[0]) => (MenuItem as unknown as (p: unknown) => unknown)(props);
+const renderSep = () => (Separator as unknown as (p: unknown) => unknown)({});
+const renderSub = (props: Parameters<typeof SubMenu>[0]) => (SubMenu as unknown as (p: unknown) => unknown)(props);
 const renderCat = (props: Parameters<typeof CategorySubMenu>[0]) =>
   (CategorySubMenu as unknown as (p: unknown) => unknown)(props);
 
@@ -299,17 +287,11 @@ describe('SubMenu', () => {
     });
     const aBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        el.props.children === 'A' &&
-        typeof el.props.onClick === 'function',
+      (el) => el.type === 'button' && el.props.children === 'A' && typeof el.props.onClick === 'function',
     );
     const bBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        el.props.children === 'B' &&
-        typeof el.props.onClick === 'function',
+      (el) => el.type === 'button' && el.props.children === 'B' && typeof el.props.onClick === 'function',
     );
     expect(aBtn).toBeDefined();
     expect(bBtn).toBeDefined();
@@ -327,10 +309,7 @@ describe('SubMenu', () => {
       onEnter,
       onLeave,
     });
-    const wrapper = findFirst(
-      tree,
-      (el) => el.type === 'div' && typeof el.props.onMouseEnter === 'function',
-    )!;
+    const wrapper = findFirst(tree, (el) => el.type === 'div' && typeof el.props.onMouseEnter === 'function')!;
     expect(wrapper.props.onMouseEnter).toBe(onEnter);
     expect(wrapper.props.onMouseLeave).toBe(onLeave);
   });
@@ -460,10 +439,7 @@ describe('CategorySubMenu', () => {
       onEnter: vi.fn(),
       onLeave: vi.fn(),
     });
-    const labelSpan = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'Add Block',
-    );
+    const labelSpan = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'Add Block');
     expect(labelSpan).toBeDefined();
   });
 

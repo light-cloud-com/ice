@@ -8,14 +8,10 @@
  * land in the live-config footer.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Radio } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -27,28 +23,37 @@ export function computeEventStreamHeight(): number {
 
 const STREAM_ACCENT = '#ec4899';
 
-const RETENTION_LABELS: Record<string, string> = {
-  '24h': '24 hours',
-  '1d': '24 hours',
-  '7d': '7 days',
-  '30d': '30 days',
-  '90d': '90 days',
-  '365d': '365 days',
-};
+function getRetentionLabel(k: string): string {
+  switch (k) {
+    case '24h':
+    case '1d':
+      return t('canvas.blocks.stream.retention24h');
+    case '7d':
+      return t('canvas.blocks.stream.retention7d');
+    case '30d':
+      return t('canvas.blocks.stream.retention30d');
+    case '90d':
+      return t('canvas.blocks.stream.retention90d');
+    case '365d':
+      return t('canvas.blocks.stream.retention365d');
+    default:
+      return k;
+  }
+}
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const sizeRaw = (data?.size as string) || '';
   const retentionRaw = ((data?.retention as string) || '').trim();
-  const retention =
-    retentionRaw || (data?.retentionHours != null ? `${data.retentionHours}h` : '');
-  const retentionLabel = retention ? RETENTION_LABELS[retention.toLowerCase()] || retention : '';
-  const partitions = data?.partitionCount != null ? `${data.partitionCount} partitions` : '';
+  const retention = retentionRaw || (data?.retentionHours != null ? `${data.retentionHours}h` : '');
+  const retentionLabel = retention ? getRetentionLabel(retention.toLowerCase()) : '';
+  const partitions =
+    data?.partitionCount != null ? t('canvas.blocks.stream.partitions', { n: Number(data.partitionCount) }) : '';
   const parts = [
     sizeRaw,
-    retentionLabel ? `${retentionLabel} retention` : '',
+    retentionLabel ? `${retentionLabel} ${t('canvas.blocks.stream.retentionSuffix')}` : '',
     partitions,
   ].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 const FanOut: React.FC<{ color: string }> = ({ color }) => {
@@ -120,7 +125,7 @@ export const SvgEventStreamNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Radio}
       accentColor={STREAM_ACCENT}
-      title={node.label || 'Event Stream'}
+      title={node.label || t('canvas.blocks.titles.eventStream')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >
@@ -146,7 +151,7 @@ export const SvgEventStreamNode: React.FC<SvgCompactNodeProps> = ({
               letterSpacing: '0.08em',
             }}
           >
-            broadcasts to
+            {t('canvas.blocks.stream.broadcastsTo')}
           </span>
           <span
             style={{
@@ -157,7 +162,7 @@ export const SvgEventStreamNode: React.FC<SvgCompactNodeProps> = ({
             }}
             data-testid={`stream-fanout-${node.id}`}
           >
-            many consumers
+            {t('canvas.blocks.stream.manyConsumers')}
           </span>
           <span
             style={{
@@ -166,7 +171,7 @@ export const SvgEventStreamNode: React.FC<SvgCompactNodeProps> = ({
               opacity: 0.6,
             }}
           >
-            one event · many readers
+            {t('canvas.blocks.stream.subtitle')}
           </span>
         </div>
       </div>

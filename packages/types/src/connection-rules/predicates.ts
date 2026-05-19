@@ -125,10 +125,7 @@ export function isContainer(iceType: string, nodeType?: string): boolean {
   // new container type once flips both predicates in lockstep (rf-0c
   // dedup). Group.* is exclusive to this predicate; the core function
   // is type-only and doesn't see node types.
-  return (
-    (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) ||
-    iceType.startsWith('Group.')
-  );
+  return (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) || iceType.startsWith('Group.');
 }
 
 // ─── Composite predicates (internal building blocks) ────────────────────────

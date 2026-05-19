@@ -35,18 +35,12 @@
  * via the explicit attribute so tests can assert it).
  */
 
-import * as React from 'react';
 import { X } from 'lucide-react';
-
+import * as React from 'react';
 import { useTranslation } from '../../../i18n';
+import { Popover, PopoverAnchor, PopoverContent, PopoverPortal } from '../../../shared/components/ui/popover';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { cn } from '../../../shared/utils/cn';
-import {
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-  PopoverPortal,
-} from '../../../shared/components/ui/popover';
 import { installFocusTrap } from '../utils/focus-trap';
 import type { Placement, TourStep } from '../tour.types';
 
@@ -194,9 +188,7 @@ export function TourPopover(props: TourPopoverProps): JSX.Element | null {
 
   const titleText = typeof step.title === 'string' ? t(step.title) : step.title;
 
-  const bodyContent: React.ReactNode = typeof step.body === 'string'
-    ? t(step.body)
-    : (step.body as React.ReactNode);
+  const bodyContent: React.ReactNode = typeof step.body === 'string' ? t(step.body) : (step.body as React.ReactNode);
 
   const nextLabelKey = step.actions?.nextLabel
     ? step.actions.nextLabel
@@ -249,7 +241,8 @@ export function TourPopover(props: TourPopoverProps): JSX.Element | null {
             // Neutralize Radix's animation when reduced motion is on. The
             // wrapped `PopoverContent` declares animate-in/animate-out;
             // these utilities counter them under reduced-motion.
-            reducedMotion && 'motion-reduce:animate-none data-[state=open]:animate-none data-[state=closed]:animate-none',
+            reducedMotion &&
+              'motion-reduce:animate-none data-[state=open]:animate-none data-[state=closed]:animate-none',
           )}
         >
           <button
@@ -261,53 +254,28 @@ export function TourPopover(props: TourPopoverProps): JSX.Element | null {
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
-          <h2
-            id="tour-popover-title"
-            className="pr-6 text-base font-semibold leading-tight text-ice-text-1"
-          >
+          <h2 id="tour-popover-title" className="pr-6 text-base font-semibold leading-tight text-ice-text-1">
             {titleText}
           </h2>
-          <div
-            id="tour-popover-body"
-            className="mt-2 text-sm leading-relaxed text-ice-text-2"
-          >
+          <div id="tour-popover-body" className="mt-2 text-sm leading-relaxed text-ice-text-2">
             {bodyContent}
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">
-            <span
-              data-tour-popover="counter"
-              aria-live="polite"
-              className="text-xs text-ice-text-2"
-            >
+            <span data-tour-popover="counter" aria-live="polite" className="text-xs text-ice-text-2">
               {stepIdx + 1} / {totalSteps}
             </span>
             <div className="flex items-center gap-2">
               {!isFirst && (
-                <button
-                  type="button"
-                  data-tour-popover="back"
-                  onClick={onPrevious}
-                  className={SECONDARY_BTN_CLASS}
-                >
+                <button type="button" data-tour-popover="back" onClick={onPrevious} className={SECONDARY_BTN_CLASS}>
                   {t(backLabelKey)}
                 </button>
               )}
               {showSkip && (
-                <button
-                  type="button"
-                  data-tour-popover="skip"
-                  onClick={onSkip}
-                  className={SECONDARY_BTN_CLASS}
-                >
+                <button type="button" data-tour-popover="skip" onClick={onSkip} className={SECONDARY_BTN_CLASS}>
                   {t('tour.actions.skip')}
                 </button>
               )}
-              <button
-                type="button"
-                data-tour-popover="next"
-                onClick={onAdvance}
-                className={NEXT_BTN_CLASS}
-              >
+              <button type="button" data-tour-popover="next" onClick={onAdvance} className={NEXT_BTN_CLASS}>
                 {t(nextLabelKey)}
               </button>
             </div>

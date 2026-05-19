@@ -21,11 +21,11 @@
  * stubbed so `persistCompletedTour` doesn't fire a network call.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import * as React from 'react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -37,8 +37,8 @@ vi.mock('../../../../shared/api/axios-instance', () => ({
 
 import tourReducer, { hydrateFromUser } from '../../store/tour-slice';
 import { clearRegistry, registerTour } from '../../utils/tour-registry';
-import type { Tour } from '../../tour.types';
 import { useTourAutostart } from '../use-tour-autostart';
+import type { Tour } from '../../tour.types';
 
 // ─── Harness ────────────────────────────────────────────────────────────────
 
@@ -158,9 +158,7 @@ describe('useTourAutostart — unknown tour id', () => {
     const store = makeStore();
     mount('/p?tour=unknown', store);
     expect(store.getState().tour.activeTourId).toBeNull();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('unknown tour id: unknown'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('unknown tour id: unknown'));
     expect(lastLocation.search).toBe('');
     warnSpy.mockRestore();
   });
@@ -316,9 +314,7 @@ describe('useTourAutostart — non-production warn gate', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const store = makeStore();
     mount('/p?tour=does-not-exist', store);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('unknown tour id: does-not-exist'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('unknown tour id: does-not-exist'));
     warnSpy.mockRestore();
   });
 });

@@ -29,8 +29,8 @@ vi.mock('../../../../../shared/components/ui/ice-select', () => ({
   IceSelect: mocks.IceSelect,
 }));
 
-import { DeploymentTargetCard } from '../deployment-target-card';
 import { PROVIDER_REGIONS } from '../../../../deploy/utils/provider-regions';
+import { DeploymentTargetCard } from '../deployment-target-card';
 
 type ReactNodeLike = React.ReactNode;
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
@@ -47,9 +47,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof DeploymentTargetCard>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof DeploymentTargetCard>> = {}): React.ReactElement => {
   const onUpdate = vi.fn();
   return DeploymentTargetCard({ provider: '', region: '', onUpdate, ...props }) as React.ReactElement;
 };

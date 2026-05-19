@@ -2,7 +2,6 @@
  * TemplatePicker — searchable dropdown that imports a template into a card.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {

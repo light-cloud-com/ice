@@ -188,10 +188,7 @@ describe('createCard', () => {
 
   it('walks the counter when "Foo" and "Foo 1" both exist — uses "Foo 2"', () => {
     const state = makeState({
-      cards: [
-        makeCard('c1', { name: 'Foo' }),
-        makeCard('c2', { name: 'Foo 1' }),
-      ],
+      cards: [makeCard('c1', { name: 'Foo' }), makeCard('c2', { name: 'Foo 1' })],
       activeCardId: 'c1',
     });
     const next = produce(state, (draft) => {
@@ -206,11 +203,7 @@ describe('createCard', () => {
 
   it('walks the counter through three collisions — uses "Foo 3"', () => {
     const state = makeState({
-      cards: [
-        makeCard('c1', { name: 'Foo' }),
-        makeCard('c2', { name: 'Foo 1' }),
-        makeCard('c3', { name: 'Foo 2' }),
-      ],
+      cards: [makeCard('c1', { name: 'Foo' }), makeCard('c2', { name: 'Foo 1' }), makeCard('c3', { name: 'Foo 2' })],
       activeCardId: 'c1',
     });
     const next = produce(state, (draft) => {

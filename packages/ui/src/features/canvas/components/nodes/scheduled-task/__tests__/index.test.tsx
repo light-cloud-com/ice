@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const passthrough: React.FC<Record<string, unknown>> = (props) =>
@@ -28,9 +28,20 @@ vi.mock('lucide-react', () => ({
   Clock: ((_props: Record<string, unknown>) => null) as React.FC,
 }));
 
-// The renderer uses `useState` + `useEffect` to drive the live countdown.
-// We render through a plain function call (no React tree), so stub the
-// hooks: useState returns the initial value, useEffect is a no-op.
+// Selector stub so the renderer's `useSelector(selectActiveCard)` returns
+// a controllable card. Tests mutate `selectorMock.value` before rendering
+// when they need a specific block-target lookup.
+const selectorMock = vi.hoisted(() => ({
+  value: { nodes: [] as Array<{ id: string; data?: Record<string, unknown> }> },
+}));
+
+vi.mock('react-redux', () => ({
+  useSelector: vi.fn(<T,>(_sel: unknown) => selectorMock.value as unknown as T),
+}));
+
+// The renderer uses `useState` + `useEffect` to drive the live countdown
+// and `useMemo` to build the block-label lookup map. We render through a
+// plain function call (no React tree), so stub the hooks accordingly.
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
@@ -40,20 +51,23 @@ vi.mock('react', async (importOriginal) => {
       return [initial, vi.fn()];
     }),
     useEffect: vi.fn(),
+    useMemo: vi.fn(<T,>(fn: () => T) => fn()),
   };
 });
 
 import {
   SvgScheduledTaskNode,
-  computeScheduledTaskHeight,
+  computeCronJobHeight,
   describeCron,
   formatCountdown,
   frequencyToCron,
   nextFireFromCron,
   resolveSchedule,
-  ST_HEADER_HEIGHT,
-  ST_BODY_HEIGHT,
-  ST_PADDING,
+  CRON_HEADER_HEIGHT,
+  CRON_TASK_ROW_HEIGHT,
+  CRON_TASK_ROW_GAP,
+  CRON_BODY_PADDING_TOP,
+  CRON_BODY_PADDING_BOTTOM,
 } from '..';
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import type { CanvasNode } from '../../../svg-canvas';
@@ -90,9 +104,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgScheduledTaskNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgScheduledTaskNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgScheduledTaskNode> = {
     node: makeNode(),
     isSelected: false,
@@ -196,9 +208,9 @@ describe('resolveSchedule', () => {
   });
 
   it('schedule_expression takes priority over frequency and legacy schedule', () => {
-    expect(
-      resolveSchedule({ schedule_expression: '15 4 * * *', frequency: 'Every hour', schedule: '0 0 * * *' }),
-    ).toBe('15 4 * * *');
+    expect(resolveSchedule({ schedule_expression: '15 4 * * *', frequency: 'Every hour', schedule: '0 0 * * *' })).toBe(
+      '15 4 * * *',
+    );
   });
 
   it('falls through to frequency when schedule_expression is empty', () => {
@@ -298,24 +310,196 @@ describe('formatCountdown', () => {
   });
 });
 
-// ─── height ───────────────────────────────────────────────────────────────
+// ─── height + per-task port geometry ─────────────────────────────────────
 
-describe('computeScheduledTaskHeight', () => {
-  it('returns header + padding*2 + body + footer', () => {
-    const expected = ST_HEADER_HEIGHT + ST_PADDING + ST_BODY_HEIGHT + ST_PADDING + CARD_FOOTER_HEIGHT;
-    expect(computeScheduledTaskHeight()).toBe(expected);
+describe('computeCronJobHeight', () => {
+  const bodyFor = (rows: number) =>
+    CRON_BODY_PADDING_TOP + rows * CRON_TASK_ROW_HEIGHT + (rows - 1) * CRON_TASK_ROW_GAP + CRON_BODY_PADDING_BOTTOM;
+
+  it('returns header + 1-row body + footer when no tasks set', () => {
+    expect(computeCronJobHeight({})).toBe(CRON_HEADER_HEIGHT + bodyFor(1) + CARD_FOOTER_HEIGHT);
   });
 
-  it('exports the layout constants for the canvas sizer', () => {
-    expect(ST_HEADER_HEIGHT).toBe(48);
-    expect(ST_BODY_HEIGHT).toBe(60);
-    expect(ST_PADDING).toBe(12);
+  it('grows linearly per task row', () => {
+    const tasks = [JSON.stringify({ id: 'a' }), JSON.stringify({ id: 'b' })];
+    expect(computeCronJobHeight({ tasks })).toBe(CRON_HEADER_HEIGHT + bodyFor(2) + CARD_FOOTER_HEIGHT);
+  });
+
+  it('treats undefined data without throwing', () => {
+    expect(computeCronJobHeight(undefined)).toBe(CRON_HEADER_HEIGHT + bodyFor(1) + CARD_FOOTER_HEIGHT);
+  });
+
+  it('synthesises a 1-row body for legacy single-task data', () => {
+    expect(computeCronJobHeight({ schedule_expression: '0 9 * * *' })).toBe(
+      CRON_HEADER_HEIGHT + bodyFor(1) + CARD_FOOTER_HEIGHT,
+    );
   });
 });
 
-// ─── SvgScheduledTaskNode ─────────────────────────────────────────────────
+// ─── SvgScheduledTaskNode — surface ───────────────────────────────────────
 
-describe('SvgScheduledTaskNode', () => {
+// ─── action display ───────────────────────────────────────────────────────
+
+describe('SvgScheduledTaskNode — action display', () => {
+  const stringifyTask = (task: {
+    id?: string;
+    name?: string;
+    frequency?: string;
+    action_type?: 'block' | 'http';
+    action_target_node_id?: string;
+    action_url?: string;
+    action_http_method?: string;
+  }) => JSON.stringify(task);
+
+  beforeEach(() => {
+    selectorMock.value = { nodes: [] };
+  });
+
+  it('shows the target block label when action_type is block', () => {
+    selectorMock.value = {
+      nodes: [{ id: 'fn-a', data: { label: 'video-encoder' } }],
+    };
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Nightly',
+              frequency: 'Daily at midnight',
+              action_type: 'block',
+              action_target_node_id: 'fn-a',
+            }),
+          ],
+        },
+      }),
+    });
+    const action = findByTestId(tree, 'st-task-action-st-1-0');
+    expect(action).toBeDefined();
+    expect((action!.props as { children: string }).children).toBe('video-encoder');
+  });
+
+  it('falls back to "(deleted)" when the target block id no longer exists', () => {
+    selectorMock.value = { nodes: [] };
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Nightly',
+              frequency: 'Daily at midnight',
+              action_type: 'block',
+              action_target_node_id: 'missing-id',
+            }),
+          ],
+        },
+      }),
+    });
+    const action = findByTestId(tree, 'st-task-action-st-1-0');
+    expect((action!.props as { children: string }).children).toBe('(deleted)');
+  });
+
+  it('shows "METHOD url-without-protocol" when action_type is http', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Heartbeat',
+              frequency: 'Every hour',
+              action_type: 'http',
+              action_url: 'https://api.example.com/cron-tick',
+              action_http_method: 'POST',
+            }),
+          ],
+        },
+      }),
+    });
+    const action = findByTestId(tree, 'st-task-action-st-1-0');
+    expect((action!.props as { children: string }).children).toBe('POST api.example.com/cron-tick');
+  });
+
+  it('defaults to GET when http method is unset', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Ping',
+              frequency: 'Every hour',
+              action_type: 'http',
+              action_url: 'https://api.example.com/ping',
+            }),
+          ],
+        },
+      }),
+    });
+    const action = findByTestId(tree, 'st-task-action-st-1-0');
+    expect((action!.props as { children: string }).children).toBe('GET api.example.com/ping');
+  });
+
+  it('shows the "set action in properties" amber hint when block action has no target', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Nightly',
+              frequency: 'Daily at midnight',
+              action_type: 'block',
+            }),
+          ],
+        },
+      }),
+    });
+    expect(findByTestId(tree, 'st-task-no-action-st-1-0')).toBeDefined();
+    expect(findByTestId(tree, 'st-task-action-st-1-0')).toBeUndefined();
+  });
+
+  it('shows the amber hint when http action has no URL', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Ping',
+              frequency: 'Every hour',
+              action_type: 'http',
+            }),
+          ],
+        },
+      }),
+    });
+    expect(findByTestId(tree, 'st-task-no-action-st-1-0')).toBeDefined();
+  });
+
+  it('omits the amber hint when block action has a target', () => {
+    selectorMock.value = { nodes: [{ id: 'fn-a', data: { label: 'fn-a' } }] };
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({
+              id: 't1',
+              name: 'Nightly',
+              frequency: 'Daily at midnight',
+              action_type: 'block',
+              action_target_node_id: 'fn-a',
+            }),
+          ],
+        },
+      }),
+    });
+    expect(findByTestId(tree, 'st-task-no-action-st-1-0')).toBeUndefined();
+  });
+});
+
+describe('SvgScheduledTaskNode — surface', () => {
   it('carries displayName', () => {
     expect(SvgScheduledTaskNode.displayName).toBe('SvgScheduledTaskNode');
   });
@@ -325,7 +509,7 @@ describe('SvgScheduledTaskNode', () => {
     expect(tree.type).toBe(mocks.CardShell);
   });
 
-  it('uses node.label as title', () => {
+  it('uses node.label as the CardShell title', () => {
     const tree = renderInner({ node: makeNode({ label: 'Custom Cron' }) });
     expect((tree.props as { title: string }).title).toBe('Custom Cron');
   });
@@ -335,87 +519,121 @@ describe('SvgScheduledTaskNode', () => {
     expect((tree.props as { title: string }).title).toBe('Scheduled Task');
   });
 
-  it('renders the cron expression from data.schedule_expression', () => {
-    const tree = renderInner({ node: makeNode({ data: { schedule_expression: '0 3 * * *' } }) });
-    const cronEl = findByTestId(tree, 'st-cron-st-1');
-    expect(cronEl).toBeDefined();
-    expect((cronEl!.props as { children: string }).children).toBe('0 3 * * *');
-  });
-
-  it('derives the cron from data.frequency when schedule_expression is unset', () => {
-    const tree = renderInner({ node: makeNode({ data: { frequency: 'Every day at midnight' } }) });
-    const cronEl = findByTestId(tree, 'st-cron-st-1');
-    expect((cronEl!.props as { children: string }).children).toBe('0 0 * * *');
-  });
-
-  it('schedule_expression wins over frequency when both are set', () => {
-    const tree = renderInner({
-      node: makeNode({ data: { schedule_expression: '15 4 * * *', frequency: 'Every hour' } }),
-    });
-    const cronEl = findByTestId(tree, 'st-cron-st-1');
-    expect((cronEl!.props as { children: string }).children).toBe('15 4 * * *');
-  });
-
-  it('falls back to the legacy data.schedule field when neither newer field is set', () => {
-    const tree = renderInner({ node: makeNode({ data: { schedule: '0 12 * * *' } }) });
-    const cronEl = findByTestId(tree, 'st-cron-st-1');
-    expect((cronEl!.props as { children: string }).children).toBe('0 12 * * *');
-  });
-
-  it('renders a placeholder when no schedule is set', () => {
-    const tree = renderInner({ node: makeNode({ data: {} }) });
-    const cronEl = findByTestId(tree, 'st-cron-st-1');
-    expect((cronEl!.props as { children: string }).children).toBe('— — — — —');
-  });
-
-  it('renders the human-readable description', () => {
-    const tree = renderInner({ node: makeNode({ data: { schedule_expression: '0 */6 * * *' } }) });
-    const descEl = findByTestId(tree, 'st-description-st-1');
-    expect((descEl!.props as { children: string }).children).toBe('every 6 hours');
-  });
-
-  it('builds liveConfig from timezone + frequency (user-editable fields)', () => {
-    const tree = renderInner({
-      node: makeNode({ data: { timezone: 'US/Pacific', frequency: 'Every day at midnight' } }),
-    });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('US/Pacific · Every day at midnight');
-  });
-
-  it('omits the "Custom" frequency literal from liveConfig (canonical label)', () => {
-    const tree = renderInner({
-      node: makeNode({
-        data: { timezone: 'UTC', frequency: 'Custom', schedule_expression: '0 12 * * *' },
-      }),
-    });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('UTC');
-  });
-
-  it('omits the legacy "Custom schedule" frequency literal too', () => {
-    const tree = renderInner({
-      node: makeNode({
-        data: { timezone: 'UTC', frequency: 'Custom schedule', schedule_expression: '0 12 * * *' },
-      }),
-    });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('UTC');
-  });
-
-  it('falls back to "cron schedule" when only a schedule is set', () => {
-    const tree = renderInner({ node: makeNode({ data: { schedule_expression: '0 12 * * *' } }) });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('cron schedule');
-  });
-
-  it('falls back to "no schedule" when nothing is configured', () => {
-    const tree = renderInner({ node: makeNode({ data: {} }) });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('no schedule');
-  });
-
-  it('ignores legacy runtime/timeout blueprint defaults (not user-editable)', () => {
-    const tree = renderInner({ node: makeNode({ data: { runtime: 'node20', timeout: 300 } }) });
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('no schedule');
-  });
-
-  it('passes ST_HEADER_HEIGHT to CardShell', () => {
+  it('passes CRON_HEADER_HEIGHT to CardShell', () => {
     const tree = renderInner();
-    expect((tree.props as { headerHeight: number }).headerHeight).toBe(ST_HEADER_HEIGHT);
+    expect((tree.props as { headerHeight: number }).headerHeight).toBe(CRON_HEADER_HEIGHT);
+  });
+});
+
+// ─── SvgScheduledTaskNode — multi-task body ──────────────────────────────
+
+describe('SvgScheduledTaskNode — tasks list', () => {
+  const stringifyTask = (task: { id?: string; name?: string; frequency?: string; schedule_expression?: string }) =>
+    JSON.stringify(task);
+
+  it('renders an empty-state hint when no tasks are configured', () => {
+    const tree = renderInner({ node: makeNode({ data: {} }) });
+    expect(findByTestId(tree, 'st-empty-st-1')).toBeDefined();
+  });
+
+  it('renders one row per task entry from data.tasks', () => {
+    const tasks = [
+      stringifyTask({ id: 't1', name: 'Nightly backup', frequency: 'Daily at midnight' }),
+      stringifyTask({ id: 't2', name: 'Hourly sync', frequency: 'Every hour' }),
+    ];
+    const tree = renderInner({ node: makeNode({ data: { tasks } }) });
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+    expect(findByTestId(tree, 'st-task-st-1-1')).toBeDefined();
+    expect(findByTestId(tree, 'st-empty-st-1')).toBeUndefined();
+  });
+
+  it('accepts object-shaped task entries (not just JSON-strings)', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            { id: 't1', name: 'Cleanup', frequency: 'Every hour' },
+            { id: 't2', name: 'Report', frequency: 'Daily at 9 AM' },
+          ],
+        },
+      }),
+    });
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+    expect(findByTestId(tree, 'st-task-st-1-1')).toBeDefined();
+  });
+
+  it('synthesises a legacy task from data.schedule_expression', () => {
+    const tree = renderInner({ node: makeNode({ data: { schedule_expression: '0 3 * * *' } }) });
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+  });
+
+  it('synthesises a legacy task from data.frequency', () => {
+    const tree = renderInner({ node: makeNode({ data: { frequency: 'Every hour' } }) });
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+  });
+
+  it('synthesises a legacy task from data.schedule (older field)', () => {
+    const tree = renderInner({ node: makeNode({ data: { schedule: '0 12 * * *' } }) });
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+  });
+
+  it('prefers data.tasks over legacy fields when both are present', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          frequency: 'Every hour', // would synthesise a legacy task
+          tasks: [stringifyTask({ id: 't1', name: 'Real task', frequency: 'Daily at midnight' })],
+        },
+      }),
+    });
+    // Only one task row should render (from data.tasks, not the legacy fallback).
+    expect(findByTestId(tree, 'st-task-st-1-0')).toBeDefined();
+    expect(findByTestId(tree, 'st-task-st-1-1')).toBeUndefined();
+  });
+});
+
+// ─── SvgScheduledTaskNode — liveConfig ───────────────────────────────────
+
+describe('SvgScheduledTaskNode — liveConfig', () => {
+  const stringifyTask = (task: { id?: string; name?: string; frequency?: string }) => JSON.stringify(task);
+
+  it('shows the task count when tasks are present', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: {
+          tasks: [
+            stringifyTask({ id: 't1', name: 'A', frequency: 'Every hour' }),
+            stringifyTask({ id: 't2', name: 'B', frequency: 'Daily at midnight' }),
+          ],
+        },
+      }),
+    });
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('2 tasks');
+  });
+
+  it('uses singular "1 task" for one entry', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { tasks: [stringifyTask({ id: 't1', name: 'A', frequency: 'Every hour' })] } }),
+    });
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 task');
+  });
+
+  it('appends timezone when set', () => {
+    const tree = renderInner({
+      node: makeNode({
+        data: { timezone: 'US/Pacific', tasks: [stringifyTask({ id: 't1', name: 'A', frequency: 'Every hour' })] },
+      }),
+    });
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 task · US/Pacific');
+  });
+
+  it('falls back to "no tasks" when none are configured', () => {
+    const tree = renderInner({ node: makeNode({ data: {} }) });
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('no tasks');
+  });
+
+  it('counts the synthesised legacy task in liveConfig', () => {
+    const tree = renderInner({ node: makeNode({ data: { frequency: 'Every hour' } }) });
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 task');
   });
 });

@@ -71,10 +71,7 @@ export function hasCollapsedAncestor(nodes: CanvasNode[], nodeId: string): boole
  * exists), the entry is NOT added to the map — the `if (ancestorId)`
  * guard. Callers fall back to the original edge endpoint in that case.
  */
-export function buildFoldedRemap(
-  canvasNodes: CanvasNode[],
-  visibleNodes: CanvasNode[],
-): Map<string, string> {
+export function buildFoldedRemap(canvasNodes: CanvasNode[], visibleNodes: CanvasNode[]): Map<string, string> {
   const remap = new Map<string, string>();
   for (const node of canvasNodes) {
     if (hasCollapsedAncestor(visibleNodes, node.id)) {

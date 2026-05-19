@@ -17,8 +17,8 @@
 
 import React from 'react';
 import { t } from '../../../../i18n';
-import type { CardNode } from '../../../../store/slices/cards-slice';
 import { Section, TextField, SelectField } from '../fields';
+import type { CardNode } from '../../../../store/slices/cards-slice';
 
 // ─── Public Endpoint Domain Section ─────────────────────────────────────────
 

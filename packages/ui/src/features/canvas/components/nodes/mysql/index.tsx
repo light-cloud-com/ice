@@ -1,16 +1,19 @@
 /**
  * SvgMysqlNode — Read-only canvas renderer for `Database.MySQL`.
  *
- * Same `TableStripes` body as postgres — both are row/column stores
- * and the visual reinforces that family. Differentiated by the cyan
- * accent (dolphin nod) so users can tell them apart at a glance on
- * a canvas full of databases.
+ * Body shows engine + version big, storage callout, and hardening
+ * badges — same identity-body pattern as postgres (the renderer
+ * imports `DbIdentityBody` from the postgres module to keep the two
+ * blocks visually consistent). Differentiated from postgres by the
+ * cyan accent (dolphin nod) and the wordmark text.
  */
 
 import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Database } from 'lucide-react';
 import React from 'react';
-import { CardShell, TableStripes } from '../_shared';
+import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
+import { formatStorage, renderDbIdentityBody } from '../postgres';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING };
@@ -21,27 +24,16 @@ export function computeMysqlHeight(): number {
 
 const MYSQL_ACCENT = '#06b6d4';
 
-function formatStorage(raw: unknown): string | null {
-  if (raw == null || raw === '') return null;
-  if (raw === 'custom') return null;
-  const n = typeof raw === 'number' ? raw : Number(String(raw));
-  if (!Number.isFinite(n) || n <= 0) return null;
-  if (n >= 1000) {
-    const tb = n / 1000;
-    return Number.isInteger(tb) ? `${tb} TB` : `${tb.toFixed(1)} TB`;
-  }
-  return `${n} GB`;
-}
-
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const version = (data?.version as string) || '';
   const storage = formatStorage(data?.storage ?? data?.storageGb);
   const production = !!data?.production || !!data?.backups;
-  const backups = data?.backup_retention != null ? `${data.backup_retention}d backups` : '';
+  const backups =
+    data?.backup_retention != null ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) }) : '';
   const parts = [
-    version ? `MySQL ${version}` : 'MySQL',
+    version ? `${t('canvas.blocks.titles.mysql')} ${version}` : t('canvas.blocks.titles.mysql'),
     storage,
-    production ? 'HA' : '',
+    production ? t('canvas.blocks.common.ha') : '',
     backups,
   ].filter(Boolean) as string[];
   return parts.join(' · ');
@@ -56,6 +48,15 @@ export const SvgMysqlNode: React.FC<SvgCompactNodeProps> = ({
   lod,
   pipelineStatus,
 }) => {
+  const data = node.data || {};
+  const version = (data.version as string) || '';
+  const storage = formatStorage(data.storage ?? data.storageGb);
+  const production = !!data.production || !!data.backups;
+  const backups =
+    data.backup_retention != null ? t('canvas.blocks.database.backupsDays', { n: Number(data.backup_retention) }) : '';
+  const badges: Array<{ label: string; color: string }> = [];
+  if (production) badges.push({ label: t('canvas.blocks.common.ha'), color: '#22c55e' });
+  if (backups) badges.push({ label: backups, color: '#06b6d4' });
   const liveConfig = buildLiveConfig(node.data);
 
   return (
@@ -69,13 +70,16 @@ export const SvgMysqlNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Database}
       accentColor={MYSQL_ACCENT}
-      title={node.label || 'MySQL'}
+      title={node.label || t('canvas.blocks.titles.mysql')}
       liveConfig={liveConfig}
       headerHeight={DB_HEADER_HEIGHT}
     >
-      <div style={{ height: DB_BODY_HEIGHT, display: 'flex' }} data-testid={`mysql-body-${node.id}`}>
-        <TableStripes color={MYSQL_ACCENT} />
-      </div>
+      {renderDbIdentityBody({
+        engineLabel: version ? `${t('canvas.blocks.titles.mysql')} ${version}` : t('canvas.blocks.titles.mysql'),
+        storage,
+        badges,
+        testId: `mysql-body-${node.id}`,
+      })}
     </CardShell>
   );
 };

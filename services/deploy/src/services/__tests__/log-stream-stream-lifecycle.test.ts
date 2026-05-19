@@ -12,12 +12,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { resetRegistry, streams } from '../log-stream/registry';
-import {
-  stopUnderlyingStream,
-  teardownStream,
-} from '../log-stream/stream-lifecycle';
+import { stopUnderlyingStream, teardownStream } from '../log-stream/stream-lifecycle';
 import type { ActiveStream } from '../log-stream/types';
 
 function makeStream(overrides: Partial<ActiveStream> = {}): ActiveStream {

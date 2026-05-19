@@ -47,10 +47,7 @@ describe('extract_secret_manager_properties', () => {
   });
 
   it('passes user-supplied replicationType through', () => {
-    const result = extract_secret_manager_properties(
-      { replicationType: 'user-managed' },
-      'us-central1',
-    );
+    const result = extract_secret_manager_properties({ replicationType: 'user-managed' }, 'us-central1');
     expect(result.replication_type).toBe('user-managed');
   });
 
@@ -75,10 +72,7 @@ describe('extract_identity_platform_properties', () => {
   });
 
   it('passes user-supplied signInProviders through', () => {
-    const result = extract_identity_platform_properties(
-      { signInProviders: ['phone', 'github'] },
-      'us-central1',
-    );
+    const result = extract_identity_platform_properties({ signInProviders: ['phone', 'github'] }, 'us-central1');
     expect(result.sign_in_providers).toEqual(['phone', 'github']);
   });
 
@@ -200,10 +194,7 @@ describe('extract_discovery_engine_properties', () => {
   });
 
   it('hardcodes solution_type to SOLUTION_TYPE_SEARCH regardless of input', () => {
-    const result = extract_discovery_engine_properties(
-      { solution_type: 'OTHER' },
-      'us-central1',
-    );
+    const result = extract_discovery_engine_properties({ solution_type: 'OTHER' }, 'us-central1');
     expect(result.solution_type).toBe('SOLUTION_TYPE_SEARCH');
   });
 });
@@ -219,10 +210,7 @@ describe('extract_gke_properties', () => {
   });
 
   it('passes user-supplied nodeCount and machineType through', () => {
-    const result = extract_gke_properties(
-      { nodeCount: 5, machineType: 'n1-standard-4' },
-      'us-central1',
-    );
+    const result = extract_gke_properties({ nodeCount: 5, machineType: 'n1-standard-4' }, 'us-central1');
     expect(result.initial_node_count).toBe(5);
     expect(result.machine_type).toBe('n1-standard-4');
   });
@@ -247,28 +235,19 @@ describe('extract_domain_mapping_properties', () => {
   });
 
   it('joins subdomain.hostname when both are present', () => {
-    const result = extract_domain_mapping_properties(
-      { subdomain: 'api', hostname: 'example.com' },
-      'us-central1',
-    );
+    const result = extract_domain_mapping_properties({ subdomain: 'api', hostname: 'example.com' }, 'us-central1');
     expect(result.domain).toBe('api.example.com');
     expect(result.hostname).toBe('example.com');
     expect(result.subdomain).toBe('api');
   });
 
   it('returns just hostname when subdomain is missing', () => {
-    const result = extract_domain_mapping_properties(
-      { hostname: 'example.com' },
-      'us-central1',
-    );
+    const result = extract_domain_mapping_properties({ hostname: 'example.com' }, 'us-central1');
     expect(result.domain).toBe('example.com');
   });
 
   it('returns just hostname when subdomain is an empty string (filter(Boolean) drops it)', () => {
-    const result = extract_domain_mapping_properties(
-      { subdomain: '', hostname: 'example.com' },
-      'us-central1',
-    );
+    const result = extract_domain_mapping_properties({ subdomain: '', hostname: 'example.com' }, 'us-central1');
     expect(result.domain).toBe('example.com');
   });
 
@@ -327,14 +306,8 @@ describe('extract_custom_domain_properties', () => {
   it('flips managed to false only when autoProvisionCert === false (strict)', () => {
     // The expression is `data.autoProvisionCert !== false` — so any truthy
     // OR null/undefined leaves managed === true.
-    const explicitFalse = extract_custom_domain_properties(
-      { autoProvisionCert: false },
-      'us-central1',
-    );
-    const explicitTrue = extract_custom_domain_properties(
-      { autoProvisionCert: true },
-      'us-central1',
-    );
+    const explicitFalse = extract_custom_domain_properties({ autoProvisionCert: false }, 'us-central1');
+    const explicitTrue = extract_custom_domain_properties({ autoProvisionCert: true }, 'us-central1');
     const undef = extract_custom_domain_properties({}, 'us-central1');
     expect(explicitFalse.managed).toBe(false);
     expect(explicitTrue.managed).toBe(true);
@@ -342,27 +315,18 @@ describe('extract_custom_domain_properties', () => {
   });
 
   it('passes sslCertificateId through', () => {
-    const result = extract_custom_domain_properties(
-      { sslCertificateId: 'cert-123' },
-      'us-central1',
-    );
+    const result = extract_custom_domain_properties({ sslCertificateId: 'cert-123' }, 'us-central1');
     expect(result.ssl_certificate_id).toBe('cert-123');
   });
 
   it('flips enable_https/redirect_http to false only on strict false', () => {
-    const result = extract_custom_domain_properties(
-      { enableHttps: false, redirectHttpToHttps: false },
-      'us-central1',
-    );
+    const result = extract_custom_domain_properties({ enableHttps: false, redirectHttpToHttps: false }, 'us-central1');
     expect(result.enable_https).toBe(false);
     expect(result.redirect_http).toBe(false);
   });
 
   it('keeps enable_https/redirect_http true when fields are missing or truthy', () => {
-    const result = extract_custom_domain_properties(
-      { enableHttps: true, redirectHttpToHttps: true },
-      'us-central1',
-    );
+    const result = extract_custom_domain_properties({ enableHttps: true, redirectHttpToHttps: true }, 'us-central1');
     expect(result.enable_https).toBe(true);
     expect(result.redirect_http).toBe(true);
   });
@@ -378,10 +342,7 @@ describe('extract_backend_bucket_properties', () => {
   });
 
   it('prefers explicit bucket_name over name', () => {
-    const result = extract_backend_bucket_properties(
-      { bucket_name: 'my-bucket', name: 'fallback' },
-      'us-central1',
-    );
+    const result = extract_backend_bucket_properties({ bucket_name: 'my-bucket', name: 'fallback' }, 'us-central1');
     expect(result.bucket_name).toBe('my-bucket');
   });
 
@@ -419,10 +380,7 @@ describe('extract_firebase_hosting_properties', () => {
   });
 
   it('returns trimmed user-supplied domain', () => {
-    const result = extract_firebase_hosting_properties(
-      { domain: '  app.example.com  ' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ domain: '  app.example.com  ' }, 'us-central1');
     expect(result.domain).toBe('app.example.com');
   });
 
@@ -457,10 +415,7 @@ describe('extract_firebase_hosting_properties', () => {
   });
 
   it('defaults branch to "main" when neither top-level branch nor source.branch is supplied', () => {
-    const result = extract_firebase_hosting_properties(
-      { repository: 'owner/repo' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ repository: 'owner/repo' }, 'us-central1');
     expect(result.branch).toBe('main');
   });
 
@@ -487,50 +442,32 @@ describe('extract_firebase_hosting_properties', () => {
   });
 
   it('reads output_directory snake-case', () => {
-    const result = extract_firebase_hosting_properties(
-      { output_directory: 'dist' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ output_directory: 'dist' }, 'us-central1');
     expect(result.output_directory).toBe('dist');
   });
 
   it('reads outputDirectory camelCase as fallback', () => {
-    const result = extract_firebase_hosting_properties(
-      { outputDirectory: 'build' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ outputDirectory: 'build' }, 'us-central1');
     expect(result.output_directory).toBe('build');
   });
 
   it('reads build_command snake-case', () => {
-    const result = extract_firebase_hosting_properties(
-      { build_command: 'npm run build' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ build_command: 'npm run build' }, 'us-central1');
     expect(result.build_command).toBe('npm run build');
   });
 
   it('reads buildCommand camelCase as fallback', () => {
-    const result = extract_firebase_hosting_properties(
-      { buildCommand: 'pnpm build' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ buildCommand: 'pnpm build' }, 'us-central1');
     expect(result.build_command).toBe('pnpm build');
   });
 
   it('reads source_path snake-case', () => {
-    const result = extract_firebase_hosting_properties(
-      { source_path: 'apps/web' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ source_path: 'apps/web' }, 'us-central1');
     expect(result.source_path).toBe('apps/web');
   });
 
   it('reads path camelCase as fallback for source_path', () => {
-    const result = extract_firebase_hosting_properties(
-      { path: 'apps/web' },
-      'us-central1',
-    );
+    const result = extract_firebase_hosting_properties({ path: 'apps/web' }, 'us-central1');
     expect(result.source_path).toBe('apps/web');
   });
 

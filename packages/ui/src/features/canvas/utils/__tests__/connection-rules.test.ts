@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
-
 import { analyzeCanvasPatterns } from '../connection-rules';
 
-const node = (id: string, iceType?: string) =>
-  iceType === undefined ? { id, data: {} } : { id, data: { iceType } };
+const node = (id: string, iceType?: string) => (iceType === undefined ? { id, data: {} } : { id, data: { iceType } });
 
 describe('connection-rules — re-export contract', () => {
   it('forwards classification + connection helpers from @ice/types', async () => {
@@ -77,11 +75,7 @@ describe('analyzeCanvasPatterns', () => {
   });
 
   it('emits "consider Redis cache" hint when ≥2 backends share a DB and no cache exists', () => {
-    const nodes = [
-      node('b1', 'Compute.Container'),
-      node('b2', 'Compute.Container'),
-      node('d1', 'Database.PostgreSQL'),
-    ];
+    const nodes = [node('b1', 'Compute.Container'), node('b2', 'Compute.Container'), node('d1', 'Database.PostgreSQL')];
     const edges = [
       { source: 'b1', target: 'd1' },
       { source: 'b2', target: 'd1' },
@@ -108,11 +102,7 @@ describe('analyzeCanvasPatterns', () => {
   });
 
   it('reverse-edge case: counts backends connected source-from-db (target = backend)', () => {
-    const nodes = [
-      node('b1', 'Compute.Container'),
-      node('b2', 'Compute.Container'),
-      node('d1', 'Database.PostgreSQL'),
-    ];
+    const nodes = [node('b1', 'Compute.Container'), node('b2', 'Compute.Container'), node('d1', 'Database.PostgreSQL')];
     const edges = [
       { source: 'd1', target: 'b1' },
       { source: 'd1', target: 'b2' },
@@ -122,10 +112,7 @@ describe('analyzeCanvasPatterns', () => {
   });
 
   it('only one connected backend → does NOT trigger Redis hint', () => {
-    const nodes = [
-      node('b1', 'Compute.Container'),
-      node('d1', 'Database.PostgreSQL'),
-    ];
+    const nodes = [node('b1', 'Compute.Container'), node('d1', 'Database.PostgreSQL')];
     const edges = [{ source: 'b1', target: 'd1' }];
     const out = analyzeCanvasPatterns(nodes, edges);
     expect(out.find((s) => s.message.includes('Redis cache'))).toBeUndefined();

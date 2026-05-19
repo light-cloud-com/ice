@@ -54,14 +54,14 @@
 
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { runNodeMove } from './container-move/move-runner';
+import { resolveToggleFoldDecision, runUnfoldExpansion } from './container-move/toggle-fold-runner';
 import {
   updateCardNodePositions,
   resizeCardNode,
   toggleCardNodeFold,
   type CardNode,
 } from '../../../store/slices/cards-slice';
-import { runNodeMove } from './container-move/move-runner';
-import { resolveToggleFoldDecision, runUnfoldExpansion } from './container-move/toggle-fold-runner';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
 
@@ -134,9 +134,7 @@ export function useContainerMove(args: UseContainerMoveArgs): UseContainerMoveRe
 
       const { positionUpdates, sizeUpdates, skipClamp, exiting } = result;
 
-      dispatch(
-        updateCardNodePositions(skipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates),
-      );
+      dispatch(updateCardNodePositions(skipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates));
       for (const su of sizeUpdates) {
         dispatch(resizeCardNode(su));
       }

@@ -114,10 +114,7 @@ export function writeAuditEntry(entry: AuditEntry): void {
       // Audit logging failures stay non-throwing on the request path
       // (see contract above) but must reach the deploy log channel so
       // a sustained outage is observable.
-      console.error(
-        `[ai-audit] writeAuditEntry failed for entry ${entry.id} (model=${entry.model}):`,
-        err,
-      );
+      console.error(`[ai-audit] writeAuditEntry failed for entry ${entry.id} (model=${entry.model}):`, err);
     });
 }
 

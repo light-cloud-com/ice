@@ -28,6 +28,28 @@ or triggered on a schedule.
 Pair with a **Message Queue** — the queue feeds the worker. Optionally wire
 to **Postgres** / **Redis Cache** / **Object Storage** for state and results.
     `.trim(),
+    markdownZh: `
+# Worker
+
+一种长期运行的容器进程，从队列中拉取任务并持续处理。无 HTTP 端点 —— Worker 通过 **消息队列** 间接调用，或者由调度器触发。
+
+## 适用场景
+
+- 视频 / 图片处理
+- ETL 流水线、数据导入
+- 邮件群发、通知扇出
+- 任何耗时超过无服务器函数超时上限的工作
+
+## 不适用场景
+
+- 处理 HTTP 请求 → 改用 **可扩展后端**
+- 短小、无状态的事件处理 → 改用 **无服务器函数**
+- 定时任务 → 改用 **定时任务**
+
+## 连接方式
+
+与 **消息队列** 配套使用 —— 队列向 Worker 投递任务。可选地连接到 **Postgres** / **Redis Cache** / **对象存储** 以存放状态和结果。
+    `.trim(),
   },
   compilesTo: {
     aws: [

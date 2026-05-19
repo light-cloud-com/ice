@@ -37,8 +37,7 @@ describe('openExternalUrl', () => {
     const open = vi.fn();
     vi.stubGlobal('window', { open });
 
-    const url =
-      'https://console.cloud.google.com/apis/api/compute.googleapis.com/overview?project=my-proj';
+    const url = 'https://console.cloud.google.com/apis/api/compute.googleapis.com/overview?project=my-proj';
     openExternalUrl(url);
 
     expect(open).toHaveBeenCalledWith(url, '_blank', 'noopener,noreferrer');

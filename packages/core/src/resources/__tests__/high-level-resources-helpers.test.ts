@@ -98,9 +98,7 @@ describe('getHighLevelResourcesForPalette', () => {
 
   it('projects resources to ice_type / display_name (not id / name)', () => {
     const palette = getHighLevelResourcesForPalette();
-    const fe = palette
-      .find((p) => p.categoryId === 'compute')!
-      .resources.find((r) => r.ice_type === 'frontend-app');
+    const fe = palette.find((p) => p.categoryId === 'compute')!.resources.find((r) => r.ice_type === 'frontend-app');
     expect(fe).toBeDefined();
     expect(fe!.display_name).toBe('Frontend App');
     expect(fe!.category).toBe('Compute');

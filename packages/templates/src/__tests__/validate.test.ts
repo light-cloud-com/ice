@@ -107,7 +107,10 @@ beforeEach(() => {
   h.templates = [];
   h.coreIssues = [];
   h.blueprints.clear();
-  h.expandResult = { nodes: [{ id: 'n', type: 'resource', position: { x: 0, y: 0 }, width: 220, height: 56, data: { name: 'x' } }], edges: [] };
+  h.expandResult = {
+    nodes: [{ id: 'n', type: 'resource', position: { x: 0, y: 0 }, width: 220, height: 56, data: { name: 'x' } }],
+    edges: [],
+  };
   h.expandThrows = null;
   h.requiredProps = {};
   h.groupColors = {};
@@ -168,9 +171,7 @@ describe('validate.ts — clean run (no templates)', () => {
 describe('validate.ts — checkCore', () => {
   it('passes through a structural error from @ice/core untouched', async () => {
     h.templates = [makeTemplate()];
-    h.coreIssues = [
-      { severity: 'error', code: 'DANGLING_EDGE_SOURCE', message: 'bad edge' },
-    ];
+    h.coreIssues = [{ severity: 'error', code: 'DANGLING_EDGE_SOURCE', message: 'bad edge' }];
     await loadValidate();
     const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
     expect(out).toMatch(/Core:DANGLING_EDGE_SOURCE/);
@@ -225,9 +226,7 @@ describe('validate.ts — checkCore', () => {
 
   it('passes through warnings as warnings (no severity flip needed)', async () => {
     h.templates = [makeTemplate()];
-    h.coreIssues = [
-      { severity: 'warning', code: 'INVALID_CONNECTION', message: 'soft warn' },
-    ];
+    h.coreIssues = [{ severity: 'warning', code: 'INVALID_CONNECTION', message: 'soft warn' }];
     await loadValidate();
     expect(exitSpy).not.toHaveBeenCalled();
   });
@@ -237,9 +236,7 @@ describe('validate.ts — checkBlueprints (R1)', () => {
   it('emits an error when no blueprint exists for a block iceType', async () => {
     h.templates = [
       makeTemplate({
-        blocks: [
-          { iceType: 'Compute.Phantom', label: 'Phantom', position: { x: 0, y: 0 } },
-        ],
+        blocks: [{ iceType: 'Compute.Phantom', label: 'Phantom', position: { x: 0, y: 0 } }],
       }),
     ];
     await loadValidate();
@@ -290,9 +287,7 @@ describe('validate.ts — checkBounds (R2)', () => {
   it('does not emit when block is inside group bounds', async () => {
     h.templates = [
       makeTemplate({
-        blocks: [
-          { iceType: 'X', label: 'A', position: { x: 30, y: 60 } },
-        ],
+        blocks: [{ iceType: 'X', label: 'A', position: { x: 30, y: 60 } }],
         groups: [
           {
             subtype: 'Stack',
@@ -666,9 +661,7 @@ describe('validate.ts — checkProperties (R6)', () => {
     h.blueprints.set('X', { iceType: 'X', providers: ['gcp'] });
     h.templates = [
       makeTemplate({
-        blocks: [
-          { iceType: 'X', label: 'A', position: { x: 30, y: 60 }, data: {} },
-        ],
+        blocks: [{ iceType: 'X', label: 'A', position: { x: 30, y: 60 }, data: {} }],
       }),
     ];
     await loadValidate();

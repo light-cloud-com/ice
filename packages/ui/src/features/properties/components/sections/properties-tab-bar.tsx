@@ -18,11 +18,7 @@ export interface PropertiesTabBarProps {
   onSelect: (id: string) => void;
 }
 
-export const PropertiesTabBar: React.FC<PropertiesTabBarProps> = ({
-  visibleTabs,
-  activeTab,
-  onSelect,
-}) => {
+export const PropertiesTabBar: React.FC<PropertiesTabBarProps> = ({ visibleTabs, activeTab, onSelect }) => {
   if (visibleTabs.length <= 1) return null;
   return (
     <div className="flex border-b border-ice-border shrink-0">

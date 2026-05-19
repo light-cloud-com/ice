@@ -367,14 +367,14 @@ describe('map_properties — cloudfunctions extractors', () => {
     expect(map_properties('cloudfunctions#function', fnProps)).toMatchObject({ trigger: 'Unknown' });
   });
   it('cloudfunction (singular) variant maps the same fields and HTTP branch', () => {
-    expect(
-      map_properties('cloudfunctions#cloudfunction', { ...fnProps, httpsTrigger: {} }),
-    ).toMatchObject({ trigger: 'HTTP' });
+    expect(map_properties('cloudfunctions#cloudfunction', { ...fnProps, httpsTrigger: {} })).toMatchObject({
+      trigger: 'HTTP',
+    });
   });
   it('cloudfunction Event branch', () => {
-    expect(
-      map_properties('cloudfunctions#cloudfunction', { ...fnProps, eventTrigger: {} }),
-    ).toMatchObject({ trigger: 'Event' });
+    expect(map_properties('cloudfunctions#cloudfunction', { ...fnProps, eventTrigger: {} })).toMatchObject({
+      trigger: 'Event',
+    });
   });
   it('cloudfunction Unknown branch', () => {
     expect(map_properties('cloudfunctions#cloudfunction', fnProps)).toMatchObject({ trigger: 'Unknown' });
@@ -497,7 +497,9 @@ describe('map_properties — pubsub#topic and pubsub#subscription extractors', (
 
 describe('map_properties — secret manager extractor', () => {
   it('extracts the bare secret name from the qualified path (findings #26)', () => {
-    expect(map_properties('secretmanager#secret', { name: 'projects/p/secrets/s', replication: { automatic: {} } })).toEqual({
+    expect(
+      map_properties('secretmanager#secret', { name: 'projects/p/secrets/s', replication: { automatic: {} } }),
+    ).toEqual({
       name: 's',
       replication: 'automatic',
     });
@@ -556,9 +558,11 @@ describe('map_properties — redis / gke / dns / iam / cloudscheduler / monitori
     expect(out).toMatchObject({ node_count: 2 });
   });
   it('dns#managedzone', () => {
-    expect(
-      map_properties('dns#managedzone', { name: 'z', dnsName: 'example.com.', visibility: 'public' }),
-    ).toEqual({ name: 'z', dns_name: 'example.com.', visibility: 'public' });
+    expect(map_properties('dns#managedzone', { name: 'z', dnsName: 'example.com.', visibility: 'public' })).toEqual({
+      name: 'z',
+      dns_name: 'example.com.',
+      visibility: 'public',
+    });
   });
   it('iam#serviceaccount prefers displayName over name', () => {
     const out = map_properties('iam#serviceaccount', {
@@ -609,9 +613,9 @@ describe('map_properties — redis / gke / dns / iam / cloudscheduler / monitori
       }),
     ).toEqual({ name: 'my_ds', location: 'US', description: 'd' });
     // fall back to friendlyName
-    expect(
-      map_properties('bigquery#dataset', { datasetReference: {}, friendlyName: 'only' }),
-    ).toMatchObject({ name: 'only' });
+    expect(map_properties('bigquery#dataset', { datasetReference: {}, friendlyName: 'only' })).toMatchObject({
+      name: 'only',
+    });
   });
 });
 

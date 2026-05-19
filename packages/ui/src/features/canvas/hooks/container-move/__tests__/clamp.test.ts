@@ -6,14 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  clampDraggedNodeToParent,
-  detectExitingGroupId,
-} from '../clamp';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../../utils/container-bounds';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../../utils/container-bounds';
+import { clampDraggedNodeToParent, detectExitingGroupId } from '../clamp';
 import type { CanvasNode } from '../../../components/types';
 import type { PositionUpdate, SizeUpdate } from '../types';
 
@@ -32,7 +26,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 // ─── clampDraggedNodeToParent ────────────────────────────────────────────────
 
@@ -204,7 +198,7 @@ describe('clampDraggedNodeToParent — descendant delta propagation', () => {
       sizeUpdates: [],
       descendantIds: ['d1'],
     });
-    const adjustX = (100 + PAD) - -100; // clampedX - rawX = 220
+    const adjustX = 100 + PAD - -100; // clampedX - rawX = 220
     expect(positionUpdates[1].position.x).toBe(50 + adjustX);
     expect(positionUpdates[1].position.y).toBe(250);
   });

@@ -92,7 +92,9 @@ function collectText(tree: unknown): string {
   return s;
 }
 
-const render = (props: Partial<DnsRecordCardProps> & { recordType: string; name: string; value: string }): React.ReactElement =>
+const render = (
+  props: Partial<DnsRecordCardProps> & { recordType: string; name: string; value: string },
+): React.ReactElement =>
   (DnsRecordCard as unknown as (p: DnsRecordCardProps) => React.ReactElement)(props as DnsRecordCardProps);
 
 beforeEach(() => {
@@ -181,9 +183,7 @@ describe('DnsRecordCard — copy interaction', () => {
     // Look for a button with title="Click to copy".
     const valueBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'Click to copy',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'Click to copy',
     );
     expect(valueBtn).toBeDefined();
     const onClick = (valueBtn!.props as { onClick: () => void }).onClick;
@@ -198,9 +198,12 @@ describe('DnsRecordCard — copy interaction', () => {
     // Order: [valueBtn, copy-record, optionally verify]
     const copyAll = buttons.find((b) => {
       const className = (b.props as { className?: string }).className;
-      return typeof className === 'string' && className.includes('Copy record') === false &&
+      return (
+        typeof className === 'string' &&
+        className.includes('Copy record') === false &&
         // discriminate via children including 'Copy record' text
-        true;
+        true
+      );
     });
     void copyAll; // unused, fall through
     // Easier: just find by predicate that label text is 'Copy record'.
@@ -301,9 +304,7 @@ describe('DnsRecordCard — setCopied timer callback', () => {
     // Advance the 1200ms timer.
     vi.advanceTimersByTime(1500);
     // The deferred call passes a function — apply it manually.
-    const deferred = mocks.setCopiedSpy.mock.calls.find(
-      (c) => typeof c[0] === 'function',
-    );
+    const deferred = mocks.setCopiedSpy.mock.calls.find((c) => typeof c[0] === 'function');
     expect(deferred).toBeDefined();
     const fn = deferred![0] as (c: string | null) => string | null;
     // Returns null when current === key.

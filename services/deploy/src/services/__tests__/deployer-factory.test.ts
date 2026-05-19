@@ -62,7 +62,7 @@ describe('createDeployer', () => {
     expect(azure).not.toHaveBeenCalled();
   });
 
-  it('falls through to GCPDeployer when provider is undefined (today\'s default)', async () => {
+  it("falls through to GCPDeployer when provider is undefined (today's default)", async () => {
     await createDeployer(undefined);
 
     expect(gcp).toHaveBeenCalledTimes(1);
@@ -70,7 +70,7 @@ describe('createDeployer', () => {
     expect(azure).not.toHaveBeenCalled();
   });
 
-  it('falls through to GCPDeployer for an unknown provider string (today\'s default)', async () => {
+  it("falls through to GCPDeployer for an unknown provider string (today's default)", async () => {
     await createDeployer('unknown-provider');
 
     expect(gcp).toHaveBeenCalledTimes(1);

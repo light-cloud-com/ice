@@ -35,10 +35,7 @@
  * uses snake_case, so 1:1); values are recursively transformed
  * via `transform_value`.
  */
-export function map_properties(
-  properties: Record<string, unknown>,
-  _terraform_type: string,
-): Record<string, unknown> {
+export function map_properties(properties: Record<string, unknown>, _terraform_type: string): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(properties)) {

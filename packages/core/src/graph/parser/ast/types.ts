@@ -24,11 +24,7 @@
  */
 
 export type { AstNode, AstNodeKind } from './types/base';
-export type {
-  Block,
-  Attribute,
-  NestedBlock,
-} from './types/blocks';
+export type { Block, Attribute, NestedBlock } from './types/blocks';
 export type {
   Expression,
   Identifier,

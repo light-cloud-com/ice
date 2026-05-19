@@ -8,7 +8,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import { create_mutable_graph_state } from '../types';
 
 describe('create_mutable_graph_state', () => {

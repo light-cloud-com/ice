@@ -45,10 +45,7 @@ export const DeployedResourcesList: React.FC<DeployedResourcesListProps> = ({ re
             <span className="font-medium text-sm">{r.name}</span>
             <span className="text-muted-foreground font-mono">{r.type}</span>
             {r.provider_id && (
-              <span
-                className="ml-auto text-muted-foreground font-mono truncate max-w-[250px]"
-                title={r.provider_id}
-              >
+              <span className="ml-auto text-muted-foreground font-mono truncate max-w-[250px]" title={r.provider_id}>
                 {r.provider_id}
               </span>
             )}

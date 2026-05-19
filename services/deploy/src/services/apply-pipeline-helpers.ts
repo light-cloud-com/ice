@@ -93,14 +93,7 @@ export async function ensureAutoDeployRules(args: {
   if (!userId) return;
   try {
     const { ensureRulesForCanvas } = await import('./pipeline.service');
-    const ruleResult = await ensureRulesForCanvas(
-      cardId,
-      nodes,
-      edges,
-      orgId,
-      userId,
-      environment || 'development',
-    );
+    const ruleResult = await ensureRulesForCanvas(cardId, nodes, edges, orgId, userId, environment || 'development');
     for (const rule of ruleResult.created) {
       const webhookNote =
         rule.webhookStatus === 'active'
@@ -128,8 +121,14 @@ export function logDiffForDebugging(translationGraph: any, currentGraph: any): v
   const desiredNodes = translationGraph?.nodes?.values ? [...translationGraph.nodes.values()] : [];
   const currentNodes = currentGraph?.nodes?.values ? [...currentGraph.nodes.values()] : [];
   console.log(`Diff: desired=${desiredNodes.length} nodes, current=${currentNodes.length} nodes`);
-  console.log('Desired:', desiredNodes.map((n: any) => `${n.type}::${n.name}`));
-  console.log('Current:', currentNodes.map((n: any) => `${n.type}::${n.name}`));
+  console.log(
+    'Desired:',
+    desiredNodes.map((n: any) => `${n.type}::${n.name}`),
+  );
+  console.log(
+    'Current:',
+    currentNodes.map((n: any) => `${n.type}::${n.name}`),
+  );
 }
 
 /**

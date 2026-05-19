@@ -37,13 +37,13 @@ vi.mock('../deployer-factory', () => ({
   createDeployer: vi.fn(),
 }));
 
-import { checkDrift } from '../drift.service';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import * as credentialsModule from '@ice/service-credentials';
 import { resolveProviderAuth, cleanupProviderAuth } from '../../providers/registry';
 import { createDeployer } from '../deployer-factory';
+import { checkDrift } from '../drift.service';
 
 const findManyMock = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<typeof vi.fn>;
 const getDecryptedCredentialsMock = (credentialsModule as any).getDecryptedCredentials as ReturnType<typeof vi.fn>;
@@ -70,9 +70,7 @@ describe('checkDrift — empty-mapping early return', () => {
   it('returns empty driftResults + unsupported:false when no mapping rows exist', async () => {
     findManyMock.mockResolvedValueOnce([]);
 
-    const result = await checkDrift('card-1', [
-      { id: 'n1', type: 'resource', data: { iceType: 'Compute.Container' } },
-    ]);
+    const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'Compute.Container' } }]);
 
     expect(result.driftResults).toEqual([]);
     expect(result.unsupported).toBe(false);
@@ -103,9 +101,7 @@ describe('checkDrift — stored-state fallback (no orgId)', () => {
       { node_id: 'n1', resource_type: 'gcp.storage.bucket', resource_name: 'b-1', provider_id: 'p-1' },
     ]);
 
-    const result = await checkDrift('card-1', [
-      { id: 'n1', type: 'resource', data: { iceType: 'Storage.Bucket' } },
-    ]);
+    const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'Storage.Bucket' } }]);
 
     expect(result.unsupported).toBe(true); // no deployer was constructed
     expect(result.driftResults).toEqual([{ nodeId: 'n1', status: 'in_sync', changes: [] }]);
@@ -154,16 +150,16 @@ describe('checkDrift — stored-state fallback (no orgId)', () => {
   it('does NOT consider non-resource nodes (containers/groups) for canvasById/unknown', async () => {
     findManyMock.mockResolvedValueOnce([]);
 
-    const result = await checkDrift('card-1', [
-      { id: 'g1', type: 'container', data: { iceType: 'Group.Custom' } },
-    ]);
+    const result = await checkDrift('card-1', [{ id: 'g1', type: 'container', data: { iceType: 'Group.Custom' } }]);
 
     expect(result.driftResults).toEqual([]);
   });
 });
 
 describe('checkDrift — GCP describe path (orgId present)', () => {
-  function fakeDeployer(overrides: Partial<{ describe: (...args: any[]) => Promise<any>; cleanup: () => Promise<void> }> = {}) {
+  function fakeDeployer(
+    overrides: Partial<{ describe: (...args: any[]) => Promise<any>; cleanup: () => Promise<void> }> = {},
+  ) {
     return {
       initialize: vi.fn().mockResolvedValue(undefined),
       describe: overrides.describe ?? vi.fn(),
@@ -203,11 +199,9 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
     ]);
     setupDeployerHappyPath(async () => ({ exists: false }));
 
-    const result = await checkDrift(
-      'card-1',
-      [{ id: 'n1', type: 'resource', data: { iceType: 'Storage.Bucket' } }],
-      { orgId: 'org-1' },
-    );
+    const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'Storage.Bucket' } }], {
+      orgId: 'org-1',
+    });
 
     expect(result.driftResults).toEqual([{ nodeId: 'n1', status: 'missing', changes: [] }]);
   });
@@ -356,9 +350,7 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('falls back to authClient.projectId when scope.project is absent in initialize()', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
     const deployer = fakeDeployer({ describe: async () => ({ exists: true, properties: {} }) });
     getDecryptedCredentialsMock.mockResolvedValueOnce({ project_id: 'proj-1' });
     createDeployerMock.mockResolvedValueOnce(deployer);
@@ -369,28 +361,20 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
       keyFilePath: '/tmp/k.json',
     });
 
-    await checkDrift(
-      'card-1',
-      [{ id: 'n1', type: 'resource', data: { iceType: 'X', properties: {} } }],
-      { orgId: 'org-1' },
-    );
+    await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'X', properties: {} } }], {
+      orgId: 'org-1',
+    });
 
-    expect(deployer.initialize).toHaveBeenCalledWith(
-      expect.objectContaining({ project: 'fallback-proj' }),
-    );
+    expect(deployer.initialize).toHaveBeenCalledWith(expect.objectContaining({ project: 'fallback-proj' }));
   });
 
   it('falls back to stored-state path when getDecryptedCredentials returns null', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
     getDecryptedCredentialsMock.mockResolvedValueOnce(null);
 
-    const result = await checkDrift(
-      'card-1',
-      [{ id: 'n1', type: 'resource', data: { iceType: 'X' } }],
-      { orgId: 'org-1' },
-    );
+    const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'X' } }], {
+      orgId: 'org-1',
+    });
 
     expect(createDeployerMock).not.toHaveBeenCalled();
     expect(result.unsupported).toBe(true);
@@ -398,18 +382,14 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('logs a warning + falls through to stored-state when deployer init throws', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
     getDecryptedCredentialsMock.mockResolvedValueOnce({ project_id: 'proj-1' });
     createDeployerMock.mockRejectedValueOnce(new Error('init blew up'));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    const result = await checkDrift(
-      'card-1',
-      [{ id: 'n1', type: 'resource', data: { iceType: 'X' } }],
-      { orgId: 'org-1' },
-    );
+    const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'X' } }], {
+      orgId: 'org-1',
+    });
 
     expect(warnSpy).toHaveBeenCalled();
     expect(result.unsupported).toBe(true);
@@ -418,9 +398,7 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('always cleans up deployer + scoped auth even when describe throws mid-loop', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
     const deployer = fakeDeployer({
       describe: async () => {
         throw new Error('describe failed');
@@ -436,11 +414,9 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
     });
 
     await expect(
-      checkDrift(
-        'card-1',
-        [{ id: 'n1', type: 'resource', data: { iceType: 'X', properties: {} } }],
-        { orgId: 'org-1' },
-      ),
+      checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'X', properties: {} } }], {
+        orgId: 'org-1',
+      }),
     ).rejects.toThrow('describe failed');
 
     expect(deployer.cleanup).toHaveBeenCalledTimes(1);
@@ -451,9 +427,7 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('swallows errors from deployer.cleanup() and cleanupProviderAuth() in the finally block', async () => {
-    findManyMock.mockResolvedValueOnce([
-      { node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' },
-    ]);
+    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
     const deployer = fakeDeployer({
       describe: async () => ({ exists: true, properties: {} }),
       cleanup: vi.fn().mockRejectedValue(new Error('cleanup-fail')),

@@ -109,9 +109,7 @@ describe('format_yaml_value — objects', () => {
 
   it('recurses with indent + 2 for nested values', () => {
     // Nested objects start at indent + 2 = 2 in the recursive call
-    expect(format_yaml_value({ outer: { inner: 1 } })).toBe(
-      '\n  outer: \n    inner: 1',
-    );
+    expect(format_yaml_value({ outer: { inner: 1 } })).toBe('\n  outer: \n    inner: 1');
   });
 });
 
@@ -132,9 +130,7 @@ describe('to_yaml — minimal program', () => {
       description: 'a test app',
       resources: [],
     };
-    expect(to_yaml(program, { provider: 'gcp' })).toBe(
-      'name: test\nruntime: nodejs\ndescription: a test app\n',
-    );
+    expect(to_yaml(program, { provider: 'gcp' })).toBe('name: test\nruntime: nodejs\ndescription: a test app\n');
   });
 
   it('skips description when empty/undefined', () => {
@@ -333,9 +329,7 @@ describe('to_yaml — outputs block', () => {
       resources: [],
       outputs: { url: 'pub-ip' },
     };
-    expect(to_yaml(program, { provider: 'gcp' })).toBe(
-      'name: test\nruntime: nodejs\n\noutputs:\n  url: pub-ip',
-    );
+    expect(to_yaml(program, { provider: 'gcp' })).toBe('name: test\nruntime: nodejs\n\noutputs:\n  url: pub-ip');
   });
 
   it('quotes a URL value because it contains a colon', () => {

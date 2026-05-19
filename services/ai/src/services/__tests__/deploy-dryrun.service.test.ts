@@ -114,7 +114,13 @@ describe('dryRunDeploy', () => {
       deployable_count: 0,
       skipped: [],
       warnings: [],
-      graph: { nodes: new Map([['a', {}], ['b', {}]]), edges: new Map([['e1', {}]]) },
+      graph: {
+        nodes: new Map([
+          ['a', {}],
+          ['b', {}],
+        ]),
+        edges: new Map([['e1', {}]]),
+      },
     });
 
     const result = await dryRunDeploy([], []);
@@ -194,12 +200,8 @@ describe('dryRunDeploy', () => {
     // deployable: n1 (gcp), n3 (no provider) => 2
     expect(result.deployableCount).toBe(2);
     // skipped: n2 (aws != gcp) => 1
-    expect(result.skipped).toEqual([
-      { nodeId: 'n2', label: 'Bucket', reason: 'Provider mismatch (aws != gcp)' },
-    ]);
-    expect(result.warnings).toEqual([
-      'Core engine translation failed: translator boom. Showing basic analysis.',
-    ]);
+    expect(result.skipped).toEqual([{ nodeId: 'n2', label: 'Bucket', reason: 'Provider mismatch (aws != gcp)' }]);
+    expect(result.warnings).toEqual(['Core engine translation failed: translator boom. Showing basic analysis.']);
     expect(result.graphSummary).toEqual({ nodes: 2, edges: 1 });
     expect(result.error).toBe('translator boom');
   });
@@ -208,11 +210,9 @@ describe('dryRunDeploy', () => {
     translateMock.mockImplementation(() => {
       throw new Error('boom');
     });
-    const result = await dryRunDeploy(
-      [{ id: 'n2', type: 'resource', data: { provider: 'aws' } }],
-      [],
-      { provider: 'gcp' },
-    );
+    const result = await dryRunDeploy([{ id: 'n2', type: 'resource', data: { provider: 'aws' } }], [], {
+      provider: 'gcp',
+    });
 
     expect(result.skipped[0]?.label).toBe('n2');
   });

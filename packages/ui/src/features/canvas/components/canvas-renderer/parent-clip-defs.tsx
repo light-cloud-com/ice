@@ -35,8 +35,8 @@
  */
 
 import React from 'react';
-import type { CanvasNode } from '../types';
 import { CORNER_RADIUS } from '../../../../config/canvas-constants';
+import type { CanvasNode } from '../types';
 
 export interface ParentClipDefsProps {
   nodes: CanvasNode[];

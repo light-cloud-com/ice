@@ -45,14 +45,10 @@ import {
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 
-const findManyMock = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<
-  typeof vi.fn
->;
+const findManyMock = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<typeof vi.fn>;
 const upsertMock = (prismaModule as any).deployedResourceMapping.upsert as ReturnType<typeof vi.fn>;
 const deleteMock = (prismaModule as any).deployedResourceMapping.delete as ReturnType<typeof vi.fn>;
-const deleteManyMock = (prismaModule as any).deployedResourceMapping.deleteMany as ReturnType<
-  typeof vi.fn
->;
+const deleteManyMock = (prismaModule as any).deployedResourceMapping.deleteMany as ReturnType<typeof vi.fn>;
 const countMock = (prismaModule as any).deployedResourceMapping.count as ReturnType<typeof vi.fn>;
 const findFirstMock = (prismaModule as any).canvasDeployment.findFirst as ReturnType<typeof vi.fn>;
 
@@ -499,9 +495,7 @@ describe('seedMappingsFromHistory', () => {
     countMock.mockResolvedValueOnce(0);
     findFirstMock.mockRejectedValueOnce(new Error('findFirst failed'));
 
-    await expect(seedMappingsFromHistory('card-1', 'production')).rejects.toThrow(
-      'findFirst failed',
-    );
+    await expect(seedMappingsFromHistory('card-1', 'production')).rejects.toThrow('findFirst failed');
     expect(upsertMock).not.toHaveBeenCalled();
   });
 });

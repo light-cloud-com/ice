@@ -7,37 +7,36 @@
  * end-to-end without per-selector mocking.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect } from 'vitest';
-import cardsReducer from '../../../../store/slices/cards-slice';
-import selectionReducer from '../../../../store/slices/selection-slice';
-import viewReducer from '../../../../store/slices/view-slice';
 import aiReducer from '../../../../store/slices/ai-slice';
+import cardsReducer from '../../../../store/slices/cards-slice';
 import pipelineReducer from '../../../../store/slices/pipeline-slice';
+import selectionReducer from '../../../../store/slices/selection-slice';
 import uiReducer from '../../../../store/slices/ui-slice';
 import validationReducer from '../../../../store/slices/validation-slice';
+import viewReducer from '../../../../store/slices/view-slice';
 import { useCanvasSelectors, type UseCanvasSelectorsResult } from '../use-canvas-selectors';
 import type { Card } from '../../../../store/slices/cards-slice';
 
 // ─── Store builder ──────────────────────────────────────────────────────────
 
 const makeStore = (cards: Card[] = [], extra: Record<string, unknown> = {}) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialCards = cardsReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialSelection = selectionReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialView = viewReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialAi = aiReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialPipeline = pipelineReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialUi = uiReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialValidation = validationReducer(undefined as any, { type: '@@INIT' });
   return configureStore({
     reducer: {
@@ -59,8 +58,7 @@ const makeStore = (cards: Card[] = [], extra: Record<string, unknown> = {}) => {
       validation: initialValidation,
       ...extra,
     },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 };
 

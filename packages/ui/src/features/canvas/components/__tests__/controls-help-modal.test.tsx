@@ -53,11 +53,9 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
-const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) =>
-  [...walk(tree)].filter(p);
+const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) => [...walk(tree)].filter(p);
 
 beforeEach(() => {
   stateMocks.openValue = false;
@@ -170,7 +168,7 @@ describe('ControlsHelpModal', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { children: string }).children).startsWith('canvas.controls.section'),
+        (el.props as { children: string }).children.startsWith('canvas.controls.section'),
     );
     expect(sectionTitles.map((s) => (s.props as { children: string }).children)).toEqual([
       'canvas.controls.sectionNavigation',
@@ -186,8 +184,7 @@ describe('ControlsHelpModal', () => {
     const tree = ControlsHelpModal({});
     const wasd = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' && (el.props as { children?: unknown }).children === 'W A S D / Arrow Keys',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'W A S D / Arrow Keys',
     );
     expect(wasd).toHaveLength(1);
   });

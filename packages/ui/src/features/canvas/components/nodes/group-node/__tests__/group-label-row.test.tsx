@@ -20,21 +20,18 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
 }
 
-const renderGLR = (
-  props: Partial<React.ComponentProps<typeof GroupLabelRow>> = {},
-): React.ReactElement => {
-  const Inner = (GroupLabelRow as unknown as {
-    type: (p: React.ComponentProps<typeof GroupLabelRow>) => React.ReactElement;
-  }).type;
+const renderGLR = (props: Partial<React.ComponentProps<typeof GroupLabelRow>> = {}): React.ReactElement => {
+  const Inner = (
+    GroupLabelRow as unknown as {
+      type: (p: React.ComponentProps<typeof GroupLabelRow>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof GroupLabelRow> = { label: 'Group A' };
   return Inner({ ...defaults, ...props });
 };
@@ -47,19 +44,28 @@ describe('GroupLabelRow', () => {
 
   it('renders the label inside a span', () => {
     const tree = renderGLR({ label: 'My Group' });
-    const labelSpan = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'My Group');
+    const labelSpan = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'My Group',
+    );
     expect(labelSpan).toHaveLength(1);
   });
 
   it('label color: uses provided color when set', () => {
     const tree = renderGLR({ label: 'X', color: '#3b82f6' });
-    const labelSpan = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'X')[0];
+    const labelSpan = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'X',
+    )[0];
     expect((labelSpan.props as { style: { color: string } }).style.color).toBe('#3b82f6');
   });
 
   it('label color: falls back to var when color undefined', () => {
     const tree = renderGLR({ label: 'X' });
-    const labelSpan = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'X')[0];
+    const labelSpan = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'X',
+    )[0];
     expect((labelSpan.props as { style: { color: string } }).style.color).toBe('var(--ice-text-secondary)');
   });
 
@@ -86,13 +92,19 @@ describe('GroupLabelRow', () => {
 
   it('renders childCount span when childCount > 0', () => {
     const tree = renderGLR({ label: 'X', childCount: 3 });
-    const cnt = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 3);
+    const cnt = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 3,
+    );
     expect(cnt).toHaveLength(1);
   });
 
   it('omits childCount span when childCount === 0', () => {
     const tree = renderGLR({ label: 'X', childCount: 0 });
-    const cnt = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 0);
+    const cnt = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 0,
+    );
     expect(cnt).toHaveLength(0);
   });
 

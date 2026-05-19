@@ -28,6 +28,4 @@ export { Badge } from './badge';
 export { KvLine } from './kv-line';
 export { LabelLine } from './label-line';
 export { EmptyHint } from './empty-hint';
-export { TableStripes } from './table-stripes';
-export { DocumentPills } from './document-pills';
 export { ScaleGauge } from './scale-gauge';

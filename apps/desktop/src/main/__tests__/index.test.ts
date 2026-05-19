@@ -44,6 +44,12 @@ const h = vi.hoisted(() => {
         ((this.webContents as any)._listeners[channel] ??= []).push(listener);
         return this.webContents;
       }),
+      once: vi.fn((channel: string, listener: Listener) => {
+        (this.webContents as any)._listeners ??= {};
+        ((this.webContents as any)._listeners[channel] ??= []).push(listener);
+        return this.webContents;
+      }),
+      executeJavaScript: vi.fn(() => Promise.resolve()),
       _listeners: {} as Listeners,
       getURL: vi.fn(() => 'http://localhost:15173/test'),
     } as any;
@@ -106,6 +112,7 @@ const h = vi.hoisted(() => {
       quit: vi.fn(),
       getPath: vi.fn((kind: string) => `/fake/${kind}`),
       getAppPath: vi.fn(() => '/fake/asar'),
+      getVersion: vi.fn(() => '0.0.0-test'),
       dock: { setIcon: vi.fn((icon: string) => bag.dockSetIconCalls.push(icon)) } as any,
     },
     BrowserWindow: Object.assign(FakeBrowserWindow, {
@@ -289,10 +296,7 @@ function resetBag(): void {
   // Restore the original resolver function — the SUT's bootstrap will replace
   // it again on the next import. Don't mockClear() because it may have been
   // reassigned to a non-vi.fn function by a prior test's bootstrap.
-  (h.moduleMod as any).default._resolveFilename = function origResolve(
-    request: string,
-    parent: any,
-  ) {
+  (h.moduleMod as any).default._resolveFilename = function origResolve(request: string, parent: any) {
     h.bag.resolveCalls.push({ request, parentFilename: parent?.filename });
     return h.bag.origResolveResult;
   };
@@ -382,10 +386,7 @@ describe('main process bootstrap', () => {
       await bootMain();
       const fakeContents = { on: vi.fn() };
       h.bag.appListeners['web-contents-created']![0]!({}, fakeContents);
-      const willNavListener = fakeContents.on.mock.calls[0]![1] as (
-        event: any,
-        url: string,
-      ) => void;
+      const willNavListener = fakeContents.on.mock.calls[0]![1] as (event: any, url: string) => void;
       const event = { preventDefault: vi.fn() };
       willNavListener(event, 'https://evil.example.com');
       expect(event.preventDefault).toHaveBeenCalled();
@@ -397,10 +398,7 @@ describe('main process bootstrap', () => {
       await bootMain();
       const fakeContents = { on: vi.fn() };
       h.bag.appListeners['web-contents-created']![0]!({}, fakeContents);
-      const willNavListener = fakeContents.on.mock.calls[0]![1] as (
-        event: any,
-        url: string,
-      ) => void;
+      const willNavListener = fakeContents.on.mock.calls[0]![1] as (event: any, url: string) => void;
       const allow = { preventDefault: vi.fn() };
       willNavListener(allow, 'http://localhost:5174/anything');
       expect(allow.preventDefault).not.toHaveBeenCalled();
@@ -411,10 +409,7 @@ describe('main process bootstrap', () => {
       await bootMain();
       const fakeContents = { on: vi.fn() };
       h.bag.appListeners['web-contents-created']![0]!({}, fakeContents);
-      const willNavListener = fakeContents.on.mock.calls[0]![1] as (
-        event: any,
-        url: string,
-      ) => void;
+      const willNavListener = fakeContents.on.mock.calls[0]![1] as (event: any, url: string) => void;
       const event = { preventDefault: vi.fn() };
       willNavListener(event, 'http://localhost:15173/dashboard');
       expect(event.preventDefault).not.toHaveBeenCalled();
@@ -426,13 +421,8 @@ describe('main process bootstrap', () => {
       h.bag.isDev = true; // skip the slow embedded-backend branch
       restorePlatform = setPlatform('linux');
       await bootAndDriveReady();
-      expect(h.electronToolkit.electronApp.setAppUserModelId).toHaveBeenCalledWith(
-        'com.ice.desktop',
-      );
-      expect(h.electron.ipcMain.handle).toHaveBeenCalledWith(
-        'get-fullscreen-state',
-        expect.any(Function),
-      );
+      expect(h.electronToolkit.electronApp.setAppUserModelId).toHaveBeenCalledWith('com.ice.desktop');
+      expect(h.electron.ipcMain.handle).toHaveBeenCalledWith('get-fullscreen-state', expect.any(Function));
     });
 
     it('sets the dock icon when on darwin and an icon file is present', async () => {
@@ -643,10 +633,7 @@ describe('main process bootstrap', () => {
       const main = h.bag.windows[h.bag.windows.length - 1]!;
       const finHandler = main.webContents._listeners['did-finish-load']![0]!;
       finHandler();
-      expect(logSpy).toHaveBeenCalledWith(
-        '[desktop] Page loaded:',
-        'http://localhost:15173/test',
-      );
+      expect(logSpy).toHaveBeenCalledWith('[desktop] Page loaded:', 'http://localhost:15173/test');
       logSpy.mockRestore();
     });
 
@@ -677,9 +664,7 @@ describe('main process bootstrap', () => {
       await bootAndDriveReady();
       const main = h.bag.windows[h.bag.windows.length - 1]!;
       expect(main.loadURL).toHaveBeenCalledWith('http://localhost:5174');
-      expect(main.loadURL).not.toHaveBeenCalledWith(
-        expect.stringContaining(':15173'),
-      );
+      expect(main.loadURL).not.toHaveBeenCalledWith(expect.stringContaining(':15173'));
     });
 
     it('falls back to localhost:5174 when FRONTEND_URL is unset in dev', async () => {
@@ -734,9 +719,7 @@ describe('main process bootstrap', () => {
       // In dev we never write desktop env vars or copy prisma.
       expect(process.env.ICE_DESKTOP).toBeUndefined();
       expect(h.fs.cpSync).not.toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Dev mode'),
-      );
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Dev mode'));
       logSpy.mockRestore();
     });
 
@@ -781,9 +764,7 @@ describe('main process bootstrap', () => {
     // every other test that needs the happy-path module shape.
 
     describe('Module._resolveFilename patch', () => {
-      async function getPatchedResolver(): Promise<
-        (request: string, parent: any, ...rest: any[]) => any
-      > {
+      async function getPatchedResolver(): Promise<(request: string, parent: any, ...rest: any[]) => any> {
         h.bag.isDev = false;
         await bootAndDriveReady();
         const patched = (h.moduleMod as any).default._resolveFilename;
@@ -933,10 +914,7 @@ describe('main process bootstrap', () => {
       await Promise.resolve();
       await Promise.resolve();
       expect(h.electron.dialog.showMessageBox).toHaveBeenCalled();
-      expect(h.electronUpdater.default.autoUpdater.quitAndInstall).toHaveBeenCalledWith(
-        false,
-        true,
-      );
+      expect(h.electronUpdater.default.autoUpdater.quitAndInstall).toHaveBeenCalledWith(false, true);
     });
 
     it('does not quit-and-install when the user picks Later', async () => {
@@ -985,9 +963,7 @@ describe('main process bootstrap', () => {
 
     it('handles a manual check-for-updates IPC request', async () => {
       await bootProd();
-      const handle = h.electron.ipcMain.handle.mock.calls.find(
-        (c) => c[0] === 'check-for-updates',
-      )!;
+      const handle = h.electron.ipcMain.handle.mock.calls.find((c) => c[0] === 'check-for-updates')!;
       const handler = handle[1] as () => unknown;
       handler();
       expect(h.electronUpdater.default.autoUpdater.checkForUpdates).toHaveBeenCalled();

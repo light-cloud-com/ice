@@ -33,12 +33,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return out;
 }
 
-const renderSL = (
-  props: Partial<React.ComponentProps<typeof ServiceLine>> = {},
-): React.ReactElement | null => {
-  const Inner = (ServiceLine as unknown as {
-    type: (p: React.ComponentProps<typeof ServiceLine>) => React.ReactElement | null;
-  }).type;
+const renderSL = (props: Partial<React.ComponentProps<typeof ServiceLine>> = {}): React.ReactElement | null => {
+  const Inner = (
+    ServiceLine as unknown as {
+      type: (p: React.ComponentProps<typeof ServiceLine>) => React.ReactElement | null;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof ServiceLine> = {
     brandIcon: null,
     providerUrl: '',

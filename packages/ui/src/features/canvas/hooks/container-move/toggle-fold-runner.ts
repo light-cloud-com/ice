@@ -13,20 +13,14 @@
  * by the caller, BEFORE this runner — including for missing-node ids.
  */
 
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../../config/canvas-constants';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../utils/container-bounds';
-import { computeCompactNodeHeight } from '../../components/nodes/compact-node';
-import { isGroupOrBlock } from '../../utils/node-classification';
 import { walkAncestorsAndExpand } from './ancestor-expansion';
-import type { CanvasNode } from '../../components/types';
-import type { CardNode } from '../../../../store/slices/cards-slice';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
+import { computeCompactNodeHeight } from '../../components/nodes/compact-node';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../utils/container-bounds';
+import { isGroupOrBlock } from '../../utils/node-classification';
 import type { PositionUpdate, SizeUpdate } from './types';
+import type { CardNode } from '../../../../store/slices/cards-slice';
+import type { CanvasNode } from '../../components/types';
 
 /**
  * Result of an unfold pass. Empty arrays mean "nothing to dispatch."
@@ -73,11 +67,12 @@ export function resolveToggleFoldDecision(args: {
  *
  * Returns the new {x, y, width, height} for the unfolded node.
  */
-function computeUnfoldedSelfBounds(args: {
-  node: CanvasNode;
-  canvasNodes: CanvasNode[];
-  nodes: CardNode[];
-}): { selfX: number; selfY: number; selfW: number; selfH: number } {
+function computeUnfoldedSelfBounds(args: { node: CanvasNode; canvasNodes: CanvasNode[]; nodes: CardNode[] }): {
+  selfX: number;
+  selfY: number;
+  selfW: number;
+  selfH: number;
+} {
   const { node, canvasNodes, nodes } = args;
   const childrenOfNode = canvasNodes.filter((n) => n.parentId === node.id);
 
@@ -126,11 +121,7 @@ function computeUnfoldedSelfBounds(args: {
   } else {
     // No children — recover stored expanded height from Redux.
     const reduxNode = nodes.find((n) => n.id === node.id);
-    const defaultH = computeCompactNodeHeight(
-      node.data as Record<string, unknown>,
-      isGroupOrBlock(node),
-      false,
-    );
+    const defaultH = computeCompactNodeHeight(node.data as Record<string, unknown>, isGroupOrBlock(node), false);
     selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
   }
 

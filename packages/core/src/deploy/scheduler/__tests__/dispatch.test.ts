@@ -35,12 +35,7 @@ import {
 } from '../dispatch';
 import type { ResourceChange } from '../../../diff/types';
 import type { Graph, Node, NodeId } from '../../../types/graph';
-import type {
-  DeployOptions,
-  NodeStatusEvent,
-  ProviderDeployer,
-  ResourceDeployResult,
-} from '../../types';
+import type { DeployOptions, NodeStatusEvent, ProviderDeployer, ResourceDeployResult } from '../../types';
 import type { NodeRecord, SchedulerContext } from '../types';
 
 // ─── helpers ─────────────────────────────────────────────────────────
@@ -89,10 +84,7 @@ function build_graph_for(records: NodeRecord[]): Graph {
   };
 }
 
-function ctx(
-  records: NodeRecord[],
-  overrides: Partial<SchedulerContext> = {},
-): SchedulerContext {
+function ctx(records: NodeRecord[], overrides: Partial<SchedulerContext> = {}): SchedulerContext {
   const records_map = new Map<string, NodeRecord>();
   for (const r of records) records_map.set(r.change.id, r);
   const default_per_handler_caps: Record<string, number> = {};
@@ -484,14 +476,7 @@ describe('invoke_handler', () => {
       } as ProviderDeployer,
     });
     await invoke_handler(c, a);
-    expect(update).toHaveBeenCalledWith(
-      'gcp.storage.bucket',
-      'a',
-      'pid',
-      { foo: 1 },
-      { old: 1 },
-      expect.any(Object),
-    );
+    expect(update).toHaveBeenCalledWith('gcp.storage.bucket', 'a', 'pid', { foo: 1 }, { old: 1 }, expect.any(Object));
   });
 
   it('dispatches to deployer.delete on the delete phase', async () => {

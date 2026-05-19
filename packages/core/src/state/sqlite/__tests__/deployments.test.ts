@@ -17,6 +17,7 @@
  *    error_message and casts status string → DeploymentStatus
  */
 import { describe, it, expect, beforeEach } from 'vitest';
+import { create_deployment_id } from '../../../types/deployment';
 import { create_memory_state_store } from '../../sqlite-state-store';
 import {
   deployments_get,
@@ -25,7 +26,6 @@ import {
   deployments_save,
   deployments_update_status,
 } from '../deployments';
-import { create_deployment_id } from '../../../types/deployment';
 import type { DeploymentRecord } from '../../state-store';
 import type { SqliteContext } from '../types';
 
@@ -127,10 +127,7 @@ describe('deployments_query', () => {
     await store.initialize();
     ctx = getCtx(store);
 
-    await deployments_save(
-      ctx,
-      deployment({ id: create_deployment_id('d1'), graph_id: 'g1', status: 'running' }),
-    );
+    await deployments_save(ctx, deployment({ id: create_deployment_id('d1'), graph_id: 'g1', status: 'running' }));
     await deployments_save(
       ctx,
       deployment({

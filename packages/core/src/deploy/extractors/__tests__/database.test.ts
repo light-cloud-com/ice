@@ -243,10 +243,7 @@ describe('extract_memorystore_properties', () => {
 
   it('size-map wins over literal tier+memorySizeGb', () => {
     // size=M3 (BASIC, 10 GB) takes precedence over tier='STANDARD_HA' / memorySizeGb=50
-    const result = extract_memorystore_properties(
-      { size: 'M3', tier: 'STANDARD_HA', memorySizeGb: 50 },
-      'us-central1',
-    );
+    const result = extract_memorystore_properties({ size: 'M3', tier: 'STANDARD_HA', memorySizeGb: 50 }, 'us-central1');
     expect(result.tier).toBe('BASIC');
     expect(result.memory_size_gb).toBe(10);
   });
@@ -329,18 +326,12 @@ describe('extract_memorystore_properties', () => {
   });
 
   it('ignores non-number memoryMb', () => {
-    const result = extract_memorystore_properties(
-      { memoryMb: 'lots' as unknown as number },
-      'us-central1',
-    );
+    const result = extract_memorystore_properties({ memoryMb: 'lots' as unknown as number }, 'us-central1');
     expect(result.memory_size_gb).toBe(1);
   });
 
   it('memorySizeGb wins over memoryMb', () => {
-    const result = extract_memorystore_properties(
-      { memorySizeGb: 50, memoryMb: 4096 },
-      'us-central1',
-    );
+    const result = extract_memorystore_properties({ memorySizeGb: 50, memoryMb: 4096 }, 'us-central1');
     expect(result.memory_size_gb).toBe(50);
   });
 

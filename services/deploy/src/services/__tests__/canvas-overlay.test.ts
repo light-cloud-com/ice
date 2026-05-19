@@ -155,9 +155,7 @@ describe('getNodeDeploymentOverlay — primary pass', () => {
   });
 
   it('sets last_deployed_at to deployment.updated_at.toISOString()', async () => {
-    findFirstMock.mockResolvedValueOnce(
-      deployRow([{ source_node_id: 'a', success: true, type: 'x', outputs: {} }]),
-    );
+    findFirstMock.mockResolvedValueOnce(deployRow([{ source_node_id: 'a', success: true, type: 'x', outputs: {} }]));
     const result = await getNodeDeploymentOverlay('card-1');
     expect(result.a.last_deployed_at).toBe(updatedAtIso);
   });

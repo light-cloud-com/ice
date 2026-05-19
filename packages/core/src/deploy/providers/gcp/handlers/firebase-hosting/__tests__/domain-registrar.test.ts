@@ -129,9 +129,7 @@ describe('firebase-hosting/domain-registrar', () => {
         dnsRecords: SAMPLE_RECORDS,
         rawResponse: existingDomainData,
       });
-      expect(ctx.on_log).toHaveBeenCalledWith(
-        expect.stringContaining('Adopted existing customDomain'),
-      );
+      expect(ctx.on_log).toHaveBeenCalledWith(expect.stringContaining('Adopted existing customDomain'));
     });
 
     it("falls back to status='pending' when adopted body has no `hostState`", async () => {
@@ -198,9 +196,7 @@ describe('firebase-hosting/domain-registrar', () => {
       // would 400.
       const postArgs = mocks.restRequest.mock.calls[1]!;
       expect(postArgs[1]).toBe('POST');
-      expect(postArgs[2]).toBe(
-        `${FH_API}/${PROJECT_SCOPED_PATH}/customDomains?customDomainId=${ENCODED_DOMAIN}`,
-      );
+      expect(postArgs[2]).toBe(`${FH_API}/${PROJECT_SCOPED_PATH}/customDomains?customDomainId=${ENCODED_DOMAIN}`);
       expect(postArgs[3]).toEqual({});
       expect(postArgs[4]).toEqual({ acceptStatuses: [409, 400] });
 
@@ -233,9 +229,7 @@ describe('firebase-hosting/domain-registrar', () => {
       expect(mocks.restRequest).toHaveBeenCalledTimes(3);
       const refetchArgs = mocks.restRequest.mock.calls[2]!;
       expect(refetchArgs[1]).toBe('GET');
-      expect(refetchArgs[2]).toBe(
-        `${FH_API}/${PROJECT_SCOPED_PATH}/customDomains/${ENCODED_DOMAIN}`,
-      );
+      expect(refetchArgs[2]).toBe(`${FH_API}/${PROJECT_SCOPED_PATH}/customDomains/${ENCODED_DOMAIN}`);
       // No acceptStatuses on re-fetch — caller wants the canonical body.
       expect(refetchArgs[4]).toBeUndefined();
       expect(mocks.extractDnsRecords).toHaveBeenLastCalledWith(refetchedData);
@@ -297,9 +291,7 @@ describe('firebase-hosting/domain-registrar', () => {
       expect(mocks.restRequest.mock.calls[2]![2]).toBe(`${FH_API}/${PROJECT_SCOPED_PATH}/domains`);
       expect(out.ok).toBe(true);
       expect(out.status).toBe('CERT_ACTIVE');
-      expect(ctx.on_log).toHaveBeenCalledWith(
-        expect.stringContaining('Trying legacy domains endpoint'),
-      );
+      expect(ctx.on_log).toHaveBeenCalledWith(expect.stringContaining('Trying legacy domains endpoint'));
     });
 
     it('falls through to Tier 3 when POST customDomains is ok:true but with status >= 300 (non-409)', async () => {

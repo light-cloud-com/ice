@@ -59,7 +59,14 @@ import { emitDestroyNodeStatus } from './deploy-event-dispatcher';
  * success, error }` from the thrown error directly).
  */
 export async function attemptDestroy(args: {
-  deployer: { delete: (type: string, name: string, providerId: string, opts: { provider: string; project: string }) => Promise<{ success: boolean; error?: string; [key: string]: unknown }> };
+  deployer: {
+    delete: (
+      type: string,
+      name: string,
+      providerId: string,
+      opts: { provider: string; project: string },
+    ) => Promise<{ success: boolean; error?: string; [key: string]: unknown }>;
+  };
   type: string;
   name: string;
   providerId: string;
@@ -73,10 +80,7 @@ export async function attemptDestroy(args: {
     if (res.success) {
       return { success: true, raw: res };
     }
-    if (
-      treatNotFoundAsSuccess &&
-      (res.error?.includes('NOT_FOUND') || res.error?.includes('404'))
-    ) {
+    if (treatNotFoundAsSuccess && (res.error?.includes('NOT_FOUND') || res.error?.includes('404'))) {
       return { success: true, raw: res };
     }
     const errMsg = res.error || 'delete returned non-success';

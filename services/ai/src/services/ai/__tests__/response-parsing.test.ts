@@ -99,9 +99,7 @@ describe('parseAiResponse', () => {
   });
 
   it('returns the suggestions array when present', () => {
-    const out = parseAiResponse(
-      '{"explanation":"a","operations":[],"suggestions":["one","two"]}',
-    );
+    const out = parseAiResponse('{"explanation":"a","operations":[],"suggestions":["one","two"]}');
     expect(out.suggestions).toEqual(['one', 'two']);
   });
 
@@ -125,15 +123,13 @@ describe('parseAiResponse', () => {
   });
 
   it('strips <think>...</think> reasoning tags before parsing', () => {
-    const wrapped =
-      '<think>thinking aloud</think>\n{"explanation":"hi","operations":[]}';
+    const wrapped = '<think>thinking aloud</think>\n{"explanation":"hi","operations":[]}';
     const out = parseAiResponse(wrapped);
     expect(out.explanation).toBe('hi');
   });
 
   it('strips multiple <think> blocks (case-insensitive, dot-all)', () => {
-    const wrapped =
-      '<THINK>a</THINK>\n<think>b</think>\n{"explanation":"hi","operations":[]}';
+    const wrapped = '<THINK>a</THINK>\n<think>b</think>\n{"explanation":"hi","operations":[]}';
     const out = parseAiResponse(wrapped);
     expect(out.explanation).toBe('hi');
   });
@@ -168,19 +164,12 @@ describe('parseAiResponse', () => {
     expect((out.operations[0] as { iceType: string }).iceType).toBe('Database.PostgreSQL');
     // The "filtered by validation" warn fires AFTER validateOperations'
     // own per-rejection warn, so warnSpy fires twice for one filter.
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('1/2 operations filtered by validation'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('1/2 operations filtered by validation'));
   });
 
   it('does NOT log the "filtered" message when validateOperations passes everything', () => {
-    parseAiResponse(
-      '{"explanation":"a","operations":[{"op":"autoOrganize"}]}',
-      new Set([]),
-    );
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('operations filtered by validation'),
-    );
+    parseAiResponse('{"explanation":"a","operations":[{"op":"autoOrganize"}]}', new Set([]));
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('operations filtered by validation'));
   });
 
   it('repairs a missing { before "op" via repairJson and logs success', () => {
@@ -188,8 +177,7 @@ describe('parseAiResponse', () => {
     // throws AND repairJson returns a non-null repaired string AND the
     // SECOND JSON.parse succeeds. Use a string with a missing { but
     // otherwise well-formed shape after repair.
-    const broken =
-      '{"explanation":"a","operations":[{"op":"autoOrganize"},"op":"deleteEdge","edgeId":"e1"}]}';
+    const broken = '{"explanation":"a","operations":[{"op":"autoOrganize"},"op":"deleteEdge","edgeId":"e1"}]}';
     const out = parseAiResponse(broken);
     expect(out.explanation).toBe('a');
     expect(logSpy).toHaveBeenCalledWith('[AI] JSON repaired successfully');

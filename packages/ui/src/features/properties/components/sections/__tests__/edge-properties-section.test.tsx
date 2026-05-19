@@ -52,9 +52,7 @@ const mocks = vi.hoisted(() => ({
   MockTextField: vi.fn(),
   MockPanelHeader: vi.fn(),
   // Pretty-stable cn passthrough — joins truthy strings with a space.
-  cnSpy: vi.fn((...args: unknown[]) =>
-    args.filter((a) => typeof a === 'string' && a).join(' '),
-  ),
+  cnSpy: vi.fn((...args: unknown[]) => args.filter((a) => typeof a === 'string' && a).join(' ')),
   // Subdomain helpers.
   normalizeSubdomainSpy: vi.fn((s: string) => s),
   validateSubdomainSpy: vi.fn((_s: string): string | null => null),
@@ -66,22 +64,18 @@ const mocks = vi.hoisted(() => ({
   // Dispatch spy.
   dispatchSpy: vi.fn(),
   // Slice action spies — return tagged objects so dispatch arg is verifiable.
-  updateCardEdgeDataSpy: vi.fn(
-    (arg: { edgeId: string; data: Record<string, unknown> }) => ({
-      type: 'cards/updateCardEdgeData',
-      payload: arg,
-    }),
-  ),
+  updateCardEdgeDataSpy: vi.fn((arg: { edgeId: string; data: Record<string, unknown> }) => ({
+    type: 'cards/updateCardEdgeData',
+    payload: arg,
+  })),
   deleteCardEdgeSpy: vi.fn((id: string) => ({
     type: 'cards/deleteCardEdge',
     payload: id,
   })),
-  updateCardNodeDataSpy: vi.fn(
-    (arg: { nodeId: string; data: Record<string, unknown> }) => ({
-      type: 'cards/updateCardNodeData',
-      payload: arg,
-    }),
-  ),
+  updateCardNodeDataSpy: vi.fn((arg: { nodeId: string; data: Record<string, unknown> }) => ({
+    type: 'cards/updateCardNodeData',
+    payload: arg,
+  })),
   toggleProperties: vi.fn(() => ({ type: 'ui/toggleProperties' })),
 }));
 
@@ -143,12 +137,7 @@ import type { Card, CardEdge, CardNode } from '../../../../../store/slices/cards
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -162,10 +151,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -201,11 +187,7 @@ function collectText(tree: React.ReactNode): string {
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
-const makeNode = (
-  id: string,
-  data: Record<string, unknown> = {},
-  overrides: Partial<CardNode> = {},
-): CardNode => ({
+const makeNode = (id: string, data: Record<string, unknown> = {}, overrides: Partial<CardNode> = {}): CardNode => ({
   id,
   type: 'block',
   position: { x: 0, y: 0 },
@@ -240,10 +222,7 @@ interface PropOnly<T> {
   (...args: any[]): T;
 }
 
-const renderSection = (
-  edge: CardEdge = makeEdge(),
-  card: Card = makeCard(),
-): React.ReactElement => {
+const renderSection = (edge: CardEdge = makeEdge(), card: Card = makeCard()): React.ReactElement => {
   return EdgePropertiesSection({
     selectedEdge: edge,
     activeCard: card,
@@ -332,10 +311,7 @@ describe('EdgePropertiesSection', () => {
 
   it('falls back to "node" suffix when iceType is missing', () => {
     const card = makeCard({
-      nodes: [
-        makeNode('src-1', {}),
-        makeNode('tgt-1', {}),
-      ],
+      nodes: [makeNode('src-1', {}), makeNode('tgt-1', {})],
     });
     const tree = renderSection(makeEdge(), card);
     const text = collectText(tree);
@@ -344,17 +320,13 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('renders connectionCategory in the middle when edge.data.connectionCategory is set', () => {
-    const tree = renderSection(
-      makeEdge({ data: { connectionCategory: 'reads-from' } }),
-    );
+    const tree = renderSection(makeEdge({ data: { connectionCategory: 'reads-from' } }));
     const text = collectText(tree);
     expect(text).toContain('reads-from');
   });
 
   it('renders relationship (with _ → space) when no connectionCategory', () => {
-    const tree = renderSection(
-      makeEdge({ data: { relationship: 'depends_on' } }),
-    );
+    const tree = renderSection(makeEdge({ data: { relationship: 'depends_on' } }));
     const text = collectText(tree);
     expect(text).toContain('depends on');
   });
@@ -408,10 +380,7 @@ describe('EdgePropertiesSection', () => {
   it('does NOT render the subdomain editor when neither end is a Network endpoint', () => {
     const tree = renderSection();
     // The subdomain editor's <label> string is the literal "Subdomain".
-    const labels = findByPredicate(
-      tree,
-      (el) => el.type === 'label' && (el.props as any).children === 'Subdomain',
-    );
+    const labels = findByPredicate(tree, (el) => el.type === 'label' && (el.props as any).children === 'Subdomain');
     expect(labels).toHaveLength(0);
   });
 
@@ -423,10 +392,7 @@ describe('EdgePropertiesSection', () => {
       ],
     });
     const tree = renderSection(makeEdge(), card);
-    const labels = findByPredicate(
-      tree,
-      (el) => el.type === 'label' && (el.props as any).children === 'Subdomain',
-    );
+    const labels = findByPredicate(tree, (el) => el.type === 'label' && (el.props as any).children === 'Subdomain');
     expect(labels).toHaveLength(1);
   });
 
@@ -438,10 +404,7 @@ describe('EdgePropertiesSection', () => {
       ],
     });
     const tree = renderSection(makeEdge(), card);
-    const labels = findByPredicate(
-      tree,
-      (el) => el.type === 'label' && (el.props as any).children === 'Subdomain',
-    );
+    const labels = findByPredicate(tree, (el) => el.type === 'label' && (el.props as any).children === 'Subdomain');
     expect(labels).toHaveLength(1);
   });
 
@@ -453,15 +416,10 @@ describe('EdgePropertiesSection', () => {
       ],
     });
     mocks.normalizeSubdomainSpy.mockReturnValueOnce('api');
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: '' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: '' } }), card);
     // Find the subdomain <input> inside the JSX (the only <input type="text">
     // before the port row, which only exists with envNode coupling).
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).type === 'text',
-    );
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).type === 'text');
     expect(inputs.length).toBeGreaterThanOrEqual(1);
     // Trigger onChange with an arbitrary string — the normalize spy returns 'api'.
     (inputs[0].props as any).onChange({ target: { value: 'API!!!' } });
@@ -480,13 +438,8 @@ describe('EdgePropertiesSection', () => {
       ],
     });
     mocks.normalizeSubdomainSpy.mockReturnValueOnce('');
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: 'api' } }),
-      card,
-    );
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).type === 'text',
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: 'api' } }), card);
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).type === 'text');
     (inputs[0].props as any).onChange({ target: { value: '!!!' } });
     expect(mocks.dispatchSpy).toHaveBeenCalledWith({
       type: 'cards/updateCardEdgeData',
@@ -502,10 +455,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Compute.Service' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: '-bad-' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: '-bad-' } }), card);
     const text = collectText(tree);
     expect(text).toContain('bad subdomain');
     // The previewHost arrow should NOT be present when there is a validation
@@ -521,10 +471,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Compute.Service' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: 'api' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: 'api' } }), card);
     const text = collectText(tree);
     expect(text).toContain('api.example.com');
   });
@@ -536,10 +483,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Compute.Service' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: '' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: '' } }), card);
     const text = collectText(tree);
     expect(text).toContain('example.com');
     // Doesn't render `<empty>.example.com`.
@@ -553,10 +497,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Compute.Service' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: '' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: '' } }), card);
     const text = collectText(tree);
     expect(text).toContain('(no domain set)');
   });
@@ -569,10 +510,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Compute.Service', domain: 'tgt-side.com' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: 'api' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: 'api' } }), card);
     const text = collectText(tree);
     expect(text).toContain('api.src-side.com');
     expect(text).not.toContain('api.tgt-side.com');
@@ -585,10 +523,7 @@ describe('EdgePropertiesSection', () => {
         makeNode('tgt-1', { iceType: 'Network.CustomDomain', domain: 'tgt-side.com' }),
       ],
     });
-    const tree = renderSection(
-      makeEdge({ data: { subdomain: 'api' } }),
-      card,
-    );
+    const tree = renderSection(makeEdge({ data: { subdomain: 'api' } }), card);
     const text = collectText(tree);
     expect(text).toContain('api.tgt-side.com');
     expect(text).not.toContain('api.src-side.com');
@@ -675,10 +610,7 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('env-var picker onChange dispatches envVarName + auto-syncs port to numeric value', () => {
-    const tree = renderSection(
-      makeEdge({ data: {} }),
-      envCouplingCard(),
-    );
+    const tree = renderSection(makeEdge({ data: {} }), envCouplingCard());
     const select = findByType(tree, 'select')[0];
     (select.props as any).onChange({ target: { value: 'PORT' } });
     // First call sets envVarName.
@@ -694,10 +626,7 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('env-var picker does NOT auto-sync port when var value is non-numeric', () => {
-    const tree = renderSection(
-      makeEdge({ data: {} }),
-      envCouplingCard(),
-    );
+    const tree = renderSection(makeEdge({ data: {} }), envCouplingCard());
     const select = findByType(tree, 'select')[0];
     (select.props as any).onChange({ target: { value: 'DEBUG' } });
     // Only the envVarName dispatch.
@@ -709,10 +638,7 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('env-var picker → empty value dispatches envVarName=null and skips auto-port', () => {
-    const tree = renderSection(
-      makeEdge({ data: {} }),
-      envCouplingCard(),
-    );
+    const tree = renderSection(makeEdge({ data: {} }), envCouplingCard());
     const select = findByType(tree, 'select')[0];
     (select.props as any).onChange({ target: { value: '' } });
     expect(mocks.dispatchSpy).toHaveBeenCalledTimes(1);
@@ -723,14 +649,9 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('env-var port input onChange sets port AND syncs the env-var value back via updateCardNodeData', () => {
-    const tree = renderSection(
-      makeEdge({ data: { envVarName: 'PORT', port: 5432 } }),
-      envCouplingCard(),
-    );
+    const tree = renderSection(makeEdge({ data: { envVarName: 'PORT', port: 5432 } }), envCouplingCard());
     // The port <input> sits next to the <select>; it has placeholder "5432".
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).placeholder === '5432',
-    );
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).placeholder === '5432');
     expect(inputs).toHaveLength(1);
     (inputs[0].props as any).onChange({ target: { value: '8080' } });
     // First dispatch: port update.
@@ -754,13 +675,8 @@ describe('EdgePropertiesSection', () => {
   });
 
   it('env-var port input onChange clears port to null when input is empty', () => {
-    const tree = renderSection(
-      makeEdge({ data: { envVarName: 'PORT', port: 5432 } }),
-      envCouplingCard(),
-    );
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).placeholder === '5432',
-    );
+    const tree = renderSection(makeEdge({ data: { envVarName: 'PORT', port: 5432 } }), envCouplingCard());
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).placeholder === '5432');
     (inputs[0].props as any).onChange({ target: { value: '' } });
     // Port → null.
     expect(mocks.dispatchSpy).toHaveBeenNthCalledWith(1, {
@@ -771,13 +687,8 @@ describe('EdgePropertiesSection', () => {
 
   it('env-var port input onChange does NOT sync env-var when no envVarName is set', () => {
     // edgeData has no envVarName — the sync branch should skip.
-    const tree = renderSection(
-      makeEdge({ data: {} }),
-      envCouplingCard(),
-    );
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).placeholder === '5432',
-    );
+    const tree = renderSection(makeEdge({ data: {} }), envCouplingCard());
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).placeholder === '5432');
     (inputs[0].props as any).onChange({ target: { value: '8080' } });
     // Only the port update; no updateCardNodeData dispatch.
     expect(mocks.dispatchSpy).toHaveBeenCalledTimes(1);
@@ -855,9 +766,7 @@ describe('EdgePropertiesSection', () => {
     // the connectionCategory (also undefined/empty here), so the wrapping
     // span isn't rendered at all. This covers the empty-string branch of
     // the relationship fallback.
-    const tree = renderSection(
-      makeEdge({ data: { relationship: '' } }),
-    );
+    const tree = renderSection(makeEdge({ data: { relationship: '' } }));
     // No rendered relationship pill — the outer guard hides the span.
     const text = collectText(tree);
     // Ensure we still rendered the rest of the panel (sanity check).
@@ -878,13 +787,8 @@ describe('EdgePropertiesSection', () => {
       ],
       edges: [{ id: 'e-env', source: 'env-1', target: 'src-1' }],
     });
-    const tree = renderSection(
-      makeEdge({ data: { envVarName: 'NONEXISTENT', port: 5432 } }),
-      card,
-    );
-    const inputs = findByType(tree, 'input').filter(
-      (el) => (el.props as any).placeholder === '5432',
-    );
+    const tree = renderSection(makeEdge({ data: { envVarName: 'NONEXISTENT', port: 5432 } }), card);
+    const inputs = findByType(tree, 'input').filter((el) => (el.props as any).placeholder === '5432');
     (inputs[0].props as any).onChange({ target: { value: '8080' } });
     // Port update fires.
     expect(mocks.dispatchSpy).toHaveBeenCalledWith({

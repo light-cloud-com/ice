@@ -20,9 +20,9 @@
  * relative-time span is deterministic.
  */
 
+import { Circle, Loader2, ChevronDown, CheckCircle, XCircle } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Circle, Loader2, ChevronDown, CheckCircle, XCircle } from 'lucide-react';
 
 const mocks = vi.hoisted(() => ({
   showLogsInitial: false,
@@ -49,8 +49,8 @@ vi.mock('../../../../i18n', () => ({
 }));
 
 import { EventRow } from '../event-row';
-import type { EventRowProps } from '../event-row';
 import type { DeploymentEvent, DeployStep } from '../../../../store/slices/pipeline-slice';
+import type { EventRowProps } from '../event-row';
 
 function render(props: EventRowProps): React.ReactElement {
   return (EventRow as unknown as (p: EventRowProps) => React.ReactElement)(props);
@@ -157,13 +157,13 @@ describe('EventRow — collapsed (showLogs=false)', () => {
     expect(text).toContain('Initial commit');
   });
 
-  it("falls back to event.branch when rule is missing", () => {
+  it('falls back to event.branch when rule is missing', () => {
     const tree = render({ event: baseEvent });
     const text = collectText(tree);
     expect(text).toContain('main');
   });
 
-  it("prefers rule.environment over event.branch when present", () => {
+  it('prefers rule.environment over event.branch when present', () => {
     const tree = render({
       event: {
         ...baseEvent,

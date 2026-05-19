@@ -18,8 +18,8 @@ import { renderToString } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 import { useCanvasData, type UseCanvasDataArgs, type UseCanvasDataResult } from '../use-canvas-data';
 import type { CardNode, CardEdge, Card } from '../../../../store/slices/cards-slice';
-import type { CanvasIssue } from '../../../../store/slices/validation-slice';
 import type { NodePipelineStatus } from '../../../../store/slices/pipeline-slice';
+import type { CanvasIssue } from '../../../../store/slices/validation-slice';
 
 // ─── Probe ──────────────────────────────────────────────────────────────────
 
@@ -104,10 +104,7 @@ describe('useCanvasData — empty card', () => {
 describe('useCanvasData — canvasNodes projection', () => {
   it('produces one canvasNode per Redux node', () => {
     const card = makeCard({
-      nodes: [
-        makeNode({ id: 'a' }),
-        makeNode({ id: 'b' }),
-      ],
+      nodes: [makeNode({ id: 'a' }), makeNode({ id: 'b' })],
     });
     const result = captureHook(makeArgs({ card }));
     expect(result.canvasNodes).toHaveLength(2);
@@ -136,9 +133,7 @@ describe('useCanvasData — visibleNodes filtering', () => {
   it('filters out nodes whose iceType is hidden at the current view level', () => {
     // viewLevel 1 typically hides Resource.* but shows Compute.Service blocks.
     const card = makeCard({
-      nodes: [
-        makeNode({ id: 'a', data: { iceType: 'Compute.Service' } }),
-      ],
+      nodes: [makeNode({ id: 'a', data: { iceType: 'Compute.Service' } })],
     });
     const result = captureHook(makeArgs({ card, viewLevel: 1 }));
     // The Compute.Service block should remain visible at viewLevel 1.
@@ -149,9 +144,7 @@ describe('useCanvasData — visibleNodes filtering', () => {
     // Build a parent that will be filtered (parent missing from set), and a
     // child pointing at the missing id.
     const card = makeCard({
-      nodes: [
-        makeNode({ id: 'child', parentId: 'missing-parent' }),
-      ],
+      nodes: [makeNode({ id: 'child', parentId: 'missing-parent' })],
     });
     const result = captureHook(makeArgs({ card }));
     // Parent isn't in the visible set → child's parentId is reset to null.
@@ -270,9 +263,7 @@ describe('useCanvasData — canvasItems / canvasConnections / portMap', () => {
 describe('useCanvasData — foldedRemap / effectiveNodes', () => {
   it('returns an empty foldedRemap when no node is folded', () => {
     const card = makeCard({
-      nodes: [
-        makeNode({ id: 'a', data: { iceType: 'Compute.Service' } }),
-      ],
+      nodes: [makeNode({ id: 'a', data: { iceType: 'Compute.Service' } })],
     });
     const result = captureHook(makeArgs({ card }));
     expect(result.foldedRemap.size).toBe(0);

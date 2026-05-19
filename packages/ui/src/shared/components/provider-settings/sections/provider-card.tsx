@@ -17,23 +17,13 @@
  * here.
  */
 
-import {
-  Check,
-  RefreshCw,
-  Download,
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  Trash2,
-  ExternalLink,
-} from 'lucide-react';
+import { Check, RefreshCw, Download, ChevronDown, ChevronRight, Plus, Trash2, ExternalLink } from 'lucide-react';
 import React from 'react';
-
+import { AddProjectForm } from './add-project-form';
 import { cn } from '../../../utils/cn';
+import { openExternalLink } from '../utils/open-external-link';
 import type { TranslatorFn } from '../hooks/use-provider-handlers';
 import type { ProviderConfig, ProviderRuntimeState, ProviderStatesMap } from '../types';
-import { openExternalLink } from '../utils/open-external-link';
-import { AddProjectForm } from './add-project-form';
 
 export interface ProviderCardProps {
   provider: ProviderConfig;
@@ -81,12 +71,7 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
   setConnecting,
 }) => {
   return (
-    <div
-      className={cn(
-        'border rounded-lg overflow-hidden',
-        state.connected ? 'border-green-500/50' : 'border-border',
-      )}
-    >
+    <div className={cn('border rounded-lg overflow-hidden', state.connected ? 'border-green-500/50' : 'border-border')}>
       {/* Provider header */}
       <button
         onClick={() => onToggle(provider.id)}
@@ -99,9 +84,7 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
         )}
 
         <div className={cn('w-8 h-8 rounded-md flex items-center justify-center', provider.bgColor)}>
-          <span className={cn('text-sm font-bold', provider.color)}>
-            {provider.id.toUpperCase().slice(0, 2)}
-          </span>
+          <span className={cn('text-sm font-bold', provider.color)}>{provider.id.toUpperCase().slice(0, 2)}</span>
         </div>
 
         <div className="flex-1 text-left">
@@ -132,19 +115,14 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
                 <div className="flex items-center gap-2">
                   {provider.id === 'gcp' && (
                     <button
-                      onClick={() =>
-                        onShowAddProjectChange(showAddProject === provider.id ? null : provider.id)
-                      }
+                      onClick={() => onShowAddProjectChange(showAddProject === provider.id ? null : provider.id)}
                       className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
                     >
                       <Plus className="w-3 h-3" />
                       {t('providerSettings.projects.addProject')}
                     </button>
                   )}
-                  <button
-                    onClick={() => onDisconnect(provider.id)}
-                    className="text-xs text-red-500 hover:text-red-600"
-                  >
+                  <button onClick={() => onDisconnect(provider.id)} className="text-xs text-red-500 hover:text-red-600">
                     {t('providerSettings.projects.disconnectAll')}
                   </button>
                 </div>
@@ -175,9 +153,7 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
                     >
                       <div className="flex-1">
                         <div className="text-sm font-medium">{project.name}</div>
-                        {project.region && (
-                          <div className="text-xs text-muted-foreground">{project.region}</div>
-                        )}
+                        {project.region && <div className="text-xs text-muted-foreground">{project.region}</div>}
                       </div>
                       <div className="flex items-center gap-1">
                         <button

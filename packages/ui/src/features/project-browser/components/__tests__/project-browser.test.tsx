@@ -10,7 +10,6 @@
  * mock reference and read the props passed by the orchestrator.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -19,9 +18,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   state: {
     account: {
-      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as
-        | { id: string; name: string; role: string }
-        | null,
+      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as { id: string; name: string; role: string } | null,
     },
   },
   pathname: '/canvas/some-project',
@@ -105,8 +102,8 @@ vi.mock('../tree-item', () => ({
   TreeItem: mocks.MockTreeItem,
 }));
 
-import { ProjectBrowser } from '../project-browser';
 import { PanelHeader, PanelHeaderAction } from '../../../../shared/components/ui/panel-header';
+import { ProjectBrowser } from '../project-browser';
 import { TreeItem } from '../tree-item';
 
 interface ElLike {
@@ -229,9 +226,7 @@ describe('ProjectBrowser — loading state', () => {
 
   it('does NOT render TreeItem when loading=true', () => {
     mocks.data.loading = true;
-    mocks.data.items = [
-      { id: 'p1', name: 'P', type: 'project', parent_id: null, cards: [], children: [] },
-    ];
+    mocks.data.items = [{ id: 'p1', name: 'P', type: 'project', parent_id: null, cards: [], children: [] }];
     const tree = render();
     const treeItems = findAll(tree, (el) => el.type === TreeItem);
     expect(treeItems.length).toBe(0);
@@ -277,9 +272,7 @@ describe('ProjectBrowser — populated state', () => {
       { id: 'a', name: 'A', type: 'folder', parent_id: null, cards: [], children: [] },
       { id: 'b', name: 'B', type: 'project', parent_id: null, cards: [], children: [] },
     ];
-    mocks.data.flatFolders = [
-      { id: 'a', name: 'A', type: 'folder', parent_id: null, cards: [], children: [] },
-    ];
+    mocks.data.flatFolders = [{ id: 'a', name: 'A', type: 'folder', parent_id: null, cards: [], children: [] }];
   });
 
   it('renders one TreeItem per top-level item', () => {
@@ -382,9 +375,7 @@ describe('ProjectBrowser — drop on tree container', () => {
 
 describe('ProjectBrowser — activeSubpage derivation', () => {
   beforeEach(() => {
-    mocks.data.items = [
-      { id: 'a', name: 'A', type: 'project', parent_id: null, cards: [], children: [] },
-    ];
+    mocks.data.items = [{ id: 'a', name: 'A', type: 'project', parent_id: null, cards: [], children: [] }];
   });
 
   it('activeSubpage is null when resolved.type is not "project"', () => {

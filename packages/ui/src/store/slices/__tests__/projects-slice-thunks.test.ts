@@ -6,8 +6,8 @@
  * `vi.mock` so the thunk runs end-to-end against an in-memory store.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const postSpy = vi.fn();
 

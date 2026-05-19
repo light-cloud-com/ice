@@ -9,12 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  isHelperIceType,
-  findPosition,
-  findRootPosition,
-  findChildPosition,
-} from '../position-finder';
+import { isHelperIceType, findPosition, findRootPosition, findChildPosition } from '../position-finder';
 import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 
 function makeCard(nodes: CardNode[]): Card {
@@ -73,9 +68,7 @@ describe('rf-aiop-3 findRootPosition', () => {
   it('places below the lowest existing node when grid cell (0,0) is taken', () => {
     // Single node at (100, 100) blocks the first grid cell; the
     // "below-the-lowest" candidate is tried first.
-    const card = makeCard([
-      makeNode({ id: 'a', position: { x: 100, y: 100 }, width: 220, height: 72 }),
-    ]);
+    const card = makeCard([makeNode({ id: 'a', position: { x: 100, y: 100 }, width: 220, height: 72 })]);
     const pos = findRootPosition(card, 220);
     // Below-the-lowest = 100 + 72 + 36 = 208. The candidate is (100, 208)
     // and shouldn't overlap the (100, 100, 220, 72) node, so it wins.
@@ -83,9 +76,7 @@ describe('rf-aiop-3 findRootPosition', () => {
   });
 
   it('uses node.height fallback (NODE_HEIGHT=72) when height is 0', () => {
-    const card = makeCard([
-      makeNode({ id: 'a', position: { x: 100, y: 100 }, width: 220, height: 0 }),
-    ]);
+    const card = makeCard([makeNode({ id: 'a', position: { x: 100, y: 100 }, width: 220, height: 0 })]);
     const pos = findRootPosition(card, 220);
     // 100 + 72 (fallback) + 36 = 208
     expect(pos).toEqual({ x: 100, y: 208 });

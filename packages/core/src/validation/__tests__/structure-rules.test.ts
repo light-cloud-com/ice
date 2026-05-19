@@ -16,7 +16,9 @@ const node = (overrides: Partial<ValidatableNode> & { id: string }): Validatable
   ...overrides,
 });
 
-const edge = (overrides: Partial<ValidatableEdge> & { id: string; source: string; target: string }): ValidatableEdge => ({
+const edge = (
+  overrides: Partial<ValidatableEdge> & { id: string; source: string; target: string },
+): ValidatableEdge => ({
   ...overrides,
 });
 
@@ -101,10 +103,7 @@ describe('validateStructure', () => {
   it('flags edges with dangling source / target node references', () => {
     const issues = validateStructure(
       [node({ id: 'a', data: { iceType: 'Compute.Container' } })],
-      [
-        edge({ id: 'e1', source: 'ghost', target: 'a' }),
-        edge({ id: 'e2', source: 'a', target: 'ghost' }),
-      ],
+      [edge({ id: 'e1', source: 'ghost', target: 'a' }), edge({ id: 'e2', source: 'a', target: 'ghost' })],
     );
     expect(issues.find((i) => i.code === 'DANGLING_EDGE_SOURCE')?.edgeId).toBe('e1');
     expect(issues.find((i) => i.code === 'DANGLING_EDGE_TARGET')?.edgeId).toBe('e2');
@@ -122,10 +121,7 @@ describe('validateStructure', () => {
   });
 
   it('uses iceType as the orphan label fallback when label is empty', () => {
-    const issues = validateStructure(
-      [node({ id: 'a', type: 'resource', data: { iceType: 'Compute.Container' } })],
-      [],
-    );
+    const issues = validateStructure([node({ id: 'a', type: 'resource', data: { iceType: 'Compute.Container' } })], []);
     const orphan = issues.find((i) => i.code === 'ORPHAN_NODE');
     expect(orphan?.message).toContain('Compute.Container');
   });
@@ -171,10 +167,7 @@ describe('validateStructure', () => {
     // the ice-type-classified suppression list does not apply, but the node
     // still has no edges and should be flagged. Document the actual behavior:
     // the empty iceType is not in the suppression set, so it IS flagged.
-    const issues = validateStructure(
-      [node({ id: 'r', type: 'resource', data: {} })],
-      [],
-    );
+    const issues = validateStructure([node({ id: 'r', type: 'resource', data: {} })], []);
     expect(issues.find((i) => i.code === 'MISSING_ICE_TYPE')).toBeTruthy();
     expect(issues.find((i) => i.code === 'ORPHAN_NODE')).toBeTruthy();
   });

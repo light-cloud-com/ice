@@ -66,7 +66,7 @@ import type { CanvasViewport, UseCanvasInteractionsOptions } from '../interactio
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const mkRef = <T,>(value: T): MutableRefObject<T> => ({ current: value });
+const mkRef = <T>(value: T): MutableRefObject<T> => ({ current: value });
 
 interface SetupOpts {
   viewport?: CanvasViewport;
@@ -279,17 +279,17 @@ describe('rf-canvint-4 — handleKeyDown: Space tracking', () => {
 // ─── handleKeyDown — pan keys ───────────────────────────────────────────────
 
 describe('rf-canvint-4 — handleKeyDown: pan keys', () => {
-  it.each([
-    ['w'], ['a'], ['s'], ['d'],
-    ['ArrowUp'], ['ArrowDown'], ['ArrowLeft'], ['ArrowRight'],
-  ])('captures %s as pan key, schedules a rAF, and preventDefaults', (key) => {
-    setup();
-    const handleKeyDown = findListener('keydown');
-    const ev = mkKey({ key });
-    handleKeyDown(ev as unknown as Event);
-    expect(ev.preventDefault).toHaveBeenCalled();
-    expect(mocks.rafQueue.length).toBe(1);
-  });
+  it.each([['w'], ['a'], ['s'], ['d'], ['ArrowUp'], ['ArrowDown'], ['ArrowLeft'], ['ArrowRight']])(
+    'captures %s as pan key, schedules a rAF, and preventDefaults',
+    (key) => {
+      setup();
+      const handleKeyDown = findListener('keydown');
+      const ev = mkKey({ key });
+      handleKeyDown(ev as unknown as Event);
+      expect(ev.preventDefault).toHaveBeenCalled();
+      expect(mocks.rafQueue.length).toBe(1);
+    },
+  );
 
   it('starting pan triggers a rAF that calls onViewportChange when the loop runs', () => {
     const ctx = setup({ viewport: { x: 100, y: 200, zoom: 1 } });

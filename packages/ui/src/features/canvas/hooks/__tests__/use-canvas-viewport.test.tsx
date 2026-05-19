@@ -23,10 +23,10 @@
  * `LOD_THRESHOLD_L3 = 0.7`, `LOD_THRESHOLD_L2 = 0.35`.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -103,9 +103,9 @@ const makeStore = (opts: MakeStoreOpts = {}) => {
   // then merge our overrides into the preloadedState. This avoids Immer's
   // frozen-state guard that fires when test code mutates `getState()`
   // directly.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialUI = uiReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialCards = cardsReducer(undefined as any, { type: '@@INIT' });
 
   const seededCards = opts.cards
@@ -122,9 +122,7 @@ const makeStore = (opts: MakeStoreOpts = {}) => {
   const preloadedCards = {
     ...initialCards,
     cards: seededCards.length > 0 ? seededCards : initialCards.cards,
-    activeCardId:
-      opts.activeCardId ??
-      (seededCards.length > 0 ? seededCards[0].id : initialCards.activeCardId),
+    activeCardId: opts.activeCardId ?? (seededCards.length > 0 ? seededCards[0].id : initialCards.activeCardId),
   };
 
   const preloadedUI = {
@@ -153,8 +151,7 @@ const makeStore = (opts: MakeStoreOpts = {}) => {
     // The default RTK middleware's `serializableCheck` complains about Date /
     // Map values that some slices may carry; disable for the test harness
     // (we don't care about serializability here).
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 };
 
@@ -162,10 +159,7 @@ type TestStore = ReturnType<typeof makeStore>;
 
 // ─── Probe ──────────────────────────────────────────────────────────────────
 
-const captureHook = (
-  args: { cardId?: string; paneId?: string },
-  store: TestStore,
-): UseCanvasViewportResult => {
+const captureHook = (args: { cardId?: string; paneId?: string }, store: TestStore): UseCanvasViewportResult => {
   const captured: { current?: UseCanvasViewportResult } = {};
   const Probe: React.FC = () => {
     captured.current = useCanvasViewport(args);

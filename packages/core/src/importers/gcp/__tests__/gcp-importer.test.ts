@@ -157,7 +157,16 @@ describe('import_gcp — service dispatch', () => {
 
   it('treats ACCESS_DENIED as partial success when at least one resource imported (findings #27)', async () => {
     h.assetDiscover.mockResolvedValueOnce({
-      resources: [{ kind: 'compute#instance', id: 'i-1', name: 'i-1', region: 'us-central1', zone: 'us-central1-a', properties: {} }] as any,
+      resources: [
+        {
+          kind: 'compute#instance',
+          id: 'i-1',
+          name: 'i-1',
+          region: 'us-central1',
+          zone: 'us-central1-a',
+          properties: {},
+        },
+      ] as any,
       errors: [{ code: 'AUTH_INSUFFICIENT_PERMISSIONS_ACCESS_DENIED', message: 'forbidden on storage' }],
       warnings: [],
     });
@@ -496,7 +505,15 @@ describe('gcp_result_to_graph', () => {
       resources: [],
       errors: [],
       warnings: [],
-      metadata: { project: 'p', regions: [], zones: [], services_scanned: [], resource_count: 0, imported_at: '', duration_ms: 0 },
+      metadata: {
+        project: 'p',
+        regions: [],
+        zones: [],
+        services_scanned: [],
+        resource_count: 0,
+        imported_at: '',
+        duration_ms: 0,
+      },
     });
     expect(graph.name).toBe('gcp-import');
   });

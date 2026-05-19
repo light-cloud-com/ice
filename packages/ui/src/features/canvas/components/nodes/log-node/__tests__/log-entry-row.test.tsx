@@ -22,10 +22,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -40,12 +37,12 @@ const mkLog = (overrides: Partial<LogEntry> = {}): LogEntry => ({
   ...overrides,
 });
 
-const renderRow = (
-  props: Partial<React.ComponentProps<typeof LogEntryRow>> = {},
-): React.ReactElement => {
-  const Inner = (LogEntryRow as unknown as {
-    type: (p: React.ComponentProps<typeof LogEntryRow>) => React.ReactElement;
-  }).type;
+const renderRow = (props: Partial<React.ComponentProps<typeof LogEntryRow>> = {}): React.ReactElement => {
+  const Inner = (
+    LogEntryRow as unknown as {
+      type: (p: React.ComponentProps<typeof LogEntryRow>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof LogEntryRow> = {
     log: mkLog(),
     isLast: false,
@@ -63,13 +60,22 @@ describe('LogEntryRow', () => {
 
   it('renders timestamp text', () => {
     const tree = renderRow({ log: mkLog({ timestamp: '01:02:03' }) });
-    const ts = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '01:02:03');
+    const ts = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '01:02:03',
+    );
     expect(ts).toHaveLength(1);
   });
 
   it('renders level pill with [LEVEL] format', () => {
     const tree = renderRow({ log: mkLog({ level: 'info' }) });
-    const lvl = findByPredicate(tree, (el) => el.type === 'span' && Array.isArray((el.props as { children?: unknown[] }).children) && ((el.props as { children: React.ReactNode[] }).children[1] === 'INFO'));
+    const lvl = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        Array.isArray((el.props as { children?: unknown[] }).children) &&
+        (el.props as { children: React.ReactNode[] }).children[1] === 'INFO',
+    );
     expect(lvl.length).toBeGreaterThan(0);
   });
 

@@ -30,8 +30,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { Lexer, tokenize } from '../lexer';
-import { make_lexer_state } from '../lexer-state';
 import { scan_heredoc } from '../lexer-heredoc';
+import { make_lexer_state } from '../lexer-state';
 
 describe('scan_heredoc — basic', () => {
   it('plain heredoc emits STRING with literal=content', () => {
@@ -115,8 +115,7 @@ describe('scan_heredoc — indented mode', () => {
 
 describe('scan_heredoc — RISK pins', () => {
   it(
-    'RISK #8 — content_end = line_start before whitespace consumed; ' +
-      'trimEnd strips trailing newline + indent',
+    'RISK #8 — content_end = line_start before whitespace consumed; ' + 'trimEnd strips trailing newline + indent',
     () => {
       // For "<<EOT\nABC\nEOT\n" the content slice runs from after
       // the opening newline through the start of the EOT line —
@@ -131,35 +130,29 @@ describe('scan_heredoc — RISK pins', () => {
     },
   );
 
-  it(
-    'RISK #9 — EOF without a closing delimiter is SILENT (no error)',
-    () => {
-      // Heredoc with content but no terminator: the loop walks to
-      // EOF and emits the token with an empty literal. NO ERROR.
-      const result = tokenize('<<EOT\nlost content');
-      // No 'Unterminated heredoc' or similar error.
-      expect(result.errors).toHaveLength(0);
-      const string_tokens = result.tokens.filter((t) => t.type === 'STRING');
-      expect(string_tokens).toHaveLength(1);
-      // content_end stays at content_start (initial value), so
-      // literal is empty after trimEnd.
-      expect(string_tokens[0]?.literal).toBe('');
-    },
-  );
+  it('RISK #9 — EOF without a closing delimiter is SILENT (no error)', () => {
+    // Heredoc with content but no terminator: the loop walks to
+    // EOF and emits the token with an empty literal. NO ERROR.
+    const result = tokenize('<<EOT\nlost content');
+    // No 'Unterminated heredoc' or similar error.
+    expect(result.errors).toHaveLength(0);
+    const string_tokens = result.tokens.filter((t) => t.type === 'STRING');
+    expect(string_tokens).toHaveLength(1);
+    // content_end stays at content_start (initial value), so
+    // literal is empty after trimEnd.
+    expect(string_tokens[0]?.literal).toBe('');
+  });
 
-  it(
-    'RISK #10 — opening-line + content-line newlines both bump line counter',
-    () => {
-      // After "<<EOT\nfoo\nbar\nEOT\n" we should have line == 5
-      // (1 for opener line, 2 for "foo", 3 for "bar", 4 for "EOT",
-      // 5 for the trailing newline). Verify line tracking by
-      // probing the EOF token's position.
-      const result = tokenize('<<EOT\nfoo\nbar\nEOT\n');
-      expect(result.errors).toHaveLength(0);
-      const eof = result.tokens.find((t) => t.type === 'EOF');
-      expect(eof?.position.line).toBe(5);
-    },
-  );
+  it('RISK #10 — opening-line + content-line newlines both bump line counter', () => {
+    // After "<<EOT\nfoo\nbar\nEOT\n" we should have line == 5
+    // (1 for opener line, 2 for "foo", 3 for "bar", 4 for "EOT",
+    // 5 for the trailing newline). Verify line tracking by
+    // probing the EOF token's position.
+    const result = tokenize('<<EOT\nfoo\nbar\nEOT\n');
+    expect(result.errors).toHaveLength(0);
+    const eof = result.tokens.find((t) => t.type === 'EOF');
+    expect(eof?.position.line).toBe(5);
+  });
 
   it('terminator at EOF (no trailing newline) closes correctly', () => {
     // Heredoc that ends with terminator + EOF (no \n after EOT).

@@ -25,13 +25,10 @@
  * effect; everything else is pure math over the card snapshot.
  */
 
-import {
-  updateCardNodePositions,
-  resizeCardNode,
-} from '../../../../store/slices/cards-slice';
+import { RESIZE_PAD, RESIZE_HEADER } from './types';
+import { updateCardNodePositions, resizeCardNode } from '../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../store';
 import type { Card, CardNode } from '../../../../store/slices/cards-slice';
-import { RESIZE_PAD, RESIZE_HEADER } from './types';
 
 /**
  * After AI operations, auto-resize all group/container nodes

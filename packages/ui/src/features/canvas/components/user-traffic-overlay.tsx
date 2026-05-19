@@ -24,9 +24,8 @@
  */
 
 import React from 'react';
-
-import { SvgUserNode } from '../../../shared/components/svg-user-node';
 import { SvgConnectionPath } from './svg-connection-path';
+import { SvgUserNode } from '../../../shared/components/svg-user-node';
 import type { CanvasNode, CanvasConnection } from './types';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 
@@ -91,9 +90,7 @@ export const UserTrafficOverlay: React.FC<UserTrafficOverlayProps> = ({
       )}
 
       {/* User traffic icon for exposed services — only when no explicit Network.PublicEndpoint block */}
-      {show && pinnedUserPos && (
-        <SvgUserNode position={pinnedUserPos} scale={zoom} onPositionChange={setUserNodePos} />
-      )}
+      {show && pinnedUserPos && <SvgUserNode position={pinnedUserPos} scale={zoom} onPositionChange={setUserNodePos} />}
     </>
   );
 };

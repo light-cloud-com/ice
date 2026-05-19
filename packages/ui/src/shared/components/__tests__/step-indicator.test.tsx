@@ -49,13 +49,13 @@ function findAll(tree: unknown, pred: (el: ElLike) => boolean): ElLike[] {
 const circlePred = (el: ElLike): boolean =>
   el.type === 'div' &&
   typeof (el.props as { className?: string }).className === 'string' &&
-  ((el.props as { className: string }).className).includes('rounded-full') &&
-  ((el.props as { className: string }).className).includes('w-8');
+  (el.props as { className: string }).className.includes('rounded-full') &&
+  (el.props as { className: string }).className.includes('w-8');
 
 const connectorPred = (el: ElLike): boolean =>
   el.type === 'div' &&
   typeof (el.props as { className?: string }).className === 'string' &&
-  ((el.props as { className: string }).className).includes('h-0.5');
+  (el.props as { className: string }).className.includes('h-0.5');
 
 function collectText(tree: unknown): string {
   let s = '';
@@ -78,8 +78,7 @@ const render = (props: {
   totalSteps: number;
   labels: string[];
   className?: string;
-}): React.ReactElement =>
-  (StepIndicator as unknown as (p: typeof props) => React.ReactElement)(props);
+}): React.ReactElement => (StepIndicator as unknown as (p: typeof props) => React.ReactElement)(props);
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
@@ -164,7 +163,7 @@ describe('StepIndicator', () => {
       (el) =>
         el.type === 'span' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('whitespace-nowrap'),
+        (el.props as { className: string }).className.includes('whitespace-nowrap'),
     );
     expect((labels[0].props as { className: string }).className).toContain('text-ice-green');
     expect((labels[1].props as { className: string }).className).toContain('text-ice-green');
@@ -177,7 +176,7 @@ describe('StepIndicator', () => {
       (el) =>
         el.type === 'span' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('whitespace-nowrap'),
+        (el.props as { className: string }).className.includes('whitespace-nowrap'),
     );
     expect((labels[1].props as { className: string }).className).toContain('text-ice-accent');
   });
@@ -189,7 +188,7 @@ describe('StepIndicator', () => {
       (el) =>
         el.type === 'span' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('whitespace-nowrap'),
+        (el.props as { className: string }).className.includes('whitespace-nowrap'),
     );
     expect((labels[1].props as { className: string }).className).toContain('text-ice-text-2');
     expect((labels[2].props as { className: string }).className).toContain('text-ice-text-2');

@@ -23,7 +23,6 @@
  *   `./cloud-blocks.ts`.
  */
 
-import type { BlockTemplate } from './cloud-blocks-types';
 import { BACKEND_TEMPLATES } from './cloud-blocks-data/backend';
 import { COMPUTE_TEMPLATES } from './cloud-blocks-data/compute';
 import { DATA_TEMPLATES } from './cloud-blocks-data/data';
@@ -33,6 +32,7 @@ import { NETWORKING_TEMPLATES } from './cloud-blocks-data/networking';
 import { OBSERVABILITY_TEMPLATES } from './cloud-blocks-data/observability';
 import { SECURITY_TEMPLATES } from './cloud-blocks-data/security';
 import { STORAGE_TEMPLATES } from './cloud-blocks-data/storage';
+import type { BlockTemplate } from './cloud-blocks-types';
 
 // =============================================================================
 // Block Templates Registry

@@ -18,15 +18,16 @@ describe('formatDateTime', () => {
 
   it('emits a single space between the date part and the time part', () => {
     const out = formatDateTime('2026-04-30T14:32:00Z');
-    // Two segments joined by exactly one space; loose match accommodates any
-    // locale's day/month rendering.
+    // The function joins `<date> ' ' <time>`. Locale-dependent extras can add
+    // tokens around either side (e.g. en-US emits "Apr 30" for the date and
+    // "02:32 PM" for the time → 4 space-separated tokens), so we don't assert
+    // on token count or position. The single-space invariant is verified by:
+    // (a) the time HH:MM token appears, and (b) the output contains no
+    // double-space sequences.
     const parts = out.split(' ');
-    // At minimum there must be: <day-part> <month-part> <time-part> (3 tokens)
-    // OR <day-month> <time> (2 tokens, e.g. "30 Apr 14:32" -> 3, "30. Apr. 14:32" -> 3).
-    // The single-space invariant means the time piece (HH:MM) is the LAST token.
     expect(parts.length).toBeGreaterThanOrEqual(2);
-    const last = parts[parts.length - 1];
-    expect(last).toMatch(/^\d{1,2}:\d{2}/);
+    expect(parts.some((p) => /^\d{1,2}:\d{2}$/.test(p))).toBe(true);
+    expect(out).not.toMatch(/ {2,}/);
   });
 
   it('output contains the day-of-month numeric (verifies day: "numeric" option)', () => {

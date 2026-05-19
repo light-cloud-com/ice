@@ -93,14 +93,12 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
 
 describe('computeMessageQueueHeight', () => {
   it('returns header + 1 row + footer when no queues', () => {
-    const expected =
-      MQ_HEADER_HEIGHT + MQ_PADDING + 1 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
+    const expected = MQ_HEADER_HEIGHT + MQ_PADDING + 1 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeMessageQueueHeight({})).toBe(expected);
   });
 
   it('returns header + N rows + footer for N queues', () => {
-    const expected =
-      MQ_HEADER_HEIGHT + MQ_PADDING + 3 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
+    const expected = MQ_HEADER_HEIGHT + MQ_PADDING + 3 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeMessageQueueHeight({ queues: ['a', 'b', 'c'] })).toBe(expected);
   });
 });
@@ -161,7 +159,14 @@ describe('SvgMessageQueueNode', () => {
 
   it('Badge tone "accent" + label "FIFO" when fifo true; "neutral" + "STD" otherwise', () => {
     const tree = SvgMessageQueueNode({
-      node: makeNode({ data: { queues: [{ name: 'F', fifo: true }, { name: 'S', fifo: false }] } }),
+      node: makeNode({
+        data: {
+          queues: [
+            { name: 'F', fifo: true },
+            { name: 'S', fifo: false },
+          ],
+        },
+      }),
       isSelected: false,
     }) as React.ReactElement;
     const badges = findByType(tree, mocks.Badge);

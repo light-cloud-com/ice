@@ -7,11 +7,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import * as Cost from '../cost';
 import * as Deploy from '../deploy';
-import * as Grid from '../grid';
 import * as Derived from '../derived';
+import * as Grid from '../grid';
 
 describe('cost.ts — pure data shape', () => {
   it('STORAGE_GB_BY_TIER + REQUESTS_M_BY_TIER cover all six tiers', () => {

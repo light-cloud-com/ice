@@ -15,7 +15,6 @@
  *  - `cn` returns a joined string.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -44,12 +43,8 @@ const mocks = vi.hoisted(() => ({
   // Redux state
   state: {
     account: {
-      user: { id: 'user-1', email: 'me@example.com', name: 'Me' } as
-        | { id: string; email: string; name: string }
-        | null,
-      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as
-        | { id: string; name: string; role: string }
-        | null,
+      user: { id: 'user-1', email: 'me@example.com', name: 'Me' } as { id: string; email: string; name: string } | null,
+      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as { id: string; name: string; role: string } | null,
     },
   },
   // axios
@@ -263,9 +258,7 @@ describe('ProjectCollaborators — header section', () => {
 
   it('shows the add-member button when there are available users to add', () => {
     mocks.membersRef.current = [];
-    mocks.orgMembersRef.current = [
-      { id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' },
-    ];
+    mocks.orgMembersRef.current = [{ id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' }];
     const tree = render({ projectId: 'p-1' });
     const addBtn = findFirst(
       tree,
@@ -289,9 +282,7 @@ describe('ProjectCollaborators — header section', () => {
     mocks.membersRef.current = [
       { userId: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'editor', grantedAt: '' },
     ];
-    mocks.orgMembersRef.current = [
-      { id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' },
-    ];
+    mocks.orgMembersRef.current = [{ id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' }];
     const tree = render({ projectId: 'p-1' });
     const text = collectText(tree);
     expect(text).not.toContain('account.collaborators.addMember');
@@ -299,9 +290,7 @@ describe('ProjectCollaborators — header section', () => {
 
   it('clicking the add-member button toggles showAdd state', () => {
     mocks.membersRef.current = [];
-    mocks.orgMembersRef.current = [
-      { id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' },
-    ];
+    mocks.orgMembersRef.current = [{ id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' }];
     const tree = render({ projectId: 'p-1' });
     const addBtn = findFirst(
       tree,
@@ -316,9 +305,7 @@ describe('ProjectCollaborators — header section', () => {
 
   it('clicking the add-member button when showAdd=true toggles to false', () => {
     mocks.membersRef.current = [];
-    mocks.orgMembersRef.current = [
-      { id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' },
-    ];
+    mocks.orgMembersRef.current = [{ id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' }];
     mocks.showAddRef.current = true;
     const tree = render({ projectId: 'p-1' });
     const addBtn = findFirst(
@@ -426,9 +413,7 @@ describe('ProjectCollaborators — add member form', () => {
     const tree = render({ projectId: 'p-1' });
     const cancelBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        el.props.children === 'account.collaborators.cancelButton',
+      (el) => el.type === 'button' && el.props.children === 'account.collaborators.cancelButton',
     );
     expect(cancelBtn).toBeDefined();
     (cancelBtn!.props.onClick as () => void)();
@@ -499,9 +484,7 @@ describe('ProjectCollaborators — handleAdd', () => {
   beforeEach(() => {
     mocks.loadingRef.current = false;
     mocks.showAddRef.current = true;
-    mocks.orgMembersRef.current = [
-      { id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' },
-    ];
+    mocks.orgMembersRef.current = [{ id: 'u-2', email: 'b@x.com', name: 'Bob', avatar: null, role: 'member' }];
   });
 
   it('returns early when addUserId is empty (no axios call)', async () => {
@@ -516,10 +499,7 @@ describe('ProjectCollaborators — handleAdd', () => {
     )!;
     mocks.axiosPost.mockClear();
     await (addBtn.props.onClick as () => Promise<void>)();
-    expect(mocks.axiosPost).not.toHaveBeenCalledWith(
-      '/project-members/add',
-      expect.anything(),
-    );
+    expect(mocks.axiosPost).not.toHaveBeenCalledWith('/project-members/add', expect.anything());
     expect(mocks.setAddingSpy).not.toHaveBeenCalledWith(true);
   });
 

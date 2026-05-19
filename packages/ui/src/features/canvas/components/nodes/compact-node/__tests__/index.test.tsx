@@ -118,9 +118,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderSCN = (
-  props: Partial<React.ComponentProps<typeof SvgCompactNode>> = {},
-): React.ReactElement => {
+const renderSCN = (props: Partial<React.ComponentProps<typeof SvgCompactNode>> = {}): React.ReactElement => {
   const Inner = SvgCompactNode as React.FC<React.ComponentProps<typeof SvgCompactNode>>;
   const defaults: React.ComponentProps<typeof SvgCompactNode> = {
     node: makeNode(),
@@ -266,11 +264,13 @@ describe('SvgCompactNode — CompactLod3 branch (data extraction)', () => {
   });
 
   it('numeric coercion: minInstances accepts string-like values', () => {
-    const p = propsOf(renderSCN({
-      node: makeNode({
-        data: { minInstances: '5' as unknown as number },
+    const p = propsOf(
+      renderSCN({
+        node: makeNode({
+          data: { minInstances: '5' as unknown as number },
+        }),
       }),
-    }));
+    );
     expect(p.minInstances).toBe(5);
   });
 
@@ -395,11 +395,13 @@ describe('SvgCompactNode — aggregatePipelineStatus', () => {
     const sourceRepo = makeNode({ data: { behavior: 'source' } });
     const statuses: NodePipelineStatus[] = [{ status: 'success' }];
     const explicit: NodePipelineStatus = { status: 'failed' };
-    const p = propsOf(renderSCN({
-      node: sourceRepo,
-      connectedPipelineStatuses: statuses,
-      pipelineStatus: explicit,
-    }));
+    const p = propsOf(
+      renderSCN({
+        node: sourceRepo,
+        connectedPipelineStatuses: statuses,
+        pipelineStatus: explicit,
+      }),
+    );
     expect(p.effectivePipelineStatus).toBe(explicit);
   });
 });
@@ -408,12 +410,12 @@ describe('SvgCompactNode — aggregatePipelineStatus', () => {
 
 describe('SvgCompactNode — border colour selection', () => {
   it('cyan #22d3ee on dragOver', () => {
-    const p = (renderSCN({ isDragOver: true }).props as { border: string });
+    const p = renderSCN({ isDragOver: true }).props as { border: string };
     expect(p.border).toBe('#22d3ee');
   });
 
   it('uses cat.glow on selected', () => {
-    const p = (renderSCN({ isSelected: true }).props as { border: string });
+    const p = renderSCN({ isSelected: true }).props as { border: string };
     // Some glow string — non-empty + does NOT end in '55'
     expect(p.border).toBeTruthy();
     expect(p.border.endsWith('55')).toBe(false);
@@ -421,12 +423,12 @@ describe('SvgCompactNode — border colour selection', () => {
 
   it('uses cat.glow on hovered', () => {
     mocks.state.hoverValue = true;
-    const p = (renderSCN({}).props as { border: string });
+    const p = renderSCN({}).props as { border: string };
     expect(p.border.endsWith('55')).toBe(false);
   });
 
   it('uses cat.glow + 55 (de-emphasised) when neither selected nor hovered', () => {
-    const p = (renderSCN({}).props as { border: string });
+    const p = renderSCN({}).props as { border: string };
     expect(p.border.endsWith('55')).toBe(true);
   });
 });

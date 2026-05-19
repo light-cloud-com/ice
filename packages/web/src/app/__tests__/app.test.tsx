@@ -93,9 +93,7 @@ vi.mock('react', async (importOriginal) => {
 });
 
 vi.mock('react-router-dom', () => ({
-  BrowserRouter: ({ children }: { children: React.ReactNode }) => (
-    <div data-stub="BrowserRouter">{children}</div>
-  ),
+  BrowserRouter: ({ children }: { children: React.ReactNode }) => <div data-stub="BrowserRouter">{children}</div>,
   Routes: ({ children }: { children: React.ReactNode }) => <div data-stub="Routes">{children}</div>,
   Route: ({ path, element }: { path: string; element: React.ReactNode }) => (
     <div data-stub="Route" data-path={path}>
@@ -114,9 +112,7 @@ vi.mock('react-redux', () => ({
 
 vi.mock('@ui/i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
-  LocaleProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-stub="LocaleProvider">{children}</div>
-  ),
+  LocaleProvider: ({ children }: { children: React.ReactNode }) => <div data-stub="LocaleProvider">{children}</div>,
 }));
 
 // Heavy children — opaque markers
@@ -142,9 +138,7 @@ vi.mock('@ui/shared/components/app-bar', () => ({
 }));
 
 vi.mock('@ui/shared/components/dev-accent-picker', () => ({
-  DevAccentPicker: ({ children }: { children: React.ReactNode }) => (
-    <div data-stub="DevAccentPicker">{children}</div>
-  ),
+  DevAccentPicker: ({ children }: { children: React.ReactNode }) => <div data-stub="DevAccentPicker">{children}</div>,
 }));
 
 vi.mock('@ui/shared/components/error-boundary', () => ({
@@ -157,7 +151,7 @@ vi.mock('@ui/shared/components/error-boundary', () => ({
 
 vi.mock('@ui/shared/components/main-layout', () => ({
   MainLayout: ({ children, ...rest }: { children?: React.ReactNode } & Record<string, unknown>) => (
-    <div data-stub="MainLayout" {...(Object.fromEntries(Object.entries(rest).map(([k, v]) => [`data-${k}`, String(v)])))}>
+    <div data-stub="MainLayout" {...Object.fromEntries(Object.entries(rest).map(([k, v]) => [`data-${k}`, String(v)]))}>
       {children}
     </div>
   ),
@@ -208,8 +202,21 @@ vi.mock('@/pages/app-settings', () => ({
 }));
 
 vi.mock('@/pages/folder-view', () => ({
-  FolderView: ({ folderId, folderName, basePath }: { folderId: string | null; folderName: string; basePath?: string }) => (
-    <div data-stub="FolderView" data-folder-id={folderId ?? ''} data-folder-name={folderName} data-base-path={basePath ?? ''} />
+  FolderView: ({
+    folderId,
+    folderName,
+    basePath,
+  }: {
+    folderId: string | null;
+    folderName: string;
+    basePath?: string;
+  }) => (
+    <div
+      data-stub="FolderView"
+      data-folder-id={folderId ?? ''}
+      data-folder-name={folderName}
+      data-base-path={basePath ?? ''}
+    />
   ),
 }));
 
@@ -263,10 +270,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -406,9 +410,7 @@ describe('DynamicContent — notFound branch', () => {
     const tree = renderApp();
     const btn = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'app.notFound.button',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'app.notFound.button',
     )[0];
     (btn.props as { onClick: () => void }).onClick();
     expect(mocks.navigate).toHaveBeenCalledWith('/acme');
@@ -423,9 +425,7 @@ describe('DynamicContent — notFound branch', () => {
     const tree = renderApp();
     const btn = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'app.notFound.button',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'app.notFound.button',
     )[0];
     (btn.props as { onClick: () => void }).onClick();
     expect(mocks.navigate).toHaveBeenCalledWith('/');

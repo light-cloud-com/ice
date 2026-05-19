@@ -8,12 +8,6 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  apply_plan,
-  apply_succeeded,
-  get_failed_resources,
-  get_successful_resources,
-} from '../apply-engine';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import {
   create_deployment_id,
@@ -22,12 +16,8 @@ import {
   type DeploymentAction,
 } from '../../types/deployment';
 import { create_node_id, type NodeId } from '../../types/graph';
-import type {
-  ProviderClient,
-  ResourceState,
-  DeploymentResult,
-  DestroyResult,
-} from '../../types/providers';
+import { apply_plan, apply_succeeded, get_failed_resources, get_successful_resources } from '../apply-engine';
+import type { ProviderClient, ResourceState, DeploymentResult, DestroyResult } from '../../types/providers';
 import type { ApplyProgressEvent, ApplyResult } from '../types';
 
 // ─── Mock the mock-provider so apply_plan picks up our fake ──────────
@@ -107,11 +97,7 @@ function add_node(graph: MutableGraph, name: string, type = 'Test.Resource'): No
   return r.node.id;
 }
 
-function make_change(
-  node_id: NodeId,
-  action: DeploymentAction,
-  overrides: Partial<PlannedChange> = {},
-): PlannedChange {
+function make_change(node_id: NodeId, action: DeploymentAction, overrides: Partial<PlannedChange> = {}): PlannedChange {
   return {
     node_id,
     action,
@@ -295,11 +281,7 @@ describe('apply_plan — layer batching and parallelism', () => {
       },
     } as FakeProviderOptions);
 
-    const result = await apply_plan(
-      make_plan(ids.map((id) => make_change(id, 'create'))),
-      graph,
-      { parallelism: 2 },
-    );
+    const result = await apply_plan(make_plan(ids.map((id) => make_change(id, 'create'))), graph, { parallelism: 2 });
 
     expect(result.success).toBe(true);
     // Peak in-flight must not exceed parallelism.
@@ -312,11 +294,9 @@ describe('apply_plan — layer batching and parallelism', () => {
     const b = add_node(graph, 'b');
     const events: ApplyProgressEvent[] = [];
 
-    await apply_plan(
-      make_plan([make_change(a, 'create'), make_change(b, 'create', { depends_on: [a] })]),
-      graph,
-      { on_progress: (e) => events.push(e) },
-    );
+    await apply_plan(make_plan([make_change(a, 'create'), make_change(b, 'create', { depends_on: [a] })]), graph, {
+      on_progress: (e) => events.push(e),
+    });
 
     const layer_starts = events.filter((e) => e.type === 'layer_started');
     expect(layer_starts).toHaveLength(2);
@@ -346,10 +326,7 @@ describe('apply_plan — failure handling', () => {
             },
     });
 
-    const result = await apply_plan(
-      make_plan([make_change(a, 'create'), make_change(b, 'create')]),
-      graph,
-    );
+    const result = await apply_plan(make_plan([make_change(a, 'create'), make_change(b, 'create')]), graph);
 
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
@@ -420,7 +397,7 @@ describe('apply_plan — failure handling', () => {
 
     current_provider = {
       ...make_provider(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       deploy: vi.fn(async () => {
         // Reject with a non-Error literal.
         throw 'string-rejection';
@@ -456,10 +433,7 @@ describe('apply_plan — failure handling', () => {
     const a = add_node(graph, 'a');
     const ghost = create_node_id('ghost-id-not-in-graph');
 
-    const result = await apply_plan(
-      make_plan([make_change(a, 'create'), make_change(ghost, 'create')]),
-      graph,
-    );
+    const result = await apply_plan(make_plan([make_change(a, 'create'), make_change(ghost, 'create')]), graph);
 
     const ghost_result = result.results.find((r) => r.node_id === ghost);
     expect(ghost_result?.success).toBe(false);
@@ -474,10 +448,7 @@ describe('apply_plan — provider operation dispatch', () => {
     const a = add_node(graph, 'a');
     const cur = state_for(a, 'pre');
 
-    const result = await apply_plan(
-      make_plan([make_change(a, 'update', { current_state: cur })]),
-      graph,
-    );
+    const result = await apply_plan(make_plan([make_change(a, 'update', { current_state: cur })]), graph);
 
     expect(result.summary.updated).toBe(1);
     expect(current_provider.update).toHaveBeenCalledTimes(1);
@@ -524,9 +495,7 @@ describe('apply_plan — provider operation dispatch', () => {
     expect(current_provider.destroy).not.toHaveBeenCalled();
     expect(current_provider.deploy).toHaveBeenCalledTimes(1);
     expect(result.summary.replaced).toBe(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/replace action.*no current_state/),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/replace action.*no current_state/));
     warnSpy.mockRestore();
   });
 
@@ -773,11 +742,9 @@ describe('apply_plan — AbortSignal cancellation (findings #23)', () => {
     const controller = new AbortController();
     controller.abort();
 
-    const result = await apply_plan(
-      make_plan([make_change(a, 'create'), make_change(b, 'create')]),
-      graph,
-      { signal: controller.signal },
-    );
+    const result = await apply_plan(make_plan([make_change(a, 'create'), make_change(b, 'create')]), graph, {
+      signal: controller.signal,
+    });
 
     expect(result.cancelled).toBe(true);
     expect(result.success).toBe(false);
@@ -859,11 +826,10 @@ describe('apply_plan — AbortSignal cancellation (findings #23)', () => {
       },
     });
 
-    const result = await apply_plan(
-      make_plan([make_change(a, 'create'), make_change(b, 'create')]),
-      graph,
-      { signal: controller.signal, parallelism: 1 },
-    );
+    const result = await apply_plan(make_plan([make_change(a, 'create'), make_change(b, 'create')]), graph, {
+      signal: controller.signal,
+      parallelism: 1,
+    });
 
     expect(result.cancelled).toBe(true);
     expect(result.success).toBe(false);

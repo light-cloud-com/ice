@@ -12,11 +12,10 @@
 
 import { ChevronDown, CheckCircle, XCircle, Circle, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
-
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
-import type { DeploymentEvent, DeployStep } from '../../../store/slices/pipeline-slice';
 import { formatRelativeTime, formatDuration } from '../utils/format';
+import type { DeploymentEvent, DeployStep } from '../../../store/slices/pipeline-slice';
 
 export interface EventRowProps {
   event: DeploymentEvent;

@@ -176,8 +176,7 @@ describe('diagnoseDeploy', () => {
 
   it('extracts and parses a JSON object embedded in trailing prose', async () => {
     mocks.providerChat.mockResolvedValue({
-      content:
-        'Here is my analysis:\n{"diagnosis":"x","suggestedFixes":["a","b"],"operations":[]}\nHope that helps!',
+      content: 'Here is my analysis:\n{"diagnosis":"x","suggestedFixes":["a","b"],"operations":[]}\nHope that helps!',
     });
 
     const result = await diagnoseDeploy(baseRequest);

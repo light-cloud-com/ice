@@ -47,14 +47,14 @@ describe('classifyAWSError — access denied', () => {
 });
 
 describe('classifyAWSError — Resource Explorer not enabled', () => {
-  it.each([
-    { code: 'ResourceExplorerNotEnabledException' },
-    { message: 'Resource Explorer needs activation' },
-  ])('classifies %j as RESOURCE_EXPLORER_NOT_ENABLED', (input) => {
-    const result = classifyAWSError(input);
-    expect(result.code).toBe(ImportErrorCode.RESOURCE_EXPLORER_NOT_ENABLED);
-    expect(result.action?.type).toBe('enable_service');
-  });
+  it.each([{ code: 'ResourceExplorerNotEnabledException' }, { message: 'Resource Explorer needs activation' }])(
+    'classifies %j as RESOURCE_EXPLORER_NOT_ENABLED',
+    (input) => {
+      const result = classifyAWSError(input);
+      expect(result.code).toBe(ImportErrorCode.RESOURCE_EXPLORER_NOT_ENABLED);
+      expect(result.action?.type).toBe('enable_service');
+    },
+  );
 
   // The 'not enabled' substring branch ALSO triggers RESOURCE_EXPLORER_NOT_ENABLED
   // (see the AWS classifier — message.includes('not enabled') is in the same OR group).
@@ -78,13 +78,13 @@ describe('classifyAWSError — throttling', () => {
 });
 
 describe('classifyAWSError — resource not found', () => {
-  it.each([
-    { code: 'ResourceNotFoundException' },
-    { $metadata: { httpStatusCode: 404 } },
-  ])('classifies %j as RESOURCE_NOT_FOUND', (input) => {
-    const result = classifyAWSError(input);
-    expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
-  });
+  it.each([{ code: 'ResourceNotFoundException' }, { $metadata: { httpStatusCode: 404 } }])(
+    'classifies %j as RESOURCE_NOT_FOUND',
+    (input) => {
+      const result = classifyAWSError(input);
+      expect(result.code).toBe(ImportErrorCode.RESOURCE_NOT_FOUND);
+    },
+  );
 });
 
 describe('classifyAWSError — fallback', () => {

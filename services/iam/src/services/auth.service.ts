@@ -113,9 +113,7 @@ export async function refreshToken(
     // from "row already cleaned up" without a token-family column, so
     // we simply reject the request. A human can investigate via the
     // security log; legit sessions stay intact.
-    console.warn(
-      `[auth] refresh token rejected (no matching row) user=${payload.userId}`,
-    );
+    console.warn(`[auth] refresh token rejected (no matching row) user=${payload.userId}`);
     throw new AuthError('Invalid refresh token', 401);
   }
 

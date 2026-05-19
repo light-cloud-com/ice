@@ -30,7 +30,6 @@
  * value here shifts placement of every AI-placed node, so they're frozen.
  */
 
-import type { Card } from '../../../../store/slices/cards-slice';
 import {
   NODE_GAP_X,
   NODE_GAP_Y,
@@ -40,6 +39,7 @@ import {
   CONTAINER_INNER_PAD,
   CONTAINER_HEADER_PAD,
 } from './types';
+import type { Card } from '../../../../store/slices/cards-slice';
 
 /** Helper/utility nodes get a smaller default size */
 export function isHelperIceType(iceType: string): boolean {

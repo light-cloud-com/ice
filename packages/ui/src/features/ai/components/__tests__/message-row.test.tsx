@@ -39,10 +39,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -102,7 +99,8 @@ describe('MessageRow — alignment', () => {
     // Find the inner bubble div (max-w-[85%])
     const bubble = findByPredicate(
       tree,
-      (el) => typeof el.type === 'string' && (el.props as { className?: string }).className?.includes('max-w-[85%]') === true,
+      (el) =>
+        typeof el.type === 'string' && (el.props as { className?: string }).className?.includes('max-w-[85%]') === true,
     );
     expect(bubble.length).toBe(1);
     expect((bubble[0].props as { className: string }).className).toContain('bg-ice-accent');
@@ -114,7 +112,8 @@ describe('MessageRow — alignment', () => {
     });
     const bubble = findByPredicate(
       tree,
-      (el) => typeof el.type === 'string' && (el.props as { className?: string }).className?.includes('max-w-[85%]') === true,
+      (el) =>
+        typeof el.type === 'string' && (el.props as { className?: string }).className?.includes('max-w-[85%]') === true,
     );
     expect((bubble[0].props as { className: string }).className).toContain('bg-white/[0.07]');
   });
@@ -216,11 +215,7 @@ describe('MessageRow — applied operations preview', () => {
         content: 'X',
         timestamp: 0,
         applied: true,
-        operations: [
-          { op: 'addBlueprint', iceType: 't' },
-          { op: 'deleteNode', nodeId: 'n' },
-          { op: 'autoOrganize' },
-        ],
+        operations: [{ op: 'addBlueprint', iceType: 't' }, { op: 'deleteNode', nodeId: 'n' }, { op: 'autoOrganize' }],
       },
     });
     const text = collectText(tree);

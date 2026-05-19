@@ -142,15 +142,9 @@ vi.mock('../../../../shared/components/ui/dialog', () => ({
       {children}
     </div>
   ),
-  DialogContent: ({ children }: { children?: React.ReactNode }) => (
-    <div data-stub="DialogContent">{children}</div>
-  ),
-  DialogHeader: ({ children }: { children?: React.ReactNode }) => (
-    <div data-stub="DialogHeader">{children}</div>
-  ),
-  DialogTitle: ({ children }: { children?: React.ReactNode }) => (
-    <div data-stub="DialogTitle">{children}</div>
-  ),
+  DialogContent: ({ children }: { children?: React.ReactNode }) => <div data-stub="DialogContent">{children}</div>,
+  DialogHeader: ({ children }: { children?: React.ReactNode }) => <div data-stub="DialogHeader">{children}</div>,
+  DialogTitle: ({ children }: { children?: React.ReactNode }) => <div data-stub="DialogTitle">{children}</div>,
   DialogDescription: ({ children }: { children?: React.ReactNode }) => (
     <div data-stub="DialogDescription">{children}</div>
   ),
@@ -219,10 +213,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -230,10 +221,7 @@ function findByPredicate(
   return out;
 }
 function findByStub(tree: React.ReactNode, stub: string): React.ReactElement[] {
-  return findByPredicate(
-    tree,
-    (el) => (el.props as { ['data-stub']?: string })['data-stub'] === stub,
-  );
+  return findByPredicate(tree, (el) => (el.props as { ['data-stub']?: string })['data-stub'] === stub);
 }
 
 function render(): React.ReactElement {
@@ -349,7 +337,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const nextBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-accent') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-accent') === true,
       );
       expect(nextBtn).toHaveLength(1);
       (nextBtn[0].props as { onClick: () => void }).onClick();
@@ -376,7 +365,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtns = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       );
       expect(createBtns).toHaveLength(1);
     });
@@ -411,13 +401,17 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
-      expect(mocks.axios.post).toHaveBeenCalledWith('/canvas/projects/create', expect.objectContaining({
-        name: 'My App',
-        type: 'project',
-      }));
+      expect(mocks.axios.post).toHaveBeenCalledWith(
+        '/canvas/projects/create',
+        expect.objectContaining({
+          name: 'My App',
+          type: 'project',
+        }),
+      );
       expect(mocks.thunks.closeDialog).toHaveBeenCalled();
       expect(mocks.navigate).toHaveBeenCalled();
     });
@@ -428,12 +422,11 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
-      const updateCalls = mocks.axios.post.mock.calls.filter(
-        (c) => c[0] === '/canvas/projects/update',
-      );
+      const updateCalls = mocks.axios.post.mock.calls.filter((c) => c[0] === '/canvas/projects/update');
       expect(updateCalls).toHaveLength(0);
     });
 
@@ -446,7 +439,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       const updateCall = mocks.axios.post.mock.calls.find((c) => c[0] === '/canvas/projects/update');
@@ -460,7 +454,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.axios.post).toHaveBeenCalledWith('/canvas/cards/create', expect.any(Object));
@@ -473,12 +468,11 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
-      const cardCalls = mocks.axios.post.mock.calls.filter(
-        (c) => c[0] === '/canvas/cards/create',
-      );
+      const cardCalls = mocks.axios.post.mock.calls.filter((c) => c[0] === '/canvas/cards/create');
       expect(cardCalls).toHaveLength(0);
     });
 
@@ -488,12 +482,11 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
-      const cardCalls = mocks.axios.post.mock.calls.filter(
-        (c) => c[0] === '/canvas/cards/create',
-      );
+      const cardCalls = mocks.axios.post.mock.calls.filter((c) => c[0] === '/canvas/cards/create');
       expect(cardCalls).toHaveLength(0);
     });
 
@@ -508,12 +501,11 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
-      const envCalls = mocks.axios.post.mock.calls.filter(
-        (c) => c[0] === '/environments/create',
-      );
+      const envCalls = mocks.axios.post.mock.calls.filter((c) => c[0] === '/environments/create');
       expect(envCalls).toHaveLength(1); // only enabled non-production
       expect(envCalls[0][1]).toEqual(
         expect.objectContaining({ name: 'staging', type: 'staging', region: 'us-west-2' }),
@@ -529,7 +521,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       const envCall = mocks.axios.post.mock.calls.find((c) => c[0] === '/environments/create');
@@ -549,7 +542,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       // Should NOT throw
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
@@ -562,7 +556,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.thunks.fetchProjectTree).toHaveBeenCalledWith('org-1');
@@ -574,7 +569,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.thunks.fetchProjectTree).not.toHaveBeenCalled();
@@ -588,7 +584,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.navigate).toHaveBeenCalledWith('/pslug');
@@ -601,7 +598,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.toSlugSpy).toHaveBeenCalledWith('My App');
@@ -623,7 +621,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.navigate).toHaveBeenCalled();
@@ -638,7 +637,8 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('bg-ice-green') === true,
       )[0];
       await (createBtn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.navigate).not.toHaveBeenCalled();
@@ -659,12 +659,14 @@ describe('ProjectWizard', () => {
       expect(stepDiv).toHaveLength(1);
       const nextBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
+        (el) =>
+          el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
       );
       expect(nextBtn).toHaveLength(1);
       const backBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-back',
+        (el) =>
+          el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-back',
       );
       expect(backBtn).toHaveLength(1);
     });
@@ -674,12 +676,14 @@ describe('ProjectWizard', () => {
       const tree = render();
       const createBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-create',
+        (el) =>
+          el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-create',
       );
       expect(createBtn).toHaveLength(1);
       const nextBtn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
+        (el) =>
+          el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
       );
       expect(nextBtn).toHaveLength(0);
     });

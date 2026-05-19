@@ -48,10 +48,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -60,12 +57,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderL2 = (
-  props: Partial<React.ComponentProps<typeof GroupLod2>> = {},
-): React.ReactElement => {
-  const Inner = (GroupLod2 as unknown as {
-    type: (p: React.ComponentProps<typeof GroupLod2>) => React.ReactElement;
-  }).type;
+const renderL2 = (props: Partial<React.ComponentProps<typeof GroupLod2>> = {}): React.ReactElement => {
+  const Inner = (
+    GroupLod2 as unknown as {
+      type: (p: React.ComponentProps<typeof GroupLod2>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof GroupLod2> = {
     nodeId: 'g-1',
     x: 0,
@@ -196,7 +193,9 @@ describe('GroupLod2 — strokeWidth & dasharray', () => {
   });
 
   it('strokeDasharray undefined when dragOver, dashed otherwise', () => {
-    expect((findRect(renderL2({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray).toBeUndefined();
+    expect(
+      (findRect(renderL2({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray,
+    ).toBeUndefined();
     expect((findRect(renderL2({ invZoom: 1 })).props as { strokeDasharray: string }).strokeDasharray).toBe('6 3');
   });
 });

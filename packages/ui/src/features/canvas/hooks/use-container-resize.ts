@@ -51,18 +51,9 @@
 
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../config/canvas-constants';
-import {
-  recalculateAncestorBounds as recalculateAncestorBoundsUtil,
-  CONTAINER_PAD,
-} from '../utils/container-bounds';
-import {
-  resizeCardNode,
-  updateCardNodePosition,
-} from '../../../store/slices/cards-slice';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../config/canvas-constants';
+import { resizeCardNode, updateCardNodePosition } from '../../../store/slices/cards-slice';
+import { recalculateAncestorBounds as recalculateAncestorBoundsUtil, CONTAINER_PAD } from '../utils/container-bounds';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
 
@@ -101,10 +92,8 @@ export function useContainerResize(args: UseContainerResizeArgs): UseContainerRe
   // rf-canv-4: thin wrapper binding `visibleNodes` to the pure
   // recalculateAncestorBounds util.
   const recalculateAncestorBounds = useCallback(
-    (
-      startNodeId: string,
-      nodeStates: Map<string, { x: number; y: number; width: number; height: number }>,
-    ) => recalculateAncestorBoundsUtil(visibleNodes, startNodeId, nodeStates),
+    (startNodeId: string, nodeStates: Map<string, { x: number; y: number; width: number; height: number }>) =>
+      recalculateAncestorBoundsUtil(visibleNodes, startNodeId, nodeStates),
     [visibleNodes],
   );
 

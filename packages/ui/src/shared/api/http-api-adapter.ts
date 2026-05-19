@@ -13,20 +13,9 @@
  * keep working.
  */
 
-import type { IceAPI } from './api-adapter';
-import { emitMenuAction } from './http-api/socket';
-import { createGraphAdapter } from './http-api/graph';
-import { createSchemaAdapter } from './http-api/schema';
-import { createResourcesAdapter } from './http-api/resources';
-import { createDialogAdapter } from './http-api/dialog';
-import { createProjectsAdapter } from './http-api/projects';
-import { createTemplatesAdapter } from './http-api/templates';
-import { createProviderAdapter } from './http-api/provider';
-import { createGithubAdapter } from './http-api/github';
 import { createDeployAdapter } from './http-api/deploy';
-import { createPipelineAdapter } from './http-api/pipeline';
+import { createDialogAdapter } from './http-api/dialog';
 import { createEnvironmentsAdapter } from './http-api/environments';
-import { createLogsAdapter } from './http-api/logs';
 import {
   createOnCardPipelineUpdate,
   createOnDeployEvent,
@@ -36,6 +25,17 @@ import {
   createSubscribeDeployProgress,
   createSubscribePipeline,
 } from './http-api/events';
+import { createGithubAdapter } from './http-api/github';
+import { createGraphAdapter } from './http-api/graph';
+import { createLogsAdapter } from './http-api/logs';
+import { createPipelineAdapter } from './http-api/pipeline';
+import { createProjectsAdapter } from './http-api/projects';
+import { createProviderAdapter } from './http-api/provider';
+import { createResourcesAdapter } from './http-api/resources';
+import { createSchemaAdapter } from './http-api/schema';
+import { emitMenuAction } from './http-api/socket';
+import { createTemplatesAdapter } from './http-api/templates';
+import type { IceAPI } from './api-adapter';
 
 // Re-export for the existing public surface; consumers calling
 // `emitMenuAction(...)` from the toolbar continue to work.

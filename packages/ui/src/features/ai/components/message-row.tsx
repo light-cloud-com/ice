@@ -54,15 +54,15 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg, t, onSuggestionClic
               <div className="flex items-start gap-1.5">
                 <span className="text-ice-text-3 shrink-0">2.</span>
                 <span className="text-ice-text-2">
-                  Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to a local model server
-                  (Ollama, LM Studio, etc.)
+                  Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to a local model server (Ollama, LM
+                  Studio, etc.)
                 </span>
               </div>
               <div className="flex items-start gap-1.5">
                 <span className="text-ice-text-3 shrink-0">3.</span>
                 <span className="text-ice-text-2">
-                  Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to any OpenAI-compatible
-                  endpoint (Ollama, LM Studio, etc.)
+                  Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to any OpenAI-compatible endpoint
+                  (Ollama, LM Studio, etc.)
                 </span>
               </div>
               <div className="flex items-start gap-1.5">
@@ -97,8 +97,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg, t, onSuggestionClic
           <div className="flex items-center gap-1.5 mt-1.5">
             <Check aria-hidden="true" className="w-3 h-3 text-emerald-400/60" />
             <span className="text-ice-2xs text-emerald-400/60">
-              {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0}{' '}
-              {t('ai.chat.changes')}
+              {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0} {t('ai.chat.changes')}
             </span>
           </div>
         )}

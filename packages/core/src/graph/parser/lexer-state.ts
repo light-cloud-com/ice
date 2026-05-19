@@ -19,8 +19,8 @@
  * from `./lexer.js` to avoid a runtime cycle.
  */
 import { create_token, create_position } from './tokens';
-import type { Token, TokenType, SourcePosition } from './tokens';
 import type { LexerError, LexerOptions } from './lexer';
+import type { Token, TokenType, SourcePosition } from './tokens';
 
 /**
  * Default options for the lexer. Mirrors `DEFAULT_OPTIONS` in
@@ -69,10 +69,7 @@ export interface LexerState {
  * fields are filled from `DEFAULT_LEXER_OPTIONS`. `pos` starts at 0,
  * `line` at 1, `column` at 1, and `tokens`/`errors` start empty.
  */
-export function make_lexer_state(
-  source: string,
-  options: Partial<LexerOptions> = {},
-): LexerState {
+export function make_lexer_state(source: string, options: Partial<LexerOptions> = {}): LexerState {
   return {
     source,
     pos: 0,
@@ -186,13 +183,7 @@ export function ls_add_token(
   start_line: number,
   start_column: number,
 ): void {
-  const position = create_position(
-    start_line,
-    start_column,
-    start_pos,
-    s.pos - start_pos,
-    s.options.file,
-  );
+  const position = create_position(start_line, start_column, start_pos, s.pos - start_pos, s.options.file);
   s.tokens.push(create_token(type, value, position));
 }
 
@@ -210,13 +201,7 @@ export function ls_add_token_with_literal(
   start_column: number,
   literal: unknown,
 ): void {
-  const position = create_position(
-    start_line,
-    start_column,
-    start_pos,
-    s.pos - start_pos,
-    s.options.file,
-  );
+  const position = create_position(start_line, start_column, start_pos, s.pos - start_pos, s.options.file);
   s.tokens.push(create_token(type, value, position, literal));
 }
 
@@ -232,11 +217,7 @@ export function ls_add_token_with_literal(
  * recovers the original char. Do not "fix" this to `pos` — every
  * caller relies on the post-advance shape.
  */
-export function ls_add_error(
-  s: LexerState,
-  message: string,
-  recoverable: boolean,
-): void {
+export function ls_add_error(s: LexerState, message: string, recoverable: boolean): void {
   s.errors.push({
     message,
     position: ls_current_position(s, 1),
@@ -245,8 +226,6 @@ export function ls_add_error(
 
   if (recoverable) {
     // Add error token and continue.
-    s.tokens.push(
-      create_token('ERROR', s.source[s.pos - 1] ?? '', ls_current_position(s, 1)),
-    );
+    s.tokens.push(create_token('ERROR', s.source[s.pos - 1] ?? '', ls_current_position(s, 1)));
   }
 }

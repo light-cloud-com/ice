@@ -11,12 +11,9 @@
  * Behavior is preserved verbatim from rf-canv-25b.
  */
 
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../utils/container-bounds';
-import type { CanvasNode } from '../../components/types';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../utils/container-bounds';
 import type { PositionUpdate, SizeUpdate } from './types';
+import type { CanvasNode } from '../../components/types';
 
 /**
  * Clamp the dragged node `node` to its parent's (post-expansion) bounds.

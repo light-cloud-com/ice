@@ -149,18 +149,14 @@ describe('destroyDeployment — validation gates', () => {
   it('throws "No deployment found" when there is no apply baseline', async () => {
     mocks.cdFindFirst.mockReset().mockResolvedValueOnce(null);
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(destroyDeployment('card-A', 'org-1')).rejects.toThrow(
-      /No deployment found to destroy/,
-    );
+    await expect(destroyDeployment('card-A', 'org-1')).rejects.toThrow(/No deployment found to destroy/);
     warnSpy.mockRestore();
   });
 
   it('throws "No deployment found" when results column is missing', async () => {
     mocks.cdFindFirst.mockReset().mockResolvedValueOnce({ ...APPLY_BASELINE, results: null });
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(destroyDeployment('card-A', 'org-1')).rejects.toThrow(
-      /No deployment found to destroy/,
-    );
+    await expect(destroyDeployment('card-A', 'org-1')).rejects.toThrow(/No deployment found to destroy/);
     warnSpy.mockRestore();
   });
 
@@ -240,9 +236,7 @@ describe('destroyDeployment — happy path', () => {
     const evt = mocks.emitDeployEvent.mock.calls[0][1];
     expect(evt.outcome).toBe('partial');
     // Failed lifecycle emit on the throw-side branch.
-    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'failed',
-    );
+    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'failed');
     expect(failedEmits.length).toBe(1);
     // Per-resource log line ("Failed to delete X: Y") fires too.
     const logCalls = mocks.emitLog.mock.calls.map((c: any) => c[1]).join(' ');
@@ -257,9 +251,7 @@ describe('destroyDeployment — happy path', () => {
     });
     const out = await destroyDeployment('card-A', 'org-1');
     expect(out.success).toBe(false);
-    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'failed',
-    );
+    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'failed');
     expect(failedEmits.length).toBe(1);
     expect(failedEmits[0][0].error.message).toBe('delete returned non-success');
   });
@@ -268,9 +260,7 @@ describe('destroyDeployment — happy path', () => {
     mocks.attemptDestroy.mockResolvedValueOnce({ success: false });
     const out = await destroyDeployment('card-A', 'org-1');
     expect(out.success).toBe(false);
-    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'failed',
-    );
+    const failedEmits = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'failed');
     expect(failedEmits[0][0].error.message).toBe('delete threw');
   });
 
@@ -308,9 +298,7 @@ describe('destroyDeployment — happy path', () => {
     await destroyDeployment('card-A', 'org-1');
     // No queued emit happened (the loop's pre-loop `for` block guarded it
     // with `res.success && res.provider_id && res.source_node_id`).
-    const queuedEmits = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'queued',
-    );
+    const queuedEmits = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'queued');
     expect(queuedEmits.length).toBe(0);
   });
 
@@ -371,9 +359,7 @@ describe('destroyDeployment — engine catch path', () => {
     const out = await destroyDeployment('card-A', 'org-1');
     expect(out.success).toBe(false);
     expect(out.error).toBe('boom from initialize');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'destroy-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'destroy-record-1');
     expect(updateCall![0].data.status).toBe('failed');
     expect(updateCall![0].data.error).toBe('boom from initialize');
     const evt = mocks.emitDeployEvent.mock.calls[0][1];

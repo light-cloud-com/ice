@@ -12,16 +12,11 @@
  * the node maps.
  */
 
-import { create_node_id } from '../../types/graph';
-import type {
-  AddNodeResult,
-  Node,
-  NodeId,
-  NodeInput,
-} from '../../types/graph';
-import { classify_resource } from '../classifier/category-classifier';
 import { edges_remove_edge } from './edges';
+import { create_node_id } from '../../types/graph';
+import { classify_resource } from '../classifier/category-classifier';
 import type { MutableGraphState } from './types';
+import type { AddNodeResult, Node, NodeId, NodeInput } from '../../types/graph';
 
 /**
  * Add a node to the graph.

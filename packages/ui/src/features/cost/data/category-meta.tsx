@@ -16,16 +16,7 @@
  * the cost-panel orchestrator doesn't drag the lucide imports.
  */
 
-import {
-  Server,
-  Database,
-  MessageSquare,
-  Globe,
-  Shield,
-  Activity,
-  BrainCircuit,
-  Package,
-} from 'lucide-react';
+import { Server, Database, MessageSquare, Globe, Shield, Activity, BrainCircuit, Package } from 'lucide-react';
 import React from 'react';
 
 export const CATEGORY_ICONS: Record<string, React.ReactNode> = {

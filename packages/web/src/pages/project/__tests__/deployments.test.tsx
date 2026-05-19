@@ -149,10 +149,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -235,8 +232,7 @@ describe('ProjectDeployments — tab switching', () => {
     const svcTab = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.deployments.tabService',
+        typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.deployments.tabService',
     )[0];
     (svcTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('service');
@@ -258,7 +254,18 @@ describe('ProjectDeployments — tab switching', () => {
   it('TabButton renders the count pill when count > 0', () => {
     mocks.stateSlots.push(
       'infra',
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       false,
     );
@@ -306,7 +313,16 @@ describe('ProjectDeployments — infra fetch', () => {
     mocks.activeCard = { id: 'card-1' };
     mocks.axiosGet.mockResolvedValueOnce({
       data: [
-        { id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 1000, error: null, created_at: '2024-01-01' },
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 1000,
+          error: null,
+          created_at: '2024-01-01',
+        },
       ],
     });
     render();
@@ -397,7 +413,8 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     const tree = render();
     const empty = findByPredicate(
       tree,
-      (el) => el.type === 'p' && (el.props as { children?: unknown }).children === 'project.deployments.infraEmptyTitle',
+      (el) =>
+        el.type === 'p' && (el.props as { children?: unknown }).children === 'project.deployments.infraEmptyTitle',
     );
     expect(empty).toHaveLength(1);
   });
@@ -415,7 +432,18 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     it(`renders the correct status icon for "${status}"`, () => {
       mocks.stateSlots.push(
         'infra',
-        [{ id: `d-${status}`, status, provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+        [
+          {
+            id: `d-${status}`,
+            status,
+            provider: 'aws',
+            region: 'us-east-1',
+            environment: 'p',
+            duration_ms: 0,
+            error: null,
+            created_at: '2024-01-01',
+          },
+        ],
         false,
         false,
       );
@@ -434,8 +462,26 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     mocks.stateSlots.push(
       'infra',
       [
-        { id: 'd2', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-02' },
-        { id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' },
+        {
+          id: 'd2',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-02',
+        },
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
       ],
       false,
       false,
@@ -443,9 +489,7 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     const tree = render();
     const rollbackBtns = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
     );
     // Only d1 is a rollback target (d2 is the latest)
     expect(rollbackBtns).toHaveLength(1);
@@ -455,8 +499,26 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     mocks.stateSlots.push(
       'infra',
       [
-        { id: 'd2', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-02' },
-        { id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' },
+        {
+          id: 'd2',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-02',
+        },
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
       ],
       false,
       false,
@@ -464,9 +526,7 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     const tree = render();
     const rollbackBtn = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
     )[0];
     // simulate click — must call e.stopPropagation()
     const stop = vi.fn();
@@ -482,7 +542,18 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
   it('renders the duration pill when duration_ms > 0', () => {
     mocks.stateSlots.push(
       'infra',
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 5000, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 5000,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       false,
     );
@@ -505,8 +576,26 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
     mocks.stateSlots.push(
       'infra',
       [
-        { id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' },
-        { id: 'd2', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: null, error: null, created_at: '2024-01-02' },
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
+        {
+          id: 'd2',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: null,
+          error: null,
+          created_at: '2024-01-02',
+        },
       ],
       false,
       false,
@@ -525,7 +614,18 @@ describe('ProjectDeployments — InfraDeploymentList', () => {
   it('renders the error message inline when present', () => {
     mocks.stateSlots.push(
       'infra',
-      [{ id: 'd1', status: 'failed', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: 'boom', created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'failed',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: 'boom',
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       false,
     );
@@ -546,7 +646,8 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     const tree = render();
     const empty = findByPredicate(
       tree,
-      (el) => el.type === 'p' && (el.props as { children?: unknown }).children === 'project.deployments.serviceEmptyTitle',
+      (el) =>
+        el.type === 'p' && (el.props as { children?: unknown }).children === 'project.deployments.serviceEmptyTitle',
     );
     expect(empty).toHaveLength(1);
   });
@@ -568,7 +669,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
       };
       mocks.pipelineHistory = {
         'c1:n1': [
-          { id: `ev-${status}`, status, started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', commit_author: 'me' },
+          {
+            id: `ev-${status}`,
+            status,
+            started_at: '2024-01-01',
+            branch: 'main',
+            commit_message: 'm',
+            commit_sha: 'abc1234',
+            commit_author: 'me',
+          },
         ],
       };
       mocks.stateSlots.push('service', [], false, false);
@@ -590,7 +699,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'success', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', duration_seconds: 30 },
+        {
+          id: 'ev1',
+          status: 'success',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          duration_seconds: 30,
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -612,7 +729,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'success', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', duration_seconds: 125 },
+        {
+          id: 'ev1',
+          status: 'success',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          duration_seconds: 125,
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -634,7 +759,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'success', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', duration_seconds: 0 },
+        {
+          id: 'ev1',
+          status: 'success',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          duration_seconds: 0,
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -656,7 +789,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'failed', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', error: 'oops' },
+        {
+          id: 'ev1',
+          status: 'failed',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          error: 'oops',
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -675,7 +816,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'success', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', rule: { environment: 'prod' } },
+        {
+          id: 'ev1',
+          status: 'success',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          rule: { environment: 'prod' },
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -694,7 +843,15 @@ describe('ProjectDeployments — ServiceDeploymentList', () => {
     };
     mocks.pipelineHistory = {
       'c1:n1': [
-        { id: 'ev1', status: 'success', started_at: '2024-01-01', branch: 'main', commit_message: 'm', commit_sha: 'abc1234', commit_author: 'me' },
+        {
+          id: 'ev1',
+          status: 'success',
+          started_at: '2024-01-01',
+          branch: 'main',
+          commit_message: 'm',
+          commit_sha: 'abc1234',
+          commit_author: 'me',
+        },
       ],
     };
     mocks.stateSlots.push('service', [], false, false);
@@ -714,7 +871,18 @@ describe('ProjectDeployments — onRollbackComplete', () => {
     mocks.activeCard = { id: 'card-1' };
     mocks.stateSlots.push(
       'infra',
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       false,
     );
@@ -722,9 +890,7 @@ describe('ProjectDeployments — onRollbackComplete', () => {
     // Find the InfraDeploymentList element (FC) and pull its onRollbackComplete prop
     const list = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        Array.isArray((el.props as { deployments?: unknown }).deployments),
+      (el) => typeof el.type === 'function' && Array.isArray((el.props as { deployments?: unknown }).deployments),
     )[0];
     mocks.axiosGet.mockResolvedValueOnce({ data: [] });
     const cb = (list.props as { onRollbackComplete?: () => Promise<void> }).onRollbackComplete!;
@@ -738,9 +904,7 @@ describe('ProjectDeployments — onRollbackComplete', () => {
     const tree = render();
     const list = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        Array.isArray((el.props as { deployments?: unknown }).deployments),
+      (el) => typeof el.type === 'function' && Array.isArray((el.props as { deployments?: unknown }).deployments),
     )[0];
     const cb = (list.props as { onRollbackComplete?: () => Promise<void> }).onRollbackComplete!;
     await cb();
@@ -751,16 +915,25 @@ describe('ProjectDeployments — onRollbackComplete', () => {
     mocks.activeCard = { id: 'card-1' };
     mocks.stateSlots.push(
       'infra',
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'p',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       false,
     );
     const tree = render();
     const list = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        Array.isArray((el.props as { deployments?: unknown }).deployments),
+      (el) => typeof el.type === 'function' && Array.isArray((el.props as { deployments?: unknown }).deployments),
     )[0];
     mocks.axiosGet.mockRejectedValueOnce(new Error('500'));
     const cb = (list.props as { onRollbackComplete?: () => void }).onRollbackComplete!;
@@ -917,8 +1090,26 @@ describe('ProjectDeployments — ServiceDeploymentList expand', () => {
 // InfraDeploymentList slots after outer 4: [4]=rollingBack, [5]=confirmId.
 describe('ProjectDeployments — rollback flow', () => {
   const fixtureDeploys = [
-    { id: 'd2', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-02' },
-    { id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'p', duration_ms: 0, error: null, created_at: '2024-01-01' },
+    {
+      id: 'd2',
+      status: 'success',
+      provider: 'aws',
+      region: 'us-east-1',
+      environment: 'p',
+      duration_ms: 0,
+      error: null,
+      created_at: '2024-01-02',
+    },
+    {
+      id: 'd1',
+      status: 'success',
+      provider: 'aws',
+      region: 'us-east-1',
+      environment: 'p',
+      duration_ms: 0,
+      error: null,
+      created_at: '2024-01-01',
+    },
   ];
 
   it('clicking the rollback button sets confirmId via slot 5', () => {
@@ -928,9 +1119,7 @@ describe('ProjectDeployments — rollback flow', () => {
     const tree = render();
     const rollbackBtn = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'project.deployments.rollbackTooltip',
     )[0];
     const stop = vi.fn();
     (rollbackBtn.props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick({ stopPropagation: stop });
@@ -980,7 +1169,9 @@ describe('ProjectDeployments — rollback flow', () => {
       tree,
       (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'project.deployments.cancel',
     )[0];
-    (cancelBtn.props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick({ stopPropagation: vi.fn() });
+    (cancelBtn.props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick({
+      stopPropagation: vi.fn(),
+    });
     expect(mocks.stateSlots[5]).toBeNull();
     expect(mocks.axiosPost).not.toHaveBeenCalled();
   });

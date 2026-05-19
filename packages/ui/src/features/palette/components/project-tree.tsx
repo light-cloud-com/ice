@@ -10,6 +10,9 @@
 import { FolderPlus, Plus, FolderOpen, Check, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { FolderRow } from './folder-row';
+import { ProjectRow } from './project-row';
+import { TreeContextMenu } from './tree-context-menu';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import {
@@ -24,13 +27,10 @@ import {
   type ProjectFolder,
 } from '../../../store/slices/projects-slice';
 import { openDialog } from '../../../store/slices/ui-slice';
-import type { AppDispatch, RootState } from '../../../store';
 import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
-import { FolderRow } from './folder-row';
-import { ProjectRow } from './project-row';
-import { TreeContextMenu } from './tree-context-menu';
+import type { AppDispatch, RootState } from '../../../store';
 
 // =============================================================================
 // Context Menu

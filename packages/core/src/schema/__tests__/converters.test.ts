@@ -12,10 +12,7 @@
  *  - to_sqlite_query forwards every field; source cast is preserved.
  */
 import { describe, expect, it, vi } from 'vitest';
-import {
-  convert_property,
-  convert_resource_to_schema,
-} from '../embedded/converters';
+import { convert_property, convert_resource_to_schema } from '../embedded/converters';
 import { to_sqlite_query } from '../embedded/sqlite-types';
 import type {
   SqliteImplementation,
@@ -24,10 +21,7 @@ import type {
   SqliteSchemaRegistry,
 } from '../embedded/sqlite-types';
 
-function makeRegistry(
-  props: SqliteProperty[] = [],
-  impls: SqliteImplementation[] = [],
-): SqliteSchemaRegistry {
+function makeRegistry(props: SqliteProperty[] = [], impls: SqliteImplementation[] = []): SqliteSchemaRegistry {
   return {
     get_properties: vi.fn(() => props),
     get_implementations: vi.fn(() => impls),
@@ -145,10 +139,7 @@ describe('convert_property', () => {
     const out = convert_property(
       baseProp({
         type: 'object',
-        nested_properties: [
-          baseProp({ name: 'child_a' }),
-          baseProp({ name: 'child_b' }),
-        ],
+        nested_properties: [baseProp({ name: 'child_a' }), baseProp({ name: 'child_b' })],
       }),
     );
     expect(out.nested_properties).toHaveLength(2);

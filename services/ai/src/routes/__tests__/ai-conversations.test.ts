@@ -7,9 +7,9 @@
  * each test can dial in.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Prisma mock ───────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ async function request(
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const raw = await res.text();
-  let parsed: any = null;
+  let parsed: any;
   try {
     parsed = raw ? JSON.parse(raw) : null;
   } catch {

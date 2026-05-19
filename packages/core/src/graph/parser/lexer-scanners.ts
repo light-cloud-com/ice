@@ -54,7 +54,6 @@
  *           comment never terminate (the lexer reports unterminated
  *           block comment).
  */
-import { get_keyword_type } from './tokens';
 import {
   type LexerState,
   ls_advance,
@@ -65,6 +64,7 @@ import {
   ls_peek,
   ls_peek_next,
 } from './lexer-state';
+import { get_keyword_type } from './tokens';
 
 // =============================================================================
 // Char Predicates (module-private)
@@ -77,11 +77,7 @@ function is_digit(char: string): boolean {
 
 /** ASCII letter or underscore. */
 function is_alpha(char: string): boolean {
-  return (
-    (char >= 'a' && char <= 'z') ||
-    (char >= 'A' && char <= 'Z') ||
-    char === '_'
-  );
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char === '_';
 }
 
 /** ASCII letter, digit, or underscore. */
@@ -153,12 +149,7 @@ export function scan_number(
  * literal-bearing tokens) and the exact TYPE_IDENTIFIER detection
  * regex (`includes('.') || /^[A-Z]/`).
  */
-export function scan_identifier(
-  s: LexerState,
-  start_pos: number,
-  start_line: number,
-  start_column: number,
-): void {
+export function scan_identifier(s: LexerState, start_pos: number, start_line: number, start_column: number): void {
   while (is_alphanumeric(ls_peek(s))) {
     ls_advance(s);
   }
@@ -179,14 +170,7 @@ export function scan_identifier(
   } else {
     // Check if it looks like a type identifier (contains a dot or starts with uppercase)
     const is_type = value.includes('.') || /^[A-Z]/.test(value);
-    ls_add_token(
-      s,
-      is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER',
-      value,
-      start_pos,
-      start_line,
-      start_column,
-    );
+    ls_add_token(s, is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER', value, start_pos, start_line, start_column);
   }
 }
 
@@ -196,12 +180,7 @@ export function scan_identifier(
  * `options.include_comments` is true; otherwise the chars are simply
  * consumed and discarded.
  */
-export function scan_line_comment(
-  s: LexerState,
-  start_pos: number,
-  start_line: number,
-  start_column: number,
-): void {
+export function scan_line_comment(s: LexerState, start_pos: number, start_line: number, start_column: number): void {
   while (!ls_is_at_end(s) && ls_peek(s) !== '\n') {
     ls_advance(s);
   }
@@ -219,12 +198,7 @@ export function scan_line_comment(
  * trailing `ls_advance` (column → 1) sequence on newlines is
  * preserved verbatim.
  */
-export function scan_block_comment(
-  s: LexerState,
-  start_pos: number,
-  start_line: number,
-  start_column: number,
-): void {
+export function scan_block_comment(s: LexerState, start_pos: number, start_line: number, start_column: number): void {
   let depth = 1;
 
   while (!ls_is_at_end(s) && depth > 0) {
@@ -274,12 +248,7 @@ export function scan_block_comment(
  * during the rf-lex-4 orchestrator slim-down so the class holds
  * only the routing dispatch + lifecycle.
  */
-export function scan_string(
-  s: LexerState,
-  start_pos: number,
-  start_line: number,
-  start_column: number,
-): void {
+export function scan_string(s: LexerState, start_pos: number, start_line: number, start_column: number): void {
   const parts: string[] = [];
 
   while (!ls_is_at_end(s) && ls_peek(s) !== '"') {

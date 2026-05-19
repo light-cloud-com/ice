@@ -39,8 +39,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
 const makeViewState = (overrides: Partial<ViewState> = {}): ViewState =>
   ({ panX: 0, panY: 0, scale: 1, ...overrides }) as ViewState;

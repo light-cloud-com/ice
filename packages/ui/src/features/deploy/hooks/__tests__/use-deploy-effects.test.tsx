@@ -25,10 +25,10 @@
  * cleanup-branch tests can invoke them manually.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React, { useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Microtask flush — equivalent to setImmediate but works in Node + browser.
@@ -288,9 +288,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
       deploy: { region: 'mars-1' },
       store,
     });
-    const setRegionCall = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setRegion',
-    );
+    const setRegionCall = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setRegion');
     expect(setRegionCall).toBeDefined();
     const action = setRegionCall![0] as unknown as { payload: string };
     // First gcp region is us-central1.
@@ -305,9 +303,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
       deploy: { region: 'europe-west1' }, // valid for gcp
       store,
     });
-    const setRegionCall = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setRegion',
-    );
+    const setRegionCall = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setRegion');
     expect(setRegionCall).toBeUndefined();
   });
 
@@ -323,9 +319,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     };
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     captureHook({ activeCard: card, store });
-    const setRegionCall = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setRegion',
-    );
+    const setRegionCall = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setRegion');
     expect(setRegionCall).toBeUndefined();
   });
 
@@ -341,9 +335,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
 
     expect(mockDeployApi.getResources).toHaveBeenCalledWith('card-1');
-    const setDR = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources',
-    );
+    const setDR = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources');
     expect(setDR).toBeDefined();
     const action = setDR![0] as unknown as { payload: unknown[] };
     expect(action.payload).toEqual([{ id: 'r1', type: 't', name: 'a' }]);
@@ -357,9 +349,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setDR = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources',
-    );
+    const setDR = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources');
     expect(setDR).toBeUndefined();
   });
 
@@ -373,9 +363,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setDR = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources',
-    );
+    const setDR = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources');
     expect(setDR).toBeUndefined();
   });
 
@@ -389,9 +377,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setDR = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources',
-    );
+    const setDR = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setDeployedResources');
     expect(setDR).toBeUndefined();
   });
 
@@ -412,9 +398,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
 
     expect(mockProviderApi.isConnected).toHaveBeenCalledWith('gcp');
     expect(mockProviderApi.getProjects).toHaveBeenCalledWith('gcp');
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeDefined();
     const action = setGcp![0] as unknown as { payload: string };
     expect(action.payload).toBe('proj-A');
@@ -450,9 +434,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
 
     expect(mockProviderApi.getProjects).not.toHaveBeenCalled();
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeUndefined();
   });
 
@@ -471,9 +453,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeUndefined();
   });
 
@@ -493,9 +473,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeUndefined();
   });
 
@@ -516,9 +494,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeUndefined();
   });
 
@@ -537,9 +513,7 @@ describe('effect 2: provider auto-detect + getResources + auto-fill gcpProject',
     await flushMicrotasks();
     await flushMicrotasks();
 
-    const setGcp = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'deploy/setGcpProject',
-    );
+    const setGcp = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'deploy/setGcpProject');
     expect(setGcp).toBeUndefined();
   });
 });
@@ -748,9 +722,7 @@ describe('effect 4: hydrate from history', () => {
 
   it('skips non-terminal apply rows (e.g. "running" status)', async () => {
     const store = makeStore();
-    mockDeployApi.getDeployments.mockResolvedValueOnce([
-      { id: 'd-1', action_type: 'apply', status: 'running' },
-    ]);
+    mockDeployApi.getDeployments.mockResolvedValueOnce([{ id: 'd-1', action_type: 'apply', status: 'running' }]);
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     captureHook({ activeCard: ACTIVE_CARD, store });
     await flushMicrotasks();
@@ -868,9 +840,7 @@ describe('effect 4: hydrate from history', () => {
     expect(typeof cleanup).toBe('function');
     cleanup();
     // Now resolve the deferred fetch with a hydrate-worthy payload.
-    resolve!([
-      { id: 'd-1', action_type: 'apply', status: 'success', results: { resources: [] } },
-    ]);
+    resolve!([{ id: 'd-1', action_type: 'apply', status: 'success', results: { resources: [] } }]);
     await flushMicrotasks();
     await flushMicrotasks();
 
@@ -895,9 +865,7 @@ describe('effect 4: hydrate from history', () => {
     // logs — assert it landed.
     expect(warnSpy).toHaveBeenCalled();
     const calls = warnSpy.mock.calls;
-    const hydrateWarn = calls.find(
-      (c) => typeof c[0] === 'string' && c[0].includes('[deploy-panel] hydrate failed'),
-    );
+    const hydrateWarn = calls.find((c) => typeof c[0] === 'string' && c[0].includes('[deploy-panel] hydrate failed'));
     expect(hydrateWarn).toBeDefined();
 
     const hydrateCall = dispatchSpy.mock.calls.find(
@@ -924,17 +892,14 @@ describe('effect 4: hydrate from history', () => {
 
   it('emits the [deploy-panel] hydrate: no terminal apply diagnostic when the find returns undefined', async () => {
     const store = makeStore();
-    mockDeployApi.getDeployments.mockResolvedValueOnce([
-      { id: 'd-1', action_type: 'plan', status: 'success' },
-    ]);
+    mockDeployApi.getDeployments.mockResolvedValueOnce([{ id: 'd-1', action_type: 'plan', status: 'success' }]);
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     captureHook({ activeCard: ACTIVE_CARD, store });
     await flushMicrotasks();
     await flushMicrotasks();
 
     const noTerminalLog = logSpy.mock.calls.find(
-      (c) =>
-        typeof c[0] === 'string' && c[0].includes('[deploy-panel] hydrate: no terminal apply in history'),
+      (c) => typeof c[0] === 'string' && c[0].includes('[deploy-panel] hydrate: no terminal apply in history'),
     );
     expect(noTerminalLog).toBeDefined();
     logSpy.mockRestore();

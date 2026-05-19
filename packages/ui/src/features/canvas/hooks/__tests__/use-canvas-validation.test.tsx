@@ -129,9 +129,7 @@ describe('useCanvasValidation — no active card', () => {
 describe('useCanvasValidation — active card', () => {
   beforeEach(() => {
     mocks.selectActiveCard.mockReturnValue({
-      nodes: [
-        { id: 'n1', type: 'block', data: { iceType: 'Compute' }, parentId: undefined },
-      ],
+      nodes: [{ id: 'n1', type: 'block', data: { iceType: 'Compute' }, parentId: undefined }],
       edges: [{ id: 'e1', source: 'n1', target: 'n2', data: { relationship: 'connects_to' } }],
     });
   });
@@ -165,12 +163,8 @@ describe('useCanvasValidation — active card', () => {
     vi.advanceTimersByTime(500);
     expect(mocks.validateCanvas).toHaveBeenCalled();
     const [validatableNodes, validatableEdges, opts] = mocks.validateCanvas.mock.calls[0];
-    expect(validatableNodes).toEqual([
-      { id: 'n1', type: 'block', data: { iceType: 'Compute' }, parentId: undefined },
-    ]);
-    expect(validatableEdges).toEqual([
-      { id: 'e1', source: 'n1', target: 'n2', data: { relationship: 'connects_to' } },
-    ]);
+    expect(validatableNodes).toEqual([{ id: 'n1', type: 'block', data: { iceType: 'Compute' }, parentId: undefined }]);
+    expect(validatableEdges).toEqual([{ id: 'e1', source: 'n1', target: 'n2', data: { relationship: 'connects_to' } }]);
     expect(opts).toMatchObject({ mode: 'design' });
   });
 

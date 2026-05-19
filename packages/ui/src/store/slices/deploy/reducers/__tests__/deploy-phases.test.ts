@@ -47,10 +47,18 @@ describe('startDeploying', () => {
     const next = produce(
       makeState({
         status: 'planned',
-        results: [
-          { name: 'svc', type: 't', action: 'create', success: true },
-        ],
-        nodesById: { a: { node_id: 'a', status: 'queued', resource_name: 'a', resource_type: 't', action: 'create', last_at: '', last_seq: 0 } },
+        results: [{ name: 'svc', type: 't', action: 'create', success: true }],
+        nodesById: {
+          a: {
+            node_id: 'a',
+            status: 'queued',
+            resource_name: 'a',
+            resource_type: 't',
+            action: 'create',
+            last_at: '',
+            last_seq: 0,
+          },
+        },
         error: 'stale',
         logs: ['log'],
       }),
@@ -69,34 +77,28 @@ describe('startDeploying', () => {
     expect(next.logs).toHaveLength(2);
   });
 
-  it("preserves currentDeployCardId when no cardId in payload", () => {
-    const next = produce(
-      makeState({ status: 'idle', currentDeployCardId: 'existing' }),
-      (draft) => {
-        deployPhasesReducers.startDeploying(draft, {
-          type: 'deploy/startDeploying',
-          payload: undefined,
-        } as PayloadAction<undefined>);
-      },
-    );
+  it('preserves currentDeployCardId when no cardId in payload', () => {
+    const next = produce(makeState({ status: 'idle', currentDeployCardId: 'existing' }), (draft) => {
+      deployPhasesReducers.startDeploying(draft, {
+        type: 'deploy/startDeploying',
+        payload: undefined,
+      } as PayloadAction<undefined>);
+    });
     expect(next.currentDeployCardId).toBe('existing');
   });
 
-  it.each(['deploying', 'planning', 'destroying'] as DeployStatus[])(
-    "is a no-op when status is '%s'",
-    (status) => {
-      const before = makeState({ status, results: [{ name: 'kept', type: 't', action: 'create', success: true }] });
-      const next = produce(before, (draft) => {
-        deployPhasesReducers.startDeploying(draft, {
-          type: 'deploy/startDeploying',
-          payload: { cardId: 'c1' },
-        } as PayloadAction<{ cardId?: string }>);
-      });
-      // Status unchanged; results not wiped — proves the early return fired.
-      expect(next.status).toBe(status);
-      expect(next.results).toHaveLength(1);
-    },
-  );
+  it.each(['deploying', 'planning', 'destroying'] as DeployStatus[])("is a no-op when status is '%s'", (status) => {
+    const before = makeState({ status, results: [{ name: 'kept', type: 't', action: 'create', success: true }] });
+    const next = produce(before, (draft) => {
+      deployPhasesReducers.startDeploying(draft, {
+        type: 'deploy/startDeploying',
+        payload: { cardId: 'c1' },
+      } as PayloadAction<{ cardId?: string }>);
+    });
+    // Status unchanged; results not wiped — proves the early return fired.
+    expect(next.status).toBe(status);
+    expect(next.results).toHaveLength(1);
+  });
 
   it("transitions from 'idle' (not in the guard set) — happy path", () => {
     const next = produce(makeState({ status: 'idle' }), (draft) => {
@@ -125,7 +127,17 @@ describe('startDestroying', () => {
       makeState({
         status: 'success',
         results: [{ name: 'kept-by-stale-state', type: 't', action: 'create', success: true }],
-        nodesById: { a: { node_id: 'a', status: 'succeeded', resource_name: 'a', resource_type: 't', action: 'create', last_at: '', last_seq: 0 } },
+        nodesById: {
+          a: {
+            node_id: 'a',
+            status: 'succeeded',
+            resource_name: 'a',
+            resource_type: 't',
+            action: 'create',
+            last_at: '',
+            last_seq: 0,
+          },
+        },
         error: 'stale',
       }),
       (draft) => {

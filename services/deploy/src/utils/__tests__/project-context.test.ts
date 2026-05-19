@@ -8,8 +8,8 @@
  * typecheck pass stays green.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import prisma from '@ice/db';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { resolveProjectContext } from '../project-context';
 
 vi.mock('@ice/db', () => ({

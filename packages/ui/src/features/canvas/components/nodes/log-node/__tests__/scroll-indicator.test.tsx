@@ -22,19 +22,22 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
 }
 
-const renderSI = (props: { trackHeight: number; scrollProgress: number; isAutoScroll: boolean }): React.ReactElement => {
-  const Inner = (ScrollIndicator as unknown as {
-    type: (p: typeof props) => React.ReactElement;
-  }).type;
+const renderSI = (props: {
+  trackHeight: number;
+  scrollProgress: number;
+  isAutoScroll: boolean;
+}): React.ReactElement => {
+  const Inner = (
+    ScrollIndicator as unknown as {
+      type: (p: typeof props) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

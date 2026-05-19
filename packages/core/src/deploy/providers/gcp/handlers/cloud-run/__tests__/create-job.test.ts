@@ -7,8 +7,8 @@ vi.mock('../image-resolver', () => ({
   resolve_image: vi.fn().mockResolvedValue('gcr.io/p/job:built'),
 }));
 
-import { resolve_image } from '../image-resolver';
 import { create_job } from '../create-job';
+import { resolve_image } from '../image-resolver';
 import type { GCPHandlerContext } from '../../../types';
 
 function clientWithCreate(operation: any) {

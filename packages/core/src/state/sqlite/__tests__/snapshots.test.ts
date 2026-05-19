@@ -22,16 +22,10 @@
  *  - row_to_snapshot maps null description → undefined
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create_memory_state_store } from '../../sqlite-state-store';
-import {
-  snapshots_create,
-  snapshots_get,
-  snapshots_list,
-  snapshots_restore,
-  snapshots_delete,
-} from '../snapshots';
-import { resources_get, resources_get_all, resources_save } from '../resources';
 import { create_node_id } from '../../../types/graph';
+import { create_memory_state_store } from '../../sqlite-state-store';
+import { resources_get, resources_get_all, resources_save } from '../resources';
+import { snapshots_create, snapshots_get, snapshots_list, snapshots_restore, snapshots_delete } from '../snapshots';
 import type { StoredResourceState, StateChangeEvent } from '../../state-store';
 import type { SqliteContext } from '../types';
 

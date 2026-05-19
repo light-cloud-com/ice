@@ -64,10 +64,7 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   for (const el of walk(tree)) if (el && el.type === type) out.push(el);
   return out;
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -103,9 +100,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderCD = (
-  props: Partial<React.ComponentProps<typeof SvgCustomDomainNode>> = {},
-): React.ReactElement => {
+const renderCD = (props: Partial<React.ComponentProps<typeof SvgCustomDomainNode>> = {}): React.ReactElement => {
   const Inner = SvgCustomDomainNode as React.FC<React.ComponentProps<typeof SvgCustomDomainNode>>;
   const defaults: React.ComponentProps<typeof SvgCustomDomainNode> = {
     node: makeNode(),
@@ -146,7 +141,9 @@ describe('Layout helpers', () => {
   });
 
   it('getCustomDomainRoutePortY for row 0 = headerH + domainH + padding + rowH/2', () => {
-    expect(getCustomDomainRoutePortY(0)).toBe(CD_HEADER_HEIGHT + CD_DOMAIN_FIELD_HEIGHT + CD_PADDING + CD_ROUTE_ROW_HEIGHT / 2);
+    expect(getCustomDomainRoutePortY(0)).toBe(
+      CD_HEADER_HEIGHT + CD_DOMAIN_FIELD_HEIGHT + CD_PADDING + CD_ROUTE_ROW_HEIGHT / 2,
+    );
   });
 
   it('getCustomDomainRoutePortY for row N adds N*(rowH+gap)', () => {
@@ -253,7 +250,13 @@ describe('SvgCustomDomainNode — route rows', () => {
   it('renders one row per route (input + host preview + delete-button when >1)', () => {
     const tree = renderCD({
       node: makeNode({
-        data: { domain: 'example.com', routes: [{ id: 'r1', subdomain: 'app' }, { id: 'r2', subdomain: 'api' }] },
+        data: {
+          domain: 'example.com',
+          routes: [
+            { id: 'r1', subdomain: 'app' },
+            { id: 'r2', subdomain: 'api' },
+          ],
+        },
       }),
     });
     const subInputs = findByPredicate(tree, (el) => {
@@ -436,7 +439,12 @@ describe('SvgCustomDomainNode — delete row button', () => {
     const onUpdateData = vi.fn();
     const tree = renderCD({
       node: makeNode({
-        data: { routes: [{ id: 'r1', subdomain: 'app' }, { id: 'r2', subdomain: 'api' }] },
+        data: {
+          routes: [
+            { id: 'r1', subdomain: 'app' },
+            { id: 'r2', subdomain: 'api' },
+          ],
+        },
       }),
       onUpdateData,
     });
@@ -452,7 +460,12 @@ describe('SvgCustomDomainNode — delete row button', () => {
   it('delete button onMouseDown stops propagation', () => {
     const tree = renderCD({
       node: makeNode({
-        data: { routes: [{ id: 'r1', subdomain: 'a' }, { id: 'r2', subdomain: 'b' }] },
+        data: {
+          routes: [
+            { id: 'r1', subdomain: 'a' },
+            { id: 'r2', subdomain: 'b' },
+          ],
+        },
       }),
     });
     const stops: string[] = [];
@@ -518,7 +531,14 @@ describe('SvgCustomDomainNode — connection ports', () => {
   it('renders left + per-row ports when isSelected', () => {
     const tree = renderCD({
       isSelected: true,
-      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'a' }, { id: 'r2', subdomain: 'b' }] } }),
+      node: makeNode({
+        data: {
+          routes: [
+            { id: 'r1', subdomain: 'a' },
+            { id: 'r2', subdomain: 'b' },
+          ],
+        },
+      }),
     });
     // Left port + 2 row ports = 3 circles.
     expect(findByType(tree, 'circle')).toHaveLength(3);

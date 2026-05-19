@@ -70,9 +70,7 @@ describe('deploySuccess', () => {
   });
 
   it('replaces results with the API payload when provided', () => {
-    const stale: DeployResourceResult[] = [
-      { name: 'stale', type: 't', action: 'create', success: false },
-    ];
+    const stale: DeployResourceResult[] = [{ name: 'stale', type: 't', action: 'create', success: false }];
     const fresh: DeployResourceResult[] = [
       { name: 'fresh', type: 't', action: 'create', success: true, outputs: { url: 'https://x' } },
     ];
@@ -86,9 +84,7 @@ describe('deploySuccess', () => {
   });
 
   it('preserves results when payload.results is empty/undefined', () => {
-    const stale: DeployResourceResult[] = [
-      { name: 'kept', type: 't', action: 'create', success: true },
-    ];
+    const stale: DeployResourceResult[] = [{ name: 'kept', type: 't', action: 'create', success: true }];
     const next = produce(makeState({ results: stale }), (draft) => {
       outcomeReducers.deploySuccess(draft, {
         type: 'deploy/deploySuccess',
@@ -185,7 +181,15 @@ describe('resetDeploy', () => {
       logs: ['log'],
       results: [{ name: 'a', type: 't', action: 'create', success: true }],
       nodesById: {
-        n1: { node_id: 'n1', status: 'succeeded', resource_name: 'a', resource_type: 't', action: 'create', last_at: '', last_seq: 1 },
+        n1: {
+          node_id: 'n1',
+          status: 'succeeded',
+          resource_name: 'a',
+          resource_type: 't',
+          action: 'create',
+          last_at: '',
+          last_seq: 1,
+        },
       },
     });
     const next = produce(before, (draft) => {
@@ -224,9 +228,7 @@ describe('resetDeploy', () => {
       dismissedWarnings: ['kept'],
       criticalAcknowledged: true,
       driftByNode: { n1: { nodeId: 'n1', status: 'in_sync', changes: [] } },
-      deployedResources: [
-        { node_id: 'n1', name: 'a', type: 't', provider_id: 'p', status: 's', deployed_at: '' },
-      ],
+      deployedResources: [{ node_id: 'n1', name: 'a', type: 't', provider_id: 'p', status: 's', deployed_at: '' }],
     });
     const next = produce(before, (draft) => {
       outcomeReducers.resetDeploy(draft);

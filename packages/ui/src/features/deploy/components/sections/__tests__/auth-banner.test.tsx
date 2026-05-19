@@ -24,11 +24,7 @@ import { describe, it, expect, vi } from 'vitest';
 // preserves the `className` prop so we can assert on `animate-spin` etc.
 const mocks = vi.hoisted(() => ({
   Loader2: vi.fn((props: { className?: string }) =>
-    React.createElement(
-      'span',
-      { 'data-icon': 'Loader2', className: props.className },
-      'Loader2',
-    ),
+    React.createElement('span', { 'data-icon': 'Loader2', className: props.className }, 'Loader2'),
   ),
 }));
 
@@ -54,12 +50,7 @@ import { AuthBanner } from '../auth-banner';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -79,10 +70,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -121,8 +109,7 @@ function collectText(tree: React.ReactNode): string {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const renderBanner = (): React.ReactElement =>
-  (AuthBanner as unknown as () => React.ReactElement)();
+const renderBanner = (): React.ReactElement => (AuthBanner as unknown as () => React.ReactElement)();
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
@@ -231,8 +218,6 @@ describe('AuthBanner — translation keys (text-only sweep)', () => {
     // Keep only strings that look like translation keys (`deploy.auth.*`).
     // The Loader2 stub renders `'Loader2'` as a span child, so we filter.
     const authKeys = leafTexts.filter((s) => s.startsWith('deploy.auth.'));
-    expect(new Set(authKeys)).toEqual(
-      new Set(['deploy.auth.connecting', 'deploy.auth.browserPrompt']),
-    );
+    expect(new Set(authKeys)).toEqual(new Set(['deploy.auth.connecting', 'deploy.auth.browserPrompt']));
   });
 });

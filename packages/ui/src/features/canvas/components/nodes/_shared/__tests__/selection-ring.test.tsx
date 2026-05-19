@@ -8,9 +8,11 @@ import { describe, it, expect } from 'vitest';
 import { SelectionRing } from '../selection-ring';
 
 const renderInner = (props: React.ComponentProps<typeof SelectionRing>): React.ReactElement => {
-  const Inner = (SelectionRing as unknown as {
-    type: (p: React.ComponentProps<typeof SelectionRing>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    SelectionRing as unknown as {
+      type: (p: React.ComponentProps<typeof SelectionRing>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

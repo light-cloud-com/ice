@@ -11,9 +11,9 @@
  *     module's namespace (no broken star-export).
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // Sentinel routers so we can prove BOTH leaf routers are mounted.
@@ -53,7 +53,7 @@ afterEach(async () => {
 
 describe('createAiRouter', () => {
   it('returns an Express router that mounts the AI router at /ai', async () => {
-    const { createAiRouter } = await import('../index');
+    const { createAiRouter } = await import('..');
     const router = createAiRouter();
 
     const app = express();
@@ -71,7 +71,7 @@ describe('createAiRouter', () => {
   });
 
   it('also mounts the AI conversations router at /ai (both leaf routers register)', async () => {
-    const { createAiRouter } = await import('../index');
+    const { createAiRouter } = await import('..');
     const router = createAiRouter();
 
     const app = express();
@@ -89,7 +89,7 @@ describe('createAiRouter', () => {
   });
 
   it('returns a fresh router each call (no shared listener state)', async () => {
-    const { createAiRouter } = await import('../index');
+    const { createAiRouter } = await import('..');
     const a = createAiRouter();
     const b = createAiRouter();
     expect(a).not.toBe(b);
@@ -98,7 +98,7 @@ describe('createAiRouter', () => {
 
 describe('re-exports from ai.service', () => {
   it('forwards the ai.service namespace via `export * from`', async () => {
-    const mod = (await import('../index')) as Record<string, unknown>;
+    const mod = (await import('..')) as Record<string, unknown>;
     // The mocked sentinel proves the star export went through.
     expect(mod.__sentinel).toBe('ai-service-export-marker');
     expect(typeof mod.getAiProvider).toBe('function');

@@ -12,13 +12,15 @@ vi.mock('../../../../../../assets/icons/category-icons', () => ({
   )),
 }));
 
-import { CategoryIcon } from '../category-icon';
 import { renderCategoryIcon } from '../../../../../../assets/icons/category-icons';
+import { CategoryIcon } from '../category-icon';
 
 const renderInner = (props: React.ComponentProps<typeof CategoryIcon>): React.ReactElement => {
-  const Inner = (CategoryIcon as unknown as {
-    type: (p: React.ComponentProps<typeof CategoryIcon>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    CategoryIcon as unknown as {
+      type: (p: React.ComponentProps<typeof CategoryIcon>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

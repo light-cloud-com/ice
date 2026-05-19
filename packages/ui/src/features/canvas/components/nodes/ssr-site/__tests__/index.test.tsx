@@ -21,13 +21,7 @@ vi.mock('lucide-react', () => ({
   LayoutTemplate: ((_p: Record<string, unknown>) => null) as React.FC,
 }));
 
-import {
-  SvgSsrSiteNode,
-  computeSsrSiteHeight,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_PADDING,
-} from '..';
+import { SvgSsrSiteNode, computeSsrSiteHeight, COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING } from '..';
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import type { CanvasNode } from '../../../svg-canvas';
 
@@ -56,9 +50,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgSsrSiteNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgSsrSiteNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgSsrSiteNode> = {
     node: makeNode(),
     isSelected: false,
@@ -68,7 +60,8 @@ const renderInner = (
 
 describe('computeSsrSiteHeight', () => {
   it('sums header + padding*2 + body + footer', () => {
-    const expected = COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
+    const expected =
+      COMPUTE_HEADER_HEIGHT + COMPUTE_PADDING + COMPUTE_BODY_HEIGHT + COMPUTE_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeSsrSiteHeight()).toBe(expected);
   });
 });

@@ -12,8 +12,8 @@ import React from 'react';
 import { providerLabel, STATUS_COLORS, type RowStatus } from '../inline-table-view-helpers';
 import { FilterChip } from './filter-chip';
 import { ALL_STATUSES, type Density, type GroupBy } from './types';
-import { SearchInput } from '../ui/search-input';
 import { useTranslation } from '../../../i18n';
+import { SearchInput } from '../ui/search-input';
 
 export interface ToolbarProps {
   search: string;
@@ -51,7 +51,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border bg-ice-raised shrink-0">
-      <SearchInput value={search} onChange={onSearchChange} placeholder={t('table.search.placeholder')} className="w-64" />
+      <SearchInput
+        value={search}
+        onChange={onSearchChange}
+        placeholder={t('table.search.placeholder')}
+        className="w-64"
+      />
 
       <div className="flex items-center gap-1 ml-1">
         <FilterIcon className="w-3 h-3 text-ice-text-3" />

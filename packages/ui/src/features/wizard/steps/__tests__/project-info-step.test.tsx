@@ -49,10 +49,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
@@ -66,9 +63,7 @@ function findAll(tree: unknown, predicate: (el: ReactElementLike) => boolean): R
   return out;
 }
 
-const callRender = (
-  props: React.ComponentProps<typeof ProjectInfoStep>,
-): unknown =>
+const callRender = (props: React.ComponentProps<typeof ProjectInfoStep>): unknown =>
   (ProjectInfoStep as (p: React.ComponentProps<typeof ProjectInfoStep>) => unknown)(props);
 
 const baseProps = (): React.ComponentProps<typeof ProjectInfoStep> => ({
@@ -158,10 +153,12 @@ describe('ProjectInfoStep — selected provider styling', () => {
     const tree = callRender({ ...baseProps(), provider: 'gcp' as const });
     const buttons = findAll(tree, (el) => el.type === 'button');
     // gcp is index 1
-    const shortNameSpan = findByPredicate(buttons[1], (el) =>
-      el.type === 'span' &&
-      typeof (el.props as { className?: string }).className === 'string' &&
-      ((el.props as { className: string }).className.includes('font-bold') ?? false),
+    const shortNameSpan = findByPredicate(
+      buttons[1],
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className.includes('font-bold') ?? false),
     );
     expect((shortNameSpan?.props.style as { color: string }).color).toBe('#4285f4');
   });
@@ -170,10 +167,12 @@ describe('ProjectInfoStep — selected provider styling', () => {
     const tree = callRender({ ...baseProps(), provider: 'aws' as const });
     const buttons = findAll(tree, (el) => el.type === 'button');
     // gcp is NOT selected
-    const shortNameSpan = findByPredicate(buttons[1], (el) =>
-      el.type === 'span' &&
-      typeof (el.props as { className?: string }).className === 'string' &&
-      ((el.props as { className: string }).className.includes('font-bold') ?? false),
+    const shortNameSpan = findByPredicate(
+      buttons[1],
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className.includes('font-bold') ?? false),
     );
     expect((shortNameSpan?.props.style as { color: string }).color).toBe('#8b949e');
   });
@@ -182,7 +181,7 @@ describe('ProjectInfoStep — selected provider styling', () => {
     const tree = callRender({ ...baseProps(), provider: 'aws' as const });
     const buttons = findAll(tree, (el) => el.type === 'button');
     // aws is index 0
-    expect((buttons[0].props.className as string)).toContain('ring-ice-accent');
-    expect((buttons[1].props.className as string)).not.toContain('ring-ice-accent');
+    expect(buttons[0].props.className as string).toContain('ring-ice-accent');
+    expect(buttons[1].props.className as string).not.toContain('ring-ice-accent');
   });
 });

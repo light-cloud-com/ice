@@ -8,14 +8,10 @@
  * scalable-backend.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell, ScaleGauge } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -51,8 +47,8 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const metric = (data?.scalingMetric as string) || '';
   const runtime = (data?.runtime as string) || '';
   const size = (data?.size as string) || '';
-  const parts = [metric ? `${metric} scaling` : '', size, runtime].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  const parts = [metric ? `${metric} ${t('canvas.blocks.worker.scalingSuffix')}` : '', size, runtime].filter(Boolean);
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 export const SvgWorkerNode: React.FC<SvgCompactNodeProps> = ({
@@ -67,7 +63,8 @@ export const SvgWorkerNode: React.FC<SvgCompactNodeProps> = ({
   const min = node.data?.minInstances != null ? Number(node.data.minInstances) : 1;
   const max = node.data?.maxInstances != null ? Number(node.data.maxInstances) : 3;
   const replicas = node.data?.replicas != null ? Number(node.data.replicas) : null;
-  const caption = replicas != null ? `${replicas} replicas` : 'auto-scaled';
+  const caption =
+    replicas != null ? t('canvas.blocks.worker.replicas', { n: replicas }) : t('canvas.blocks.worker.autoScaled');
   const liveConfig = buildLiveConfig(node.data);
 
   return (
@@ -81,7 +78,7 @@ export const SvgWorkerNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Cog}
       accentColor={WORKER_ACCENT}
-      title={node.label || 'Worker'}
+      title={node.label || t('canvas.blocks.titles.worker')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >

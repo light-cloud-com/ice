@@ -7,7 +7,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import { resolveLogFilter, type SourceContext } from '../filter-resolver';
 
 const PROJECT_ID = 'my-project';
@@ -29,7 +28,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Compute.Container',
         resource: { name: 'api-server', type: 'gcp.run.service' },
         region: 'us-central1',
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -44,7 +43,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Compute.SsrSite',
         resource: { name: 'web-frontend', type: 'gcp.run.service' },
         region: 'europe-west1',
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -59,7 +58,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Compute.ServerlessFunction',
         resource: { name: 'process-webhook', type: 'gcp.cloudfunctions.function' },
         region: 'us-central1',
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -75,7 +74,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Compute.Worker',
         resource: { name: 'nightly-batch', type: 'gcp.run.job' },
         region: 'us-central1',
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -90,12 +89,11 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Database.PostgreSQL',
         resource: { name: 'app-db', type: 'gcp.sql.instance' },
         projectId: 'my-project',
-      })
+      }),
     );
 
     expect(result).toEqual({
-      filter:
-        'resource.type="cloudsql_database" AND resource.labels.database_id="my-project:app-db"',
+      filter: 'resource.type="cloudsql_database" AND resource.labels.database_id="my-project:app-db"',
     });
   });
 
@@ -105,12 +103,11 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Database.MySQL',
         resource: { name: 'orders-db', type: 'gcp.sql.instance' },
         projectId: 'shop-prod',
-      })
+      }),
     );
 
     expect(result).toEqual({
-      filter:
-        'resource.type="cloudsql_database" AND resource.labels.database_id="shop-prod:orders-db"',
+      filter: 'resource.type="cloudsql_database" AND resource.labels.database_id="shop-prod:orders-db"',
     });
   });
 
@@ -120,7 +117,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
         iceType: 'Database.Redis',
         resource: { name: 'session-cache', type: 'gcp.redis.instance' },
         region: 'us-central1',
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -134,7 +131,7 @@ describe('resolveLogFilter — supported iceTypes', () => {
       makeCtx({
         iceType: 'Database.MongoDB',
         resource: { name: 'mongo-1', type: 'gcp.compute.instance' },
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -152,7 +149,7 @@ describe('resolveLogFilter — unsupported / dropped sources', () => {
       makeCtx({
         iceType: 'Compute.StaticSite',
         resource: { name: 'marketing-site', type: 'gcp.firebase.hosting.site' },
-      })
+      }),
     );
 
     expect(result).toBeNull();
@@ -163,7 +160,7 @@ describe('resolveLogFilter — unsupported / dropped sources', () => {
       makeCtx({
         iceType: 'Compute.Made.Up',
         resource: { name: 'whatever', type: 'gcp.unspecified' },
-      })
+      }),
     );
 
     expect(result).toBeNull();
@@ -177,12 +174,11 @@ describe('resolveLogFilter — region is optional', () => {
         iceType: 'Compute.Container',
         resource: { name: 'api-server', type: 'gcp.run.service' },
         region: undefined,
-      })
+      }),
     );
 
     expect(result).toEqual({
-      filter:
-        'resource.type="cloud_run_revision" AND resource.labels.service_name="api-server"',
+      filter: 'resource.type="cloud_run_revision" AND resource.labels.service_name="api-server"',
     });
     expect(result?.filter).not.toContain('resource.labels.location');
   });
@@ -193,7 +189,7 @@ describe('resolveLogFilter — region is optional', () => {
         iceType: 'Compute.Worker',
         resource: { name: 'nightly-batch', type: 'gcp.run.job' },
         region: undefined,
-      })
+      }),
     );
 
     expect(result).toEqual({
@@ -208,12 +204,11 @@ describe('resolveLogFilter — region is optional', () => {
         iceType: 'Database.Redis',
         resource: { name: 'session-cache', type: 'gcp.redis.instance' },
         region: undefined,
-      })
+      }),
     );
 
     expect(result).toEqual({
-      filter:
-        'resource.type="redis_instance" AND resource.labels.instance_id="session-cache"',
+      filter: 'resource.type="redis_instance" AND resource.labels.instance_id="session-cache"',
     });
     expect(result?.filter).not.toContain('resource.labels.region');
   });
@@ -225,7 +220,7 @@ describe('resolveLogFilter — caveats are surfaced verbatim', () => {
       makeCtx({
         iceType: 'Compute.ServerlessFunction',
         resource: { name: 'fn', type: 'gcp.cloudfunctions.function' },
-      })
+      }),
     );
 
     expect(result?.caveats).toEqual(['Cloud Functions v1 (legacy) is not supported.']);
@@ -236,7 +231,7 @@ describe('resolveLogFilter — caveats are surfaced verbatim', () => {
       makeCtx({
         iceType: 'Database.MongoDB',
         resource: { name: 'mongo-1', type: 'gcp.compute.instance' },
-      })
+      }),
     );
 
     expect(result?.caveats).toEqual([
@@ -249,7 +244,7 @@ describe('resolveLogFilter — caveats are surfaced verbatim', () => {
       makeCtx({
         iceType: 'Compute.Container',
         resource: { name: 'api-server', type: 'gcp.run.service' },
-      })
+      }),
     );
 
     expect(result).not.toBeNull();

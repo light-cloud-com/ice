@@ -58,9 +58,7 @@ export async function resolve_image(
     // the bar shows refreshing labels under the same step. See the
     // BUILD_STEP_INDEX note in cloud-build-helper.ts.
     reportStep?.(2, 'Building from source');
-    const forwardBuildStep = reportStep
-      ? (_inner_index: number, label: string) => reportStep(2, label)
-      : undefined;
+    const forwardBuildStep = reportStep ? (_inner_index: number, label: string) => reportStep(2, label) : undefined;
 
     return await build_from_source(ctx, region, repository, branch, imageUri, onLog, forwardBuildStep);
   }

@@ -3,7 +3,7 @@
  * the capture-ref probe pattern — no jsdom; we directly invoke the
  * hook via a Probe FC and walk the result.
  */
-import React, { createElement } from 'react';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -103,7 +103,11 @@ describe('inline-table-view/use-table-rows', () => {
       const r = callHook({
         ...baseInput,
         activeCard: {
-          nodes: [makeNode('n1', { label: 'Charlie' }), makeNode('n2', { label: 'Alice' }), makeNode('n3', { label: 'Bob' })],
+          nodes: [
+            makeNode('n1', { label: 'Charlie' }),
+            makeNode('n2', { label: 'Alice' }),
+            makeNode('n3', { label: 'Bob' }),
+          ],
         },
       });
       expect(r.sorted.map((row) => row.label)).toEqual(['Alice', 'Bob', 'Charlie']);
@@ -114,7 +118,11 @@ describe('inline-table-view/use-table-rows', () => {
         ...baseInput,
         sortDir: 'desc',
         activeCard: {
-          nodes: [makeNode('n1', { label: 'Charlie' }), makeNode('n2', { label: 'Alice' }), makeNode('n3', { label: 'Bob' })],
+          nodes: [
+            makeNode('n1', { label: 'Charlie' }),
+            makeNode('n2', { label: 'Alice' }),
+            makeNode('n3', { label: 'Bob' }),
+          ],
         },
       });
       expect(r.sorted.map((row) => row.label)).toEqual(['Charlie', 'Bob', 'Alice']);

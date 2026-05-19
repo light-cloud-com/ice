@@ -32,12 +32,7 @@ import { parseTar, type FileEntry } from '../tar-parser';
  *   the checksum field treated as 8 spaces, then written as a 6-digit
  *   octal followed by NUL + space (the canonical layout).
  */
-function makeTarHeader(opts: {
-  name: string;
-  size: number;
-  prefix?: string;
-  typeFlag?: string;
-}): Buffer {
+function makeTarHeader(opts: { name: string; size: number; prefix?: string; typeFlag?: string }): Buffer {
   const header = Buffer.alloc(512);
   // name (0-100)
   header.write(opts.name, 0, 100, 'utf8');
@@ -76,12 +71,7 @@ function padToBlock(data: Buffer): Buffer {
 }
 
 /** Build a full tar entry: header + padded data. */
-function makeEntry(opts: {
-  name: string;
-  data: Buffer;
-  prefix?: string;
-  typeFlag?: string;
-}): Buffer {
+function makeEntry(opts: { name: string; data: Buffer; prefix?: string; typeFlag?: string }): Buffer {
   const header = makeTarHeader({
     name: opts.name,
     size: opts.data.length,
@@ -100,10 +90,7 @@ describe('firebase-hosting/tar-parser', () => {
   describe('parseTar()', () => {
     it('extracts a single 100-byte file (name + data round-trip)', () => {
       const data = Buffer.from('a'.repeat(100), 'utf8');
-      const tar = Buffer.concat([
-        makeEntry({ name: 'hello.txt', data }),
-        eofBlock(),
-      ]);
+      const tar = Buffer.concat([makeEntry({ name: 'hello.txt', data }), eofBlock()]);
       const out = parseTar(tar);
       expect(out).toHaveLength(1);
       expect(out[0]?.name).toBe('hello.txt');
@@ -185,10 +172,7 @@ describe('firebase-hosting/tar-parser', () => {
       // strips trailing NULs but otherwise reads the full 100 chars.
       const longName = 'a'.repeat(100);
       const data = Buffer.from('hi', 'utf8');
-      const tar = Buffer.concat([
-        makeEntry({ name: longName, data }),
-        eofBlock(),
-      ]);
+      const tar = Buffer.concat([makeEntry({ name: longName, data }), eofBlock()]);
       const out = parseTar(tar);
       expect(out).toHaveLength(1);
       expect(out[0]?.name).toBe(longName);
@@ -252,10 +236,7 @@ describe('firebase-hosting/tar-parser', () => {
 
     it('returns a deep copy of file data — mutating the source tar after parseTar does not corrupt entries (RISK #3d)', () => {
       const original = Buffer.from('hello', 'utf8');
-      const tar = Buffer.concat([
-        makeEntry({ name: 'a.txt', data: original }),
-        eofBlock(),
-      ]);
+      const tar = Buffer.concat([makeEntry({ name: 'a.txt', data: original }), eofBlock()]);
       const out = parseTar(tar);
       const beforeMutation = Buffer.from(out[0]!.data); // snapshot for compare
 
@@ -288,10 +269,7 @@ describe('firebase-hosting/tar-parser', () => {
       // Some older archivers leave typeflag = NUL instead of '0'. The
       // parser treats both as regular files.
       const data = Buffer.from('nul-typeflag', 'utf8');
-      const tar = Buffer.concat([
-        makeEntry({ name: 'a.txt', data, typeFlag: '\0' }),
-        eofBlock(),
-      ]);
+      const tar = Buffer.concat([makeEntry({ name: 'a.txt', data, typeFlag: '\0' }), eofBlock()]);
       const out = parseTar(tar);
       expect(out).toHaveLength(1);
       expect(out[0]?.name).toBe('a.txt');

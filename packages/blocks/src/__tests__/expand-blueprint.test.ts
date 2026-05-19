@@ -23,8 +23,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { BlockBlueprint } from '../types';
 import { expandBlueprint } from '../expand-blueprint';
+import type { BlockBlueprint } from '../types';
 
 // `frontend-app` is a real schema entry — we use it whenever we need the
 // auto-default resolver to actually fire against `HIGH_LEVEL_CATEGORIES`.
@@ -59,10 +59,9 @@ describe('expandBlueprint — node identity and shape', () => {
   });
 
   it('attaches name, blockTypeName, and resourceId onto node.data', () => {
-    const out = expandBlueprint(
-      makeBlueprint({ name: 'My Block', resourceId: 'res-abc' }),
-      { position: { x: 0, y: 0 } },
-    );
+    const out = expandBlueprint(makeBlueprint({ name: 'My Block', resourceId: 'res-abc' }), {
+      position: { x: 0, y: 0 },
+    });
     expect(out.node.data.name).toBe('My Block');
     expect(out.node.data.blockTypeName).toBe('My Block');
     expect(out.node.data.resourceId).toBe('res-abc');
@@ -219,9 +218,7 @@ describe('expandBlueprint — schema-driven default resolution', () => {
     const bp = makeBlueprint({ resourceId: '__never_present__' });
     const out = expandBlueprint(bp, { position: { x: 0, y: 0 } });
     // No defaults injected, only the merged nodeData + name/blockTypeName/resourceId.
-    expect(Object.keys(out.node.data).sort()).toEqual(
-      ['blockTypeName', 'iceType', 'name', 'resourceId'].sort(),
-    );
+    expect(Object.keys(out.node.data).sort()).toEqual(['blockTypeName', 'iceType', 'name', 'resourceId'].sort());
   });
 
   it('skips select/optionDetails when the provider filter excludes every option', () => {
@@ -291,10 +288,9 @@ describe('expandBlueprint — node sizing', () => {
   it('counts github / repo / repository as a single repository line (first match wins)', () => {
     // The resolver reads `repository || github || repo`; supplying any of them
     // contributes one line — supplying all three still contributes one.
-    const a = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', repository: 'a/b' } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const a = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', repository: 'a/b' } }), {
+      position: { x: 0, y: 0 },
+    });
     const b = expandBlueprint(
       makeBlueprint({
         nodeData: { iceType: 'X', repository: 'a/b', github: 'a/b', repo: 'a/b' },
@@ -305,10 +301,9 @@ describe('expandBlueprint — node sizing', () => {
   });
 
   it('counts subdomain and url alongside domain as the same single domain line', () => {
-    const a = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', domain: 'example.com' } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const a = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', domain: 'example.com' } }), {
+      position: { x: 0, y: 0 },
+    });
     const b = expandBlueprint(
       makeBlueprint({
         nodeData: {
@@ -324,30 +319,21 @@ describe('expandBlueprint — node sizing', () => {
   });
 
   it('grows height when storage but no size is provided (hasHardware branch)', () => {
-    const bare = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X' } }),
-      { position: { x: 0, y: 0 } },
-    );
-    const stor = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', storage: '50 GB' } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const bare = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X' } }), { position: { x: 0, y: 0 } });
+    const stor = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', storage: '50 GB' } }), {
+      position: { x: 0, y: 0 },
+    });
     expect(stor.node.height).toBeGreaterThan(bare.node.height);
   });
 
   it('grows height when minInstances or maxInstances are present (scaling row)', () => {
-    const bare = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X' } }),
-      { position: { x: 0, y: 0 } },
-    );
-    const min = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', minInstances: 1 } }),
-      { position: { x: 0, y: 0 } },
-    );
-    const max = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', maxInstances: 5 } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const bare = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X' } }), { position: { x: 0, y: 0 } });
+    const min = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', minInstances: 1 } }), {
+      position: { x: 0, y: 0 },
+    });
+    const max = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', maxInstances: 5 } }), {
+      position: { x: 0, y: 0 },
+    });
     expect(min.node.height).toBeGreaterThan(bare.node.height);
     expect(max.node.height).toBeGreaterThan(bare.node.height);
   });
@@ -369,22 +355,15 @@ describe('expandBlueprint — node sizing', () => {
   });
 
   it('adds a status line when only status (not cost) is set', () => {
-    const a = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X' } }),
-      { position: { x: 0, y: 0 } },
-    );
-    const b = expandBlueprint(
-      makeBlueprint({ nodeData: { iceType: 'X', status: 'deployed' } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const a = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X' } }), { position: { x: 0, y: 0 } });
+    const b = expandBlueprint(makeBlueprint({ nodeData: { iceType: 'X', status: 'deployed' } }), {
+      position: { x: 0, y: 0 },
+    });
     expect(b.node.height).toBeGreaterThan(a.node.height);
   });
 
   it('handles a blueprint whose name is the empty string (no blockTypeName subtitle)', () => {
-    const out = expandBlueprint(
-      makeBlueprint({ name: '', nodeData: { iceType: 'X' } }),
-      { position: { x: 0, y: 0 } },
-    );
+    const out = expandBlueprint(makeBlueprint({ name: '', nodeData: { iceType: 'X' } }), { position: { x: 0, y: 0 } });
     expect(out.node.data.blockTypeName).toBe('');
   });
 });
@@ -394,9 +373,7 @@ describe('expandBlueprint — resourceId guard', () => {
     const bp = makeBlueprint({ resourceId: '', nodeData: { iceType: 'X' } });
     const out = expandBlueprint(bp, { position: { x: 0, y: 0 } });
     // No defaults injected — only the merged nodeData + name/blockTypeName.
-    expect(Object.keys(out.node.data).sort()).toEqual(
-      ['blockTypeName', 'iceType', 'name', 'resourceId'].sort(),
-    );
+    expect(Object.keys(out.node.data).sort()).toEqual(['blockTypeName', 'iceType', 'name', 'resourceId'].sort());
   });
 });
 

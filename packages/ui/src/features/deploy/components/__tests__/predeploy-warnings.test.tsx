@@ -97,14 +97,15 @@ function collectText(tree: unknown): string {
   return s;
 }
 
-const makeWarning = (overrides: Partial<PreDeployWarning> = {}): PreDeployWarning => ({
-  id: 'w1',
-  severity: 'warning',
-  title: 'Title',
-  description: 'desc',
-  dismissible: true,
-  ...overrides,
-}) as PreDeployWarning;
+const makeWarning = (overrides: Partial<PreDeployWarning> = {}): PreDeployWarning =>
+  ({
+    id: 'w1',
+    severity: 'warning',
+    title: 'Title',
+    description: 'desc',
+    dismissible: true,
+    ...overrides,
+  }) as PreDeployWarning;
 
 const render = (analysis: PreDeployAnalysis): React.ReactElement | null =>
   (PreDeployWarnings as unknown as (p: { analysis: PreDeployAnalysis }) => React.ReactElement | null)({ analysis });
@@ -177,9 +178,7 @@ describe('PreDeployWarnings — render warnings', () => {
     });
     const dismissBtns = findAll(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'Dismiss',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'Dismiss',
     );
     expect(dismissBtns).toHaveLength(1);
   });
@@ -191,9 +190,7 @@ describe('PreDeployWarnings — render warnings', () => {
     });
     const dismissBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'Dismiss',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'Dismiss',
     )!;
     const onClick = (dismissBtn.props as { onClick: () => void }).onClick;
     onClick();
@@ -208,10 +205,7 @@ describe('PreDeployWarnings — critical-acknowledge gate', () => {
       warnings: [makeWarning({ id: 'w1', severity: 'warning' })],
       hasCritical: false,
     });
-    const ackLabel = findFirst(
-      tree,
-      (el) => el.type === 'label',
-    );
+    const ackLabel = findFirst(tree, (el) => el.type === 'label');
     expect(ackLabel).toBeUndefined();
   });
 
@@ -245,10 +239,7 @@ describe('PreDeployWarnings — critical-acknowledge gate', () => {
 
   it('pluralises "critical issues" when there are 2+ visible criticals', () => {
     const tree = render({
-      warnings: [
-        makeWarning({ id: 'c1', severity: 'critical' }),
-        makeWarning({ id: 'c2', severity: 'critical' }),
-      ],
+      warnings: [makeWarning({ id: 'c1', severity: 'critical' }), makeWarning({ id: 'c2', severity: 'critical' })],
       hasCritical: true,
     });
     const text = collectText(tree);
@@ -283,7 +274,7 @@ describe('PreDeployWarnings — critical-acknowledge gate', () => {
       tree,
       (el) =>
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('text-red-500'),
+        (el.props as { className: string }).className.includes('text-red-500'),
     );
     expect(reds.length).toBeGreaterThan(0);
   });
@@ -300,7 +291,7 @@ describe('PreDeployWarnings — severity icon + classes', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded border'),
+        (el.props as { className: string }).className.includes('rounded border'),
     );
     expect(cards[0].props.className).toContain('border-red-500/30');
   });
@@ -315,7 +306,7 @@ describe('PreDeployWarnings — severity icon + classes', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded border'),
+        (el.props as { className: string }).className.includes('rounded border'),
     );
     expect(cards[0].props.className).toContain('border-amber-500/30');
   });
@@ -330,7 +321,7 @@ describe('PreDeployWarnings — severity icon + classes', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded border'),
+        (el.props as { className: string }).className.includes('rounded border'),
     );
     expect(cards[0].props.className).toContain('border-blue-500/30');
   });

@@ -25,7 +25,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const stateSlots: unknown[] = [];
-  let useStateIdx = 0;
+  const useStateIdx = 0;
   const effects: Array<{ cb: () => void | (() => void); deps: unknown[] }> = [];
   return {
     stateSlots,
@@ -166,8 +166,30 @@ vi.mock('../../../../shared/api/axios-instance', () => ({
   default: { post: (...args: unknown[]) => mocks.axios.post(...args) },
 }));
 
+// `getEnabledProvidersForTemplate` calls `getBlueprint` per (block, provider)
+// against live PROVIDER_FLAGS, so the gallery's pre-filter
+// `getEnabledProvidersForTemplate(tpl).length > 0` drops every template when
+// only GCP is enabled (the fixture templates have empty `blocks` so the
+// helper returns []). Stub it to return template.providers verbatim so the
+// gallery surface is observable.
+vi.mock('@ice/templates', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getEnabledProvidersForTemplate: (tpl: { providers?: string[] }) => tpl.providers ?? ['gcp'],
+  };
+});
+
 vi.mock('../../../../shared/components/ui/dialog', () => ({
-  Dialog: ({ children, open, onOpenChange }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (o: boolean) => void }) => (
+  Dialog: ({
+    children,
+    open,
+    onOpenChange,
+  }: {
+    children?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (o: boolean) => void;
+  }) => (
     <div data-stub="Dialog" data-open={String(open ?? false)} data-onchange={onOpenChange ? 'set' : 'unset'}>
       {children}
     </div>
@@ -180,13 +202,27 @@ vi.mock('../../../../shared/components/ui/dialog', () => ({
 }));
 
 vi.mock('../../../../shared/components/ui/search-input', () => ({
-  SearchInput: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
+  SearchInput: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+  }) => (
     <input data-stub="SearchInput" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
   ),
 }));
 
 vi.mock('../template-card', () => ({
-  TemplateCard: ({ template, onSelect }: { template: { id: string; name: string }; onSelect: (t: { id: string }) => void }) => (
+  TemplateCard: ({
+    template,
+    onSelect,
+  }: {
+    template: { id: string; name: string };
+    onSelect: (t: { id: string }) => void;
+  }) => (
     <button data-stub="TemplateCard" data-template-id={template.id} onClick={() => onSelect(template)}>
       {template.name}
     </button>
@@ -194,7 +230,15 @@ vi.mock('../template-card', () => ({
 }));
 
 vi.mock('../template-detail', () => ({
-  TemplateDetail: ({ template, onBack, onUse }: { template: { id: string }; onBack: () => void; onUse: (t: { id: string }) => void }) => (
+  TemplateDetail: ({
+    template,
+    onBack,
+    onUse,
+  }: {
+    template: { id: string };
+    onBack: () => void;
+    onUse: (t: { id: string }) => void;
+  }) => (
     <div data-stub="TemplateDetail" data-template-id={template.id}>
       <button data-stub="back" onClick={onBack}>
         back
@@ -250,10 +294,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -315,7 +356,9 @@ describe('TemplateGalleryDialog — list view', () => {
     expect(tree).not.toBeNull();
     const dialogs = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' && (el.props as { ['data-stub']: string })['data-stub'] === 'Dialog',
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+        (el.props as { ['data-stub']: string })['data-stub'] === 'Dialog',
     );
     expect(dialogs.length).toBe(1);
     expect((dialogs[0].props as { ['data-open']: string })['data-open']).toBe('true');
@@ -362,7 +405,9 @@ describe('TemplateGalleryDialog — list view', () => {
     const tree = render();
     const cards = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' && (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateCard',
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+        (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateCard',
     );
     // Featured row has tpl-a (1) + grouped row also lists tpl-a (omitted from featured filter) — so
     // expect tpl-b in groups + tpl-a in featured.
@@ -419,7 +464,9 @@ describe('TemplateGalleryDialog — detail view', () => {
     const tree = render();
     const details = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' && (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateDetail',
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+        (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateDetail',
     );
     expect(details.length).toBe(1);
     expect((details[0].props as { ['data-template-id']: string })['data-template-id']).toBe('tpl-a');
@@ -435,9 +482,7 @@ describe('TemplateGalleryDialog — detail view', () => {
     // Probe for the FC-invocation site via the props.template.id.
     const detail = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { template?: { id?: string } }).template?.id === 'tpl-a',
+      (el) => typeof el.type === 'function' && (el.props as { template?: { id?: string } }).template?.id === 'tpl-a',
     )[0];
     expect(detail).toBeDefined();
     const backFn = (detail.props as { onBack: () => void }).onBack;
@@ -730,9 +775,7 @@ describe('TemplateGalleryDialog — tab + filter wiring', () => {
     // Find the TemplateDetail React element to read onBack
     const detail = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { template?: { id?: string } }).template?.id === 'tpl-a',
+      (el) => typeof el.type === 'function' && (el.props as { template?: { id?: string } }).template?.id === 'tpl-a',
     )[0];
     expect(detail).toBeDefined();
     (detail.props as { onBack: () => void }).onBack();
@@ -746,8 +789,7 @@ describe('TemplateGalleryDialog — tab + filter wiring', () => {
     const dialogs = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+        typeof el.type === 'function' && typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
     );
     expect(dialogs.length).toBeGreaterThanOrEqual(1);
     (dialogs[0].props as { onOpenChange: (open: boolean) => void }).onOpenChange(false);
@@ -760,8 +802,7 @@ describe('TemplateGalleryDialog — tab + filter wiring', () => {
     const dialogs = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+        typeof el.type === 'function' && typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
     );
     (dialogs[0].props as { onOpenChange: (open: boolean) => void }).onOpenChange(true);
     const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
@@ -776,8 +817,7 @@ describe('TemplateGalleryDialog — tab + filter wiring', () => {
     const dialog = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+        typeof el.type === 'function' && typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
     )[0];
     (dialog.props as { onOpenChange: (open: boolean) => void }).onOpenChange(false);
     const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);

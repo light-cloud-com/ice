@@ -46,12 +46,10 @@ const mocks = vi.hoisted(() => ({
   expandedIdRef: { current: null as string | null },
   retryDeploySpy: vi.fn(),
   formatAgeSpy: vi.fn((s: string) => `AGE:${s}`),
-  fetchEventsForNodeSpy: vi.fn(
-    (arg: { cardId: string; nodeId: string }) => ({
-      type: 'pipeline/fetchEventsForNode/fulfilled',
-      payload: arg,
-    }),
-  ),
+  fetchEventsForNodeSpy: vi.fn((arg: { cardId: string; nodeId: string }) => ({
+    type: 'pipeline/fetchEventsForNode/fulfilled',
+    payload: arg,
+  })),
 }));
 
 vi.mock('react-redux', () => ({
@@ -105,12 +103,7 @@ import type { DeploymentEvent } from '../../../../../store/slices/pipeline-slice
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -124,10 +117,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -221,9 +211,7 @@ describe('RepoDeployList', () => {
   });
 
   it('renders one row per event up to the first 8', () => {
-    const tenEvents = Array.from({ length: 10 }, (_, i) =>
-      makeEvent({ id: `ev-${i}`, commit_sha: `sha${i}` }),
-    );
+    const tenEvents = Array.from({ length: 10 }, (_, i) => makeEvent({ id: `ev-${i}`, commit_sha: `sha${i}` }));
     const tree = renderList(tenEvents);
     const rows = findByPredicate(
       tree,
@@ -395,8 +383,20 @@ describe('RepoDeployList', () => {
       makeEvent({
         id: 'ev-A',
         deployment_logs: [
-          { step: 'build', status: 'completed', message: 'build done', timestamp: '2025-01-01T00:00:00Z', duration_ms: 1500 },
-          { step: 'deploy', status: 'failed', message: 'deploy err', timestamp: '2025-01-01T00:00:00Z', duration_ms: 2300 },
+          {
+            step: 'build',
+            status: 'completed',
+            message: 'build done',
+            timestamp: '2025-01-01T00:00:00Z',
+            duration_ms: 1500,
+          },
+          {
+            step: 'deploy',
+            status: 'failed',
+            message: 'deploy err',
+            timestamp: '2025-01-01T00:00:00Z',
+            duration_ms: 2300,
+          },
           { step: 'test', status: 'started', message: 'tests', timestamp: '2025-01-01T00:00:00Z' },
         ],
       }),
@@ -430,9 +430,7 @@ describe('RepoDeployList', () => {
 
   it('expanded panel surfaces ev.error when present', () => {
     mocks.expandedIdRef.current = 'ev-A';
-    const tree = renderList([
-      makeEvent({ id: 'ev-A', error: 'permission denied' }),
-    ]);
+    const tree = renderList([makeEvent({ id: 'ev-A', error: 'permission denied' })]);
     expect(collectText(tree)).toContain('permission denied');
   });
 
@@ -475,9 +473,11 @@ describe('RepoDeployList', () => {
     const buttons = findByType(tree, 'button');
     expect(buttons).toHaveLength(1);
     const stopPropagation = vi.fn();
-    const onClick = (buttons[0].props as {
-      onClick: (e: { stopPropagation: () => void }) => void;
-    }).onClick;
+    const onClick = (
+      buttons[0].props as {
+        onClick: (e: { stopPropagation: () => void }) => void;
+      }
+    ).onClick;
     onClick({ stopPropagation });
     expect(stopPropagation).toHaveBeenCalledTimes(1);
     // Wait for the dynamic import + retry promise + then chain to settle.
@@ -498,10 +498,7 @@ describe('RepoDeployList', () => {
 
   it('hides the expanded panel for events whose id != expandedId', () => {
     mocks.expandedIdRef.current = 'ev-A';
-    const tree = renderList([
-      makeEvent({ id: 'ev-A', error: 'errA' }),
-      makeEvent({ id: 'ev-B', error: 'errB' }),
-    ]);
+    const tree = renderList([makeEvent({ id: 'ev-A', error: 'errA' }), makeEvent({ id: 'ev-B', error: 'errB' })]);
     const text = collectText(tree);
     // Only A's expanded panel is rendered → A's error appears, B's does not.
     expect(text).toContain('errA');

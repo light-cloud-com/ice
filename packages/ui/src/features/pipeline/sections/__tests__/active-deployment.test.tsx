@@ -18,13 +18,12 @@
  *   - duration suffix conditional render + .toFixed(1)
  */
 
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-
 import { ActiveDeployment } from '../active-deployment';
-import type { ActiveDeploymentProps } from '../active-deployment';
 import type { DeployStep } from '../../../../store/slices/pipeline-slice';
+import type { ActiveDeploymentProps } from '../active-deployment';
 
 function render(props: ActiveDeploymentProps): React.ReactElement {
   return (ActiveDeployment as unknown as (p: ActiveDeploymentProps) => React.ReactElement)(props);

@@ -206,9 +206,7 @@ export async function createEnvironment(
       // permission error from the DB user, network) is a real failure
       // and should bubble.
       if (err?.code === 'P2002') {
-        console.warn(
-          `Trigger rule for node ${prodRule.node_id} already exists on env ${envName}; skipping clone.`,
-        );
+        console.warn(`Trigger rule for node ${prodRule.node_id} already exists on env ${envName}; skipping clone.`);
         continue;
       }
       throw err;

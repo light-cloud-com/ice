@@ -21,11 +21,7 @@ vi.mock('../../../../assets/icons/brand-registry', () => ({
   }),
 }));
 
-import {
-  resolveNodeIconUrl,
-  findCustomDomainEdge,
-  nodeHasSourceTab,
-} from '../node-properties-derivations';
+import { resolveNodeIconUrl, findCustomDomainEdge, nodeHasSourceTab } from '../node-properties-derivations';
 import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 
 const makeNode = (overrides: Partial<CardNode> = {}): CardNode =>

@@ -22,9 +22,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import type { CanvasNode } from '../../components/types';
 import { findContainerAtPosition, findSmallestContainerHit } from '../drop-target';
+import type { CanvasNode } from '../../components/types';
 
 /** Minimal CanvasNode factory — only the fields these utils read. */
 function node(overrides: Partial<CanvasNode> & Pick<CanvasNode, 'id'>): CanvasNode {

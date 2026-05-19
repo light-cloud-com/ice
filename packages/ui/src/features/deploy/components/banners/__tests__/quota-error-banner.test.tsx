@@ -26,10 +26,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // callback target.
 const mocks = vi.hoisted(() => ({
   stateRef: { current: 'idle' as 'idle' | 'running' | 'done' | 'failed' },
-  reportRef: { current: {} as {
-    deleted?: Array<{ type: string; name: string }>;
-    errors?: Array<{ type: string; name: string; error: string }>;
-  } },
+  reportRef: {
+    current: {} as {
+      deleted?: Array<{ type: string; name: string }>;
+      errors?: Array<{ type: string; name: string; error: string }>;
+    },
+  },
   errorMsgRef: { current: '' as string },
   stateSetterSpy: vi.fn(),
   reportSetterSpy: vi.fn(),
@@ -93,12 +95,7 @@ import { QuotaErrorBanner } from '../quota-error-banner';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -122,10 +119,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);

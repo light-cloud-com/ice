@@ -9,14 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import {
-  INITIAL_STATE,
-  KEYBOARD_PAN_SPEED,
-  cursorForMode,
-  freshInitialState,
-  snapToGrid,
-} from '../interactions/state';
+import { INITIAL_STATE, KEYBOARD_PAN_SPEED, cursorForMode, freshInitialState, snapToGrid } from '../interactions/state';
 import type { InteractionState, InteractionMode, DragItemOffset } from '../interactions/types';
 
 describe('rf-canvint-1 — INITIAL_STATE', () => {
@@ -143,9 +136,7 @@ describe('rf-canvint-1 — InteractionState type shape (compile-time guard)', ()
       startItemHeight: 30,
       boxStartCanvasX: 0,
       boxStartCanvasY: 0,
-      dragItemOffsets: new Map<string, DragItemOffset>([
-        ['other-1', { dx: 5, dy: 5, startX: 100, startY: 100 }],
-      ]),
+      dragItemOffsets: new Map<string, DragItemOffset>([['other-1', { dx: 5, dy: 5, startX: 100, startY: 100 }]]),
     };
     expect(state.mode).toBe('drag');
     expect(state.dragItemOffsets.size).toBe(1);

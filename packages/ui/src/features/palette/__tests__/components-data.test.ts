@@ -1,25 +1,20 @@
 /**
  * rf-rpal-3 — `data/components.ts` invariant tests.
  *
- * Pin the 25 concept blocks (icon + provider list + category), the
+ * Pin the 24 concept blocks (icon + provider list + category), the
  * `blockKey` slug helper, and the `def` builder's i18n + fallback
- * branching. The COMPONENTS order is observable in the palette — keep
+ * branching. The component order is observable in the palette — keep
  * it stable.
  *
- * `t()` is mocked to identity by default, so block names equal the
- * derived translation key. Two tests override the mock to assert the
- * fallback path (when `t()` returns the key string verbatim, i.e. the
- * key was missing).
+ * `getComponents(t)` and `def(t, ...)` take the translator as an
+ * argument so they can be called per-render with React's locale-bound
+ * `t`. Tests pass identity `(k) => k` so block names equal the
+ * derived translation key (or trip the missing-key fallback when the
+ * fallback shape is exercised).
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { Server } from 'lucide-react';
-
-vi.mock('../../../i18n', () => ({
-  t: (key: string) => key,
-}));
-
 import {
+  Server,
   Globe,
   HardDrive,
   Zap,
@@ -38,9 +33,13 @@ import {
   Database,
   Activity,
 } from 'lucide-react';
+import { describe, it, expect } from 'vitest';
 void Folder;
 
-import { COMPONENTS, blockKey, def } from '../data/components';
+import { getComponents, blockKey, def } from '../data/components';
+
+const t = (k: string) => k;
+const COMPONENTS = getComponents(t);
 
 // ─── blockKey ───────────────────────────────────────────────────────────────
 
@@ -69,38 +68,38 @@ describe('blockKey', () => {
 
 describe('def — i18n branch', () => {
   it('uses t() for name/description/tooltip when no fallback provided', () => {
-    const c = def('Compute.X', Server, ['aws'], 'Compute');
-    // Identity mock means name === t(key) === key.
+    const c = def(t, 'Compute.X', Server, ['aws'], 'Compute');
+    // Identity translator means name === t(key) === key.
     expect(c.name).toBe('blocks.computeX.name');
     expect(c.description).toBe('blocks.computeX.description');
     expect(c.tooltip).toBe('blocks.computeX.tooltip');
   });
 
   it('forwards icon, providers, category verbatim', () => {
-    const c = def('Compute.X', Server, ['aws', 'gcp'], 'Compute');
+    const c = def(t, 'Compute.X', Server, ['aws', 'gcp'], 'Compute');
     expect(c.icon).toBe(Server);
     expect(c.providers).toEqual(['aws', 'gcp']);
     expect(c.category).toBe('Compute');
   });
 
   it('omits runtimes when not provided', () => {
-    const c = def('Compute.X', Server, ['aws'], 'Compute');
+    const c = def(t, 'Compute.X', Server, ['aws'], 'Compute');
     expect(c.runtimes).toBeUndefined();
     expect('runtimes' in c).toBe(false);
   });
 
   it('attaches runtimes when provided', () => {
     const rt = [{ label: 'Node', value: 'Node.js 20' }];
-    const c = def('Compute.X', Server, ['aws'], 'Compute', rt);
+    const c = def(t, 'Compute.X', Server, ['aws'], 'Compute', rt);
     expect(c.runtimes).toBe(rt);
   });
 });
 
 describe('def — fallback branch', () => {
   it('uses fallback name and description when the i18n key is missing', () => {
-    // Identity mock causes t('blocks.fooBar.name') to return 'blocks.fooBar.name',
+    // Identity translator causes t('blocks.fooBar.name') to return 'blocks.fooBar.name',
     // which equals the key string — so def() detects the miss and uses fallback.
-    const c = def('Foo.Bar', Server, ['aws'], 'Custom', undefined, {
+    const c = def(t, 'Foo.Bar', Server, ['aws'], 'Custom', undefined, {
       name: 'Foo Bar',
       description: 'A foo that bars.',
     });
@@ -109,7 +108,7 @@ describe('def — fallback branch', () => {
   });
 
   it('falls back tooltip to description when fallback.tooltip is omitted', () => {
-    const c = def('Foo.Bar', Server, ['aws'], 'Custom', undefined, {
+    const c = def(t, 'Foo.Bar', Server, ['aws'], 'Custom', undefined, {
       name: 'Foo Bar',
       description: 'desc',
     });
@@ -117,7 +116,7 @@ describe('def — fallback branch', () => {
   });
 
   it('uses explicit fallback.tooltip when provided', () => {
-    const c = def('Foo.Bar', Server, ['aws'], 'Custom', undefined, {
+    const c = def(t, 'Foo.Bar', Server, ['aws'], 'Custom', undefined, {
       name: 'Foo Bar',
       description: 'desc',
       tooltip: 'explicit tooltip',
@@ -257,13 +256,7 @@ describe('COMPONENTS — runtimes', () => {
   it('Compute.ServerlessFunction exposes 5 runtime options (no Rust)', () => {
     const fn = COMPONENTS.find((c) => c.type === 'Compute.ServerlessFunction');
     expect(fn?.runtimes).toHaveLength(5);
-    expect(fn?.runtimes?.map((r) => r.label)).toEqual([
-      'Node.js',
-      'Python',
-      'Go',
-      'Java',
-      '.NET',
-    ]);
+    expect(fn?.runtimes?.map((r) => r.label)).toEqual(['Node.js', 'Python', 'Go', 'Java', '.NET']);
   });
 
   it('blocks without runtimes omit the field entirely', () => {

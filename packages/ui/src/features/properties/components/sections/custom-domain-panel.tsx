@@ -36,10 +36,11 @@
  */
 
 import React from 'react';
+import { t } from '../../../../i18n';
 import { cn } from '../../../../shared/utils/cn';
-import type { AppDispatch } from '../../../../store';
 import { normalizeSubdomain } from '../../utils/normalize-subdomain';
 import { Section } from '../fields';
+import type { AppDispatch } from '../../../../store';
 
 export interface CustomDomainRoute {
   id: string;
@@ -98,26 +99,25 @@ export const CustomDomainPanel: React.FC<{
   return (
     <div className="space-y-3">
       {/* Root domain field */}
-      <Section title="Root domain">
+      <Section title={t('canvas.properties.customDomain.rootDomainTitle')}>
         <input
           type="text"
           value={rootDomain}
-          placeholder="example.com"
+          placeholder={t('canvas.properties.customDomain.rootDomainPlaceholder')}
           onChange={(e) => updateNodeField('domain', e.target.value.toLowerCase().trim())}
           data-prop-key="domain"
           className="w-full px-2 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         <p className="mt-1 text-ice-2xs text-ice-text-3 leading-relaxed">
-          The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want to
-          expose, then drag the matching dot on the canvas block to a publicly-facing service.
+          {t('canvas.properties.customDomain.rootDomainHint')}
         </p>
       </Section>
 
       {/* Routes — same data the canvas block reads from */}
-      <Section title={`Routes (${routeViews.length})`}>
+      <Section title={t('canvas.properties.customDomain.routesTitle', { count: routeViews.length })}>
         {routeViews.length === 0 && (
           <p className="text-ice-2xs text-ice-text-3 leading-relaxed py-2">
-            No routes yet. Click + below to add a subdomain slot.
+            {t('canvas.properties.customDomain.routesEmpty')}
           </p>
         )}
         {routeViews.length > 0 && (
@@ -135,21 +135,26 @@ export const CustomDomainPanel: React.FC<{
                         → {targetLabel} <span className="text-ice-text-3/60">({targetId.slice(0, 8)})</span>
                       </>
                     ) : (
-                      <span className="italic">unconnected — drag the dot to wire up</span>
+                      <span className="italic">{t('canvas.properties.customDomain.routeUnconnected')}</span>
                     )}
                   </span>
-                  <span className="text-ice-2xs font-mono text-blue-400 truncate" title={host || '(no domain)'}>
-                    {host || '(no domain)'}
+                  <span
+                    className="text-ice-2xs font-mono text-blue-400 truncate"
+                    title={host || t('canvas.properties.customDomain.noDomain')}
+                  >
+                    {host || t('canvas.properties.customDomain.noDomain')}
                   </span>
                 </div>
 
                 {/* Bottom row: subdomain editor + delete */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-ice-2xs text-ice-text-3 shrink-0">subdomain</span>
+                  <span className="text-ice-2xs text-ice-text-3 shrink-0">
+                    {t('canvas.properties.customDomain.subdomainLabel')}
+                  </span>
                   <input
                     type="text"
                     value={subdomain}
-                    placeholder="api (blank = root)"
+                    placeholder={t('canvas.properties.customDomain.subdomainPlaceholder')}
                     onChange={(e) => updateRouteSubdomain(route.id, e.target.value)}
                     data-prop-key="routes.subdomain"
                     data-route-id={route.id}
@@ -158,7 +163,7 @@ export const CustomDomainPanel: React.FC<{
                   {routes.length > 1 && (
                     <button
                       onClick={() => deleteRoute(route.id)}
-                      title="Delete route"
+                      title={t('canvas.properties.customDomain.deleteRouteTitle')}
                       className="shrink-0 w-6 h-6 flex items-center justify-center text-ice-text-3 hover:text-red-400 hover:bg-red-500/10 rounded"
                     >
                       ×
@@ -173,7 +178,7 @@ export const CustomDomainPanel: React.FC<{
           onClick={addRoute}
           className="mt-2 w-full px-3 py-1.5 text-ice-xs text-ice-text-2 border border-dashed border-ice-border rounded hover:bg-ice-base/40"
         >
-          + Add subdomain route
+          {t('canvas.properties.customDomain.addRoute')}
         </button>
       </Section>
 
@@ -199,11 +204,9 @@ export const CustomDomainPanel: React.FC<{
 
         if (allDnsRows.length === 0) {
           return (
-            <Section title="DNS records">
+            <Section title={t('canvas.properties.customDomain.dnsRecordsTitle')}>
               <p className="text-ice-2xs text-ice-text-3 leading-relaxed">
-                After deploy, the DNS records you need to add at your registrar will appear here. Verify the domain at
-                your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically provision a
-                managed SSL certificate.
+                {t('canvas.properties.customDomain.dnsRecordsEmpty')}
               </p>
             </Section>
           );
@@ -211,9 +214,9 @@ export const CustomDomainPanel: React.FC<{
 
         const renderHeader = () => (
           <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-ice-text-3 px-2 pb-1">
-            <span className="w-10 shrink-0">Type</span>
-            <span className="flex-shrink min-w-0">Domain name</span>
-            <span className="flex-1 min-w-0">Value</span>
+            <span className="w-10 shrink-0">{t('canvas.properties.customDomain.dnsHeaderType')}</span>
+            <span className="flex-shrink min-w-0">{t('canvas.properties.customDomain.dnsHeaderDomain')}</span>
+            <span className="flex-1 min-w-0">{t('canvas.properties.customDomain.dnsHeaderValue')}</span>
             <span className="w-10 shrink-0" />
           </div>
         );
@@ -238,19 +241,19 @@ export const CustomDomainPanel: React.FC<{
                 navigator.clipboard.writeText(rec.value).catch(() => undefined);
               }}
               className={cn('shrink-0 px-1.5 py-0.5 text-[10px] rounded', palette.chip)}
-              title="Copy value to clipboard"
+              title={t('canvas.properties.customDomain.dnsCopyTitle')}
             >
-              Copy
+              {t('canvas.properties.customDomain.dnsCopyButton')}
             </button>
           </div>
         );
 
         return (
-          <Section title={`DNS records (${allDnsRows.length})`}>
+          <Section title={t('canvas.properties.customDomain.dnsRecordsTitleCount', { count: allDnsRows.length })}>
             {addRows.length > 0 && (
               <div className="space-y-1">
                 <div className="text-ice-2xs text-blue-400 leading-relaxed">
-                  Add the records below at your DNS provider to verify the domain.
+                  {t('canvas.properties.customDomain.dnsAddBanner')}
                 </div>
                 {renderHeader()}
                 {addRows.map((rec, i) =>
@@ -266,8 +269,7 @@ export const CustomDomainPanel: React.FC<{
             {removeRows.length > 0 && (
               <div className="space-y-1 mt-3">
                 <div className="text-ice-2xs text-amber-400 leading-relaxed">
-                  Remove the records below from your DNS provider — they conflict with the new configuration and block
-                  verification.
+                  {t('canvas.properties.customDomain.dnsRemoveBanner')}
                 </div>
                 {renderHeader()}
                 {removeRows.map((rec, i) =>
@@ -281,8 +283,7 @@ export const CustomDomainPanel: React.FC<{
             )}
 
             <p className="mt-2 text-ice-2xs text-ice-text-3 leading-relaxed">
-              After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL certificate
-              automatically.
+              {t('canvas.properties.customDomain.dnsPropagationHint')}
             </p>
           </Section>
         );

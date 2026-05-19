@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as Templates from '../index';
+import * as Templates from '..';
 
 describe('config/templates barrel re-export', () => {
   it('re-exports the registry constants', () => {

@@ -36,8 +36,8 @@
 
 import { useCallback } from 'react';
 import { isContainer } from '../../../config/containment-rules';
-import { descendants } from '../utils/folded-remap';
 import { findContainerAtPosition as findContainerAtPositionUtil } from '../utils/drop-target';
+import { descendants } from '../utils/folded-remap';
 import type { CanvasNode } from '../components/types';
 
 export interface UseCanvasTraversalArgs {
@@ -73,10 +73,7 @@ export function useCanvasTraversal(args: UseCanvasTraversalArgs): UseCanvasTrave
 
   // Get descendant IDs from VISIBLE nodes only (for box selection, reparenting).
   // Thin wrapper binding to the pure descendants() walk.
-  const getDescendantIds = useCallback(
-    (nodeId: string): string[] => descendants(visibleNodes, nodeId),
-    [visibleNodes],
-  );
+  const getDescendantIds = useCallback((nodeId: string): string[] => descendants(visibleNodes, nodeId), [visibleNodes]);
 
   // Get ALL descendant IDs including hidden children (searches canvasNodes, not visibleNodes).
   // Used by handleNodeMove so hidden block children at L1 move with their parent.

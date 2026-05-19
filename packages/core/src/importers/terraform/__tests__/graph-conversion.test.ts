@@ -2,12 +2,12 @@
  * Tests for Terraform graph conversion (rf-timp-3 extraction).
  */
 
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { import_result_to_graph, import_terraform_to_graph } from '../graph-conversion';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { create_mutable_graph } from '../../../graph/mutable-graph';
+import { import_result_to_graph, import_terraform_to_graph } from '../graph-conversion';
 import type { TerraformImportResult, ImportedResource, TerraformState } from '../types';
 
 const empty_metadata = {
@@ -93,9 +93,7 @@ describe('import_result_to_graph (terraform)', () => {
   });
 
   it('attaches module label only when the resource is in a module', () => {
-    const graph = import_result_to_graph(
-      make_result([make_resource({ module: 'module.network' })]),
-    );
+    const graph = import_result_to_graph(make_result([make_resource({ module: 'module.network' })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.metadata.labels.module).toBe('module.network');
   });

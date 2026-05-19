@@ -20,9 +20,9 @@
  * snapshots also unmarshal `ResourceRow[]` from `resource_data`.)
  */
 
+import { ensure_db, emit_event, wrap_error } from './resources';
 import { create_deployment_id } from '../../types/deployment';
 import { success } from '../../types/result';
-import { ensure_db, emit_event, wrap_error } from './resources';
 import type { DeploymentId, DeploymentStatus } from '../../types/deployment';
 import type { IceError } from '../../types/errors';
 import type { Result } from '../../types/result';

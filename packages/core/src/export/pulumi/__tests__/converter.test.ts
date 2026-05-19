@@ -20,12 +20,8 @@
  * mirror real consumer setups.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  build_dependency_map,
-  export_graph,
-  node_to_resource,
-} from '../converter';
 import { MutableGraph } from '../../../graph/mutable-graph';
+import { build_dependency_map, export_graph, node_to_resource } from '../converter';
 import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider';
 
 /**
@@ -33,9 +29,7 @@ import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-pro
  * single method consulted by the converter (`get_implementation`).
  * The other class members are typed-only — never invoked here.
  */
-function makeSchemaProvider(
-  implMap: Record<string, { native_type: string }> = {},
-): EmbeddedSchemaProvider {
+function makeSchemaProvider(implMap: Record<string, { native_type: string }> = {}): EmbeddedSchemaProvider {
   return {
     get_implementation: vi.fn((ice_type: string) => implMap[ice_type] ?? null),
   } as unknown as EmbeddedSchemaProvider;
@@ -131,7 +125,7 @@ describe('node_to_resource', () => {
 
   it('sanitizes resource name', async () => {
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const a = g.add_node({ type: 't', name: 'My Resource!', properties: {} });
     if (!a.success) throw new Error('node add failed');
@@ -142,7 +136,7 @@ describe('node_to_resource', () => {
 
   it('camelCases properties via map_properties', async () => {
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const a = g.add_node({ type: 't', name: 'x', properties: { snake_key: 1 } });
     if (!a.success) throw new Error('node add failed');
@@ -153,7 +147,7 @@ describe('node_to_resource', () => {
 
   it('builds options from the dependency_map', async () => {
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const a = g.add_node({ type: 't', name: 'x', properties: {} });
     if (!a.success) throw new Error('node add failed');
@@ -165,7 +159,7 @@ describe('node_to_resource', () => {
 
   it('omits options when there are no dependencies', async () => {
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const a = g.add_node({ type: 't', name: 'x', properties: {} });
     if (!a.success) throw new Error('node add failed');
@@ -178,7 +172,7 @@ describe('node_to_resource', () => {
     // Drives the defensive `node.properties || {}` branch on the
     // schema-provider-hit path.
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const a = g.add_node({ type: 't', name: 'x', properties: {} });
     if (!a.success) throw new Error('node add failed');
@@ -315,7 +309,7 @@ describe('export_graph', () => {
 
   it('resources reference the dependency map (depends_on)', async () => {
     const provider = makeSchemaProvider({
-      't': { native_type: 't:m/r:C' },
+      t: { native_type: 't:m/r:C' },
     });
     const g = new MutableGraph('test');
     const a = g.add_node({ type: 't', name: 'a', properties: {} });

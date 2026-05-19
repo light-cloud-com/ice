@@ -9,8 +9,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { autoResizeContainers } from '../auto-resize';
-import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../../store';
+import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 
 function makeCard(nodes: CardNode[]): Card {
   return {
@@ -250,9 +250,7 @@ describe('rf-aiop-5 autoResizeContainers', () => {
     // The resize dispatch should fire because newW/newH != container.width/height
     // (which were 0 and 0).
     const resize = calls.find(
-      (c) =>
-        (c.payload as { id?: string }).id === 'c1' &&
-        (c.payload as { width?: number }).width !== undefined,
+      (c) => (c.payload as { id?: string }).id === 'c1' && (c.payload as { width?: number }).width !== undefined,
     );
     expect(resize).toBeDefined();
   });
@@ -283,8 +281,7 @@ describe('rf-aiop-5 autoResizeContainers', () => {
     // newW = max(50, 328, 380+24-min(0,76)=380+24-0=404) = 404
     // newH = max(50, 248, 260+24-min(0,36)=260+24-0=284) = 284
     const resize = calls.find(
-      (c) =>
-        (c.payload as { id?: string }).id === 'c1' && (c.payload as { width?: number }).width !== undefined,
+      (c) => (c.payload as { id?: string }).id === 'c1' && (c.payload as { width?: number }).width !== undefined,
     );
     expect(resize).toBeDefined();
     expect(resize?.payload).toEqual({ id: 'c1', width: 404, height: 284 });

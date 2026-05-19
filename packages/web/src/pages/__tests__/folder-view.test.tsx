@@ -122,20 +122,19 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
 }
 
-function render(props: {
-  folderId?: string | null;
-  folderName?: string;
-  basePath?: string;
-} = {}): React.ReactElement | null {
+function render(
+  props: {
+    folderId?: string | null;
+    folderName?: string;
+    basePath?: string;
+  } = {},
+): React.ReactElement | null {
   (mocks as unknown as { __resetIdx: () => void }).__resetIdx();
   const FC = FolderView as unknown as (p: {
     folderId: string | null;
@@ -428,9 +427,7 @@ describe('FolderView — handleCreate', () => {
   });
 
   it('does not navigate when project create response omits slug', async () => {
-    mocks.axiosPost
-      .mockResolvedValueOnce({ data: { id: 'p9' /* no slug */ } })
-      .mockResolvedValueOnce({ data: [] });
+    mocks.axiosPost.mockResolvedValueOnce({ data: { id: 'p9' /* no slug */ } }).mockResolvedValueOnce({ data: [] });
     mocks.stateSlots.push([], false);
     const tree = render();
     const projectBtn = findByPredicate(

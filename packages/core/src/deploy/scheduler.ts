@@ -31,13 +31,7 @@
  */
 
 import { build_dag } from './scheduler/dag';
-import {
-  cancel_remaining_not_in_flight,
-  dispatch,
-  emit_status,
-  wait_for_settle,
-  wake,
-} from './scheduler/dispatch';
+import { cancel_remaining_not_in_flight, dispatch, emit_status, wait_for_settle, wake } from './scheduler/dispatch';
 import { collect_ready, is_unfinished } from './scheduler/predicates';
 import {
   DEFAULT_PER_HANDLER_CAPS,
@@ -161,4 +155,3 @@ export class ParallelChangeScheduler {
     return ctx.results;
   }
 }
-

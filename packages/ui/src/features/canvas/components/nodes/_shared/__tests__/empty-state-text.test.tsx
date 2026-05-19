@@ -9,9 +9,11 @@ import { describe, it, expect } from 'vitest';
 import { EmptyStateText } from '../empty-state-text';
 
 const renderInner = (props: React.ComponentProps<typeof EmptyStateText>): React.ReactElement => {
-  const Inner = (EmptyStateText as unknown as {
-    type: (p: React.ComponentProps<typeof EmptyStateText>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    EmptyStateText as unknown as {
+      type: (p: React.ComponentProps<typeof EmptyStateText>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

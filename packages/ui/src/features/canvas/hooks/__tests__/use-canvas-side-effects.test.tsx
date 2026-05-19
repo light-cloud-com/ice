@@ -37,10 +37,10 @@ const mocks = vi.hoisted(() => ({
   // Counter that resets each render — the hook calls useRef in fixed
   // source order: first prevNodeCountRef, then prevCardIdRef.
   refCallIndex: { current: 0 as number },
-  refSlots: [
-    { current: 0 as number },
-    { current: undefined as string | undefined },
-  ] as [{ current: number }, { current: string | undefined }],
+  refSlots: [{ current: 0 as number }, { current: undefined as string | undefined }] as [
+    { current: number },
+    { current: string | undefined },
+  ],
 
   // The single useState slot: overlay-dismissed boolean. The orchestrator
   // discards the getter, but the setter is exercised via this spy.
@@ -100,12 +100,8 @@ vi.mock('react', async (importOriginal) => {
 
 // Import AFTER the mocks are registered so the hook closes over the mocked
 // useEffect/useRef/useState and the four side-effect helpers.
-import {
-  installInspector,
-  updateInspectorState,
-  inspectLayout,
-} from '../../../../shared/utils/layout-inspector';
 import { logCanvasRender } from '../../../../shared/utils/debug-logger';
+import { installInspector, updateInspectorState, inspectLayout } from '../../../../shared/utils/layout-inspector';
 import { useCanvasSideEffects, type UseCanvasSideEffectsArgs } from '../use-canvas-side-effects';
 import type { CardNode, CardEdge, Card } from '../../../../store/slices/cards-slice';
 import type { CanvasNode } from '../../components/types';
@@ -151,7 +147,14 @@ const makeCanvasNode = (id: string): CanvasNode => ({
 });
 
 const baseArgs = (overrides: Partial<UseCanvasSideEffectsArgs> = {}): UseCanvasSideEffectsArgs => ({
-  card: { id: 'card-1', name: 'C1', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+  card: {
+    id: 'card-1',
+    name: 'C1',
+    nodes: [],
+    edges: [],
+    viewport: { panX: 0, panY: 0, scale: 1 },
+    createdAt: 0,
+  } as Card,
   nodes: [],
   edges: [],
   canvasNodes: [],
@@ -322,7 +325,13 @@ describe('useCanvasSideEffects — auto-organize threshold', () => {
     const dispatch = vi.fn();
     // prevNodeCountRef starts at 0 (its initializer); the slot mock honors that.
     const nodes = Array.from({ length: 12 }, (_, i) => makeNode({ id: `n${i}` }));
-    renderHook(baseArgs({ nodes, dispatch: dispatch as unknown as UseCanvasSideEffectsArgs['dispatch'], viewport: { zoom: 0.8 } }));
+    renderHook(
+      baseArgs({
+        nodes,
+        dispatch: dispatch as unknown as UseCanvasSideEffectsArgs['dispatch'],
+        viewport: { zoom: 0.8 },
+      }),
+    );
 
     // No dispatch yet — the timer is queued.
     expect(dispatch).not.toHaveBeenCalled();
@@ -441,7 +450,14 @@ describe('useCanvasSideEffects — overlay-dismiss reset on card change', () => 
     mocks.refSlots[1].current = 'old-card';
     renderHook(
       baseArgs({
-        card: { id: 'new-card', name: 'N', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+        card: {
+          id: 'new-card',
+          name: 'N',
+          nodes: [],
+          edges: [],
+          viewport: { panX: 0, panY: 0, scale: 1 },
+          createdAt: 0,
+        } as Card,
       }),
     );
 
@@ -454,7 +470,14 @@ describe('useCanvasSideEffects — overlay-dismiss reset on card change', () => 
     mocks.refSlots[1].current = 'card-1';
     renderHook(
       baseArgs({
-        card: { id: 'card-1', name: 'C1', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+        card: {
+          id: 'card-1',
+          name: 'C1',
+          nodes: [],
+          edges: [],
+          viewport: { panX: 0, panY: 0, scale: 1 },
+          createdAt: 0,
+        } as Card,
         aiCurrentIntent: null,
       }),
     );
@@ -482,7 +505,14 @@ describe('useCanvasSideEffects — overlay-dismiss on AI intent', () => {
     mocks.refSlots[1].current = 'card-1'; // match current card so reset doesn't fire either
     renderHook(
       baseArgs({
-        card: { id: 'card-1', name: 'C1', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+        card: {
+          id: 'card-1',
+          name: 'C1',
+          nodes: [],
+          edges: [],
+          viewport: { panX: 0, panY: 0, scale: 1 },
+          createdAt: 0,
+        } as Card,
         aiCurrentIntent: null,
       }),
     );
@@ -493,7 +523,14 @@ describe('useCanvasSideEffects — overlay-dismiss on AI intent', () => {
     mocks.refSlots[1].current = 'card-1';
     renderHook(
       baseArgs({
-        card: { id: 'card-1', name: 'C1', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+        card: {
+          id: 'card-1',
+          name: 'C1',
+          nodes: [],
+          edges: [],
+          viewport: { panX: 0, panY: 0, scale: 1 },
+          createdAt: 0,
+        } as Card,
         aiCurrentIntent: '',
       }),
     );
@@ -504,7 +541,14 @@ describe('useCanvasSideEffects — overlay-dismiss on AI intent', () => {
     mocks.refSlots[1].current = 'old';
     renderHook(
       baseArgs({
-        card: { id: 'new', name: 'N', nodes: [], edges: [], viewport: { panX: 0, panY: 0, scale: 1 }, createdAt: 0 } as Card,
+        card: {
+          id: 'new',
+          name: 'N',
+          nodes: [],
+          edges: [],
+          viewport: { panX: 0, panY: 0, scale: 1 },
+          createdAt: 0,
+        } as Card,
         aiCurrentIntent: 'do something',
       }),
     );

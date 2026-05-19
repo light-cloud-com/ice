@@ -8,8 +8,8 @@ vi.mock('@ice/db', () => ({
   default: {},
 }));
 
-import { createCanvasRouter } from '../index';
-import * as Canvas from '../index';
+import { createCanvasRouter } from '..';
+import * as Canvas from '..';
 
 describe('services/canvas barrel', () => {
   it('exposes createCanvasRouter as a function', () => {

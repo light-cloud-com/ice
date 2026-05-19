@@ -19,49 +19,35 @@
  *    path `gcp.compute.Instance` (NOT `gcp.compute.instance.Instance`).
  */
 import { describe, expect, it } from 'vitest';
-import {
-  fallback_type_mapping,
-  get_package_name,
-  parse_resource_type,
-} from '../type-mapping';
+import { fallback_type_mapping, get_package_name, parse_resource_type } from '../type-mapping';
 
 describe('fallback_type_mapping — provider table', () => {
   it("maps 'google' to 'gcp' inside the gcp branch", () => {
     // gcp branch reads pulumi_provider from provider_map; 'google' ->
     // 'gcp', so output prefix is 'gcp:...'.
-    expect(fallback_type_mapping('gcp.compute.instance', 'google')).toBe(
-      'gcp:compute/instance:Instance',
-    );
+    expect(fallback_type_mapping('gcp.compute.instance', 'google')).toBe('gcp:compute/instance:Instance');
   });
 
   it("maps 'azurerm' to 'azure-native' but only in the (generic) branch where it's read", () => {
     // The azure branch is keyed on `ice_type.startsWith('azure.')`,
     // not on the provider arg — so a `azure.storage.account` type
     // always emits the 'azure-native' prefix regardless of provider.
-    expect(fallback_type_mapping('azure.storage.account', 'azurerm')).toBe(
-      'azure-native:storage/account:Account',
-    );
+    expect(fallback_type_mapping('azure.storage.account', 'azurerm')).toBe('azure-native:storage/account:Account');
   });
 
   it('passes through unknown providers (identity)', () => {
     // pulumi_provider for 'k8s' is 'k8s' (not in the map)
-    expect(fallback_type_mapping('k8s.apps.deployment', 'k8s')).toBe(
-      'k8s:apps/deployment:Deployment',
-    );
+    expect(fallback_type_mapping('k8s.apps.deployment', 'k8s')).toBe('k8s:apps/deployment:Deployment');
   });
 });
 
 describe('fallback_type_mapping — gcp branch', () => {
   it('converts gcp.compute.instance', () => {
-    expect(fallback_type_mapping('gcp.compute.instance', 'gcp')).toBe(
-      'gcp:compute/instance:Instance',
-    );
+    expect(fallback_type_mapping('gcp.compute.instance', 'gcp')).toBe('gcp:compute/instance:Instance');
   });
 
   it('joins multi-segment resources with /', () => {
-    expect(fallback_type_mapping('gcp.compute.firewall.rule', 'gcp')).toBe(
-      'gcp:compute/firewall/rule:Rule',
-    );
+    expect(fallback_type_mapping('gcp.compute.firewall.rule', 'gcp')).toBe('gcp:compute/firewall/rule:Rule');
   });
 
   it('uses to_pascal_case on the LAST segment for className', () => {
@@ -78,9 +64,7 @@ describe('fallback_type_mapping — gcp branch', () => {
 
   it('respects provider_map override: provider="google" still uses gcp branch', () => {
     // The branch is keyed on ice_type prefix. provider_map maps 'google' to 'gcp'.
-    expect(fallback_type_mapping('gcp.compute.instance', 'google')).toBe(
-      'gcp:compute/instance:Instance',
-    );
+    expect(fallback_type_mapping('gcp.compute.instance', 'google')).toBe('gcp:compute/instance:Instance');
   });
 });
 
@@ -90,9 +74,7 @@ describe('fallback_type_mapping — aws branch', () => {
   });
 
   it('joins multi-segment resources with /', () => {
-    expect(fallback_type_mapping('aws.ec2.security.group', 'aws')).toBe(
-      'aws:ec2/security/group:Group',
-    );
+    expect(fallback_type_mapping('aws.ec2.security.group', 'aws')).toBe('aws:ec2/security/group:Group');
   });
 
   it('hard-codes the aws prefix even when provider differs', () => {
@@ -103,15 +85,11 @@ describe('fallback_type_mapping — aws branch', () => {
 
 describe('fallback_type_mapping — azure branch', () => {
   it('converts azure.storage.account', () => {
-    expect(fallback_type_mapping('azure.storage.account', 'azure')).toBe(
-      'azure-native:storage/account:Account',
-    );
+    expect(fallback_type_mapping('azure.storage.account', 'azure')).toBe('azure-native:storage/account:Account');
   });
 
   it('hard-codes azure-native prefix even when provider differs', () => {
-    expect(fallback_type_mapping('azure.storage.account', 'aws')).toBe(
-      'azure-native:storage/account:Account',
-    );
+    expect(fallback_type_mapping('azure.storage.account', 'aws')).toBe('azure-native:storage/account:Account');
   });
 
   it('uses substring(6) — strips "azure." (6 chars) NOT "azure" (5 chars)', () => {
@@ -124,15 +102,11 @@ describe('fallback_type_mapping — azure branch', () => {
 
 describe('fallback_type_mapping — generic branch', () => {
   it('handles 3+ segment types not matching any prefix', () => {
-    expect(fallback_type_mapping('cloudflare.dns.record', 'cloudflare')).toBe(
-      'cloudflare:dns/record:Record',
-    );
+    expect(fallback_type_mapping('cloudflare.dns.record', 'cloudflare')).toBe('cloudflare:dns/record:Record');
   });
 
   it('joins all-but-first-two segments with /', () => {
-    expect(fallback_type_mapping('cloudflare.dns.zone.record', 'cloudflare')).toBe(
-      'cloudflare:dns/zone/record:Record',
-    );
+    expect(fallback_type_mapping('cloudflare.dns.zone.record', 'cloudflare')).toBe('cloudflare:dns/zone/record:Record');
   });
 
   it('returns null for fewer than 3 segments', () => {
@@ -197,12 +171,8 @@ describe('parse_resource_type', () => {
 
   it('discards the resource segment (uses module + className only)', () => {
     // Input has resource segment 'instance' but class_path is module.className
-    expect(parse_resource_type('gcp:compute/instance:Instance').class_path).toBe(
-      'gcp.compute.Instance',
-    );
-    expect(parse_resource_type('gcp:compute/firewall:Firewall').class_path).toBe(
-      'gcp.compute.Firewall',
-    );
+    expect(parse_resource_type('gcp:compute/instance:Instance').class_path).toBe('gcp.compute.Instance');
+    expect(parse_resource_type('gcp:compute/firewall:Firewall').class_path).toBe('gcp.compute.Firewall');
   });
 
   it('returns unknown / type for malformed inputs (no colon)', () => {

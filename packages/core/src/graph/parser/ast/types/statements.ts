@@ -14,14 +14,8 @@
  */
 
 import type { AstNode } from './base';
-import type {
-  Expression,
-  Identifier,
-  Reference,
-  StringLiteral,
-  TypeIdentifier,
-} from './expressions';
 import type { Block } from './blocks';
+import type { Expression, Identifier, Reference, StringLiteral, TypeIdentifier } from './expressions';
 
 // =============================================================================
 // Program

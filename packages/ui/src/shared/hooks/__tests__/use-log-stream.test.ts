@@ -52,16 +52,8 @@ describe('computeCandidateFingerprint', () => {
   // stuck on "Deploy this environment to start streaming logs."
   it('produces a different string when `deploy_status` flips from idle → active', () => {
     const edges = [edge('a', TID)];
-    const before = computeCandidateFingerprint(
-      edges,
-      [node('a', { iceType: 'X', deploy_status: 'idle' })],
-      TID,
-    );
-    const after = computeCandidateFingerprint(
-      edges,
-      [node('a', { iceType: 'X', deploy_status: 'active' })],
-      TID,
-    );
+    const before = computeCandidateFingerprint(edges, [node('a', { iceType: 'X', deploy_status: 'idle' })], TID);
+    const after = computeCandidateFingerprint(edges, [node('a', { iceType: 'X', deploy_status: 'active' })], TID);
     expect(before).toBe('a>X>idle');
     expect(after).toBe('a>X>active');
     expect(before).not.toBe(after);
@@ -73,11 +65,7 @@ describe('computeCandidateFingerprint', () => {
     // writes `'active'`. The fingerprint dep MUST observe this change.
     const edges = [edge('a', TID)];
     const before = computeCandidateFingerprint(edges, [node('a', { iceType: 'X' })], TID);
-    const after = computeCandidateFingerprint(
-      edges,
-      [node('a', { iceType: 'X', deploy_status: 'active' })],
-      TID,
-    );
+    const after = computeCandidateFingerprint(edges, [node('a', { iceType: 'X', deploy_status: 'active' })], TID);
     expect(before).toBe('a>X>');
     expect(after).toBe('a>X>active');
     expect(before).not.toBe(after);
@@ -111,9 +99,7 @@ describe('computeCandidateFingerprint', () => {
       node('a', { iceType: 'Compute.Container', deploy_status: 'idle' }),
       node('b', { iceType: 'Compute.Worker', deploy_status: 'active' }),
     ];
-    expect(computeCandidateFingerprint(edges, nodes, TID)).toBe(
-      'a>Compute.Container>idle|b>Compute.Worker>active',
-    );
+    expect(computeCandidateFingerprint(edges, nodes, TID)).toBe('a>Compute.Container>idle|b>Compute.Worker>active');
   });
 
   it('handles edges referencing missing source nodes by skipping them', () => {
@@ -123,9 +109,7 @@ describe('computeCandidateFingerprint', () => {
   });
 
   it('ignores null / undefined edge slots without throwing', () => {
-    const edges = [null, undefined, edge('a', TID)] as Array<
-      { source: string; target: string } | null | undefined
-    >;
+    const edges = [null, undefined, edge('a', TID)] as Array<{ source: string; target: string } | null | undefined>;
     const nodes = [node('a', { iceType: 'X', deploy_status: 'active' })];
     expect(computeCandidateFingerprint(edges, nodes, TID)).toBe('a>X>active');
   });

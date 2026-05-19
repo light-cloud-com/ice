@@ -31,10 +31,10 @@ vi.mock('../orphan-cleanup.service', () => ({
   cleanupOrphanedIceResources: vi.fn(),
 }));
 
-import { hasQuotaFailure, retryAfterQuotaCleanup } from '../quota-retry';
 import * as dispatcher from '../deploy-event-dispatcher';
-import * as schedulerCallbacks from '../scheduler-callbacks';
 import * as orphanCleanup from '../orphan-cleanup.service';
+import { hasQuotaFailure, retryAfterQuotaCleanup } from '../quota-retry';
+import * as schedulerCallbacks from '../scheduler-callbacks';
 
 const emitLogMock = (dispatcher as any).emitLog as ReturnType<typeof vi.fn>;
 const makeSchedulerCallbacksMock = (schedulerCallbacks as any).makeSchedulerCallbacks as ReturnType<typeof vi.fn>;
@@ -67,15 +67,13 @@ describe('hasQuotaFailure', () => {
   });
 
   it("returns true on a Quota 'BACKEND_BUCKETS' substring", () => {
-    expect(
-      hasQuotaFailure([{ success: false, error: "googleapi error: Quota 'BACKEND_BUCKETS' exceeded" }]),
-    ).toBe(true);
+    expect(hasQuotaFailure([{ success: false, error: "googleapi error: Quota 'BACKEND_BUCKETS' exceeded" }])).toBe(
+      true,
+    );
   });
 
   it('returns true on a Backend bucket quota exceeded substring', () => {
-    expect(
-      hasQuotaFailure([{ success: false, error: 'Backend bucket quota exceeded — try cleanup' }]),
-    ).toBe(true);
+    expect(hasQuotaFailure([{ success: false, error: 'Backend bucket quota exceeded — try cleanup' }])).toBe(true);
   });
 
   it('returns false when the matching error is on a SUCCESSFUL resource (gate requires !r.success)', () => {
@@ -384,10 +382,7 @@ describe('retryAfterQuotaCleanup', () => {
 
     await retryAfterQuotaCleanup(args);
 
-    expect(emitLogMock).toHaveBeenCalledWith(
-      'card-1',
-      '[auto-cleanup] Cleanup attempt failed: plain-string-failure',
-    );
+    expect(emitLogMock).toHaveBeenCalledWith('card-1', '[auto-cleanup] Cleanup attempt failed: plain-string-failure');
   });
 
   it('passes auth_key_file and auth_credentials from authClient private fields verbatim', async () => {

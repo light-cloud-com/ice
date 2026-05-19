@@ -5,14 +5,6 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
-import { create_mutable_graph } from '../graph/mutable-graph';
-import type { Graph } from '../types/graph';
-import {
-  sanitize_name,
-  sanitize_label_value,
-} from './utils/name-utils';
-import { generate_stable_name } from './utils/stable-name';
-import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
 import {
   UI_ONLY_TYPES,
   SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
@@ -21,10 +13,15 @@ import {
   isCustomDomainStandalone,
   map_edge_relationship,
 } from './edge-classifier';
+import { create_mutable_graph } from '../graph/mutable-graph';
 import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
 import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
 import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
 import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
+import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
+import { sanitize_name, sanitize_label_value } from './utils/name-utils';
+import { generate_stable_name } from './utils/stable-name';
+import type { Graph } from '../types/graph';
 
 // =============================================================================
 // Types
@@ -398,4 +395,3 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     deployables,
   };
 }
-

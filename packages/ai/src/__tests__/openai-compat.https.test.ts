@@ -34,8 +34,8 @@ describe('OpenAICompatProvider — https transport selection', () => {
     const { OpenAICompatProvider } = await import('../providers/openai-compat');
     const p = new OpenAICompatProvider({ baseUrl: 'https://secure.example' });
     // Fire and forget — the mocked request never invokes a response handler.
-    p.streamChat({ systemPrompt: '', messages: [], maxTokens: 1 })
-      [Symbol.asyncIterator]()
+    const stream = p.streamChat({ systemPrompt: '', messages: [], maxTokens: 1 });
+    stream[Symbol.asyncIterator]()
       .next()
       .catch(() => {});
 

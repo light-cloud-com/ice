@@ -54,8 +54,8 @@ vi.mock('../ai-audit.service', () => ({
 }));
 
 import { processCanvasIntent, streamCanvasIntent } from '../ai.service';
-import type { Response } from 'express';
 import type { SerializedCanvas } from '@ice/types';
+import type { Response } from 'express';
 
 const baseCanvas: SerializedCanvas = {
   nodes: [],
@@ -89,10 +89,7 @@ describe('processCanvasIntent', () => {
       messages: [{ role: 'user', content: 'add a redis cache' }],
       maxTokens: 4096,
     });
-    expect(mocks.parseAiResponse).toHaveBeenCalledWith(
-      '{"explanation":"ok","operations":[]}',
-      expect.any(Set),
-    );
+    expect(mocks.parseAiResponse).toHaveBeenCalledWith('{"explanation":"ok","operations":[]}', expect.any(Set));
     expect(mocks.runPostProcessing).toHaveBeenCalledTimes(1);
     expect(out).toEqual({ explanation: 'ok', operations: [] });
   });
@@ -102,9 +99,7 @@ describe('processCanvasIntent', () => {
 
     await processCanvasIntent('I want to build a SaaS', baseCanvas);
 
-    expect(mocks.providerChat).toHaveBeenCalledWith(
-      expect.objectContaining({ maxTokens: 8192 }),
-    );
+    expect(mocks.providerChat).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 8192 }));
   });
 
   it('returns "No response generated" when provider returns empty content', async () => {
@@ -224,9 +219,7 @@ describe('streamCanvasIntent', () => {
     const ctx = makeMockResponse();
     await streamCanvasIntent('I want to build a SaaS', baseCanvas, ctx.res);
 
-    expect(mocks.providerStreamChat).toHaveBeenCalledWith(
-      expect.objectContaining({ maxTokens: 8192 }),
-    );
+    expect(mocks.providerStreamChat).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 8192 }));
     const joined = ctx.writes.join('');
     expect(joined).toContain('Designing your cloud architecture');
   });

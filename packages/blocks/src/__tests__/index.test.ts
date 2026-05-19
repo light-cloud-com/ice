@@ -17,6 +17,14 @@
  * is the smoke test for the 100+ underlying imports.
  */
 
+import {
+  ALL_PROVIDERS,
+  CATEGORY_IDS,
+  ICE_TYPE_TO_CATEGORY_ID,
+  getCategoryForIceType,
+  isCategoryEnabledForProvider,
+  PROVIDER_FLAGS,
+} from '@ice/constants';
 import { describe, expect, it } from 'vitest';
 import {
   BLOCK_BLUEPRINTS,
@@ -33,15 +41,7 @@ import {
   SNIPPET_LANGUAGES,
   SNIPPET_LANGUAGE_LABELS,
   DEFAULT_ZOOM_THRESHOLDS,
-} from '../index';
-import {
-  ALL_PROVIDERS,
-  CATEGORY_IDS,
-  ICE_TYPE_TO_CATEGORY_ID,
-  getCategoryForIceType,
-  isCategoryEnabledForProvider,
-  PROVIDER_FLAGS,
-} from '@ice/constants';
+} from '..';
 
 describe('@ice/blocks barrel — re-exports', () => {
   it('exposes the expansion engine as a callable function', () => {

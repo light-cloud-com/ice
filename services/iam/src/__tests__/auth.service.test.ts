@@ -8,9 +8,9 @@
  * getProfile / findOrCreateOAuthUser branch-by-branch.
  */
 
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import prisma from '@ice/db';
 import * as bcrypt from 'bcryptjs';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
 beforeAll(() => {
   process.env.NODE_ENV = 'test';
@@ -303,17 +303,18 @@ describe('refreshToken', () => {
   it('rejects payloads whose type is not "refresh"', async () => {
     const { refreshToken } = await import('../services/auth.service');
 
-    await expect(
-      refreshToken('tok', { userId: 'u', organisationId: 'o' /* no type */ }),
-    ).rejects.toMatchObject({ status: 401, message: /Invalid token type/ });
+    await expect(refreshToken('tok', { userId: 'u', organisationId: 'o' /* no type */ })).rejects.toMatchObject({
+      status: 401,
+      message: /Invalid token type/,
+    });
   });
 
   it('rejects payloads where type is set to a non-refresh value', async () => {
     const { refreshToken } = await import('../services/auth.service');
 
-    await expect(
-      refreshToken('tok', { userId: 'u', organisationId: 'o', type: 'access' }),
-    ).rejects.toMatchObject({ status: 401 });
+    await expect(refreshToken('tok', { userId: 'u', organisationId: 'o', type: 'access' })).rejects.toMatchObject({
+      status: 401,
+    });
   });
 
   it('rejects a missing refresh-token row without wiping the family (findings #3)', async () => {
@@ -343,9 +344,10 @@ describe('refreshToken', () => {
 
     const { refreshToken } = await import('../services/auth.service');
 
-    await expect(
-      refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
-    ).rejects.toMatchObject({ status: 401, message: /expired/ });
+    await expect(refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' })).rejects.toMatchObject({
+      status: 401,
+      message: /expired/,
+    });
     expect(prisma.refreshToken.delete).toHaveBeenCalledWith({ where: { token: 'tok' } });
   });
 
@@ -360,9 +362,10 @@ describe('refreshToken', () => {
 
     const { refreshToken } = await import('../services/auth.service');
 
-    await expect(
-      refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
-    ).rejects.toMatchObject({ status: 401, message: /expired/ });
+    await expect(refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' })).rejects.toMatchObject({
+      status: 401,
+      message: /expired/,
+    });
   });
 
   it('rotates a valid refresh token: deletes old, issues new pair, persists new row', async () => {
@@ -501,9 +504,7 @@ describe('getProfile', () => {
       onboarding_step: 0,
       default_provider: null,
       default_region: null,
-      memberships: [
-        { organisation_id: 'org-1', role: 'admin', organisation: { id: 'org-1', name: 'A Inc' } },
-      ],
+      memberships: [{ organisation_id: 'org-1', role: 'admin', organisation: { id: 'org-1', name: 'A Inc' } }],
       organisation: { id: 'org-1', name: 'A Inc' },
     });
     const { getProfile } = await import('../services/auth.service');

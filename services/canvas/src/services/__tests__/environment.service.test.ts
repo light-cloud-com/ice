@@ -130,10 +130,12 @@ describe('bootstrapProductionEnvironment', () => {
 
   it('creates a new card AND production env inside a transaction when none exists', async () => {
     envFindFirst.mockResolvedValue(null);
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'card-new' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-new', type: 'production' }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'card-new' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-new', type: 'production' }) },
+      }),
+    );
 
     const result = await bootstrapProductionEnvironment('p1', 'u1', 'Acme');
 
@@ -145,10 +147,12 @@ describe('bootstrapProductionEnvironment', () => {
     envFindFirst.mockResolvedValue(null);
     const txCardCreate = vi.fn();
     const txEnvCreate = vi.fn().mockResolvedValue({ id: 'env-x' });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: txCardCreate },
-      environment: { create: txEnvCreate },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: txCardCreate },
+        environment: { create: txEnvCreate },
+      }),
+    );
 
     await bootstrapProductionEnvironment('p1', 'u1', 'Acme', 'card-existing');
 
@@ -177,9 +181,9 @@ describe('bootstrapProductionEnvironment', () => {
     // old env unchanged and never noticed. Loud failure is preferred.
     envFindFirst.mockResolvedValue({ id: 'env-prod', type: 'production', card_id: 'card-old' });
 
-    await expect(
-      bootstrapProductionEnvironment('p1', 'u1', 'My Project', 'card-different'),
-    ).rejects.toThrow(/Production environment already exists.*card_id=card-old.*card_id=card-different/);
+    await expect(bootstrapProductionEnvironment('p1', 'u1', 'My Project', 'card-different')).rejects.toThrow(
+      /Production environment already exists.*card_id=card-old.*card_id=card-different/,
+    );
     expect(transactionMock).not.toHaveBeenCalled();
   });
 });
@@ -190,9 +194,7 @@ describe('createEnvironment', () => {
   it('throws when the project already has the maximum number of environments', async () => {
     envCount.mockResolvedValue(20);
 
-    await expect(createEnvironment('p1', 'u1', 'staging', 'staging')).rejects.toThrow(
-      /Maximum 20 environments/,
-    );
+    await expect(createEnvironment('p1', 'u1', 'staging', 'staging')).rejects.toThrow(/Maximum 20 environments/);
   });
 
   it('throws when production is missing', async () => {
@@ -215,10 +217,12 @@ describe('createEnvironment', () => {
       id: 'env-new',
       card: { id: 'new-card', name: 'Staging', updated_at: new Date() },
     });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: txCardCreate },
-      environment: { create: txEnvCreate },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: txCardCreate },
+        environment: { create: txEnvCreate },
+      }),
+    );
     ruleFindMany.mockResolvedValue([]);
 
     const result = await createEnvironment('p1', 'u1', 'Staging', 'staging');
@@ -238,10 +242,12 @@ describe('createEnvironment', () => {
     });
     const txCardCreate = vi.fn().mockResolvedValue({ id: 'new-card' });
     const txEnvCreate = vi.fn().mockResolvedValue({ id: 'env-x', card: { id: 'new-card' } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: txCardCreate },
-      environment: { create: txEnvCreate },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: txCardCreate },
+        environment: { create: txEnvCreate },
+      }),
+    );
     ruleFindMany.mockResolvedValue([]);
 
     await createEnvironment('p1', 'u1', 'feature x', 'development');
@@ -253,10 +259,12 @@ describe('createEnvironment', () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
     const txEnvCreate = vi.fn().mockResolvedValue({ id: 'env', card: { id: 'c' } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'c' }) },
-      environment: { create: txEnvCreate },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'c' }) },
+        environment: { create: txEnvCreate },
+      }),
+    );
     ruleFindMany.mockResolvedValue([]);
 
     await createEnvironment('p1', 'u1', 'My Cool Env', 'development');
@@ -268,10 +276,12 @@ describe('createEnvironment', () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
     const txEnvCreate = vi.fn().mockResolvedValue({ id: 'env', card: { id: 'c' } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'c' }) },
-      environment: { create: txEnvCreate },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'c' }) },
+        environment: { create: txEnvCreate },
+      }),
+    );
     ruleFindMany.mockResolvedValue([]);
 
     await createEnvironment('p1', 'u1', 'feature', '');
@@ -282,10 +292,12 @@ describe('createEnvironment', () => {
   it('clones production trigger rules with branch_pattern="staging" when env name is staging', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-stg', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-stg', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([
       {
         node_id: 'n1',
@@ -311,10 +323,12 @@ describe('createEnvironment', () => {
   it('uses branch_pattern="develop" when env name is develop', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-dev', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-dev', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([{ node_id: 'n', organisation_id: 'org' }]);
     ruleCreate.mockResolvedValue({});
 
@@ -326,10 +340,12 @@ describe('createEnvironment', () => {
   it('uses branch_pattern="develop" when env name is development (alias)', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-dev', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-dev', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([{ node_id: 'n', organisation_id: 'org' }]);
     ruleCreate.mockResolvedValue({});
 
@@ -341,10 +357,12 @@ describe('createEnvironment', () => {
   it('uses prBranch as branch_pattern when type=pr and prBranch is provided', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-pr', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-pr', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([{ node_id: 'n', organisation_id: 'org' }]);
     ruleCreate.mockResolvedValue({});
 
@@ -356,10 +374,12 @@ describe('createEnvironment', () => {
   it('falls back to the env name as branch_pattern when env is not staging/develop and not a PR', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-pre', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-pre', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([{ node_id: 'n', organisation_id: 'org' }]);
     ruleCreate.mockResolvedValue({});
 
@@ -371,10 +391,12 @@ describe('createEnvironment', () => {
   it('falls back to env name when type=pr but prBranch is missing', async () => {
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue({ id: 'env-pr', card: { id: 'newc' } }) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-pr', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockResolvedValue([{ node_id: 'n', organisation_id: 'org' }]);
     ruleCreate.mockResolvedValue({});
 
@@ -436,9 +458,7 @@ describe('createEnvironment', () => {
       { node_id: 'n1', repository: 'r1', trigger_type: 'push' },
       { node_id: 'n2', repository: 'r2', trigger_type: 'push' },
     ]);
-    ruleCreate
-      .mockRejectedValueOnce(Object.assign(new Error('exists'), { code: 'P2002' }))
-      .mockResolvedValueOnce({});
+    ruleCreate.mockRejectedValueOnce(Object.assign(new Error('exists'), { code: 'P2002' })).mockResolvedValueOnce({});
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const out = await createEnvironment('p1', 'u1', 'staging', 'staging');
@@ -563,9 +583,7 @@ describe('compareEnvironments', () => {
   });
 
   it('throws when the target env is missing', async () => {
-    envFindUnique
-      .mockResolvedValueOnce({ id: 's', card: { nodes: [] } })
-      .mockResolvedValueOnce(null);
+    envFindUnique.mockResolvedValueOnce({ id: 's', card: { nodes: [] } }).mockResolvedValueOnce(null);
 
     await expect(compareEnvironments('s', 't')).rejects.toThrow('Environment not found');
   });
@@ -601,12 +619,10 @@ describe('compareEnvironments', () => {
   });
 
   it('reports removed when target has a node missing from source', async () => {
-    envFindUnique
-      .mockResolvedValueOnce({ id: 's', card: { nodes: [] } })
-      .mockResolvedValueOnce({
-        id: 't',
-        card: { nodes: [{ id: 'n2', data: { label: 'B', iceType: 'gcp.storage.bucket' } }] },
-      });
+    envFindUnique.mockResolvedValueOnce({ id: 's', card: { nodes: [] } }).mockResolvedValueOnce({
+      id: 't',
+      card: { nodes: [{ id: 'n2', data: { label: 'B', iceType: 'gcp.storage.bucket' } }] },
+    });
 
     const diff = await compareEnvironments('s', 't');
 
@@ -797,9 +813,7 @@ describe('compareEnvironments', () => {
 
 describe('promoteEnvironment', () => {
   it('throws when source is missing', async () => {
-    envFindUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 't', type: 'production' });
+    envFindUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 't', type: 'production' });
 
     await expect(promoteEnvironment('s', 't', 'u1')).rejects.toThrow('Environment not found');
   });
@@ -809,9 +823,7 @@ describe('promoteEnvironment', () => {
       .mockResolvedValueOnce({ id: 's', card: { nodes: [], edges: [] }, name: 'staging' })
       .mockResolvedValueOnce({ id: 't', type: 'development', card_id: 'tc' });
 
-    await expect(promoteEnvironment('s', 't', 'u1')).rejects.toThrow(
-      'Can only promote to the production environment',
-    );
+    await expect(promoteEnvironment('s', 't', 'u1')).rejects.toThrow('Can only promote to the production environment');
     expect(cardUpdate).not.toHaveBeenCalled();
   });
 
@@ -952,9 +964,7 @@ describe('closePrEnvironment', () => {
       { id: 'e1', card_id: 'c1' },
       { id: 'e2', card_id: 'c2' },
     ]);
-    cardDelete
-      .mockRejectedValueOnce(new Error('fk constraint'))
-      .mockResolvedValueOnce({});
+    cardDelete.mockRejectedValueOnce(new Error('fk constraint')).mockResolvedValueOnce({});
 
     // Must not throw
     await closePrEnvironment('me/repo', 99);

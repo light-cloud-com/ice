@@ -74,10 +74,7 @@ const mocks = vi.hoisted(() => ({
       },
     },
     pipeline: {
-      nodeStatus: {} as Record<
-        string,
-        { status: string; stage?: string; startedAt?: string }
-      >,
+      nodeStatus: {} as Record<string, { status: string; stage?: string; startedAt?: string }>,
       rules: {} as Record<string, Array<Record<string, unknown>>>,
       history: {} as Record<string, Array<Record<string, unknown>>>,
     },
@@ -125,9 +122,7 @@ vi.mock('react', async (importOriginal) => {
   (mocks as unknown as { __resetUseState: () => void }).__resetUseState = () => {
     callIdx = 0;
   };
-  const dispatch = [
-    () => [mocks.autoCreatedRef.current, mocks.autoCreatedSetterSpy] as const,
-  ];
+  const dispatch = [() => [mocks.autoCreatedRef.current, mocks.autoCreatedSetterSpy] as const];
   return {
     ...actual,
     useState: vi.fn(() => {
@@ -196,12 +191,7 @@ import { SourceRepositorySection } from '../source-repository-section';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -215,10 +205,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -309,8 +296,7 @@ type RenderProps = Partial<{
   activeEnvName: string;
 }>;
 
-const HAS_ACTIVE_CARD = (props: RenderProps): boolean =>
-  Object.prototype.hasOwnProperty.call(props, 'activeCard');
+const HAS_ACTIVE_CARD = (props: RenderProps): boolean => Object.prototype.hasOwnProperty.call(props, 'activeCard');
 
 const renderSection = (props: RenderProps = {}): React.ReactElement | null => {
   // Reset useState queue + spy state for each render.
@@ -370,10 +356,7 @@ describe('SourceRepositorySection', () => {
   });
 
   it('mount does NOT fire fetchGitHubBranches when branches cache is already populated', () => {
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     renderSection({ nodeRepo: 'owner/repo' });
     expect(mocks.fetchGitHubBranchesSpy).not.toHaveBeenCalled();
   });
@@ -502,26 +485,16 @@ describe('SourceRepositorySection', () => {
 
   it('auto-create picks "master" when no "main" but "master" is in branches', () => {
     mocks.state.pipeline.rules['card-1:svc-1'] = [];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'master' },
-      { name: 'feature' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'master' }, { name: 'feature' }];
     renderSection();
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ branchPattern: 'master' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ branchPattern: 'master' }));
   });
 
   it('auto-create falls back to first branch when neither "main" nor "master" exists', () => {
     mocks.state.pipeline.rules['card-1:svc-1'] = [];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'feature-1' },
-      { name: 'feature-2' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'feature-1' }, { name: 'feature-2' }];
     renderSection();
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ branchPattern: 'feature-1' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ branchPattern: 'feature-1' }));
   });
 
   it('auto-create forwards buildCommand/outputDirectory when set', () => {
@@ -546,17 +519,13 @@ describe('SourceRepositorySection', () => {
     });
     mocks.state.pipeline.rules['card-1:svc-A'] = [];
     renderSection({ activeCard: card });
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ nodeId: 'svc-A' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ nodeId: 'svc-A' }));
   });
 
   it('auto-create uses activeEnvName for environment', () => {
     mocks.state.pipeline.rules['card-1:svc-1'] = [];
     renderSection({ activeEnvName: 'staging' });
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ environment: 'staging' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ environment: 'staging' }));
   });
 
   it('auto-create logs to console.error when the dispatch promise rejects', async () => {
@@ -573,10 +542,7 @@ describe('SourceRepositorySection', () => {
       // Flush microtasks so the .catch runs.
       await new Promise((r) => setTimeout(r, 0));
       await new Promise((r) => setTimeout(r, 0));
-      expect(errSpy).toHaveBeenCalledWith(
-        '[Pipeline] Auto-create failed:',
-        expect.any(Error),
-      );
+      expect(errSpy).toHaveBeenCalledWith('[Pipeline] Auto-create failed:', expect.any(Error));
     } finally {
       errSpy.mockRestore();
     }
@@ -598,9 +564,7 @@ describe('SourceRepositorySection', () => {
   it('renders a Section with title "t:properties.source.repository" containing the RepoSelector', () => {
     const tree = renderSection();
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const repoSection = sections.find(
-      (s) => (s.props as { title: string }).title === 't:properties.source.repository',
-    );
+    const repoSection = sections.find((s) => (s.props as { title: string }).title === 't:properties.source.repository');
     expect(repoSection).toBeDefined();
     const repoSelectors = findByPredicate(repoSection!, (el) => el.type === mocks.MockRepoSelector);
     expect(repoSelectors).toHaveLength(1);
@@ -650,9 +614,7 @@ describe('SourceRepositorySection', () => {
   it('does NOT render the branch Section when nodeRepo is empty', () => {
     const tree = renderSection({ nodeRepo: '' });
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const branchSection = sections.find(
-      (s) => (s.props as { title: string }).title === 't:properties.source.branch',
-    );
+    const branchSection = sections.find((s) => (s.props as { title: string }).title === 't:properties.source.branch');
     expect(branchSection).toBeUndefined();
   });
 
@@ -664,9 +626,7 @@ describe('SourceRepositorySection', () => {
     ];
     const tree = renderSection({ nodeBranch: 'develop' });
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     expect(branchSelect).toBeDefined();
     expect((branchSelect!.props as { value: string }).value).toBe('develop');
     const options = findByType(branchSelect!, 'option');
@@ -677,9 +637,7 @@ describe('SourceRepositorySection', () => {
   it('branch select renders fallback options (current + main + master) when branches cache is empty', () => {
     const tree = renderSection({ nodeBranch: 'feature-x' });
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     const options = findByType(branchSelect!, 'option');
     const optionValues = options.map((o) => (o.props as { value: string }).value);
     expect(optionValues).toEqual(['feature-x', 'main', 'master']);
@@ -688,9 +646,7 @@ describe('SourceRepositorySection', () => {
   it('branch fallback omits "main" when nodeBranch === "main"', () => {
     const tree = renderSection({ nodeBranch: 'main' });
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     const options = findByType(branchSelect!, 'option');
     const optionValues = options.map((o) => (o.props as { value: string }).value);
     // Two options: nodeBranch ('main') + master.
@@ -700,9 +656,7 @@ describe('SourceRepositorySection', () => {
   it('branch fallback omits "master" when nodeBranch === "master"', () => {
     const tree = renderSection({ nodeBranch: 'master' });
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     const options = findByType(branchSelect!, 'option');
     const optionValues = options.map((o) => (o.props as { value: string }).value);
     expect(optionValues).toEqual(['master', 'main']);
@@ -710,15 +664,10 @@ describe('SourceRepositorySection', () => {
 
   it('branch select onChange dispatches onUpdateField("branch", value)', () => {
     const onUpdateField = vi.fn();
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     const tree = renderSection({ onUpdateField });
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     (branchSelect!.props as { onChange: (e: { target: { value: string } }) => void }).onChange({
       target: { value: 'develop' },
     });
@@ -726,15 +675,10 @@ describe('SourceRepositorySection', () => {
   });
 
   it('protected branches show a protected suffix in the option text', () => {
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main', protected: true },
-      { name: 'feature' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main', protected: true }, { name: 'feature' }];
     const tree = renderSection();
     const selects = findByType(tree, 'select');
-    const branchSelect = selects.find(
-      (s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch',
-    );
+    const branchSelect = selects.find((s) => (s.props as { 'data-prop-key'?: string })['data-prop-key'] === 'branch');
     const text = collectText(branchSelect!);
     expect(text).toContain('t:properties.source.branchProtected');
   });
@@ -751,12 +695,8 @@ describe('SourceRepositorySection', () => {
     const tree = renderSection({ buildCommand: 'npm run build', outputDirectory: 'dist' });
     const tfs = findByPredicate(tree, (el) => el.type === mocks.MockTextField);
     expect(tfs).toHaveLength(2);
-    const buildTF = tfs.find(
-      (t) => (t.props as { propKey?: string }).propKey === 'buildCommand',
-    );
-    const outputTF = tfs.find(
-      (t) => (t.props as { propKey?: string }).propKey === 'outputDirectory',
-    );
+    const buildTF = tfs.find((t) => (t.props as { propKey?: string }).propKey === 'buildCommand');
+    const outputTF = tfs.find((t) => (t.props as { propKey?: string }).propKey === 'outputDirectory');
     expect(buildTF).toBeDefined();
     expect(outputTF).toBeDefined();
     expect((buildTF!.props as { value: string }).value).toBe('npm run build');
@@ -767,14 +707,10 @@ describe('SourceRepositorySection', () => {
     const onUpdateField = vi.fn();
     const tree = renderSection({ onUpdateField });
     const tfs = findByPredicate(tree, (el) => el.type === mocks.MockTextField);
-    const buildTF = tfs.find(
-      (t) => (t.props as { propKey?: string }).propKey === 'buildCommand',
-    )!;
+    const buildTF = tfs.find((t) => (t.props as { propKey?: string }).propKey === 'buildCommand')!;
     (buildTF.props as { onChange: (v: string) => void }).onChange('yarn build');
     expect(onUpdateField).toHaveBeenCalledWith('buildCommand', 'yarn build');
-    const outputTF = tfs.find(
-      (t) => (t.props as { propKey?: string }).propKey === 'outputDirectory',
-    )!;
+    const outputTF = tfs.find((t) => (t.props as { propKey?: string }).propKey === 'outputDirectory')!;
     (outputTF.props as { onChange: (v: string) => void }).onChange('build/');
     expect(onUpdateField).toHaveBeenCalledWith('outputDirectory', 'build/');
   });
@@ -784,9 +720,7 @@ describe('SourceRepositorySection', () => {
   it('renders a Triggers section with envName in the title when nodeRepo + connectedServices', () => {
     const tree = renderSection({ activeEnvName: 'staging' });
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const triggerSection = sections.find(
-      (s) => (s.props as { title: string }).title === 'Triggers · staging',
-    );
+    const triggerSection = sections.find((s) => (s.props as { title: string }).title === 'Triggers · staging');
     expect(triggerSection).toBeDefined();
   });
 
@@ -829,9 +763,7 @@ describe('SourceRepositorySection', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        (el.props as { className: string }).className.includes(
-          'flex items-center gap-1.5 text-ice-xs rounded border',
-        ),
+        (el.props as { className: string }).className.includes('flex items-center gap-1.5 text-ice-xs rounded border'),
     );
     expect(triggerRows).toHaveLength(2);
   });
@@ -861,10 +793,7 @@ describe('SourceRepositorySection', () => {
     mocks.state.pipeline.rules['card-1:svc-1'] = [
       makeRule({ environment: 'staging' }), // doesn't match active env
     ];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     // Ensure auto-create doesn't fire by pre-marking autoCreated.
     mocks.autoCreatedRef.current = true;
     const tree = renderSection();
@@ -898,10 +827,7 @@ describe('SourceRepositorySection', () => {
     mocks.state.pipeline.rules['card-1:svc-1'] = [
       makeRule({ branch_pattern: 'main', environment: 'production', node_id: 'svc-1' }),
     ];
-    mocks.state.integrations.github.branches['owner/repo'] = [
-      { name: 'main' },
-      { name: 'develop' },
-    ];
+    mocks.state.integrations.github.branches['owner/repo'] = [{ name: 'main' }, { name: 'develop' }];
     mocks.autoCreatedRef.current = true;
     const tree = renderSection({ activeEnvName: 'preview' });
     const toggles = findByPredicate(
@@ -931,17 +857,13 @@ describe('SourceRepositorySection', () => {
         (el.props as { className: string }).className.includes('w-6 h-3.5 rounded-full'),
     );
     (toggles[0].props as { onClick: () => void }).onClick();
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ branchPattern: 'main' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ branchPattern: 'main' }));
   });
 
   // ── Manual deploy button (dynamic import) ─────────────────────────────────
 
   it('renders the Deploy button only when the rule is disabled', () => {
-    mocks.state.pipeline.rules['card-1:svc-1'] = [
-      makeRule({ id: 'r-D', enabled: false, environment: 'production' }),
-    ];
+    mocks.state.pipeline.rules['card-1:svc-1'] = [makeRule({ id: 'r-D', enabled: false, environment: 'production' })];
     const tree = renderSection();
     const deployBtns = findByPredicate(
       tree,
@@ -955,9 +877,7 @@ describe('SourceRepositorySection', () => {
   });
 
   it('does NOT render the Deploy button when the rule is enabled', () => {
-    mocks.state.pipeline.rules['card-1:svc-1'] = [
-      makeRule({ enabled: true, environment: 'production' }),
-    ];
+    mocks.state.pipeline.rules['card-1:svc-1'] = [makeRule({ enabled: true, environment: 'production' })];
     const tree = renderSection();
     const deployBtns = findByPredicate(
       tree,
@@ -1012,9 +932,7 @@ describe('SourceRepositorySection', () => {
     });
     const tree = renderSection({ activeCard: card });
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const triggerSection = sections.find(
-      (s) => (s.props as { title: string }).title === 't:pipeline.triggers',
-    );
+    const triggerSection = sections.find((s) => (s.props as { title: string }).title === 't:pipeline.triggers');
     expect(triggerSection).toBeDefined();
     expect(collectText(triggerSection!)).toContain('t:properties.noServiceHint');
   });
@@ -1029,9 +947,7 @@ describe('SourceRepositorySection', () => {
     };
     const tree = renderSection();
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const liveBuild = sections.find(
-      (s) => (s.props as { title: string }).title === 't:pipeline.liveBuild',
-    );
+    const liveBuild = sections.find((s) => (s.props as { title: string }).title === 't:pipeline.liveBuild');
     expect(liveBuild).toBeDefined();
     expect(collectText(liveBuild!)).toContain('compile');
   });
@@ -1039,9 +955,7 @@ describe('SourceRepositorySection', () => {
   it('does NOT render the live build Section when no service is active', () => {
     const tree = renderSection();
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const liveBuild = sections.find(
-      (s) => (s.props as { title: string }).title === 't:pipeline.liveBuild',
-    );
+    const liveBuild = sections.find((s) => (s.props as { title: string }).title === 't:pipeline.liveBuild');
     expect(liveBuild).toBeUndefined();
   });
 
@@ -1074,9 +988,7 @@ describe('SourceRepositorySection', () => {
     };
     const tree = renderSection();
     const sections = findByPredicate(tree, (el) => el.type === mocks.MockSection);
-    const liveBuild = sections.find(
-      (s) => (s.props as { title: string }).title === 't:pipeline.liveBuild',
-    );
+    const liveBuild = sections.find((s) => (s.props as { title: string }).title === 't:pipeline.liveBuild');
     expect(liveBuild).toBeDefined();
     // Status word should still appear.
     expect(collectText(liveBuild!)).toContain('queued');
@@ -1150,9 +1062,7 @@ describe('SourceRepositorySection', () => {
     mocks.state.pipeline.rules[':svc-1'] = []; // empty cardId in the key
     renderSection({ activeCard: card });
     // Auto-create runs with empty cardId.
-    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ cardId: '' }),
-    );
+    expect(mocks.createPipelineRuleSpy).toHaveBeenCalledWith(expect.objectContaining({ cardId: '' }));
   });
 
   it('handles activeCard with no edges array', () => {

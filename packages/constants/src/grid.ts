@@ -68,6 +68,21 @@ export const ST_BODY_HEIGHT = 60;
 export const ST_PADDING = 12;
 
 /**
+ * Compute.CronJob multi-task layout — each task is a row with its own
+ * connection port on the right edge, similar to Network.CustomDomain.
+ *
+ * Port-y geometry is derived from these constants + CardShell's hardcoded
+ * body padding (10px top, 12px bottom). If CardShell's body padding
+ * changes, `getCronTaskPortY` in the cron renderer needs to match.
+ */
+export const CRON_HEADER_HEIGHT = 48;
+export const CRON_BODY_PADDING_TOP = 10;
+export const CRON_BODY_PADDING_BOTTOM = 12;
+export const CRON_TASK_ROW_HEIGHT = 28;
+export const CRON_TASK_ROW_GAP = 6;
+export const CRON_MIN_TASK_ROWS = 1;
+
+/**
  * Database family layout — postgres / mysql / mongodb share the same
  * card height. The body content (relational stripes vs. document pills)
  * is what differentiates each renderer.

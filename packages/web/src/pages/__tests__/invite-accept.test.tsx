@@ -69,7 +69,9 @@ vi.mock('react', async (importOriginal) => {
 });
 
 vi.mock('@ui/i18n', () => ({
-  useTranslation: () => ({ t: (k: string, vars?: Record<string, string>) => (vars ? `${k}:${JSON.stringify(vars)}` : k) }),
+  useTranslation: () => ({
+    t: (k: string, vars?: Record<string, string>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),
+  }),
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -118,10 +120,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -201,10 +200,7 @@ describe('InviteAcceptPage — auth gate', () => {
     mocks.isAuthenticated.mockReturnValueOnce(false);
     render();
     await mocks.effects[0].cb();
-    expect(mocks.navigate).toHaveBeenCalledWith(
-      '/login?redirect=/invite/a%2Bb%2Fc%3Fd%3De%26f',
-      { replace: true },
-    );
+    expect(mocks.navigate).toHaveBeenCalledWith('/login?redirect=/invite/a%2Bb%2Fc%3Fd%3De%26f', { replace: true });
   });
 });
 
@@ -255,7 +251,7 @@ describe('InviteAcceptPage — accept flow success', () => {
       (el) =>
         el.type === 'p' &&
         typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { children: string }).children).startsWith('invite.success.description'),
+        (el.props as { children: string }).children.startsWith('invite.success.description'),
     );
     expect(desc).toHaveLength(1);
   });
@@ -308,7 +304,8 @@ describe('InviteAcceptPage — accept flow error', () => {
     expect(heading).toHaveLength(1);
     const links = findByPredicate(
       tree,
-      (el) => typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'Link',
     );
     expect(links).toHaveLength(1);

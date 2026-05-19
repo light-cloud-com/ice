@@ -127,7 +127,15 @@ vi.mock('@ui/shared/api/api-adapter', () => ({
 }));
 
 vi.mock('@ui/shared/components/ui/ice-select', () => ({
-  IceSelect: ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: Array<{ value: string; label: string }> }) => (
+  IceSelect: ({
+    value,
+    onChange,
+    options,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    options: Array<{ value: string; label: string }>;
+  }) => (
     <select data-stub="IceSelect" value={value} onChange={(e) => onChange(e.target.value)}>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -199,7 +207,7 @@ vi.mock('react-redux', () => ({
   useDispatch: () => (action: unknown) => {
     mocks.dispatch(action);
     if (action && typeof action === 'object' && typeof (action as { unwrap?: unknown }).unwrap === 'function') {
-      return (action as { unwrap: () => Promise<unknown> });
+      return action as { unwrap: () => Promise<unknown> };
     }
     return action;
   },
@@ -241,10 +249,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -318,9 +323,7 @@ describe('ProjectEnvironments — empty list', () => {
     expect(empty).toHaveLength(1);
     const cta = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'Create your first environment',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'Create your first environment',
     );
     expect(cta).toHaveLength(1);
   });
@@ -329,9 +332,7 @@ describe('ProjectEnvironments — empty list', () => {
     const tree = render();
     const cta = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'Create your first environment',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'Create your first environment',
     )[0];
     (cta.props as { onClick: () => void }).onClick();
     // slot 1 = showCreate
@@ -433,9 +434,7 @@ describe('ProjectEnvironments — list rendering', () => {
     );
     const trashBtn = findByPredicate(
       rows[0],
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { title?: string }).title === 'common.buttons.delete',
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'common.buttons.delete',
     );
     expect(trashBtn).toHaveLength(0); // protected → no trash
   });
@@ -745,9 +744,7 @@ describe('ProjectEnvironments — create flow', () => {
     // walking into the rendered <select>.
     const iceSelects = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        Array.isArray((el.props as { options?: unknown[] }).options),
+      (el) => typeof el.type === 'function' && Array.isArray((el.props as { options?: unknown[] }).options),
     );
     expect(iceSelects.length).toBe(1);
     (iceSelects[0].props as { onChange: (v: string) => void }).onChange('development');
@@ -795,7 +792,9 @@ describe('ProjectEnvironments — create flow', () => {
     const tree = render();
     const btn = findByPredicate(
       tree,
-      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'environments.createModal.creatingButton',
+      (el) =>
+        el.type === 'button' &&
+        (el.props as { children?: unknown }).children === 'environments.createModal.creatingButton',
     );
     expect(btn).toHaveLength(1);
   });
@@ -816,9 +815,7 @@ describe('ProjectEnvironments — create flow', () => {
       (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'common.buttons.create',
     )[0];
     // shouldn't throw even though unwrap rejects; the source's catch is empty
-    await expect(
-      (submitBtn.props as { onClick: () => Promise<void> }).onClick(),
-    ).resolves.toBeUndefined();
+    await expect((submitBtn.props as { onClick: () => Promise<void> }).onClick()).resolves.toBeUndefined();
   });
 });
 
@@ -839,9 +836,7 @@ describe('ProjectEnvironments — action buttons', () => {
   });
 
   it('does not render the promote button when there is no production env', () => {
-    mocks.environments = [
-      { id: 'stg', name: 'Stg', type: 'staging', card_id: 'cs', is_protected: false },
-    ];
+    mocks.environments = [{ id: 'stg', name: 'Stg', type: 'staging', card_id: 'cs', is_protected: false }];
     const tree = render();
     const promoteBtns = findByPredicate(
       tree,
@@ -900,7 +895,9 @@ describe('ProjectEnvironments — action buttons', () => {
     );
     expect(containers.length).toBe(1);
     const stop = vi.fn();
-    (containers[0].props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick({ stopPropagation: stop });
+    (containers[0].props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick({
+      stopPropagation: stop,
+    });
     expect(stop).toHaveBeenCalled();
   });
 });

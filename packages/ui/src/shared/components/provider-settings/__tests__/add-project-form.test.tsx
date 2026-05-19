@@ -53,10 +53,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -299,7 +296,10 @@ describe('AddProjectForm — submit', () => {
   it('success path: calls api.connect, appends new projects, resets new_*, clears form, success message', async () => {
     mocks.api.connect.mockResolvedValueOnce({
       success: true,
-      projects: [{ id: 'g2', name: 'G2' }, { id: 'g3', name: 'G3' }],
+      projects: [
+        { id: 'g2', name: 'G2' },
+        { id: 'g3', name: 'G3' },
+      ],
     });
     const setProviderStates = vi.fn();
     const setSuccess = vi.fn();
@@ -323,9 +323,9 @@ describe('AddProjectForm — submit', () => {
       projectId: 'pid',
       serviceAccountKey: '{"k":"v"}',
     });
-    const updater = setProviderStates.mock.calls[0][0] as (
-      prev: { gcp: ProviderRuntimeState },
-    ) => { gcp: ProviderRuntimeState };
+    const updater = setProviderStates.mock.calls[0][0] as (prev: { gcp: ProviderRuntimeState }) => {
+      gcp: ProviderRuntimeState;
+    };
     const next = updater({
       gcp: {
         connected: true,

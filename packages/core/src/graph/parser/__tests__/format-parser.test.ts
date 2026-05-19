@@ -24,7 +24,6 @@ import type {
   StringLiteral,
   NumberLiteral,
   BooleanLiteral,
-  NullLiteral,
   ArrayExpression,
   ObjectExpression,
   Reference,
@@ -385,8 +384,7 @@ describe('convert_value branches (driven via resource properties)', () => {
     expect((obj.properties[1]?.key as StringLiteral).value).toBe('b');
     expect((obj.properties[1]?.value as StringLiteral).value).toBe('x');
   });
-
- });
+});
 
 // -----------------------------------------------------------------------------
 // parse_reference_string — every branch in the switch
@@ -620,7 +618,6 @@ resources:
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]?.message).toContain('YAML parse error');
   });
-
 });
 
 // -----------------------------------------------------------------------------

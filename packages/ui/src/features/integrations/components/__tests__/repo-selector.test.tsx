@@ -14,7 +14,9 @@ const mocks = vi.hoisted(() => {
   return {
     state: {
       integrations: {
-        integrations: { github: { status: 'connected' as 'connected' | 'disconnected' | 'error' | 'connecting' | undefined } },
+        integrations: {
+          github: { status: 'connected' as 'connected' | 'disconnected' | 'error' | 'connecting' | undefined },
+        },
         github: {
           repos: [] as Array<{ full_name: string; description?: string | null; private?: boolean }>,
           loading: false,
@@ -133,7 +135,7 @@ describe('RepoSelector — disconnected state', () => {
     mocks.state.integrations.integrations = { github: { status: 'disconnected' } };
     const tree = callRender({ value: '', onChange: vi.fn(), compact: true });
     const btn = findByPredicate(tree, (el) => el.type === 'button');
-    expect((btn?.props.className as string)).toContain('text-ice-2xs');
+    expect(btn?.props.className as string).toContain('text-ice-2xs');
   });
 });
 
@@ -195,9 +197,19 @@ describe('RepoSelector — connected state', () => {
     ];
     const tree = callRender({ value: 'octo/repo1', onChange: vi.fn() });
     const combobox = findByPredicate(tree, (el) => el.type === mocks.ComboboxStub);
-    const options = combobox?.props.options as Array<{ value: string; label: string; description?: string; badge?: string }>;
+    const options = combobox?.props.options as Array<{
+      value: string;
+      label: string;
+      description?: string;
+      badge?: string;
+    }>;
     expect(options).toHaveLength(2);
-    expect(options[0]).toEqual({ value: 'octo/repo1', label: 'octo/repo1', description: 'public repo', badge: undefined });
+    expect(options[0]).toEqual({
+      value: 'octo/repo1',
+      label: 'octo/repo1',
+      description: 'public repo',
+      badge: undefined,
+    });
     expect(options[1]).toEqual({ value: 'octo/repo2', label: 'octo/repo2', description: undefined, badge: 'private' });
   });
 

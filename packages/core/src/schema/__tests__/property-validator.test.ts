@@ -60,14 +60,7 @@ describe('validate_property — top-level', () => {
   });
 
   it('runs constraint checks when type matches', () => {
-    const r = validate_property(
-      'p',
-      'ab',
-      prop({ type: 'string', validation: { min_length: 5 } }),
-      {},
-      0,
-      10,
-    );
+    const r = validate_property('p', 'ab', prop({ type: 'string', validation: { min_length: 5 } }), {}, 0, 10);
     expect(r).toHaveLength(1);
     expect(r[0]?.code).toBe('STRING_TOO_SHORT');
   });

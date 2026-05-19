@@ -2,7 +2,6 @@
  * FirstProjectStep — onboarding step 5 template picker + project name.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -12,9 +11,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   setProjectNameSpy: vi.fn((n: string) => ({ type: 'ob/projectName', payload: n })),
   setSelectedTemplateIdSpy: vi.fn((id: string | null) => ({ type: 'ob/template', payload: id })),
-  quickStarts: [
-    { id: 'qs-1', name: 'Quick Start', description: 'd1', icon: 'Globe' },
-  ],
+  quickStarts: [{ id: 'qs-1', name: 'Quick Start', description: 'd1', icon: 'Globe' }],
   composedTemplates: [
     { id: 'ct-1', name: 'Composed One', description: 'd2', icon: 'Server' },
     { id: 'ct-2', name: 'Composed Two', description: 'd3', icon: 'NotInMap' },
@@ -91,9 +88,7 @@ describe('FirstProjectStep — render', () => {
     const tree = callRender();
     const input = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'input' &&
-        (el.props as { id?: string }).id === 'ice-onboarding-project-input-name',
+      (el) => el.type === 'input' && (el.props as { id?: string }).id === 'ice-onboarding-project-input-name',
     );
     expect(input).toBeDefined();
   });
@@ -117,9 +112,7 @@ describe('FirstProjectStep — handlers', () => {
     const tree = callRender();
     const input = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'input' &&
-        (el.props as { id?: string }).id === 'ice-onboarding-project-input-name',
+      (el) => el.type === 'input' && (el.props as { id?: string }).id === 'ice-onboarding-project-input-name',
     );
     (input?.props.onChange as (e: { target: { value: string } }) => void)?.({ target: { value: 'My App' } });
     expect(mocks.setProjectNameSpy).toHaveBeenCalledWith('My App');
@@ -166,13 +159,13 @@ describe('FirstProjectStep — selection styling', () => {
     mocks.state.onboarding.selectedTemplateId = 'qs-1';
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    expect((buttons[0].props.className as string)).toContain('border-ice-accent');
+    expect(buttons[0].props.className as string).toContain('border-ice-accent');
   });
 
   it('marks blank-canvas as selected when selectedTemplateId is null', () => {
     mocks.state.onboarding.selectedTemplateId = null;
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
-    expect((buttons[buttons.length - 1].props.className as string)).toContain('border-ice-accent');
+    expect(buttons[buttons.length - 1].props.className as string).toContain('border-ice-accent');
   });
 });

@@ -17,10 +17,10 @@
  * store + Provider + renderToString.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock useEffect to no-op (we don't want side-effects firing during smoke render)
@@ -37,11 +37,11 @@ vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
-import { ProjectTree } from '../project-tree';
-import projectsReducer from '../../../../store/slices/projects-slice';
-import deployReducer from '../../../../store/slices/deploy-slice';
-import uiReducer from '../../../../store/slices/ui-slice';
 import cardsReducer from '../../../../store/slices/cards-slice';
+import deployReducer from '../../../../store/slices/deploy-slice';
+import projectsReducer from '../../../../store/slices/projects-slice';
+import uiReducer from '../../../../store/slices/ui-slice';
+import { ProjectTree } from '../project-tree';
 
 interface StoreInputs {
   projects?: Parameters<typeof projectsReducer>[1];

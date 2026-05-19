@@ -112,12 +112,7 @@ import { ResultsSummary } from '../results-summary';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -141,10 +136,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -792,9 +784,7 @@ describe('ResultsSummary — error IIFE', () => {
     setCounts({ succeeded: 1, failed: 1, totalMs: 0, allOk: false });
     mocks.primaryOutput.mockReturnValue(null);
     const url = 'https://console.cloud.google.com/apis/api/foo.googleapis.com/overview?project=p';
-    const tree = renderSummary([
-      baseResult({ success: false, error: 'boom', api_enable_url: url }),
-    ]);
+    const tree = renderSummary([baseResult({ success: false, error: 'boom', api_enable_url: url })]);
     const btns = findByPredicate(tree, (el) => {
       if (el.type !== 'button') return false;
       return collectText(el).includes('deploy.buttons.enableApi');
@@ -809,9 +799,7 @@ describe('ResultsSummary — error IIFE', () => {
     mocks.primaryOutput.mockReturnValue(null);
     mocks.isApiNotEnabledError.mockReturnValue(true);
     mocks.extractApiEnableUrl.mockReturnValue('https://console/extracted');
-    const tree = renderSummary([
-      baseResult({ success: false, error: 'API foo not enabled' }),
-    ]);
+    const tree = renderSummary([baseResult({ success: false, error: 'API foo not enabled' })]);
     expect(mocks.t).toHaveBeenCalledWith('deploy.buttons.enableApi');
     expect(mocks.isApiNotEnabledError).toHaveBeenCalledWith('API foo not enabled');
     expect(mocks.extractApiEnableUrl).toHaveBeenCalledWith('API foo not enabled');

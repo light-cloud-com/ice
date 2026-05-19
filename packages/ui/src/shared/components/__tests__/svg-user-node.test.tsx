@@ -181,9 +181,11 @@ describe('SvgUserNode — pointer handlers', () => {
   it('pointerDown captures pointer, sets dragRef, and stops/prevents default (when button=0)', () => {
     const tree = render({ position: { x: 50, y: 50 } });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerDown = (hitArea.props as {
-      onPointerDown: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerDown;
+    const onPointerDown = (
+      hitArea.props as {
+        onPointerDown: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerDown;
     const setPointerCapture = vi.fn();
     const stopPropagation = vi.fn();
     const preventDefault = vi.fn();
@@ -210,9 +212,11 @@ describe('SvgUserNode — pointer handlers', () => {
   it('pointerDown short-circuits when button !== 0 (right-click etc.)', () => {
     const tree = render({ position: { x: 50, y: 50 } });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerDown = (hitArea.props as {
-      onPointerDown: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerDown;
+    const onPointerDown = (
+      hitArea.props as {
+        onPointerDown: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerDown;
     const setPointerCapture = vi.fn();
     const stopPropagation = vi.fn();
     onPointerDown({
@@ -233,9 +237,11 @@ describe('SvgUserNode — pointer handlers', () => {
     mocks.dragRef.current = { startX: 100, startY: 200, startDx: 5, startDy: 10 };
     const tree = render({ position: { x: 50, y: 50 }, scale: 1 });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerMove = (hitArea.props as {
-      onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerMove;
+    const onPointerMove = (
+      hitArea.props as {
+        onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerMove;
     onPointerMove({
       clientX: 150,
       clientY: 250,
@@ -248,9 +254,11 @@ describe('SvgUserNode — pointer handlers', () => {
     mocks.dragRef.current = { startX: 0, startY: 0, startDx: 0, startDy: 0 };
     const tree = render({ position: { x: 50, y: 50 }, scale: 2 });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerMove = (hitArea.props as {
-      onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerMove;
+    const onPointerMove = (
+      hitArea.props as {
+        onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerMove;
     onPointerMove({
       clientX: 100,
       clientY: 80,
@@ -263,9 +271,11 @@ describe('SvgUserNode — pointer handlers', () => {
     mocks.dragRef.current = null;
     const tree = render({ position: { x: 50, y: 50 } });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerMove = (hitArea.props as {
-      onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerMove;
+    const onPointerMove = (
+      hitArea.props as {
+        onPointerMove: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerMove;
     onPointerMove({
       clientX: 999,
       clientY: 999,
@@ -278,9 +288,11 @@ describe('SvgUserNode — pointer handlers', () => {
     mocks.dragRef.current = { startX: 0, startY: 0, startDx: 0, startDy: 0 };
     const tree = render({ position: { x: 50, y: 50 } });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerUp = (hitArea.props as {
-      onPointerUp: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerUp;
+    const onPointerUp = (
+      hitArea.props as {
+        onPointerUp: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerUp;
     onPointerUp({ stopPropagation: vi.fn() } as unknown as React.PointerEvent<SVGElement>);
     expect(mocks.dragRef.current).toBeNull();
   });
@@ -289,9 +301,11 @@ describe('SvgUserNode — pointer handlers', () => {
     mocks.dragRef.current = null;
     const tree = render({ position: { x: 50, y: 50 } });
     const hitArea = findAll(tree, (el) => el.type === 'circle')[0];
-    const onPointerUp = (hitArea.props as {
-      onPointerUp: (e: React.PointerEvent<SVGElement>) => void;
-    }).onPointerUp;
+    const onPointerUp = (
+      hitArea.props as {
+        onPointerUp: (e: React.PointerEvent<SVGElement>) => void;
+      }
+    ).onPointerUp;
     const stopPropagation = vi.fn();
     onPointerUp({ stopPropagation } as unknown as React.PointerEvent<SVGElement>);
     expect(stopPropagation).not.toHaveBeenCalled();

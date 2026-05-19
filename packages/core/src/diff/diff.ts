@@ -300,10 +300,8 @@ function null_equivalent(a: unknown, b: unknown): boolean {
   const b_empty_array = Array.isArray(b) && b.length === 0;
   if (a_nullish && b_empty_array) return true;
   if (b_nullish && a_empty_array) return true;
-  const a_empty_object =
-    is_object(a) && Object.keys(a as Record<string, unknown>).length === 0;
-  const b_empty_object =
-    is_object(b) && Object.keys(b as Record<string, unknown>).length === 0;
+  const a_empty_object = is_object(a) && Object.keys(a as Record<string, unknown>).length === 0;
+  const b_empty_object = is_object(b) && Object.keys(b as Record<string, unknown>).length === 0;
   if (a_nullish && b_empty_object) return true;
   if (b_nullish && a_empty_object) return true;
   return false;

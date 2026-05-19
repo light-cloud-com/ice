@@ -16,7 +16,14 @@ export interface SortHeaderProps {
   onToggleSort: (col: SortCol) => void;
 }
 
-export const SortHeader: React.FC<SortHeaderProps> = ({ col, label, sortCol, sortDir, align = 'left', onToggleSort }) => {
+export const SortHeader: React.FC<SortHeaderProps> = ({
+  col,
+  label,
+  sortCol,
+  sortDir,
+  align = 'left',
+  onToggleSort,
+}) => {
   const isActive = sortCol === col;
   return (
     <button

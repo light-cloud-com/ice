@@ -4,20 +4,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { circularLayout, forceResolveOverlaps } from '../circular';
 import { DEFAULT_OPTIONS, type LayoutEdge, type LayoutNode } from '../../types';
+import { circularLayout, forceResolveOverlaps } from '../circular';
 
 const GRID_STEP = 40;
 
-function mk(
-  id: string,
-  iceType: string = 'Compute.Container',
-  parentId: string | null = null,
-): LayoutNode {
+function mk(id: string, iceType: string = 'Compute.Container', parentId: string | null = null): LayoutNode {
   return {
     id,
-    type:
-      iceType.startsWith('Group.') || iceType === 'Network.PrivateNetwork' ? 'container' : 'resource',
+    type: iceType.startsWith('Group.') || iceType === 'Network.PrivateNetwork' ? 'container' : 'resource',
     iceType,
     label: id,
     parentId,
@@ -148,7 +143,12 @@ describe('forceResolveOverlaps', () => {
   }
 
   function overlaps(a: { x: number; y: number; width: number; height: number }, b: typeof a, gap = 0): boolean {
-    return !(a.x + a.width + gap <= b.x || b.x + b.width + gap <= a.x || a.y + a.height + gap <= b.y || b.y + b.height + gap <= a.y);
+    return !(
+      a.x + a.width + gap <= b.x ||
+      b.x + b.width + gap <= a.x ||
+      a.y + a.height + gap <= b.y ||
+      b.y + b.height + gap <= a.y
+    );
   }
 
   it('< 2 nodes: no-op', () => {

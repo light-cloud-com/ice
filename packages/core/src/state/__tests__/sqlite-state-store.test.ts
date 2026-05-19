@@ -15,13 +15,9 @@
  * without dropping events or corrupting prepared-statement cache.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  SqliteStateStore,
-  create_sqlite_state_store,
-  create_memory_state_store,
-} from '../sqlite-state-store';
-import { create_node_id } from '../../types/graph';
 import { create_deployment_id } from '../../types/deployment';
+import { create_node_id } from '../../types/graph';
+import { SqliteStateStore, create_sqlite_state_store, create_memory_state_store } from '../sqlite-state-store';
 import type { DeploymentRecord, StateChangeEvent, StoredResourceState } from '../state-store';
 
 function fixture_resource(overrides: Partial<StoredResourceState> = {}): StoredResourceState {
@@ -67,9 +63,11 @@ describe('SqliteStateStore constructor', () => {
 
   it('merges partial overrides on top of defaults', () => {
     const store = new SqliteStateStore({ path: ':memory:', wal_mode: false });
-    const opts = (store as unknown as {
-      options: { path: string; wal_mode: boolean; foreign_keys: boolean; busy_timeout_ms: number };
-    }).options;
+    const opts = (
+      store as unknown as {
+        options: { path: string; wal_mode: boolean; foreign_keys: boolean; busy_timeout_ms: number };
+      }
+    ).options;
     expect(opts.path).toBe(':memory:');
     expect(opts.wal_mode).toBe(false);
     // Untouched defaults survive the merge.

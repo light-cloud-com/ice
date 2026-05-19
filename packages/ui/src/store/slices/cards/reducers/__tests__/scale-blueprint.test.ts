@@ -59,11 +59,11 @@
 
 import { produce } from 'immer';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { ExpandedBlueprint } from '../../../../../config/blocks';
-import { scaleBlueprintReducers } from '../scale-blueprint';
 import { pushSnapshot } from '../../snapshot';
+import { scaleBlueprintReducers } from '../scale-blueprint';
+import type { ExpandedBlueprint } from '../../../../../config/blocks';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 // -----------------------------------------------------------------------------
 // Fixture builders

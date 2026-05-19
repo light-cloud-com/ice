@@ -20,8 +20,8 @@
  */
 
 import { isContainer as isContainerType } from '../../config/containment-rules';
-import { dagreTreeLayout } from './auto-layout/algorithms/dagre-tree';
 import { circularLayout, forceResolveOverlaps } from './auto-layout/algorithms/circular';
+import { dagreTreeLayout } from './auto-layout/algorithms/dagre-tree';
 import {
   DEFAULT_OPTIONS,
   type LayoutNode,

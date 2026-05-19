@@ -26,11 +26,7 @@ export interface EdgeWarning {
   suggestion?: string;
 }
 
-export function computeEdgeWarnings(
-  srcIceType: string,
-  tgtIceType: string,
-  t: (key: string) => string,
-): EdgeWarning[] {
+export function computeEdgeWarnings(srcIceType: string, tgtIceType: string, t: (key: string) => string): EdgeWarning[] {
   const edgeWarnings: EdgeWarning[] = [];
   // Inline lightweight checks (avoiding importing from canvas utils in properties)
   if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Database|PostgreSQL|MySQL|MongoDB/i.test(tgtIceType)) {

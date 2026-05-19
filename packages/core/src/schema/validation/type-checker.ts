@@ -32,11 +32,7 @@ export function get_type_name(value: unknown): string {
  * Validate that `value` matches `expected_type`. Returns a TYPE_MISMATCH
  * issue when it does not, or null on success.
  */
-export function validate_type(
-  path: string,
-  value: unknown,
-  expected_type: string,
-): ValidationIssue | null {
+export function validate_type(path: string, value: unknown, expected_type: string): ValidationIssue | null {
   const actual_type = get_type_name(value);
 
   switch (expected_type) {

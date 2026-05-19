@@ -144,10 +144,19 @@ describe('async helpers', () => {
   });
   it('from_try wraps a thrown error', () => {
     const err = new Error('sync-boom');
-    expect(from_try(() => { throw err; })).toEqual({ ok: false, error: err });
+    expect(
+      from_try(() => {
+        throw err;
+      }),
+    ).toEqual({ ok: false, error: err });
   });
   it('from_try applies an error_mapper', () => {
-    const out = from_try(() => { throw new Error('sync-boom'); }, (e) => `mapped:${(e as Error).message}`);
+    const out = from_try(
+      () => {
+        throw new Error('sync-boom');
+      },
+      (e) => `mapped:${(e as Error).message}`,
+    );
     expect(out).toEqual({ ok: false, error: 'mapped:sync-boom' });
   });
 

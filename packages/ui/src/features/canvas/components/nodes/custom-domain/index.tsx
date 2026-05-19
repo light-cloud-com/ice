@@ -44,6 +44,7 @@ import {
 import { Globe, Plus, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { CARD_PX, CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 // Re-exported so SvgConnectionPath / tests can compute the exact y-coordinate
@@ -264,7 +265,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
                   textOverflow: 'ellipsis',
                 }}
               >
-                {label || 'Custom Domain'}
+                {label || t('canvas.blocks.titles.customDomain')}
               </div>
               <div
                 style={{
@@ -275,7 +276,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
                   textOverflow: 'ellipsis',
                 }}
               >
-                {rootDomain || 'Network · CustomDomain'}
+                {rootDomain || t('canvas.blocks.customDomain.fallbackSubtitle')}
               </div>
             </div>
           </div>
@@ -329,7 +330,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
                   ? `${route.subdomain}.${rootDomain}`
                   : rootDomain
                     ? rootDomain
-                    : route.subdomain || '(set root domain above)';
+                    : route.subdomain || t('canvas.blocks.customDomain.rootDomainPlaceholder');
               return (
                 <div
                   key={route.id}
@@ -350,7 +351,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
                   <input
                     type="text"
                     value={route.subdomain}
-                    placeholder="root"
+                    placeholder={t('canvas.blocks.customDomain.rootSubdomain')}
                     onChange={(e) => updateRouteSubdomain(route.id, e.target.value)}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
@@ -444,7 +445,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
               }}
             >
               <Plus size={12} />
-              Add subdomain route
+              {t('canvas.blocks.customDomain.addSubdomain')}
             </button>
           </div>
         </div>

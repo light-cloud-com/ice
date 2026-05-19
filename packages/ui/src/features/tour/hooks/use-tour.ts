@@ -26,8 +26,6 @@
  */
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '../../../store';
-import { getTour } from '../utils/tour-registry';
 import {
   flagSkipped,
   hydrateFromUser,
@@ -40,6 +38,8 @@ import {
   startTour,
   stopTour,
 } from '../store/tour-slice';
+import { getTour } from '../utils/tour-registry';
+import type { AppDispatch, RootState } from '../../../store';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -84,14 +84,13 @@ export function useTour(): UseTour {
   // so it stays in lockstep with the live tour definition. The runner
   // re-reads on every selector firing, but the registry is a Map lookup
   // (O(1)) so this is cheap.
-  const totalSteps = activeTourId ? getTour(activeTourId)?.steps.length ?? 0 : 0;
+  const totalSteps = activeTourId ? (getTour(activeTourId)?.steps.length ?? 0) : 0;
 
   const start = useCallback(
     (tourId: string) => {
       const tour = getTour(tourId);
       if (!tour) {
         if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
           console.warn(`[tour] useTour.start("${tourId}") — tour is not registered.`);
         }
         return;
@@ -164,10 +163,7 @@ export function useTour(): UseTour {
     [dispatch],
   );
 
-  const isCompleted = useCallback(
-    (id: string) => completedTours.includes(id),
-    [completedTours],
-  );
+  const isCompleted = useCallback((id: string) => completedTours.includes(id), [completedTours]);
 
   return {
     activeTourId,

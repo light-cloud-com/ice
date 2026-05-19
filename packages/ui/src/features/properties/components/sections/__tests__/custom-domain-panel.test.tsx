@@ -58,12 +58,7 @@ import type { AppDispatch } from '../../../../../store';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -77,10 +72,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -110,8 +102,7 @@ interface SectionProps {
   children: React.ReactNode;
 }
 
-const findInputs = (tree: React.ReactNode): React.ReactElement[] =>
-  findByPredicate(tree, (el) => el.type === 'input');
+const findInputs = (tree: React.ReactNode): React.ReactElement[] => findByPredicate(tree, (el) => el.type === 'input');
 
 const findButtons = (tree: React.ReactNode): React.ReactElement[] =>
   findByPredicate(tree, (el) => el.type === 'button');
@@ -122,16 +113,11 @@ const findSections = (tree: React.ReactNode): React.ReactElement[] =>
 const findRouteSubdomainInputs = (tree: React.ReactNode): React.ReactElement[] =>
   findByPredicate(
     tree,
-    (el) =>
-      el.type === 'input' &&
-      (el.props as InputProps)['data-prop-key'] === 'routes.subdomain',
+    (el) => el.type === 'input' && (el.props as InputProps)['data-prop-key'] === 'routes.subdomain',
   );
 
 const findRootDomainInput = (tree: React.ReactNode): React.ReactElement | undefined =>
-  findByPredicate(
-    tree,
-    (el) => el.type === 'input' && (el.props as InputProps)['data-prop-key'] === 'domain',
-  )[0];
+  findByPredicate(tree, (el) => el.type === 'input' && (el.props as InputProps)['data-prop-key'] === 'domain')[0];
 
 const findAddRouteButton = (tree: React.ReactNode): React.ReactElement | undefined =>
   findButtons(tree).find((b) => {
@@ -227,9 +213,7 @@ describe('CustomDomainPanel', () => {
     it('routes count 0 reflected in the routes section title', () => {
       const { tree } = renderPanel({ routes: [] });
       const sections = findSections(tree);
-      const routesSection = sections.find((s) =>
-        (s.props as SectionProps).title.includes('Routes'),
-      );
+      const routesSection = sections.find((s) => (s.props as SectionProps).title.includes('Routes'));
       expect(routesSection).toBeDefined();
       expect((routesSection!.props as SectionProps).title).toBe('Routes (0)');
     });
@@ -237,9 +221,7 @@ describe('CustomDomainPanel', () => {
     it('renders empty-state copy when routes is undefined entirely', () => {
       const { tree } = renderPanel({});
       const sections = findSections(tree);
-      const routesSection = sections.find((s) =>
-        (s.props as SectionProps).title.includes('Routes'),
-      );
+      const routesSection = sections.find((s) => (s.props as SectionProps).title.includes('Routes'));
       expect((routesSection!.props as SectionProps).title).toBe('Routes (0)');
     });
   });
@@ -339,9 +321,7 @@ describe('CustomDomainPanel', () => {
       ];
       const { tree } = renderPanel({ routes });
       const sections = findSections(tree);
-      const routesSection = sections.find((s) =>
-        (s.props as SectionProps).title.includes('Routes'),
-      );
+      const routesSection = sections.find((s) => (s.props as SectionProps).title.includes('Routes'));
       expect((routesSection!.props as SectionProps).title).toBe('Routes (2)');
     });
 
@@ -547,13 +527,9 @@ describe('CustomDomainPanel', () => {
         cardNodes: [targetNode],
       });
       const sections = findSections(tree);
-      const dnsSection = sections.find((s) =>
-        (s.props as SectionProps).title.startsWith('DNS records'),
-      );
+      const dnsSection = sections.find((s) => (s.props as SectionProps).title.startsWith('DNS records'));
       expect((dnsSection!.props as SectionProps).title).toBe('DNS records (2)');
-      const copyButtons = findButtons(tree).filter(
-        (b) => (b.props as ButtonProps).title === 'Copy value to clipboard',
-      );
+      const copyButtons = findButtons(tree).filter((b) => (b.props as ButtonProps).title === 'Copy value to clipboard');
       expect(copyButtons).toHaveLength(2);
     });
 
@@ -583,9 +559,7 @@ describe('CustomDomainPanel', () => {
         cardNodes: [targetNode],
       });
       const sections = findSections(tree);
-      const dnsSection = sections.find((s) =>
-        (s.props as SectionProps).title.startsWith('DNS records'),
-      );
+      const dnsSection = sections.find((s) => (s.props as SectionProps).title.startsWith('DNS records'));
       expect((dnsSection!.props as SectionProps).title).toBe('DNS records (2)');
     });
 
@@ -596,9 +570,7 @@ describe('CustomDomainPanel', () => {
         data: {
           iceType: 'Compute.CloudRun',
           label: 'web',
-          custom_domain_dns_records: [
-            { type: 'A', domain: 'api.example.com', value: 'COPY-ME-1.2.3.4' },
-          ],
+          custom_domain_dns_records: [{ type: 'A', domain: 'api.example.com', value: 'COPY-ME-1.2.3.4' }],
         },
       };
       const edge = { source: 'cd-1', target: 'tgt', data: { routeId: 'r-1' } };
@@ -640,9 +612,7 @@ describe('CustomDomainPanel', () => {
           iceType: 'Compute.CloudRun',
           label: 'web',
           deploy_outputs: {
-            custom_domain_dns_records: [
-              { type: 'A', domain: 'api.example.com', value: '5.6.7.8' },
-            ],
+            custom_domain_dns_records: [{ type: 'A', domain: 'api.example.com', value: '5.6.7.8' }],
           },
         },
       };
@@ -654,9 +624,7 @@ describe('CustomDomainPanel', () => {
         cardNodes: [targetNode],
       });
       const sections = findSections(tree);
-      const dnsSection = sections.find((s) =>
-        (s.props as SectionProps).title.startsWith('DNS records'),
-      );
+      const dnsSection = sections.find((s) => (s.props as SectionProps).title.startsWith('DNS records'));
       expect((dnsSection!.props as SectionProps).title).toBe('DNS records (1)');
     });
   });
@@ -697,7 +665,7 @@ describe('CustomDomainPanel', () => {
       (addBtn.props as ButtonProps).onClick();
       const deleteBtns = findDeleteRouteButtons(tree);
       (deleteBtns[0].props as ButtonProps).onClick();
-      expect((dispatch as unknown as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+      expect(dispatch as unknown as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
     });
   });
 

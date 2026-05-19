@@ -27,6 +27,28 @@ transactions, JSON columns, strong constraints, full-text search.
 Managed providers handle daily backups automatically. PITR (point-in-time
 recovery) is typically available on larger tiers.
     `.trim(),
+    markdownZh: `
+# Postgres
+
+托管的 PostgreSQL。大多数应用的默认关系型数据库 — 支持 SQL、事务、JSON 列、强约束、全文搜索。
+
+## 适用场景
+
+- 任何需要真正关系型数据库的应用
+- 多行事务、外键、连接查询
+- 关系型与文档数据混合(JSONB 列)
+
+## 不适用场景
+
+- 亚毫秒级查找 → 在 Postgres 前面加 **Redis 缓存**
+- 海量文档存储 → **MongoDB**
+- 向量嵌入 / 相似度搜索 → **Vector DB**
+- 分析数据仓库 → 专用的数据仓库(本面板暂未包含)
+
+## 备份
+
+托管服务商会自动处理每日备份。PITR(时间点恢复)通常在更高规格中提供。
+    `.trim(),
   },
   compilesTo: {
     aws: [
@@ -61,5 +83,6 @@ rows, _ := db.Query("SELECT * FROM users WHERE id = $1", userID)`,
     { label: 'AWS RDS Postgres', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html' },
     { label: 'GCP Cloud SQL', url: 'https://cloud.google.com/sql/docs/postgres' },
   ],
+  linksZh: ['PostgreSQL 文档', 'AWS RDS Postgres', 'GCP Cloud SQL'],
   relatedConcepts: ['Database.Redis', 'Compute.Container', 'Security.SecretStore'],
 };

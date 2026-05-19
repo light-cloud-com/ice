@@ -13,11 +13,11 @@
  * stable between repo-builds and direct-image deploys; the build helper
  * refreshes labels at index 2 without advancing the counter.
  */
-import { SERVICE_NAMES, sdk_not_available } from '../../messages';
 import { grant_public_access } from './iam';
 import { resolve_image } from './image-resolver';
 import { fail, result, TYPE_SERVICE } from './result-helpers';
 import { build_env_vars, fetch_service_outputs } from './utils';
+import { SERVICE_NAMES, sdk_not_available } from '../../messages';
 import type { ResourceDeployResult } from '../../../../types';
 import type { GCPHandlerContext } from '../../types';
 

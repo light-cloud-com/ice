@@ -31,7 +31,6 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { describe, it, expect } from 'vitest';
-
 import { ICON_MAP } from '../icon-map';
 
 describe('ICON_MAP', () => {

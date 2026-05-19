@@ -41,10 +41,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -168,10 +165,7 @@ describe('FilterChip — icon', () => {
 
   it('passes the w-3 h-3 class + aria-hidden to the icon', () => {
     const tree = render({ label: 'X', icon: Zap, active: false, onClick: vi.fn() });
-    const icons = findByPredicate(
-      tree,
-      (el) => (el.type as { displayName?: string })?.displayName === 'Zap',
-    );
+    const icons = findByPredicate(tree, (el) => (el.type as { displayName?: string })?.displayName === 'Zap');
     expect(icons).toHaveLength(1);
     const cls = (icons[0].props as { className: string }).className;
     expect(cls).toBe('w-3 h-3');

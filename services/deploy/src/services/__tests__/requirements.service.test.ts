@@ -12,20 +12,20 @@
  * without depending on the shape of the real built-in definitions.
  */
 
+import { BUILT_IN_REQUIREMENTS } from '@ice/blocks/requirements';
+import prismaModule from '@ice/db';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // All imports up top (per the import-x/order learning), then hoisted mocks
 // after — vitest hoists vi.mock above the imports during pre-execution.
-import { resolveForCard, loadPersistedStatuses } from '../requirements.service';
-// @ts-ignore — resolved at runtime via pnpm workspace; mocked above
-import prismaModule from '@ice/db';
-// @ts-ignore — mocked below
-import { BUILT_IN_REQUIREMENTS } from '@ice/blocks/requirements';
 import {
   checkSearchConsoleVerification,
   fetchSslCertificateStatus,
   generateVerificationToken,
 } from '../google-verification.service';
+import { resolveForCard, loadPersistedStatuses } from '../requirements.service';
+// @ts-ignore — resolved at runtime via pnpm workspace; mocked above
+// @ts-ignore — mocked below
 import { getResourceMap } from '../resource-mapping.service';
 
 vi.mock('@ice/db', () => ({
@@ -181,9 +181,7 @@ describe('resolveForCard — happy path', () => {
     );
 
     getResourceMapMock.mockResolvedValueOnce(
-      new Map([
-        ['n1', { name: 'res-name-1', type: 't', providerId: 'provider-1' }],
-      ]),
+      new Map([['n1', { name: 'res-name-1', type: 't', providerId: 'provider-1' }]]),
     );
     findFirstMock.mockResolvedValueOnce({
       results: {
@@ -470,7 +468,11 @@ describe('resolveForCard — deployedOutputs sourcing', () => {
   });
 
   it('handles a deployment row whose results.resources is missing entirely', async () => {
-    findFirstMock.mockResolvedValueOnce({ results: { /* no resources */ } });
+    findFirstMock.mockResolvedValueOnce({
+      results: {
+        /* no resources */
+      },
+    });
     builtInMock.push(
       makeDef({
         id: 'r',
@@ -611,9 +613,7 @@ describe('resolveForCard — domain verification token pre-fetch', () => {
       cardId: 'card-1',
       environment: 'production',
       orgId: 'org-1',
-      nodes: [
-        { id: 'n1', type: 'resource', data: { iceType: 'Network.PublicEndpoint', domain: 'a.com' } },
-      ],
+      nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Network.PublicEndpoint', domain: 'a.com' } }],
     });
 
     expect(result.canDeploy).toBe(true);
@@ -638,9 +638,7 @@ describe('resolveForCard — domain verification token pre-fetch', () => {
       cardId: 'card-1',
       environment: 'production',
       orgId: 'org-1',
-      nodes: [
-        { id: 'n1', type: 'resource', data: { iceType: 'Network.PublicEndpoint', domain: 'a.com' } },
-      ],
+      nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Network.PublicEndpoint', domain: 'a.com' } }],
     });
 
     expect(captured[0]).toEqual({});
@@ -649,9 +647,7 @@ describe('resolveForCard — domain verification token pre-fetch', () => {
 
 describe('resolveForCard — extraDefinitions', () => {
   it('runs caller-provided extraDefinitions alongside the built-ins', async () => {
-    builtInMock.push(
-      makeDef({ id: 'built-in-1', check: async () => ({ status: 'met', lastCheckedAt: 'iso' }) }),
-    );
+    builtInMock.push(makeDef({ id: 'built-in-1', check: async () => ({ status: 'met', lastCheckedAt: 'iso' }) }));
 
     const result = await resolveForCard({
       cardId: 'card-1',
@@ -784,7 +780,6 @@ describe('runCheck — error & abort handling', () => {
       makeDef({
         id: 'string-throws',
         check: async () => {
-          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw 'just a string';
         },
       }),

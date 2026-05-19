@@ -7,12 +7,12 @@ import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { ChildExitingIndicator } from '../child-exiting-indicator';
 
-const renderInner = (
-  props: React.ComponentProps<typeof ChildExitingIndicator>,
-): React.ReactElement => {
-  const Inner = (ChildExitingIndicator as unknown as {
-    type: (p: React.ComponentProps<typeof ChildExitingIndicator>) => React.ReactElement;
-  }).type;
+const renderInner = (props: React.ComponentProps<typeof ChildExitingIndicator>): React.ReactElement => {
+  const Inner = (
+    ChildExitingIndicator as unknown as {
+      type: (p: React.ComponentProps<typeof ChildExitingIndicator>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 
@@ -40,8 +40,6 @@ describe('ChildExitingIndicator', () => {
   });
 
   it('exposes a stable displayName', () => {
-    expect((ChildExitingIndicator as unknown as { displayName: string }).displayName).toBe(
-      'ChildExitingIndicator',
-    );
+    expect((ChildExitingIndicator as unknown as { displayName: string }).displayName).toBe('ChildExitingIndicator');
   });
 });

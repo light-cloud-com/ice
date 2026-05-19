@@ -39,13 +39,7 @@ vi.mock('../pipeline/github-webhooks', () => ({
 
 import prisma from '@ice/db';
 import * as webhooks from '../pipeline/github-webhooks';
-import {
-  createRule,
-  updateRule,
-  deleteRule,
-  getRulesForNode,
-  ensureRulesForCanvas,
-} from '../pipeline/rule-management';
+import { createRule, updateRule, deleteRule, getRulesForNode, ensureRulesForCanvas } from '../pipeline/rule-management';
 
 const ruleFindFirst = (prisma as any).deploymentRule.findFirst as ReturnType<typeof vi.fn>;
 const ruleFindMany = (prisma as any).deploymentRule.findMany as ReturnType<typeof vi.fn>;
@@ -80,11 +74,7 @@ describe('createRule', () => {
     ruleUpdate.mockResolvedValue({ id: 'rule-1' });
     registerWebhook.mockResolvedValue({ status: 'registered', webhookId: 42 });
 
-    const result = await createRule(
-      { cardId: 'c1', nodeId: 'n1', repository: 'o/r' },
-      'org-1',
-      'user-1',
-    );
+    const result = await createRule({ cardId: 'c1', nodeId: 'n1', repository: 'o/r' }, 'org-1', 'user-1');
 
     expect(result.webhook_status).toBe('registered');
     expect(result.webhook_error).toBeUndefined();
@@ -122,11 +112,7 @@ describe('createRule', () => {
     ruleUpdate.mockResolvedValue({ id: 'rule-1' });
     registerWebhook.mockResolvedValue({ status: 'failed', error: 'no admin' });
 
-    const result = await createRule(
-      { cardId: 'c', nodeId: 'n', repository: 'o/r' },
-      'org',
-      'user',
-    );
+    const result = await createRule({ cardId: 'c', nodeId: 'n', repository: 'o/r' }, 'org', 'user');
 
     expect(result.webhook_status).toBe('failed');
     expect(result.webhook_error).toBe('no admin');
@@ -320,14 +306,7 @@ describe('ensureRulesForCanvas', () => {
       { id: 'r', iceType: 'Source.Repository', data: { repository: 'o/r' } },
       { id: 's', iceType: 'Storage.Bucket' },
     ]);
-    const result = await ensureRulesForCanvas(
-      'c',
-      nodes,
-      [{ source: 'r', target: 's' }],
-      'org',
-      'user',
-      'production',
-    );
+    const result = await ensureRulesForCanvas('c', nodes, [{ source: 'r', target: 's' }], 'org', 'user', 'production');
     expect(result.created).toEqual([]);
     expect(ruleCreate).not.toHaveBeenCalled();
   });

@@ -17,15 +17,11 @@
  *   - the explicit `errors`/`warnings` parameters carry through
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import {
-  import_terraform_state,
-  import_terraform_state_json,
-  import_terraform_state_object,
-} from '../state-importer';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { import_terraform_state, import_terraform_state_json, import_terraform_state_object } from '../state-importer';
 import type { TerraformState } from '../types';
 
 // =============================================================================
@@ -303,9 +299,7 @@ describe('import_terraform_state_object — per-resource error capture', () => {
       ],
     };
     expect(import_terraform_state_object(state).resources).toHaveLength(0);
-    expect(
-      import_terraform_state_object(state, { include_data_sources: true }).resources,
-    ).toHaveLength(1);
+    expect(import_terraform_state_object(state, { include_data_sources: true }).resources).toHaveLength(1);
   });
 
   it('filter_modules requires the resource module to startWith one of the prefixes', () => {
@@ -390,9 +384,7 @@ describe('import_terraform_state_object — per-resource error capture', () => {
           type: 'aws_vpc',
           name: 'a',
           provider: 'provider["registry.terraform.io/hashicorp/aws"]',
-          instances: [
-            { schema_version: 1, attributes: { id: 'vpc-a' }, sensitive_attributes: [] },
-          ],
+          instances: [{ schema_version: 1, attributes: { id: 'vpc-a' }, sensitive_attributes: [] }],
         },
         {
           mode: 'managed',

@@ -5,12 +5,12 @@
 
 import { AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import React from 'react';
+import { QuotaErrorBanner } from './quota-error-banner';
 import { useTranslation } from '../../../../i18n';
 import { cn } from '../../../../shared/utils/cn';
 import { extractApiName } from '../../../../shared/utils/gcp-errors';
 import { classifyDeployError, collectApiEnableUrls, extractProjectIdFromError } from '../../utils/error-classification';
 import { openExternalUrl } from '../../utils/open-external-url';
-import { QuotaErrorBanner } from './quota-error-banner';
 
 export const ApiErrorBanner: React.FC<{
   error: string;

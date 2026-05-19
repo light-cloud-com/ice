@@ -50,10 +50,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -62,12 +59,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderLH = (
-  props: Partial<React.ComponentProps<typeof LogHeader>> = {},
-): React.ReactElement => {
-  const Inner = (LogHeader as unknown as {
-    type: (p: React.ComponentProps<typeof LogHeader>) => React.ReactElement;
-  }).type;
+const renderLH = (props: Partial<React.ComponentProps<typeof LogHeader>> = {}): React.ReactElement => {
+  const Inner = (
+    LogHeader as unknown as {
+      type: (p: React.ComponentProps<typeof LogHeader>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof LogHeader> = {
     label: 'Stream',
     folded: false,
@@ -87,13 +84,19 @@ describe('LogHeader', () => {
 
   it('renders the title from label', () => {
     const tree = renderLH({ label: 'My Stream' });
-    const title = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'My Stream');
+    const title = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'My Stream',
+    );
     expect(title).toHaveLength(1);
   });
 
   it('falls back to "Logs" when label empty', () => {
     const tree = renderLH({ label: '' });
-    const title = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Logs');
+    const title = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Logs',
+    );
     expect(title).toHaveLength(1);
   });
 

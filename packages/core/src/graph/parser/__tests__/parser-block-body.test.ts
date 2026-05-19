@@ -19,23 +19,9 @@
  * test pins exactly the shape it cares about.
  */
 import { describe, it, expect } from 'vitest';
-import {
-  parse_block,
-  parse_data_block,
-  parse_provider_block,
-  parse_resource_block,
-} from '../parser-block-body';
+import { parse_block, parse_data_block, parse_provider_block, parse_resource_block } from '../parser-block-body';
 import { make_parser_state } from '../parser-state';
-import type {
-  Block,
-  DataBlock,
-  Identifier,
-  NumberLiteral,
-  ProviderBlock,
-  ResourceBlock,
-  StringLiteral,
-  TypeIdentifier,
-} from '../ast';
+import type { NumberLiteral, StringLiteral } from '../ast';
 import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
@@ -135,12 +121,7 @@ describe('parse_provider_block', () => {
   it('parses `provider <name> { }` and returns a ProviderBlock', () => {
     // provider aws {}
     const s = make_parser_state(
-      eof(
-        tk('PROVIDER', 'provider'),
-        id('aws'),
-        tk('LEFT_BRACE', '{'),
-        tk('RIGHT_BRACE', '}'),
-      ),
+      eof(tk('PROVIDER', 'provider'), id('aws'), tk('LEFT_BRACE', '{'), tk('RIGHT_BRACE', '}')),
     );
     const node = parse_provider_block(s);
     expect(node.kind).toBe('ProviderBlock');
@@ -180,13 +161,7 @@ describe('parse_block', () => {
 
   it('parses a single attribute `{ name = "value" }`', () => {
     const s = make_parser_state(
-      eof(
-        tk('LEFT_BRACE', '{'),
-        id('name'),
-        tk('EQUALS', '='),
-        str('value'),
-        tk('RIGHT_BRACE', '}'),
-      ),
+      eof(tk('LEFT_BRACE', '{'), id('name'), tk('EQUALS', '='), str('value'), tk('RIGHT_BRACE', '}')),
     );
     const block = parse_block(s);
     expect(block.attributes).toHaveLength(1);
@@ -346,27 +321,17 @@ describe('parse_block', () => {
     expect(block.blocks[0]!.type).toBe('nested');
   });
 
-  it(
-    'unexpected token after identifier emits error and synchronises ' +
-      'past the bad slice',
-    () => {
-      // outer { name + 1 }
-      // After identifier `name`, neither EQUALS, LEFT_BRACE, STRING, nor
-      // IDENTIFIER follows. Falls through to the error branch and calls
-      // ps_synchronize. The synchronize advances past tokens until it
-      // sees a statement keyword OR a previous RIGHT_BRACE — here, the
-      // outer `}` ends up satisfying the previous-RIGHT_BRACE condition.
-      const s = make_parser_state(
-        eof(
-          tk('LEFT_BRACE', '{'),
-          id('name'),
-          tk('PLUS', '+'),
-          num(1),
-          tk('RIGHT_BRACE', '}'),
-        ),
-      );
-      parse_block(s);
-      expect(s.errors.some((e) => e.message.includes("Unexpected token after identifier 'name'"))).toBe(true);
-    },
-  );
+  it('unexpected token after identifier emits error and synchronises ' + 'past the bad slice', () => {
+    // outer { name + 1 }
+    // After identifier `name`, neither EQUALS, LEFT_BRACE, STRING, nor
+    // IDENTIFIER follows. Falls through to the error branch and calls
+    // ps_synchronize. The synchronize advances past tokens until it
+    // sees a statement keyword OR a previous RIGHT_BRACE — here, the
+    // outer `}` ends up satisfying the previous-RIGHT_BRACE condition.
+    const s = make_parser_state(
+      eof(tk('LEFT_BRACE', '{'), id('name'), tk('PLUS', '+'), num(1), tk('RIGHT_BRACE', '}')),
+    );
+    parse_block(s);
+    expect(s.errors.some((e) => e.message.includes("Unexpected token after identifier 'name'"))).toBe(true);
+  });
 });

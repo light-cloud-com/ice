@@ -203,10 +203,7 @@ const DeployStatusIndicator: React.FC = () => {
   // rollup the deploy panel uses, so the status bar and the panel agree
   // on what "X%" means. `shallowEqual` keeps re-renders cheap during the
   // event-stream burst.
-  const deployNodesById = useSelector(
-    (state: RootState) => state.deploy.nodesById,
-    shallowEqual,
-  );
+  const deployNodesById = useSelector((state: RootState) => state.deploy.nodesById, shallowEqual);
   const rollup = useMemo(() => deriveRollup(deployNodesById), [deployNodesById]);
   const deployProgress = deriveRollupPercentage(rollup);
 

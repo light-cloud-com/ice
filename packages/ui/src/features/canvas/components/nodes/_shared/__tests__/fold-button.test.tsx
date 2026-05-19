@@ -25,9 +25,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof FoldButton>): React.ReactElement => {
-  const Inner = (FoldButton as unknown as {
-    type: (p: React.ComponentProps<typeof FoldButton>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    FoldButton as unknown as {
+      type: (p: React.ComponentProps<typeof FoldButton>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

@@ -6,16 +6,9 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { is_provider_resource, is_stack_resource } from './type-mapper';
-import {
-  get_deployment,
-  get_stack_info,
-  is_secret_value,
-  unwrap_secret,
-  create_empty_metadata,
-} from './parsing';
+import { get_deployment, get_stack_info, is_secret_value, unwrap_secret, create_empty_metadata } from './parsing';
 import { import_resource } from './resource-conversion';
-import type { MutableGraph } from '../../graph/mutable-graph';
+import { is_provider_resource, is_stack_resource } from './type-mapper';
 import type {
   PulumiStackState,
   PulumiStackExport,
@@ -26,6 +19,7 @@ import type {
   PulumiImportWarning,
   PulumiImportMetadata,
 } from './types';
+import type { MutableGraph } from '../../graph/mutable-graph';
 
 // =============================================================================
 // Import Options

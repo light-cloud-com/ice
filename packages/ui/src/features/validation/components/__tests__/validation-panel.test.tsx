@@ -5,7 +5,6 @@
  * setSelectedNodes when an issue is clicked.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { CanvasIssue } from '../../../../store/slices/validation-slice';
 
@@ -247,9 +246,7 @@ describe('ValidationPanel — handlers', () => {
 
   it('renders the suggestion when issue has one', () => {
     mocks.state.valid = false;
-    mocks.state.issues = [
-      issue({ id: 'e1', severity: 'error', message: 'msg', suggestion: 'try this fix' }),
-    ];
+    mocks.state.issues = [issue({ id: 'e1', severity: 'error', message: 'msg', suggestion: 'try this fix' })];
     const tree = callRender();
     expect(collectText(tree)).toContain('try this fix');
   });
@@ -264,7 +261,7 @@ describe('ValidationPanel — handlers', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         ((el.props as { className: string }).className.includes('w-3.5 h-3.5 mt-0.5 flex-shrink-0') ?? false),
     );
-    expect((icons[0].props.className as string)).toContain('text-red-400');
+    expect(icons[0].props.className as string).toContain('text-red-400');
   });
 
   it('shows amber icon color for warnings', () => {
@@ -277,7 +274,7 @@ describe('ValidationPanel — handlers', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         ((el.props as { className: string }).className.includes('w-3.5 h-3.5 mt-0.5 flex-shrink-0') ?? false),
     );
-    expect((icons[0].props.className as string)).toContain('text-amber-400');
+    expect(icons[0].props.className as string).toContain('text-amber-400');
   });
 
   it('falls back to muted color for info severity', () => {
@@ -290,6 +287,6 @@ describe('ValidationPanel — handlers', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         ((el.props as { className: string }).className.includes('w-3.5 h-3.5 mt-0.5 flex-shrink-0') ?? false),
     );
-    expect((icons[0].props.className as string)).toContain('text-ice-text-3/40');
+    expect(icons[0].props.className as string).toContain('text-ice-text-3/40');
   });
 });

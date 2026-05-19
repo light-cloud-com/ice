@@ -73,9 +73,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgApiGatewayNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgApiGatewayNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgApiGatewayNode> = {
     node: makeNode(),
     isSelected: false,

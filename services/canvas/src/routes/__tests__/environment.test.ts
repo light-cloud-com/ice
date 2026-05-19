@@ -8,9 +8,9 @@
  * middleware (`requireAuth`, `requireProjectAccess`) is mocked too.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks (must be hoisted before the router import) ──────────────────
@@ -47,14 +47,12 @@ vi.mock('@ice/shared', () => ({
     req.organisationId = currentOrgId;
     next();
   },
-  requireProjectAccess:
-    (_role: string) =>
-    (_req: any, res: any, next: any) => {
-      if (currentAuth === 'no-project-access') {
-        return res.status(403).json({ message: 'Insufficient project permissions' });
-      }
-      next();
-    },
+  requireProjectAccess: (_role: string) => (_req: any, res: any, next: any) => {
+    if (currentAuth === 'no-project-access') {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  },
 }));
 
 // ── Test harness ──────────────────────────────────────────────────────
@@ -94,7 +92,7 @@ async function post(path: string, body: unknown, headers?: Record<string, string
     body: JSON.stringify(body),
   });
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {

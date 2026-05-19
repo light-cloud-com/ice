@@ -34,13 +34,7 @@
 
 /** Per-node lifecycle status. Terminal states are listed in
  * {@link TERMINAL_NODE_STATUSES}. */
-export type DeployNodeStatus =
-  | 'queued'
-  | 'applying'
-  | 'succeeded'
-  | 'failed'
-  | 'skipped'
-  | 'cancelled-due-to-dep';
+export type DeployNodeStatus = 'queued' | 'applying' | 'succeeded' | 'failed' | 'skipped' | 'cancelled-due-to-dep';
 
 /**
  * Per-node lifecycle event. Emitted on every transition into a new
@@ -234,9 +228,7 @@ export function isDeployCompleteEvent(e: DeployEvent): e is DeployCompleteEvent 
   return e.type === 'complete';
 }
 
-export function isRequirementVerifiedEvent(
-  e: DeployEvent,
-): e is DeployRequirementVerifiedEvent {
+export function isRequirementVerifiedEvent(e: DeployEvent): e is DeployRequirementVerifiedEvent {
   return e.type === 'requirement_verified';
 }
 
@@ -266,13 +258,7 @@ export function isRequirementVerifiedEvent(
  * The matching `STATUS_COLORS` entries live in
  * `packages/ui/src/config/canvas-constants.ts`.
  */
-export type DeployOverlayStatus =
-  | 'queued'
-  | 'deploying'
-  | 'active'
-  | 'error'
-  | 'skipped'
-  | 'cancelled';
+export type DeployOverlayStatus = 'queued' | 'deploying' | 'active' | 'error' | 'skipped' | 'cancelled';
 
 export function mapStatusToOverlay(status: DeployNodeStatus): DeployOverlayStatus {
   switch (status) {

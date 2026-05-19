@@ -97,20 +97,14 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield* walk(node.props.children);
 }
 
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
   return undefined;
 }
 
-function findAllByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike[] {
+function findAllByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike[] {
   const out: ReactElementLike[] = [];
   for (const el of walk(tree)) {
     if (predicate(el)) out.push(el);
@@ -145,7 +139,9 @@ const makeNode = (overrides: Partial<ProjectNode> = {}): ProjectNode => ({
   ...overrides,
 });
 
-const makeProps = (overrides: Partial<React.ComponentProps<typeof TreeItem>> = {}): React.ComponentProps<typeof TreeItem> => ({
+const makeProps = (
+  overrides: Partial<React.ComponentProps<typeof TreeItem>> = {},
+): React.ComponentProps<typeof TreeItem> => ({
   node: makeNode(),
   level: 0,
   expandedIds: new Set<string>(),
@@ -286,9 +282,7 @@ describe('TreeItem — rendering', () => {
 
   it('renders the dragOver highlight class for folders when isDragOver is true', () => {
     mocks.isDragOverRef.current = true;
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }));
     const button = findByPredicate(
       tree,
       (el) => typeof el.props.className === 'string' && el.props.className.includes('group flex items-center'),
@@ -298,9 +292,7 @@ describe('TreeItem — rendering', () => {
 
   it('does not apply dragOver highlight for non-folders even when isDragOver is true', () => {
     mocks.isDragOverRef.current = true;
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', type: 'project' }) }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', type: 'project' }) }));
     const button = findByPredicate(
       tree,
       (el) => typeof el.props.className === 'string' && el.props.className.includes('group flex items-center'),
@@ -349,9 +341,7 @@ describe('TreeItem — click handlers', () => {
     // The chevron wrapper is the inner span around ChevronRight
     const chevWrapper = findByPredicate(
       tree,
-      (el) =>
-        typeof el.props.className === 'string' &&
-        el.props.className.includes('w-4 h-4 flex items-center'),
+      (el) => typeof el.props.className === 'string' && el.props.className.includes('w-4 h-4 flex items-center'),
     );
     const stop = vi.fn();
     (chevWrapper?.props.onClick as (e: { stopPropagation: () => void }) => void)?.({
@@ -702,9 +692,7 @@ describe('TreeItem — drag/drop', () => {
   });
 
   it('onDragLeave clears isDragOver when relatedTarget is outside', () => {
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }));
     const button = findByPredicate(
       tree,
       (el) => typeof el.props.className === 'string' && el.props.className.includes('group flex items-center'),
@@ -718,9 +706,7 @@ describe('TreeItem — drag/drop', () => {
   });
 
   it('onDragLeave keeps isDragOver when relatedTarget is a child', () => {
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }));
     const button = findByPredicate(
       tree,
       (el) => typeof el.props.className === 'string' && el.props.className.includes('group flex items-center'),
@@ -786,9 +772,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = 'New Name';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Old Name' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Old Name' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onKeyDown as (e: { key: string }) => void)({ key: 'Enter' });
     expect(onRename).toHaveBeenCalledWith('p', 'New Name');
@@ -799,9 +783,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = '   ';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Old' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Old' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onKeyDown as (e: { key: string }) => void)({ key: 'Enter' });
     expect(onRename).not.toHaveBeenCalled();
@@ -812,9 +794,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = 'Same';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Same' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Same' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onKeyDown as (e: { key: string }) => void)({ key: 'Enter' });
     expect(onRename).not.toHaveBeenCalled();
@@ -825,9 +805,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = 'Edited';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onKeyDown as (e: { key: string }) => void)({ key: 'Escape' });
     expect(mocks.setRenameValueSpy).toHaveBeenCalledWith('Original');
@@ -839,9 +817,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = 'Whatever';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onKeyDown as (e: { key: string }) => void)({ key: 'a' });
     expect(onRename).not.toHaveBeenCalled();
@@ -852,9 +828,7 @@ describe('TreeItem — rename input', () => {
     const onRename = vi.fn();
     mocks.isRenamingRef.current = true;
     mocks.renameValueRef.current = 'Blurred';
-    const tree = callTreeItem(
-      makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }),
-    );
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'p', name: 'Original' }), onRename }));
     const input = findByPredicate(tree, (el) => el.type === 'input');
     (input!.props.onBlur as () => void)?.();
     expect(onRename).toHaveBeenCalledWith('p', 'Blurred');

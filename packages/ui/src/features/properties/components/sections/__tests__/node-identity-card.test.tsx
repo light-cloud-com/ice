@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { NodeIdentityCard } from '../node-identity-card';
 import type { CardNode } from '../../../../../store/slices/cards-slice';
 import type { ResourceDef } from '../../../hooks/use-resource-map';
@@ -25,19 +24,13 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
   return undefined;
 }
-function findAllByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike[] {
+function findAllByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike[] {
   const out: ReactElementLike[] = [];
   for (const el of walk(tree)) {
     if (predicate(el)) out.push(el);
@@ -156,8 +149,7 @@ describe('NodeIdentityCard — rendering', () => {
     });
     const chips = findAllByPredicate(
       tree,
-      (el) =>
-        typeof el.props.className === 'string' && el.props.className.includes('text-blue-400'),
+      (el) => typeof el.props.className === 'string' && el.props.className.includes('text-blue-400'),
     );
     expect(chips.length).toBe(0);
   });

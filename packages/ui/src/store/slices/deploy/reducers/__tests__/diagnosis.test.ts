@@ -38,12 +38,9 @@ function makeState(overrides: Partial<DeployState> = {}): DeployState {
 
 describe('startDiagnosis', () => {
   it('sets the loading state with null result and error', () => {
-    const next = produce(
-      makeState({ diagnosis: { status: 'error', result: null, error: 'old' } }),
-      (draft) => {
-        diagnosisReducers.startDiagnosis(draft);
-      },
-    );
+    const next = produce(makeState({ diagnosis: { status: 'error', result: null, error: 'old' } }), (draft) => {
+      diagnosisReducers.startDiagnosis(draft);
+    });
     expect(next.diagnosis).toEqual({ status: 'loading', result: null, error: null });
   });
 });
@@ -51,15 +48,12 @@ describe('startDiagnosis', () => {
 describe('setDiagnosis', () => {
   it('sets the loaded state and stores the payload as result', () => {
     const payload = { diagnosis: 'cold-cold start', suggestedFixes: ['warm it up'] };
-    const next = produce(
-      makeState({ diagnosis: { status: 'loading', result: null, error: null } }),
-      (draft) => {
-        diagnosisReducers.setDiagnosis(draft, {
-          type: 'deploy/setDiagnosis',
-          payload,
-        } as PayloadAction<typeof payload>);
-      },
-    );
+    const next = produce(makeState({ diagnosis: { status: 'loading', result: null, error: null } }), (draft) => {
+      diagnosisReducers.setDiagnosis(draft, {
+        type: 'deploy/setDiagnosis',
+        payload,
+      } as PayloadAction<typeof payload>);
+    });
     expect(next.diagnosis).toEqual({ status: 'loaded', result: payload, error: null });
   });
 });

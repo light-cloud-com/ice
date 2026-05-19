@@ -12,8 +12,8 @@
  */
 
 import { DEPLOY_EVENT_CHANNEL, type DeployEvent } from '@ice/types';
-import type { IceAPI } from '../api-adapter';
 import { getSocket, menuCallbacks } from './socket';
+import type { IceAPI } from '../api-adapter';
 
 /**
  * Register a callback for menu actions emitted from the web toolbar.

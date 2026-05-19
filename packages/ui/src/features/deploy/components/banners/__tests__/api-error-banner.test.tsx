@@ -86,12 +86,7 @@ import { ApiErrorBanner } from '../api-error-banner';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -115,10 +110,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -180,8 +172,7 @@ const makeProps = (overrides: Partial<BannerProps> = {}): BannerProps => ({
 const findButtons = (tree: React.ReactNode): React.ReactElement[] =>
   findByPredicate(tree, (el) => el.type === 'button');
 
-const findLinks = (tree: React.ReactNode): React.ReactElement[] =>
-  findByPredicate(tree, (el) => el.type === 'a');
+const findLinks = (tree: React.ReactNode): React.ReactElement[] => findByPredicate(tree, (el) => el.type === 'a');
 
 // ─── Reset mocks ────────────────────────────────────────────────────────────
 
@@ -384,9 +375,7 @@ describe('ApiErrorBanner — API-not-enabled branch (hasApiErrors)', () => {
       ]),
     );
     const tree = renderBanner(makeProps({ error: 'API not enabled' }));
-    const enableButtons = findButtons(tree).filter((b) =>
-      collectText(b).includes('[t:deploy.errors.enableApi]'),
-    );
+    const enableButtons = findButtons(tree).filter((b) => collectText(b).includes('[t:deploy.errors.enableApi]'));
     expect(enableButtons).toHaveLength(2);
   });
 
@@ -394,9 +383,7 @@ describe('ApiErrorBanner — API-not-enabled branch (hasApiErrors)', () => {
     const url = 'https://console.cloud.google.com/apis/library/run.googleapis.com';
     mocks.collectApiEnableUrlsSpy.mockReturnValue(new Set([url]));
     const tree = renderBanner(makeProps({ error: 'API not enabled' }));
-    const enableBtn = findButtons(tree).find((b) =>
-      collectText(b).includes('[t:deploy.errors.enableApi]'),
-    );
+    const enableBtn = findButtons(tree).find((b) => collectText(b).includes('[t:deploy.errors.enableApi]'));
     expect(enableBtn).toBeDefined();
     const onClick = (enableBtn!.props as { onClick: () => void }).onClick;
     onClick();
@@ -422,9 +409,7 @@ describe('ApiErrorBanner — API-not-enabled branch (hasApiErrors)', () => {
     mocks.collectApiEnableUrlsSpy.mockReturnValue(new Set(['https://example.com/api']));
     const onRetryDeploy = vi.fn();
     const tree = renderBanner(makeProps({ error: 'API not enabled', onRetryDeploy }));
-    const retryBtn = findButtons(tree).find((b) =>
-      collectText(b).includes('[t:deploy.buttons.retryDeploy]'),
-    );
+    const retryBtn = findButtons(tree).find((b) => collectText(b).includes('[t:deploy.buttons.retryDeploy]'));
     expect(retryBtn).toBeDefined();
     const onClick = (retryBtn!.props as { onClick: () => void }).onClick;
     onClick();
@@ -445,16 +430,10 @@ describe('ApiErrorBanner — API-not-enabled branch (hasApiErrors)', () => {
 
   it('uses stable index-based keys for enable-URL buttons (key={i})', () => {
     mocks.collectApiEnableUrlsSpy.mockReturnValue(
-      new Set([
-        'https://example.com/a',
-        'https://example.com/b',
-        'https://example.com/c',
-      ]),
+      new Set(['https://example.com/a', 'https://example.com/b', 'https://example.com/c']),
     );
     const tree = renderBanner(makeProps({ error: 'API not enabled' }));
-    const enableButtons = findButtons(tree).filter((b) =>
-      collectText(b).includes('[t:deploy.errors.enableApi]'),
-    );
+    const enableButtons = findButtons(tree).filter((b) => collectText(b).includes('[t:deploy.errors.enableApi]'));
     expect(enableButtons.map((b) => b.key)).toEqual(['0', '1', '2']);
   });
 
@@ -477,9 +456,7 @@ describe('ApiErrorBanner — API-not-enabled branch (hasApiErrors)', () => {
     const links = findLinks(tree);
     const iamLink = links.find((a) => collectText(a).includes('IAM'));
     expect(iamLink).toBeDefined();
-    expect((iamLink!.props as { href: string }).href).toBe(
-      'https://console.cloud.google.com/iam-admin/iam',
-    );
+    expect((iamLink!.props as { href: string }).href).toBe('https://console.cloud.google.com/iam-admin/iam');
   });
 });
 

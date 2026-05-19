@@ -39,12 +39,12 @@
  * @see rf-cards-11
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CardNode, CardEdge, CardsState } from '../types';
-import { migrateCardNodes } from '../migration';
-import { applyEdgeRoutes } from '../edge-routes';
-import { pushSnapshot } from '../snapshot';
 import { autoLayout, type LayoutNode } from '../../../../shared/utils/auto-layout';
+import { applyEdgeRoutes } from '../edge-routes';
+import { migrateCardNodes } from '../migration';
+import { pushSnapshot } from '../snapshot';
+import type { CardNode, CardEdge, CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const importReducers = {
   // Import nodes/edges to active card (for cloud import) - auto-organizes by default

@@ -5,13 +5,7 @@
  */
 
 import { BaseGCPService } from './base-service';
-import type {
-  ServiceDiscoveryResult,
-  GCPServiceType,
-  GCPResource,
-  GCPImportError,
-  GCPImportWarning,
-} from '../types';
+import type { ServiceDiscoveryResult, GCPServiceType, GCPResource, GCPImportError, GCPImportWarning } from '../types';
 
 /**
  * Compute Engine resource discovery service.

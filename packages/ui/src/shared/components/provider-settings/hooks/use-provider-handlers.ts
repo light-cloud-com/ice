@@ -22,7 +22,6 @@
  */
 
 import { useEffect } from 'react';
-
 import { getApi } from '../../../api/api-adapter';
 import { useGCPOAuth } from '../../../hooks/use-gcp-oauth';
 import { PROVIDER_CONFIGS } from '../data/provider-configs';
@@ -46,7 +45,7 @@ export interface UseProviderHandlersInput {
   onClose: () => void;
   // Preserved as `any` from the source — the imported graph's schema
   // lives outside this file and the hook does not introspect it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onImportComplete?: (graph: any) => void;
 }
 
@@ -98,7 +97,7 @@ export function useProviderHandlers(input: UseProviderHandlersInput): UseProvide
   // Sync GCP OAuth errors
   useEffect(() => {
     if (gcpOAuth.error) setError(gcpOAuth.error);
-  }, [gcpOAuth.error]);
+  }, [gcpOAuth.error, setError]);
 
   // Handle connect
   const handleConnect = async (providerId: string): Promise<void> => {
@@ -134,7 +133,6 @@ export function useProviderHandlers(input: UseProviderHandlersInput): UseProvide
       } else {
         throw new Error(result.error || 'Connection failed');
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || String(err);
       setError(msg);

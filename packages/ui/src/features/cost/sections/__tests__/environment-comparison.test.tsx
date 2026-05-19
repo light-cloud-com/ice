@@ -25,12 +25,9 @@ vi.mock('../../utils/cost-calculator', async (importOriginal) => {
   };
 });
 
-// eslint-disable-next-line import/first
 import { EnvironmentComparison, type EnvironmentComparisonProps } from '../environment-comparison';
-// eslint-disable-next-line import/first
-import type { Environment } from '../../../../store/slices/environments-slice';
-// eslint-disable-next-line import/first
 import type { CardNode } from '../../../../store/slices/cards-slice';
+import type { Environment } from '../../../../store/slices/environments-slice';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
 
@@ -62,10 +59,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -218,9 +212,7 @@ describe('EnvironmentComparison — active highlight', () => {
     });
     const rows = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        ((el.props as { className?: string }).className ?? '').includes('py-1.5'),
+      (el) => el.type === 'div' && ((el.props as { className?: string }).className ?? '').includes('py-1.5'),
     );
     expect(rows.length).toBe(2);
     // Look at the dev row (second).
@@ -297,9 +289,7 @@ describe('EnvironmentComparison — delta column', () => {
     // Look for the red-400 span
     const redSpans = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        ((el.props as { className?: string }).className ?? '').includes('text-red-400'),
+      (el) => el.type === 'span' && ((el.props as { className?: string }).className ?? '').includes('text-red-400'),
     );
     expect(redSpans.length).toBeGreaterThanOrEqual(1);
   });
@@ -372,9 +362,7 @@ describe('EnvironmentComparison — protected lock', () => {
   it('shows lock emoji when env.is_protected', () => {
     costsByCardId.clear();
     const tree = render({
-      environments: [
-        buildEnv({ id: 'e', card_id: 'c1', name: 'prod', type: 'production', is_protected: true }),
-      ],
+      environments: [buildEnv({ id: 'e', card_id: 'c1', name: 'prod', type: 'production', is_protected: true })],
       allCards: [buildCard('c1', 100)],
       activeCardId: null,
       currentCost: 0,
@@ -387,9 +375,7 @@ describe('EnvironmentComparison — protected lock', () => {
   it('omits lock emoji when env.is_protected is false', () => {
     costsByCardId.clear();
     const tree = render({
-      environments: [
-        buildEnv({ id: 'e', card_id: 'c1', name: 'prod', type: 'production', is_protected: false }),
-      ],
+      environments: [buildEnv({ id: 'e', card_id: 'c1', name: 'prod', type: 'production', is_protected: false })],
       allCards: [buildCard('c1', 100)],
       activeCardId: null,
       currentCost: 0,

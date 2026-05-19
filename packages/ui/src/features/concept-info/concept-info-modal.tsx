@@ -17,6 +17,7 @@ import {
 } from '@ice/blocks';
 import React, { useMemo, useState } from 'react';
 import { renderMarkdown } from './markdown';
+import { useTranslation } from '../../i18n';
 
 type Tab = 'overview' | 'compiles' | 'snippets' | 'links';
 
@@ -36,18 +37,27 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
 }) => {
   const content: InfoContent | undefined = useMemo(() => getInfoContent(iceType), [iceType]);
   const [tab, setTab] = useState<Tab>('overview');
+  const { t } = useTranslation();
 
   if (!content) return null;
 
   const allTabs: readonly { id: Tab; label: string; show: boolean }[] = [
-    { id: 'overview' as const, label: 'Overview', show: true },
+    { id: 'overview' as const, label: t('canvas.infoModal.tabOverview'), show: true },
     {
       id: 'compiles' as const,
-      label: 'Compiles To',
+      label: t('canvas.infoModal.tabCompiles'),
       show: !!content.compilesTo && Object.keys(content.compilesTo).length > 0,
     },
-    { id: 'snippets' as const, label: 'Code', show: !!content.snippets && Object.keys(content.snippets).length > 0 },
-    { id: 'links' as const, label: 'Links', show: !!content.links && content.links.length > 0 },
+    {
+      id: 'snippets' as const,
+      label: t('canvas.infoModal.tabCode'),
+      show: !!content.snippets && Object.keys(content.snippets).length > 0,
+    },
+    {
+      id: 'links' as const,
+      label: t('canvas.infoModal.tabLinks'),
+      show: !!content.links && content.links.length > 0,
+    },
   ];
   const availableTabs = allTabs.filter((t) => t.show);
 
@@ -109,7 +119,7 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
             onClick={onClose}
             className="text-base leading-none w-6 h-6 rounded flex items-center justify-center"
             style={{ color: 'var(--ice-text-tertiary)' }}
-            aria-label="Close"
+            aria-label={t('canvas.infoModal.close')}
           >
             ×
           </button>
@@ -149,19 +159,25 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
 // Overview tab
 // =============================================================================
 
-const OverviewTab: React.FC<{ content: InfoContent }> = ({ content }) => (
-  <div
-    className="text-ice-sm prose-custom"
-    style={{ color: 'var(--ice-text-secondary)', lineHeight: 1.6 }}
-    dangerouslySetInnerHTML={{ __html: renderMarkdown(content.overview.markdown) }}
-  />
-);
+const OverviewTab: React.FC<{ content: InfoContent }> = ({ content }) => {
+  const { locale } = useTranslation();
+  const markdown =
+    locale === 'zh' && content.overview.markdownZh ? content.overview.markdownZh : content.overview.markdown;
+  return (
+    <div
+      className="text-ice-sm prose-custom"
+      style={{ color: 'var(--ice-text-secondary)', lineHeight: 1.6 }}
+      dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
+    />
+  );
+};
 
 // =============================================================================
 // Compiles To tab
 // =============================================================================
 
 const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }> = ({ content, currentProvider }) => {
+  const { t } = useTranslation();
   const providers = Object.keys(content.compilesTo ?? {}) as Provider[];
   const [selected, setSelected] = useState<Provider>(
     currentProvider && providers.includes(currentProvider) ? currentProvider : providers[0],
@@ -170,7 +186,7 @@ const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }
   if (!content.compilesTo || providers.length === 0) {
     return (
       <div className="text-ice-sm" style={{ color: 'var(--ice-text-tertiary)' }}>
-        No infrastructure — this is a canvas-only block.
+        {t('canvas.infoModal.noInfrastructure')}
       </div>
     );
   }
@@ -181,7 +197,7 @@ const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <span className="text-ice-sm" style={{ color: 'var(--ice-text-tertiary)' }}>
-          Provider:
+          {t('canvas.infoModal.providerLabel')}
         </span>
         <div className="flex gap-1">
           {providers.map((p) => (
@@ -224,7 +240,7 @@ const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }
                     border: '1px solid var(--ice-border)',
                   }}
                 >
-                  optional
+                  {t('canvas.infoModal.optional')}
                 </span>
               )}
             </div>
@@ -248,13 +264,14 @@ const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }
 // =============================================================================
 
 const SnippetsTab: React.FC<{ content: InfoContent }> = ({ content }) => {
+  const { t } = useTranslation();
   const availableLangs: SnippetLanguage[] = SNIPPET_LANGUAGES.filter((l) => content.snippets && content.snippets[l]);
   const [lang, setLang] = useState<SnippetLanguage>(availableLangs[0] ?? 'ts');
 
   if (availableLangs.length === 0) {
     return (
       <div className="text-ice-sm" style={{ color: 'var(--ice-text-tertiary)' }}>
-        No code snippets available yet.
+        {t('canvas.infoModal.noSnippets')}
       </div>
     );
   }
@@ -300,24 +317,30 @@ const SnippetsTab: React.FC<{ content: InfoContent }> = ({ content }) => {
 // Links tab
 // =============================================================================
 
-const LinksTab: React.FC<{ content: InfoContent }> = ({ content }) => (
-  <div className="flex flex-col gap-2">
-    {content.links?.map((link) => (
-      <a
-        key={link.url}
-        href={link.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-ice-sm px-3 py-2 rounded block"
-        style={{
-          color: 'var(--ice-text-primary)',
-          background: 'var(--ice-bg-raised)',
-          border: '1px solid var(--ice-border)',
-          textDecoration: 'none',
-        }}
-      >
-        {link.label} <span style={{ color: 'var(--ice-text-tertiary)' }}>↗</span>
-      </a>
-    ))}
-  </div>
-);
+const LinksTab: React.FC<{ content: InfoContent }> = ({ content }) => {
+  const { locale } = useTranslation();
+  return (
+    <div className="flex flex-col gap-2">
+      {content.links?.map((link, i) => {
+        const label = locale === 'zh' && content.linksZh && content.linksZh[i] ? content.linksZh[i] : link.label;
+        return (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ice-sm px-3 py-2 rounded block"
+            style={{
+              color: 'var(--ice-text-primary)',
+              background: 'var(--ice-bg-raised)',
+              border: '1px solid var(--ice-border)',
+              textDecoration: 'none',
+            }}
+          >
+            {label} <span style={{ color: 'var(--ice-text-tertiary)' }}>↗</span>
+          </a>
+        );
+      })}
+    </div>
+  );
+};

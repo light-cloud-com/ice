@@ -13,6 +13,7 @@ import { NodeMenu } from './node-menu';
 import { getBlockCategoryLabel, BLOCK_CATEGORY_ORDER } from '../../../../config/block-categories';
 import { BLOCK_BLUEPRINTS, getBlueprint, expandBlueprint } from '../../../../config/blocks';
 import { ALL_TEMPLATES, TEMPLATE_CATEGORIES, expandComposedTemplate } from '../../../../config/templates';
+import { useTranslation } from '../../../../i18n';
 import axiosInstance from '../../../../shared/api/axios-instance';
 import { selectActiveCard, expandBlueprintToCard, importToActiveCard } from '../../../../store/slices/cards-slice';
 import { closeContextMenu } from '../../../../store/slices/ui-slice';
@@ -21,6 +22,7 @@ import type { EdgeStyle } from '../../../../store/slices/ui-slice';
 
 export const CanvasContextMenu: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const contextMenu = useSelector((state: RootState) => state.ui.contextMenu);
@@ -75,8 +77,8 @@ export const CanvasContextMenu: React.FC = () => {
         const bi = BLOCK_CATEGORY_ORDER.findIndex((c) => c.toLowerCase() === b[0].toLowerCase());
         return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
       })
-      .map(([cat, items]) => ({ label: getBlockCategoryLabel(cat), items }));
-  }, [projectProvider, contextMenu.canvasPosition, dispatch]);
+      .map(([cat, items]) => ({ label: getBlockCategoryLabel(t, cat), items }));
+  }, [projectProvider, contextMenu.canvasPosition, dispatch, t]);
 
   // Template categories
   const templateCategories = useMemo(() => {

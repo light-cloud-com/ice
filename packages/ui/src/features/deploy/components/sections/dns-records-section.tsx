@@ -41,7 +41,6 @@
  *   intended behavior; the Copy click is best-effort UX.
  */
 import React from 'react';
-
 import { cn } from '../../../../shared/utils/cn';
 import { extractDnsResults, splitDnsByAction, type DnsRec } from '../../utils/dns-records';
 import type { DeployResourceResult } from '../../../../store/slices/deploy-slice';
@@ -104,9 +103,7 @@ export const DnsRecordsSection: React.FC<DnsRecordsSectionProps> = ({ results })
             className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3"
           >
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-blue-700 dark:text-blue-300">
-                DNS records for {customDomain}
-              </span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">DNS records for {customDomain}</span>
             </div>
 
             {addRecords.length > 0 && (
@@ -129,8 +126,8 @@ export const DnsRecordsSection: React.FC<DnsRecordsSectionProps> = ({ results })
             {removeRecords.length > 0 && (
               <div className="space-y-1">
                 <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                  Remove the records below from your DNS provider — they conflict with the new configuration and
-                  block verification
+                  Remove the records below from your DNS provider — they conflict with the new configuration and block
+                  verification
                 </div>
                 {renderHeader()}
                 {removeRecords.map((rec, ridx) =>

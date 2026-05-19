@@ -166,12 +166,7 @@ import { ConfigSection } from '../config-section';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -195,10 +190,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -270,7 +262,7 @@ const renderSection = (props: SectionProps): React.ReactElement => {
 // (which re-walk and re-invoke FCs) do not pollute the snapshot.
 const drainIceSelectCalls = (tree: React.ReactNode): unknown[] => {
   mocks.iceSelectCalls.length = 0;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   for (const _el of walk(tree)) {
     // pass — walking is the side-effect.
   }
@@ -489,7 +481,7 @@ describe('ConfigSection — connection-status banner', () => {
     expect(text).not.toContain(' via Google OAuth');
   });
 
-  it("authType is some other unknown string → no suffix appended", () => {
+  it('authType is some other unknown string → no suffix appended', () => {
     mocks.providerConnectedRef.current = true;
     mocks.authTypeRef.current = 'mystery-auth';
     const tree = renderSection(makeProps({ provider: 'gcp' }));
@@ -723,7 +715,7 @@ describe('ConfigSection — labels via translation + project meta', () => {
     expect(text).toContain('Project ID');
   });
 
-  it("project field placeholder comes from PROVIDER_PROJECT_LABELS[provider].placeholder when text input is shown", () => {
+  it('project field placeholder comes from PROVIDER_PROJECT_LABELS[provider].placeholder when text input is shown', () => {
     mocks.connectedProjectsRef.current = [];
     const tree = renderSection(makeProps({ provider: 'aws' }));
     const input = findByPredicate(

@@ -126,9 +126,7 @@ describe('validateTemplate', () => {
       name: 'T',
       blocks: blocks('Compute.Container'),
       connections: [],
-      groups: [
-        { subtype: 'vpc', label: 'My VPC', blockIndices: [0, 99, -1] },
-      ],
+      groups: [{ subtype: 'vpc', label: 'My VPC', blockIndices: [0, 99, -1] }],
     });
     const oob = issues.filter((i) => i.code === 'INVALID_PARENT_REF' && i.id.includes('block_oob'));
     expect(oob).toHaveLength(2);

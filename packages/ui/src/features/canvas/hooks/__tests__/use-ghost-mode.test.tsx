@@ -31,10 +31,10 @@
  * `Math.max(0, 10_000 - elapsed)` clamp is verifiable.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -78,12 +78,9 @@ vi.mock('../../../../config/blocks', () => ({
 }));
 
 // Import AFTER the mocks are registered so the hook closes over them.
-import { useGhostMode, type UseGhostModeResult } from '../use-ghost-mode';
 import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
-import ghostReducer, {
-  setGhosts,
-  type GhostNode,
-} from '../../../../store/slices/ghost-slice';
+import ghostReducer, { setGhosts, type GhostNode } from '../../../../store/slices/ghost-slice';
+import { useGhostMode, type UseGhostModeResult } from '../use-ghost-mode';
 
 // ─── Store builder ──────────────────────────────────────────────────────────
 // The hook reads `state.ghosts.ghosts` and dispatches into `cards-slice`
@@ -108,8 +105,7 @@ const makeStore = (preloadedGhosts: GhostNode[] = []) =>
       ghosts: { ghosts: preloadedGhosts },
       cards: { activeCardId: null, cards: [] },
     },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
@@ -193,12 +189,8 @@ describe('useGhostMode — handleAcceptGhost (blueprint resolves)', () => {
       children: [],
       edges: [],
     };
-    vi.mocked(getBlueprint).mockReturnValue(
-      fakeBlueprint as unknown as ReturnType<typeof getBlueprint>,
-    );
-    vi.mocked(expandBlueprint).mockReturnValue(
-      expanded as unknown as ReturnType<typeof expandBlueprint>,
-    );
+    vi.mocked(getBlueprint).mockReturnValue(fakeBlueprint as unknown as ReturnType<typeof getBlueprint>);
+    vi.mocked(expandBlueprint).mockReturnValue(expanded as unknown as ReturnType<typeof expandBlueprint>);
 
     mocks.syncUseEffect.current = false; // empty ghosts → no timer regardless
     const store = makeStore();
@@ -235,9 +227,7 @@ describe('useGhostMode — handleAcceptGhost (blueprint resolves)', () => {
 
 describe('useGhostMode — handleAcceptGhost (no blueprint)', () => {
   it('dispatches only dismissGhost when getBlueprint returns falsy', () => {
-    vi.mocked(getBlueprint).mockReturnValue(
-      undefined as unknown as ReturnType<typeof getBlueprint>,
-    );
+    vi.mocked(getBlueprint).mockReturnValue(undefined as unknown as ReturnType<typeof getBlueprint>);
 
     mocks.syncUseEffect.current = false;
     const store = makeStore();
@@ -344,23 +334,17 @@ describe('useGhostMode — auto-dismiss timer', () => {
     captureHook(store);
 
     // Immediately after render, no clearGhosts yet — timer is queued for ~10s.
-    const clearCalls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    const clearCalls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(clearCalls).toHaveLength(0);
 
     // Advance just before the threshold — still no fire.
     vi.advanceTimersByTime(9_999);
-    let postCalls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    let postCalls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(postCalls).toHaveLength(0);
 
     // Cross the threshold.
     vi.advanceTimersByTime(1);
-    postCalls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    postCalls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(postCalls).toHaveLength(1);
   });
 
@@ -375,16 +359,12 @@ describe('useGhostMode — auto-dismiss timer', () => {
 
     // After 6_999 ms still pending.
     vi.advanceTimersByTime(6_999);
-    let calls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    let calls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(calls).toHaveLength(0);
 
     // Cross 7_000 ms boundary.
     vi.advanceTimersByTime(1);
-    calls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    calls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(calls).toHaveLength(1);
   });
 
@@ -398,9 +378,7 @@ describe('useGhostMode — auto-dismiss timer', () => {
 
     // setTimeout(cb, 0) is still queued, not synchronous — advance once.
     vi.advanceTimersByTime(0);
-    const calls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    const calls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(calls).toHaveLength(1);
   });
 
@@ -414,9 +392,7 @@ describe('useGhostMode — auto-dismiss timer', () => {
     expect(mocks.effectCleanups).toHaveLength(0);
 
     vi.advanceTimersByTime(60_000);
-    const calls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    const calls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(calls).toHaveLength(0);
   });
 
@@ -432,9 +408,7 @@ describe('useGhostMode — auto-dismiss timer', () => {
     mocks.effectCleanups[0]();
 
     vi.advanceTimersByTime(60_000);
-    const calls = dispatchSpy.mock.calls.filter(
-      (c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts',
-    );
+    const calls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type: string }).type === 'ghosts/clearGhosts');
     expect(calls).toHaveLength(0);
   });
 });
@@ -446,12 +420,7 @@ describe('useGhostMode — selector reactivity to setGhosts', () => {
     let result = captureHook(store);
     expect(result.ghosts).toHaveLength(0);
 
-    store.dispatch(
-      setGhosts([
-        makeGhost({ id: 'a' }),
-        makeGhost({ id: 'b' }),
-      ]),
-    );
+    store.dispatch(setGhosts([makeGhost({ id: 'a' }), makeGhost({ id: 'b' })]));
 
     result = captureHook(store);
     expect(result.ghosts).toHaveLength(2);

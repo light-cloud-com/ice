@@ -237,7 +237,8 @@ export function startCronJobs() {
           `Deploy stopped emitting events ${idleMin}m ago (started ${ageMin}m ago). ` +
           `The gateway likely crashed or the active operation is wedged. ` +
           `Cancel + redeploy, or inspect the gateway logs for the failure.`;
-        const body = tailLines.length > 0 ? `\n--- Last activity (${tailLines.length} events) ---\n${tailLines.join('\n')}` : '';
+        const body =
+          tailLines.length > 0 ? `\n--- Last activity (${tailLines.length} events) ---\n${tailLines.join('\n')}` : '';
 
         await prisma.canvasDeployment.update({
           where: { id: dep.id },

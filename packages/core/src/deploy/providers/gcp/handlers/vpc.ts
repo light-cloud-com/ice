@@ -101,9 +101,7 @@ export const vpc_handler: GCPResourceHandler = {
 
   async describe(name, _provider_id, ctx) {
     try {
-      const network = (await ctx.rest_client.get(
-        `${BASE_URL}/projects/${ctx.project}/global/networks/${name}`,
-      )) as any;
+      const network = (await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/networks/${name}`)) as any;
       if (!network) return { exists: false };
       return {
         exists: true,

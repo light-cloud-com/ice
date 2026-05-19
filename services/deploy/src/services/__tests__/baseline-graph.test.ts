@@ -90,7 +90,14 @@ describe('buildBaselineGraph', () => {
       id: 'prev',
       results: {
         resources: [
-          { name: 'a', type: 'gcp.storage.bucket', success: true, resource_id: 'r-a', outputs: { url: 'gs://a' }, provider_id: 'p-a' },
+          {
+            name: 'a',
+            type: 'gcp.storage.bucket',
+            success: true,
+            resource_id: 'r-a',
+            outputs: { url: 'gs://a' },
+            provider_id: 'p-a',
+          },
           { name: 'b', type: 'gcp.storage.bucket', success: false, resource_id: 'r-b' }, // skipped: not success
           { name: 'c', type: 'gcp.storage.bucket', success: true /* no resource_id */ }, // skipped: no resource_id
           { name: 'd', type: 'gcp.storage.bucket', success: true, resource_id: 'r-d', outputs: {}, provider_id: 'p-d' },

@@ -11,9 +11,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { NodeLabel } from '../node-label';
 
 const renderInner = (props: React.ComponentProps<typeof NodeLabel>): React.ReactElement => {
-  const Inner = (NodeLabel as unknown as {
-    type: (p: React.ComponentProps<typeof NodeLabel>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    NodeLabel as unknown as {
+      type: (p: React.ComponentProps<typeof NodeLabel>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

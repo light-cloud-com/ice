@@ -41,13 +41,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
-import {
-  SvgEnvConfigNode,
-  computeEnvConfigHeight,
-  EC_HEADER_HEIGHT,
-  EC_ROW_HEIGHT,
-  EC_PADDING,
-} from '../index';
+import { SvgEnvConfigNode, computeEnvConfigHeight, EC_HEADER_HEIGHT, EC_ROW_HEIGHT, EC_PADDING } from '..';
 import type { CanvasNode } from '../../../svg-canvas';
 
 const MockCardShell = mocks.CardShell;
@@ -88,9 +82,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderEC = (
-  props: Partial<React.ComponentProps<typeof SvgEnvConfigNode>> = {},
-): React.ReactElement => {
+const renderEC = (props: Partial<React.ComponentProps<typeof SvgEnvConfigNode>> = {}): React.ReactElement => {
   const Inner = SvgEnvConfigNode as React.FC<React.ComponentProps<typeof SvgEnvConfigNode>>;
   const defaults: React.ComponentProps<typeof SvgEnvConfigNode> = {
     node: makeNode(),
@@ -188,11 +180,7 @@ describe('SvgEnvConfigNode — populated state', () => {
   it('drops variables with empty key (object form, non-string)', () => {
     const node = makeNode({
       data: {
-        variables: [
-          { key: '', value: 'v' },
-          { key: 'OK', value: 'good' },
-          42,
-        ],
+        variables: [{ key: '', value: 'v' }, { key: 'OK', value: 'good' }, 42],
       },
     });
     const tree = renderEC({ node });

@@ -14,8 +14,8 @@ vi.mock('bullmq', () => ({
   QueueEvents: vi.fn(() => ({ on: vi.fn() })),
 }));
 
-import { createDeployRouter } from '../index';
-import * as Deploy from '../index';
+import { createDeployRouter } from '..';
+import * as Deploy from '..';
 
 describe('services/deploy barrel', () => {
   it('exposes createDeployRouter as a function', () => {

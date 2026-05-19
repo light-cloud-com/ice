@@ -9,12 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  RESOURCE_CATEGORIES,
-  VIEW_LEVELS,
-  isTypeVisibleAtLevel,
-  isEdgeVisibleAtLevel,
-} from '../visualization-config';
+import { RESOURCE_CATEGORIES, VIEW_LEVELS, isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../visualization-config';
 
 describe('RESOURCE_CATEGORIES', () => {
   it('exposes every documented category as a non-empty list', () => {

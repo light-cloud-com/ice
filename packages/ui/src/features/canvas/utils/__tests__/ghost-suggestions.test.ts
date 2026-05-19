@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-
 import { generateGhostSuggestions } from '../ghost-suggestions';
 import type { CardNode } from '../../../../store/slices/cards-slice';
 

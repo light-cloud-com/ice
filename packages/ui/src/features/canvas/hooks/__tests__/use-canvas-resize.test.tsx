@@ -85,9 +85,7 @@ interface Captured {
   dimensions: { width: number; height: number };
 }
 
-const renderHook = (
-  containerRef: React.RefObject<HTMLDivElement | null>,
-): Captured => {
+const renderHook = (containerRef: React.RefObject<HTMLDivElement | null>): Captured => {
   const captured: { current?: Captured } = {};
   const Probe: React.FC = () => {
     const dimensions = useCanvasDimensions(containerRef);
@@ -132,13 +130,13 @@ beforeEach(() => {
 
 describe('useCanvasDimensions', () => {
   it('returns the default 800x600 on initial render', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     const { dimensions } = renderHook(ref as React.RefObject<HTMLDivElement | null>);
     expect(dimensions).toEqual({ width: 800, height: 600 });
   });
 
   it('observes the containerRef.current element exactly once', () => {
-    const el = ({} as HTMLDivElement);
+    const el = {} as HTMLDivElement;
     const ref = { current: el };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
     expect(mocks.observeSpy).toHaveBeenCalledTimes(1);
@@ -153,7 +151,7 @@ describe('useCanvasDimensions', () => {
   });
 
   it('calls setDimensions with the new size when the observer fires with valid dimensions', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     expect(mocks.observerCallbacks).toHaveLength(1);
@@ -165,7 +163,7 @@ describe('useCanvasDimensions', () => {
   });
 
   it('returns the new dimensions on the next render after a valid observer firing', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
@@ -180,7 +178,7 @@ describe('useCanvasDimensions', () => {
   });
 
   it('skips the setter when the observer fires with width=0', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
@@ -190,7 +188,7 @@ describe('useCanvasDimensions', () => {
   });
 
   it('skips the setter when the observer fires with height=0', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
@@ -200,7 +198,7 @@ describe('useCanvasDimensions', () => {
   });
 
   it('skips the setter when both width and height are 0', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
@@ -210,14 +208,11 @@ describe('useCanvasDimensions', () => {
   });
 
   it('processes every entry in a multi-entry callback (last valid one wins)', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
-    cb(
-      [makeEntry(100, 100), makeEntry(200, 200), makeEntry(300, 300)],
-      {} as ResizeObserver,
-    );
+    cb([makeEntry(100, 100), makeEntry(200, 200), makeEntry(300, 300)], {} as ResizeObserver);
 
     // The hook iterates `for (const entry of entries) { ... setDimensions(...) }`
     // so each valid entry triggers a setter call and the LAST one is the
@@ -229,21 +224,18 @@ describe('useCanvasDimensions', () => {
   });
 
   it('skips invalid entries while still applying valid ones in the same callback', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     const cb = mocks.observerCallbacks[0];
-    cb(
-      [makeEntry(0, 0), makeEntry(640, 480), makeEntry(0, 100), makeEntry(800, 0)],
-      {} as ResizeObserver,
-    );
+    cb([makeEntry(0, 0), makeEntry(640, 480), makeEntry(0, 100), makeEntry(800, 0)], {} as ResizeObserver);
 
     expect(mocks.setDimensionsSpy).toHaveBeenCalledTimes(1);
     expect(mocks.setDimensionsSpy).toHaveBeenCalledWith({ width: 640, height: 480 });
   });
 
   it('disconnects the observer when the effect cleanup is invoked', () => {
-    const ref = { current: ({} as HTMLDivElement) };
+    const ref = { current: {} as HTMLDivElement };
     renderHook(ref as React.RefObject<HTMLDivElement | null>);
 
     expect(mocks.effectCleanups).toHaveLength(1);

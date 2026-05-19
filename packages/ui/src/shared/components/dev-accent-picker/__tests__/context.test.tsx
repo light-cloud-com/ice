@@ -18,7 +18,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { ThemePickerContext, useThemePicker } from '../context';
 
 describe('ThemePickerContext', () => {
@@ -35,9 +34,7 @@ describe('ThemePickerContext', () => {
     // Default value snapshot via React internals — kept off the assertion path
     // because the internal field name is implementation-specific. This is the
     // load-bearing check (defaultValue.toggle is a function that no-ops).
-    const defaultValue = (
-      ThemePickerContext as unknown as { _currentValue: { toggle: () => void } }
-    )._currentValue;
+    const defaultValue = (ThemePickerContext as unknown as { _currentValue: { toggle: () => void } })._currentValue;
     expect(typeof defaultValue.toggle).toBe('function');
     expect(() => defaultValue.toggle()).not.toThrow();
   });
@@ -51,8 +48,7 @@ describe('useThemePicker', () => {
     // no-render approach: stub the dispatcher with a useContext that just
     // returns the context's defaultValue.
     const dispatcher = {
-      useContext: <T,>(ctx: React.Context<T>) =>
-        (ctx as unknown as { _currentValue: T })._currentValue,
+      useContext: <T,>(ctx: React.Context<T>) => (ctx as unknown as { _currentValue: T })._currentValue,
     };
     const ReactInternals = (
       React as unknown as {

@@ -68,8 +68,7 @@ const baseProps = {
   children: 'PANEL_KIDS',
 };
 
-const render = (props: Record<string, unknown>): unknown =>
-  (SidebarPanel as unknown as (p: unknown) => unknown)(props);
+const render = (props: Record<string, unknown>): unknown => (SidebarPanel as unknown as (p: unknown) => unknown)(props);
 
 describe('SidebarPanel — collapsed (visible=false) with collapsedTabs', () => {
   it('renders SidebarStrip when collapsedTabs is non-empty', () => {

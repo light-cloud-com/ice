@@ -5,7 +5,9 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, vars?: Record<string, unknown>) => (vars ? `${k}:${JSON.stringify(vars)}` : k) }),
+  useTranslation: () => ({
+    t: (k: string, vars?: Record<string, unknown>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),
+  }),
 }));
 
 import { Toolbar } from '../toolbar';
@@ -65,7 +67,10 @@ const baseProps: {
   onSearchChange: vi.fn(),
   statusFilter: new Set<RowStatus>(),
   providerFilter: new Set<string>(),
-  counts: { live: 3, drifted: 0, deploying: 0, building: 0, queued: 0, failed: 1, idle: 0 } as Record<RowStatus, number>,
+  counts: { live: 3, drifted: 0, deploying: 0, building: 0, queued: 0, failed: 1, idle: 0 } as Record<
+    RowStatus,
+    number
+  >,
   availableProviders: ['gcp'],
   hasActiveFilter: false,
   groupBy: 'none',
@@ -107,7 +112,13 @@ describe('inline-table-view/toolbar', () => {
     const allButtons = findElements(tree, (el) => el.type === 'button');
     const providerChips = allButtons.filter((b) => {
       const c = (b.props as any).children as React.ReactNode[];
-      return Array.isArray(c) && c.length === 2 && c[0] === false && typeof c[1] === 'string' && c[1].toLowerCase().includes('gcp');
+      return (
+        Array.isArray(c) &&
+        c.length === 2 &&
+        c[0] === false &&
+        typeof c[1] === 'string' &&
+        c[1].toLowerCase().includes('gcp')
+      );
     });
     expect(providerChips).toHaveLength(0);
   });

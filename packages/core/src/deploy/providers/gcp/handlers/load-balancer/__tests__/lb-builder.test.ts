@@ -8,12 +8,7 @@ vi.mock('../compute-ops', () => ({
 }));
 
 import { wait_for_compute_op } from '../compute-ops';
-import {
-  create_url_map,
-  create_target_proxy,
-  create_forwarding_rule,
-  create_redirect_chain,
-} from '../lb-builder';
+import { create_url_map, create_target_proxy, create_forwarding_rule, create_redirect_chain } from '../lb-builder';
 import type { GCPHandlerContext } from '../../../types';
 import type { HostRule } from '../backend-creator';
 
@@ -219,9 +214,7 @@ describe('load-balancer/lb-builder', () => {
       );
       expect(post.mock.calls[1][1]).toMatchObject({ name: 'lb-redirect-proxy' });
       // 3: forwarding rule on port 80
-      expect(post.mock.calls[2][0]).toBe(
-        'https://compute.googleapis.com/compute/v1/projects/p/global/forwardingRules',
-      );
+      expect(post.mock.calls[2][0]).toBe('https://compute.googleapis.com/compute/v1/projects/p/global/forwardingRules');
       expect(post.mock.calls[2][1]).toMatchObject({ name: 'lb-http', portRange: '80' });
     });
 

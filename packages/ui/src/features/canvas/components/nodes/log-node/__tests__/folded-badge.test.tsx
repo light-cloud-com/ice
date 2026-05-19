@@ -8,9 +8,11 @@ import { describe, it, expect } from 'vitest';
 import { FoldedBadge } from '../folded-badge';
 
 const renderFB = (logCount: number): React.ReactElement => {
-  const Inner = (FoldedBadge as unknown as {
-    type: (p: { logCount: number }) => React.ReactElement;
-  }).type;
+  const Inner = (
+    FoldedBadge as unknown as {
+      type: (p: { logCount: number }) => React.ReactElement;
+    }
+  ).type;
   return Inner({ logCount });
 };
 

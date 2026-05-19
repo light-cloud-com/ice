@@ -40,10 +40,12 @@ vi.mock('react', async (importOriginal) => {
   // - __setState(i, v) — pre-seed slot i for the next render.
   let stateSlots: unknown[] = [];
   let useStateIdx = 0;
-  (mocks as unknown as {
-    __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    __setState: (i: number, v: unknown) => void;
-  }).__resetUseState = (opts) => {
+  (
+    mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      __setState: (i: number, v: unknown) => void;
+    }
+  ).__resetUseState = (opts) => {
     if (!opts?.keepSlots) stateSlots = [];
     useStateIdx = 0;
   };
@@ -65,15 +67,19 @@ vi.mock('react', async (importOriginal) => {
     return [stateSlots[slot], setter];
   });
   // Capture each useEffect's callback + deps so tests can fire them.
-  (mocks as unknown as {
-    effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    callbacks: unknown[];
-  }).effects = [];
+  (
+    mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      callbacks: unknown[];
+    }
+  ).effects = [];
   (mocks as unknown as { callbacks: unknown[] }).callbacks = [];
   const patchedUseEffect = vi.fn((cb: () => void | (() => void), deps?: unknown[]) => {
-    (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects.push({ cb, deps: deps ?? [] });
+    (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects.push({ cb, deps: deps ?? [] });
   });
   const patchedUseMemo = vi.fn((fn: () => unknown) => fn());
   const patchedUseCallback = vi.fn((fn: unknown) => {
@@ -81,6 +87,14 @@ vi.mock('react', async (importOriginal) => {
     return fn;
   });
   const patchedUseRef = vi.fn(<T,>(initial: T) => ({ current: initial }));
+  // ResourcePalette now calls `useTranslation()` to fetch the localized
+  // category labels. The hook reads LocaleContext via useContext —
+  // return an identity translator so the test stays locale-independent.
+  const patchedUseContext = vi.fn(() => ({
+    t: (key: string) => key,
+    locale: 'en' as const,
+    setLocale: () => {},
+  }));
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
     ...actual,
@@ -89,6 +103,7 @@ vi.mock('react', async (importOriginal) => {
     useMemo: patchedUseMemo,
     useCallback: patchedUseCallback,
     useRef: patchedUseRef,
+    useContext: patchedUseContext,
     default: {
       ...actualDefault,
       useState: patchedUseState,
@@ -96,6 +111,7 @@ vi.mock('react', async (importOriginal) => {
       useMemo: patchedUseMemo,
       useCallback: patchedUseCallback,
       useRef: patchedUseRef,
+      useContext: patchedUseContext,
     },
   };
 });
@@ -118,13 +134,22 @@ vi.mock('../../../config/providers', () => ({
   ENABLED_PROVIDER_IDS: new Set(['aws', 'gcp', 'azure']),
 }));
 
+// `resource-palette.tsx`'s filter calls `isCategoryEnabledForProvider`
+// against live PROVIDER_FLAGS, which currently gates most providers off.
+// These tests are about the filter wiring (ENABLED_PROVIDER_IDS +
+// search + provider-pick), NOT about the per-category provider flags —
+// stub the gate to true so test fixtures stay locale-/flag-independent.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isCategoryEnabledForProvider: () => true,
+  };
+});
+
 vi.mock('../../../shared/components/ui/tooltip', () => ({
   TooltipProvider: ({ children, delayDuration }: { children: React.ReactNode; delayDuration?: number }) =>
-    React.createElement(
-      'div',
-      { 'data-stub': 'TooltipProvider', 'data-delay': delayDuration },
-      children,
-    ),
+    React.createElement('div', { 'data-stub': 'TooltipProvider', 'data-delay': delayDuration }, children),
 }));
 
 vi.mock('../../../shared/components/ui/resizable', () => ({
@@ -199,14 +224,15 @@ vi.mock('../sections/blocks-section', () => ({
 
 vi.mock('../data/categories', () => ({
   CATEGORY_ORDER: ['Compute', 'Network'],
-  CATEGORY_MAP: new Map([
-    ['Compute', { id: 'Compute', label: 'Compute', icon: () => null, color: '#22c55e', tooltip: 'tt' }],
-    ['Network', { id: 'Network', label: 'Network', icon: () => null, color: '#06b6d4', tooltip: 'tt' }],
-  ]),
+  getCategoryMap: () =>
+    new Map([
+      ['Compute', { id: 'Compute', label: 'Compute', icon: () => null, color: '#22c55e', tooltip: 'tt' }],
+      ['Network', { id: 'Network', label: 'Network', icon: () => null, color: '#06b6d4', tooltip: 'tt' }],
+    ]),
 }));
 
 vi.mock('../data/components', () => ({
-  COMPONENTS: [
+  getComponents: () => [
     {
       type: 'Compute.A',
       name: 'Alpha',
@@ -241,6 +267,7 @@ vi.mock('../data/providers', () => ({
   PALETTE_STYLES: '/* styles */',
   loadCollapsed: vi.fn(() => new Set<string>()),
   saveCollapsed: vi.fn(),
+  getProviders: () => [],
 }));
 
 import { ResourcePalette } from '../components/resource-palette';
@@ -273,10 +300,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -304,10 +328,12 @@ beforeEach(() => {
   mocks.projectBrowserCalls = 0;
   mocks.templatesCalls = 0;
   mocks.resizableGroupCalls = 0;
-  (mocks as unknown as {
-    effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    callbacks: unknown[];
-  }).effects.length = 0;
+  (
+    mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      callbacks: unknown[];
+    }
+  ).effects.length = 0;
   (mocks as unknown as { callbacks: unknown[] }).callbacks.length = 0;
 });
 
@@ -575,9 +601,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
     renderPalette();
     // Seed slot 1 (localSearch). Slot 0 = projectProvider; slot 1 = localSearch.
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'alpha');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
     const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
       showProjectSection: false,
       showBlocksSection: true,
@@ -592,9 +620,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
   it('with localSearch set, filters by description (covers L109 branch)', () => {
     renderPalette();
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'second');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
     const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
       showProjectSection: false,
       showBlocksSection: true,
@@ -610,9 +640,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
     renderPalette();
     // Seed localSearch (slot 1) to 'group' — matches the showGroup substring.
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'group');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
     const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
       showProjectSection: false,
       showBlocksSection: true,
@@ -627,9 +659,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
     renderPalette();
     // Slot 2 = selectedProvider. Set to 'azure' so only Network.B matches.
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(2, 'azure');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
     const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
       showProjectSection: false,
       showBlocksSection: true,
@@ -644,9 +678,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
   it('with localSearch unrelated to "group organize", showGroup is false', () => {
     renderPalette();
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'redis');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
     const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
       showProjectSection: false,
       showBlocksSection: true,
@@ -662,9 +698,11 @@ describe('ResourcePalette — filteredComponents wiring', () => {
 describe('ResourcePalette — effect bodies', () => {
   it('mount effect ([]) fires setMounted(true) — covers line 82', () => {
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     // The mount effect is the one with deps=[]
     const mountEffect = effects.find((e) => e.deps.length === 0);
     expect(mountEffect).toBeDefined();
@@ -676,16 +714,22 @@ describe('ResourcePalette — effect bodies', () => {
     // to 'gcp' and re-render with the slots preserved + index reset.
     renderPalette();
     (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(0, 'gcp');
-    (mocks as unknown as {
-      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
-    }).__resetUseState({ keepSlots: true });
-    (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects.length = 0;
+    (
+      mocks as unknown as {
+        __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+      }
+    ).__resetUseState({ keepSlots: true });
+    (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects.length = 0;
     (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({});
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const lockEffect = effects.find((e) => e.deps.length === 1 && e.deps[0] === 'gcp');
     expect(lockEffect).toBeDefined();
     expect(() => lockEffect?.cb()).not.toThrow();
@@ -693,9 +737,11 @@ describe('ResourcePalette — effect bodies', () => {
 
   it('provider-lock effect is a no-op when projectProvider is null', () => {
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const lockEffect = effects.find((e) => e.deps.length === 1 && e.deps[0] === null);
     expect(lockEffect).toBeDefined();
     // No throw means the early return ran; nothing to assert beyond invocability.
@@ -705,9 +751,11 @@ describe('ResourcePalette — effect bodies', () => {
   it('resolve effect (deps length 2) is registered and invocable when type=project', () => {
     mocks.resolved = { type: 'project', id: 'p1' };
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     // The resolve effect has deps [resolved.type, resolved.id] — length 2.
     const resolveEffect = effects.find((e) => e.deps.length === 2);
     expect(resolveEffect).toBeDefined();
@@ -717,9 +765,11 @@ describe('ResourcePalette — effect bodies', () => {
   it('resolve effect runs the else branch (setProjectProvider(null)) when type is not project', () => {
     mocks.resolved = { type: 'unknown', id: null };
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const resolveEffect = effects.find((e) => e.deps.length === 2);
     expect(() => resolveEffect?.cb()).not.toThrow();
   });
@@ -730,9 +780,11 @@ describe('ResourcePalette — effect bodies', () => {
     post.mockRejectedValueOnce(new Error('boom'));
     mocks.resolved = { type: 'project', id: 'p1' };
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const resolveEffect = effects.find((e) => e.deps.length === 2);
     expect(resolveEffect).toBeDefined();
     resolveEffect?.cb();
@@ -746,9 +798,11 @@ describe('ResourcePalette — effect bodies', () => {
     post.mockResolvedValueOnce({ data: { provider: 'aws' } });
     mocks.resolved = { type: 'project', id: 'p1' };
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const resolveEffect = effects.find((e) => e.deps.length === 2);
     resolveEffect?.cb();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -760,9 +814,11 @@ describe('ResourcePalette — effect bodies', () => {
     post.mockResolvedValueOnce({ data: {} });
     mocks.resolved = { type: 'project', id: 'p1' };
     renderPalette();
-    const effects = (mocks as unknown as {
-      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
-    }).effects;
+    const effects = (
+      mocks as unknown as {
+        effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+      }
+    ).effects;
     const resolveEffect = effects.find((e) => e.deps.length === 2);
     resolveEffect?.cb();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));

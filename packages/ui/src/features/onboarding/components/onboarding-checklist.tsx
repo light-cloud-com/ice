@@ -9,9 +9,9 @@
 import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useTour } from '../../tour';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
+import { useTour } from '../../tour';
 import type { RootState } from '../../../store';
 
 interface ChecklistItem {
@@ -129,9 +129,7 @@ export const OnboardingChecklist: React.FC = () => {
                 >
                   {item.done && <Check className="w-2.5 h-2.5 text-white" />}
                 </div>
-                <span
-                  className={cn('flex-1', item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}
-                >
+                <span className={cn('flex-1', item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}>
                   {item.label}
                 </span>
                 {item.tourId && !item.done && (
@@ -145,11 +143,7 @@ export const OnboardingChecklist: React.FC = () => {
                 )}
               </div>
             ))}
-            {tourHint && (
-              <p className="px-2 pt-1 text-[11px] text-ice-text-3 italic">
-                {tourHint}
-              </p>
-            )}
+            {tourHint && <p className="px-2 pt-1 text-[11px] text-ice-text-3 italic">{tourHint}</p>}
           </div>
         </div>
       )}

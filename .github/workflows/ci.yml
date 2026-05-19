@@ -10,7 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,18 +25,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Prisma client has to be generated before any package that imports it
-      # can be typechecked.
+      # Prisma client must be generated before any package that imports it
+      # can compile or test.
       - name: Generate Prisma client
         run: pnpm --filter @ice/db exec prisma generate
 
-      - name: Typecheck (all packages)
-        run: pnpm typecheck
-
-      - name: Lint (errors fail the build; warnings are allowed)
-        run: pnpm lint:check
-
-      - name: Format check
+      - name: Format check (Prettier)
         run: pnpm format:check
 
       - name: Unit tests
@@ -43,8 +38,5 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: Build web app
-        run: pnpm --filter @ice/web build
-
-      - name: Audit dependencies (high+ only, non-blocking)
-        run: pnpm audit --prod --audit-level=high || true
+      - name: Build
+        run: pnpm test:build

@@ -72,11 +72,7 @@ let mockAutoLayoutResult: {
 } = { nodes: [], edgeRoutes: new Map() };
 
 vi.mock('../../../../../shared/utils/auto-layout', () => ({
-  autoLayout: (
-    nodes: unknown[],
-    edges: unknown[],
-    options: Record<string, unknown>,
-  ) => {
+  autoLayout: (nodes: unknown[], edges: unknown[], options: Record<string, unknown>) => {
     mockAutoLayoutSpy(nodes, edges, options);
     return mockAutoLayoutResult;
   },
@@ -85,8 +81,8 @@ vi.mock('../../../../../shared/utils/auto-layout', () => ({
 // Imports MUST come AFTER `vi.mock` so the mock takes effect before module
 // resolution. Vitest hoists `vi.mock` calls regardless, but keeping the
 // physical order matches the cognitive flow (mock first, then code under test).
-import { importReducers } from '../import';
 import { pushSnapshot } from '../../snapshot';
+import { importReducers } from '../import';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
 
 // -----------------------------------------------------------------------------
@@ -396,10 +392,7 @@ describe('importToActiveCard — auto-organize path', () => {
       importReducers.importToActiveCard(draft, {
         type: 'cards/importToActiveCard',
         payload: {
-          nodes: [
-            makeNode('a'),
-            makeNode('lonely', { position: { x: 999, y: 888 }, width: 50, height: 60 }),
-          ],
+          nodes: [makeNode('a'), makeNode('lonely', { position: { x: 999, y: 888 }, width: 50, height: 60 })],
           edges: [],
         },
       } as PayloadAction<{ nodes: CardNode[]; edges: CardEdge[]; skipAutoOrganize?: boolean }>);

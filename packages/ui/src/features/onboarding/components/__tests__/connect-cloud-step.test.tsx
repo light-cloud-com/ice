@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   stateSlots: [] as unknown[],
@@ -37,7 +37,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn((a: unknown) => a),
   apiHandlers: {
     isConnected: vi.fn(async (_p: string) => false as boolean),
-    connect: vi.fn(async (_p: string, _f: Record<string, string>) => ({ success: true } as unknown)),
+    connect: vi.fn(async (_p: string, _f: Record<string, string>) => ({ success: true }) as unknown),
   },
   thunks: {
     setDefaultProvider: vi.fn((id: string) => ({ type: 'onboarding/setDefaultProvider', payload: id })),
@@ -110,6 +110,17 @@ vi.mock('../../../../store/slices/onboarding-slice', () => ({
   setCloudConnected: (v: boolean) => mocks.thunks.setCloudConnected(v),
 }));
 
+// ConnectCloudStep filters its provider list via `isProviderEnabled`, which
+// respects live PROVIDER_FLAGS (GCP-only by default). These tests assert on
+// the gcp / aws / azure surface — stub the gate so all three render.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 // Asset SVG imports — vitest can't load SVG; alias them
 vi.mock('devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg', () => ({
   default: 'aws.svg',
@@ -142,10 +153,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -187,8 +195,6 @@ beforeEach(() => {
 afterEach(() => {
   Date.prototype.getTimezoneOffset = origGetTimezoneOffset;
 });
-
-import { afterEach } from 'vitest';
 
 describe('ConnectCloudStep', () => {
   describe('Provider buttons', () => {
@@ -317,7 +323,10 @@ describe('ConnectCloudStep', () => {
     it('typing into a text input updates formValues state', () => {
       mocks.reduxState.defaultProvider = 'aws';
       const tree = render();
-      const inputs = findByPredicate(tree, (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text');
+      const inputs = findByPredicate(
+        tree,
+        (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text',
+      );
       (inputs[0].props as { onChange: (e: { target: { value: string } }) => void }).onChange({
         target: { value: 'AKIATEST' },
       });
@@ -353,7 +362,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.apiHandlers.connect).toHaveBeenCalledWith('aws', expect.any(Object));
@@ -366,7 +376,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.stateSlots[0]).toEqual({});
@@ -378,7 +389,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       // error slot is index 2
@@ -391,7 +403,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.stateSlots[2]).toBe('onboarding.cloud.connectionFailed');
@@ -403,7 +416,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.stateSlots[2]).toBe('denied');
@@ -415,7 +429,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.stateSlots[2]).toBe('network down');
@@ -427,7 +442,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       await (btn.props as { onClick: () => Promise<void> }).onClick();
       expect(mocks.stateSlots[2]).toBe('onboarding.cloud.connectionFailed');
@@ -439,7 +455,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       // Replace handler reference with one bound to provider=null state
       mocks.reduxState.defaultProvider = null;
@@ -449,7 +466,8 @@ describe('ConnectCloudStep', () => {
       // Even attempting to find the button: not rendered without provider
       const btns = findByPredicate(
         tree2,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       );
       expect(btns).toHaveLength(0);
       // The first invocation does dispatch, just sanity check baseline
@@ -463,7 +481,8 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const btn = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('ice-btn-primary') === true,
       )[0];
       expect((btn.props as { disabled?: boolean }).disabled).toBe(true);
     });
@@ -476,9 +495,7 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const banners = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'div' &&
-          (el.props as { className?: string }).className?.includes('bg-ice-red/10') === true,
+        (el) => el.type === 'div' && (el.props as { className?: string }).className?.includes('bg-ice-red/10') === true,
       );
       expect(banners).toHaveLength(1);
       expect((banners[0].props as { children: string }).children).toBe('oops failed');
@@ -489,9 +506,7 @@ describe('ConnectCloudStep', () => {
       const tree = render();
       const banners = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'div' &&
-          (el.props as { className?: string }).className?.includes('bg-ice-red/10') === true,
+        (el) => el.type === 'div' && (el.props as { className?: string }).className?.includes('bg-ice-red/10') === true,
       );
       expect(banners).toHaveLength(0);
     });
@@ -505,8 +520,7 @@ describe('ConnectCloudStep', () => {
       const cards = findByPredicate(
         tree,
         (el) =>
-          el.type === 'div' &&
-          (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
+          el.type === 'div' && (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
       );
       expect(cards).toHaveLength(1);
     });
@@ -518,8 +532,7 @@ describe('ConnectCloudStep', () => {
       const cards = findByPredicate(
         tree,
         (el) =>
-          el.type === 'div' &&
-          (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
+          el.type === 'div' && (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
       );
       expect(cards).toHaveLength(0);
     });
@@ -531,8 +544,7 @@ describe('ConnectCloudStep', () => {
       const cards = findByPredicate(
         tree,
         (el) =>
-          el.type === 'div' &&
-          (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
+          el.type === 'div' && (el.props as { className?: string }).className?.includes('bg-emerald-500/10') === true,
       );
       expect(cards).toHaveLength(0);
     });

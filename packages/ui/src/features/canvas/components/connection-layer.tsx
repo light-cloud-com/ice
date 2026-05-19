@@ -36,11 +36,10 @@
  */
 
 import React, { type CSSProperties } from 'react';
-
 import { SvgConnectionPath, type ConnectionTooltipInfo } from './svg-connection-path';
 import type { CanvasNode, CanvasConnection } from './types';
-import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { NodePipelineStatus } from '../../../store/slices/pipeline-slice';
+import type { EdgeStyle } from '../../../store/slices/ui-slice';
 
 export interface ConnectionLayerProps {
   /** 'background' renders non-highlighted connections behind nodes (with the
@@ -64,11 +63,7 @@ export interface ConnectionLayerProps {
   handleConnectionHover: (info: ConnectionTooltipInfo | null) => void;
   handleEdgeDelete: (connectionId: string) => void;
   handleEdgeSelect: (connectionId: string) => void;
-  handleContextMenu: (
-    position: { x: number; y: number },
-    type: 'canvas' | 'node' | 'edge',
-    targetId?: string,
-  ) => void;
+  handleContextMenu: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
 }
 
 export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({

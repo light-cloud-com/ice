@@ -16,12 +16,11 @@
  * branch the planner explicitly flagged — covered.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
+import { describe, it, expect, vi } from 'vitest';
 import { useTreeDrag, type UseTreeDragOutput } from '../use-tree-drag';
 
 // ─── Store + capture helpers ────────────────────────────────────────────────
@@ -159,9 +158,7 @@ describe('handleDrop — happy paths', () => {
     const { result } = captureHook(store);
     const e = makeDragEvent({ 'text/plain': 'project:p1' });
     result.handleDrop(e.event, 'target-folder');
-    const call = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'projects/moveProjectToFolder',
-    );
+    const call = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'projects/moveProjectToFolder');
     expect(call).toBeDefined();
     expect((call![0] as unknown as { payload: { projectId: string; folderId: string } }).payload).toEqual({
       projectId: 'p1',
@@ -175,9 +172,7 @@ describe('handleDrop — happy paths', () => {
     const { result } = captureHook(store);
     const e = makeDragEvent({ 'text/plain': 'project:p1' });
     result.handleDrop(e.event, null);
-    const call = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'projects/moveProjectToFolder',
-    );
+    const call = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'projects/moveProjectToFolder');
     expect(call).toBeDefined();
     expect((call![0] as unknown as { payload: { folderId: null | string } }).payload.folderId).toBeNull();
   });
@@ -188,9 +183,7 @@ describe('handleDrop — happy paths', () => {
     const { result } = captureHook(store);
     const e = makeDragEvent({ 'text/plain': 'folder:child' });
     result.handleDrop(e.event, 'parent');
-    const call = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'projects/moveFolder',
-    );
+    const call = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'projects/moveFolder');
     expect(call).toBeDefined();
     expect((call![0] as unknown as { payload: { folderId: string; parentFolderId: string } }).payload).toEqual({
       folderId: 'child',
@@ -204,9 +197,7 @@ describe('handleDrop — happy paths', () => {
     const { result } = captureHook(store);
     const e = makeDragEvent({ 'text/plain': 'folder:f1' });
     result.handleDrop(e.event, null);
-    const call = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'projects/moveFolder',
-    );
+    const call = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'projects/moveFolder');
     expect((call![0] as unknown as { payload: { parentFolderId: null | string } }).payload.parentFolderId).toBeNull();
   });
 });
@@ -253,9 +244,7 @@ describe('handleDrop — guards', () => {
     const { result } = captureHook(store);
     const e = makeDragEvent({ 'text/plain': 'folder:same' });
     result.handleDrop(e.event, 'same');
-    const moveCalls = dispatchSpy.mock.calls.filter((c) =>
-      (c[0] as { type?: string }).type === 'projects/moveFolder',
-    );
+    const moveCalls = dispatchSpy.mock.calls.filter((c) => (c[0] as { type?: string }).type === 'projects/moveFolder');
     expect(moveCalls).toHaveLength(0);
   });
 

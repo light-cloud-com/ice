@@ -19,7 +19,6 @@ import { createSlice } from '@reduxjs/toolkit';
 // `CardNode` is dropped from the local `import type` list.
 
 export type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
-import type { CardsState } from './cards/types';
 
 // =============================================================================
 // Migration
@@ -68,15 +67,16 @@ import { loadPersistedCards } from './cards/persistence';
 // the action type strings (`'cards/setActiveCard'` etc.) because action types
 // are derived from the keys of the spread object inside `createSlice`.
 
+import { autoOrganizeReducers } from './cards/reducers/auto-organize';
 import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
-import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
-import { nodePositionReducers } from './cards/reducers/node-position';
+import { importReducers } from './cards/reducers/import';
 import { nodeDataReducers } from './cards/reducers/node-data';
 import { nodeDeleteMergeReducers } from './cards/reducers/node-delete-merge';
-import { importReducers } from './cards/reducers/import';
-import { autoOrganizeReducers } from './cards/reducers/auto-organize';
+import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
+import { nodePositionReducers } from './cards/reducers/node-position';
 import { scaleBlueprintReducers } from './cards/reducers/scale-blueprint';
 import { undoRedoGroupReducers } from './cards/reducers/undo-redo-group';
+import type { CardsState } from './cards/types';
 
 // =============================================================================
 // Initial State

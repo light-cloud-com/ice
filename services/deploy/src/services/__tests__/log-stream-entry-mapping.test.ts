@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import {
   isPermissionDenied,
   mapEntry,
@@ -47,9 +46,7 @@ describe('mapEntry', () => {
   });
 
   it('returns null when insertId is missing', () => {
-    expect(
-      mapEntry({ metadata: { timestamp: '2026-04-30T10:00:00.000Z', insertId: '' } }),
-    ).toBeNull();
+    expect(mapEntry({ metadata: { timestamp: '2026-04-30T10:00:00.000Z', insertId: '' } })).toBeNull();
   });
 
   it('JSON-serializes object payloads', () => {

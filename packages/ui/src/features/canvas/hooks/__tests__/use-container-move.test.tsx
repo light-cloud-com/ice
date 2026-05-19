@@ -12,10 +12,10 @@
  * no-children-on-unfold height fallback has a deterministic value.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -34,14 +34,11 @@ vi.mock('../../components/nodes/compact-node', async (importOriginal) => {
 });
 
 // Import AFTER the mock is registered so the hook closes over the spy.
-import {
-  useContainerMove,
-  type UseContainerMoveResult,
-} from '../use-container-move';
-import type { CanvasNode } from '../../components/types';
-import type { CardNode } from '../../../../store/slices/cards-slice';
 import { MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
 import { CONTAINER_PAD, CONTAINER_HEADER_H } from '../../utils/container-bounds';
+import { useContainerMove, type UseContainerMoveResult } from '../use-container-move';
+import type { CardNode } from '../../../../store/slices/cards-slice';
+import type { CanvasNode } from '../../components/types';
 
 // ─── Store builder ──────────────────────────────────────────────────────────
 // The hook DISPATCHES `updateCardNodePositions`, `resizeCardNode`, and
@@ -58,8 +55,7 @@ const cardsStubSlice = createSlice({
 const makeStore = () =>
   configureStore({
     reducer: { cards: cardsStubSlice.reducer },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
@@ -74,10 +70,7 @@ interface ProbeArgs {
   setExitingGroupId?: (id: string | null) => void;
 }
 
-const captureHook = (
-  store: TestStore,
-  args: ProbeArgs,
-): UseContainerMoveResult => {
+const captureHook = (store: TestStore, args: ProbeArgs): UseContainerMoveResult => {
   const captured: { current?: UseContainerMoveResult } = {};
   const Probe: React.FC = () => {
     captured.current = useContainerMove({
@@ -112,7 +105,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -175,9 +168,7 @@ describe('useContainerMove — handleNodeMove with descendants', () => {
   it('translates ALL descendants by the same delta (uses canvasNodes lookup)', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
-    const visibleNodes = [
-      mkNode({ id: 'parent', x: 100, y: 100, width: 400, height: 300 }),
-    ];
+    const visibleNodes = [mkNode({ id: 'parent', x: 100, y: 100, width: 400, height: 300 })];
     // Descendants live in canvasNodes only (rf-canv-3 hidden L1 children).
     const canvasNodes = [
       ...visibleNodes,
@@ -233,7 +224,9 @@ describe('useContainerMove — handleNodeMove ancestor expansion', () => {
       (c) => (c[0] as { type: string }).type === 'cards/updateCardNodePositions',
     )!;
     const positionsPayload = (positionsAction[0] as { type: string; payload: unknown }).payload;
-    const updates = Array.isArray(positionsPayload) ? positionsPayload : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
+    const updates = Array.isArray(positionsPayload)
+      ? positionsPayload
+      : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
     const parentUpdate = updates.find((u) => u.id === 'parent');
     expect(parentUpdate).toBeDefined();
     // Parent shifted left by overflowL = 50+PAD.
@@ -242,11 +235,10 @@ describe('useContainerMove — handleNodeMove ancestor expansion', () => {
     expect(parentUpdate!.position.x).toBe(100 - (50 + PAD));
 
     // Resize dispatched too.
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeDefined();
-    const resizePayload = (resizeAction![0] as { type: string; payload: { id: string; width: number; height: number } }).payload;
+    const resizePayload = (resizeAction![0] as { type: string; payload: { id: string; width: number; height: number } })
+      .payload;
     expect(resizePayload.id).toBe('parent');
     // Width grew by overflowL = 50+PAD (and is well above MIN 240).
     expect(resizePayload.width).toBe(400 + 50 + PAD);
@@ -272,15 +264,15 @@ describe('useContainerMove — handleNodeMove ancestor expansion', () => {
       (c) => (c[0] as { type: string }).type === 'cards/updateCardNodePositions',
     )!;
     const positionsPayload = (positionsAction[0] as { type: string; payload: unknown }).payload;
-    const updates = Array.isArray(positionsPayload) ? positionsPayload : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
+    const updates = Array.isArray(positionsPayload)
+      ? positionsPayload
+      : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
     const parentUpdate = updates.find((u) => u.id === 'parent');
     expect(parentUpdate).toBeDefined();
     // Parent shifted up by PAD + HEADER.
     expect(parentUpdate!.position.y).toBe(100 - (PAD + HEADER));
 
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     const resizePayload = (resizeAction![0] as { type: string; payload: { width: number; height: number } }).payload;
     expect(resizePayload.height).toBe(300 + PAD + HEADER);
   });
@@ -306,15 +298,15 @@ describe('useContainerMove — handleNodeMove ancestor expansion', () => {
       (c) => (c[0] as { type: string }).type === 'cards/updateCardNodePositions',
     )!;
     const positionsPayload = (positionsAction[0] as { type: string; payload: unknown }).payload;
-    const updates = Array.isArray(positionsPayload) ? positionsPayload : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
+    const updates = Array.isArray(positionsPayload)
+      ? positionsPayload
+      : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
     const parentUpdate = updates.find((u) => u.id === 'parent');
     // Original behavior pushes position update on `changed=true` even if px/py unchanged.
     expect(parentUpdate).toBeDefined();
     expect(parentUpdate!.position).toEqual({ x: 0, y: 0 });
 
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     const resizePayload = (resizeAction![0] as { type: string; payload: { width: number; height: number } }).payload;
     expect(resizePayload.width).toBe(400 + 50 + PAD);
     expect(resizePayload.height).toBe(300 + 30 + PAD);
@@ -534,10 +526,7 @@ describe('useContainerMove — handleNodeMove skipClamp', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 100, height: 60 })];
-    const canvasNodes = [
-      ...visibleNodes,
-      mkNode({ id: 'b', x: 10, y: 10, width: 50, height: 30, parentId: 'a' }),
-    ];
+    const canvasNodes = [...visibleNodes, mkNode({ id: 'b', x: 10, y: 10, width: 50, height: 30, parentId: 'a' })];
     const getAllDescendantIds = () => ['b'];
     const result = captureHook(store, { visibleNodes, canvasNodes, getAllDescendantIds });
     dispatchSpy.mockClear();
@@ -571,9 +560,7 @@ describe('useContainerMove — handleToggleFold folding (no-op beyond toggle)', 
   it('was unfolded → wasFolded=false → only dispatches toggleCardNodeFold', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
-    const visibleNodes = [
-      mkNode({ id: 'a', x: 0, y: 0, width: 100, height: 60, data: { folded: false } }),
-    ];
+    const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 100, height: 60, data: { folded: false } })];
     const result = captureHook(store, { visibleNodes });
     dispatchSpy.mockClear();
 
@@ -605,12 +592,8 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     // Folded node, no children. Redux says height=200, mock says 80, MIN floor.
-    const visibleNodes = [
-      mkNode({ id: 'a', x: 0, y: 0, width: 300, height: 38, data: { folded: true } }),
-    ];
-    const nodes = [
-      { id: 'a', height: 200, position: { x: 0, y: 0 }, width: 300, data: {} } as unknown as CardNode,
-    ];
+    const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 300, height: 38, data: { folded: true } })];
+    const nodes = [{ id: 'a', height: 200, position: { x: 0, y: 0 }, width: 300, data: {} } as unknown as CardNode];
     mocks.computeCompactNodeHeightSpy.mockReturnValue(80);
 
     const result = captureHook(store, { visibleNodes, nodes });
@@ -622,7 +605,8 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const resizeAction = dispatchSpy.mock.calls.find(
       (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
     )!;
-    const payload = (resizeAction[0] as { type: string; payload: { id: string; width: number; height: number } }).payload;
+    const payload = (resizeAction[0] as { type: string; payload: { id: string; width: number; height: number } })
+      .payload;
     expect(payload.id).toBe('a');
     expect(payload.height).toBe(200); // max(200, 80, MIN_CONTAINER_HEIGHT)
     // Width unchanged → no width override; preserved.
@@ -633,9 +617,7 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     // Folded node with default mock value 150 should win against undefined redux height.
-    const visibleNodes = [
-      mkNode({ id: 'a', x: 0, y: 0, width: 300, height: 38, data: { folded: true } }),
-    ];
+    const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 300, height: 38, data: { folded: true } })];
     mocks.computeCompactNodeHeightSpy.mockReturnValue(150);
 
     const result = captureHook(store, { visibleNodes });
@@ -655,9 +637,7 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const PAD = CONTAINER_PAD;
     // Folded parent at (0,0) size 100x60. Children extend past right/bottom edges.
-    const visibleNodes = [
-      mkNode({ id: 'parent', x: 0, y: 0, width: 100, height: 60, data: { folded: true } }),
-    ];
+    const visibleNodes = [mkNode({ id: 'parent', x: 0, y: 0, width: 100, height: 60, data: { folded: true } })];
     const canvasNodes = [
       ...visibleNodes,
       mkNode({ id: 'c1', x: 50, y: 50, width: 200, height: 80, parentId: 'parent' }),
@@ -671,7 +651,8 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const resizeAction = dispatchSpy.mock.calls.find(
       (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
     )!;
-    const payload = (resizeAction[0] as { type: string; payload: { id: string; width: number; height: number } }).payload;
+    const payload = (resizeAction[0] as { type: string; payload: { id: string; width: number; height: number } })
+      .payload;
     expect(payload.id).toBe('parent');
     // Width: child at right=250, parent right edge=100-PAD → overflow = 250 - (100-PAD) = 150+PAD → grows by that.
     expect(payload.width).toBeGreaterThanOrEqual(250 + PAD);
@@ -684,9 +665,7 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     const PAD = CONTAINER_PAD;
     const HEADER = CONTAINER_HEADER_H;
     // Parent at (200, 200) size 200x200, folded. Child at (50, 50) — far left/top of parent.
-    const visibleNodes = [
-      mkNode({ id: 'parent', x: 200, y: 200, width: 200, height: 200, data: { folded: true } }),
-    ];
+    const visibleNodes = [mkNode({ id: 'parent', x: 200, y: 200, width: 200, height: 200, data: { folded: true } })];
     const canvasNodes = [
       ...visibleNodes,
       mkNode({ id: 'c1', x: 50, y: 50, width: 30, height: 30, parentId: 'parent' }),
@@ -703,7 +682,9 @@ describe('useContainerMove — handleToggleFold unfolding self-expansion', () =>
     );
     expect(positionsAction).toBeDefined();
     const positionsPayload = (positionsAction![0] as { type: string; payload: unknown }).payload;
-    const updates = Array.isArray(positionsPayload) ? positionsPayload : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
+    const updates = Array.isArray(positionsPayload)
+      ? positionsPayload
+      : (positionsPayload as { updates: Array<{ id: string; position: { x: number; y: number } }> }).updates;
     const parentUpd = updates.find((u) => u.id === 'parent')!;
     // overL = 200+PAD-50 = 150+PAD → selfX = 200 - (150+PAD) = 50-PAD
     expect(parentUpd.position.x).toBe(50 - PAD);
@@ -787,13 +768,8 @@ describe('useContainerMove — handleToggleFold no-update guards', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     // Folded node with children fully inside (so no left/top overflow → no x/y shift).
-    const visibleNodes = [
-      mkNode({ id: 'a', x: 0, y: 0, width: 1000, height: 1000, data: { folded: true } }),
-    ];
-    const canvasNodes = [
-      ...visibleNodes,
-      mkNode({ id: 'c', x: 500, y: 500, width: 50, height: 50, parentId: 'a' }),
-    ];
+    const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 1000, height: 1000, data: { folded: true } })];
+    const canvasNodes = [...visibleNodes, mkNode({ id: 'c', x: 500, y: 500, width: 50, height: 50, parentId: 'a' })];
 
     const result = captureHook(store, { visibleNodes, canvasNodes });
     dispatchSpy.mockClear();
@@ -811,12 +787,8 @@ describe('useContainerMove — handleToggleFold no-update guards', () => {
     const store = makeStore();
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     // Folded node with NO children, redux height matches current height — no change.
-    const visibleNodes = [
-      mkNode({ id: 'a', x: 0, y: 0, width: 100, height: 60, data: { folded: true } }),
-    ];
-    const nodes = [
-      { id: 'a', height: 60, position: { x: 0, y: 0 }, width: 100, data: {} } as unknown as CardNode,
-    ];
+    const visibleNodes = [mkNode({ id: 'a', x: 0, y: 0, width: 100, height: 60, data: { folded: true } })];
+    const nodes = [{ id: 'a', height: 60, position: { x: 0, y: 0 }, width: 100, data: {} } as unknown as CardNode];
     // Mock returns 60 too (≤ MIN_CONTAINER_HEIGHT? Set explicitly).
     mocks.computeCompactNodeHeightSpy.mockReturnValue(60);
 

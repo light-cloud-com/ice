@@ -26,9 +26,8 @@
  * never goes through React.memo.
  */
 
-import type React from 'react';
-
 import type { useCanvasInteractions } from './use-canvas-interactions';
+import type React from 'react';
 
 type CanvasInteractionsBindings = ReturnType<typeof useCanvasInteractions>['bindCanvas'];
 

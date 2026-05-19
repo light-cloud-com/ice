@@ -45,12 +45,7 @@ const original_function = globalThis.Function;
 
 function install_dynamic_import_stub(registry: FakeImportRegistry): void {
   const stub = function (...args: unknown[]) {
-    if (
-      args.length === 2 &&
-      args[0] === 'm' &&
-      typeof args[1] === 'string' &&
-      args[1].includes('return import')
-    ) {
+    if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
       return (module_name: string) => {
         const mod = (registry as Record<string, unknown>)[module_name];
         if (mod === undefined) {
@@ -307,12 +302,7 @@ describe('initialize', () => {
     // a non-Error throw to exercise the `error instanceof Error ? message :
     // String(error)` fallback in the outer catch.
     const stub = function (...args: unknown[]) {
-      if (
-        args.length === 2 &&
-        args[0] === 'm' &&
-        typeof args[1] === 'string' &&
-        args[1].includes('return import')
-      ) {
+      if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
         return () => Promise.reject('plain-string-throw');
       }
       return (original_function as unknown as (...a: unknown[]) => unknown).apply(original_function, args);
@@ -374,12 +364,7 @@ describe('create', () => {
       id: '/subscriptions/sub-1/resourceGroups/rg-default/providers/Microsoft.Compute/virtualMachines/vm1',
     });
 
-    const out = await d.create(
-      'azure.compute.virtual_machine.linux',
-      'vm1',
-      { admin_password: 'pass' },
-      {},
-    );
+    const out = await d.create('azure.compute.virtual_machine.linux', 'vm1', { admin_password: 'pass' }, {});
 
     expect(out.success).toBe(true);
     expect(out.action).toBe('create');
@@ -388,7 +373,7 @@ describe('create', () => {
     expect(out.duration_ms).toBeGreaterThanOrEqual(0);
   });
 
-  it("creates a VM with linuxConfiguration when admin_password is missing (SSH-only mode)", async () => {
+  it('creates a VM with linuxConfiguration when admin_password is missing (SSH-only mode)', async () => {
     const { d, compute } = await deployerWithFullSdk();
     compute.beginCreateOrUpdateAndWait.mockResolvedValue({ id: '/.../vm1' });
 
@@ -676,17 +661,9 @@ describe('update', () => {
   it('updates virtual_machine tags via beginUpdateAndWait', async () => {
     const { d, compute } = await deployerWithFullSdk();
     compute.beginUpdateAndWait.mockResolvedValue({});
-    const provider_id =
-      '/subscriptions/sub-1/resourceGroups/rg-vm/providers/Microsoft.Compute/virtualMachines/vm1';
+    const provider_id = '/subscriptions/sub-1/resourceGroups/rg-vm/providers/Microsoft.Compute/virtualMachines/vm1';
 
-    const out = await d.update(
-      'azure.compute.virtual_machine',
-      'vm1',
-      provider_id,
-      { tags: { env: 'prod' } },
-      {},
-      {},
-    );
+    const out = await d.update('azure.compute.virtual_machine', 'vm1', provider_id, { tags: { env: 'prod' } }, {}, {});
 
     expect(out).toMatchObject({ success: true, action: 'update', provider_id });
     expect(compute.beginUpdateAndWait).toHaveBeenCalledWith('rg-vm', 'vm1', { tags: { env: 'prod' } });
@@ -723,14 +700,7 @@ describe('update', () => {
     web.update.mockResolvedValue({});
     const provider_id = '/subscriptions/sub-1/resourceGroups/rg-w/providers/Microsoft.Web/sites/wa1';
 
-    await d.update(
-      'azure.web.app',
-      'wa1',
-      provider_id,
-      { app_settings: { K: 'v' }, tags: { t: 'x' } },
-      {},
-      {},
-    );
+    await d.update('azure.web.app', 'wa1', provider_id, { app_settings: { K: 'v' }, tags: { t: 'x' } }, {}, {});
 
     expect(web.update).toHaveBeenCalledWith('rg-w', 'wa1', {
       siteConfig: { appSettings: [{ name: 'K', value: 'v' }] },
@@ -857,8 +827,7 @@ describe('delete', () => {
   it('deletes a virtual_machine via beginDeleteAndWait', async () => {
     const { d, compute } = await deployerWithFullSdk();
     compute.beginDeleteAndWait.mockResolvedValue({});
-    const provider_id =
-      '/subscriptions/sub-1/resourceGroups/rg-vm/providers/Microsoft.Compute/virtualMachines/vm1';
+    const provider_id = '/subscriptions/sub-1/resourceGroups/rg-vm/providers/Microsoft.Compute/virtualMachines/vm1';
 
     const out = await d.delete('azure.compute.virtual_machine', 'vm1', provider_id, {});
 

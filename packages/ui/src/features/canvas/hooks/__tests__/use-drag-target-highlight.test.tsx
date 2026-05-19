@@ -20,10 +20,10 @@
  * post-reparent expansion's MIN clamp doesn't swallow the asserted delta.
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -52,17 +52,11 @@ vi.mock('../../../../config/containment-rules', async (importOriginal) => {
 });
 
 // Import AFTER the mocks are registered so the hook closes over the spies.
-import {
-  useDragTargetHighlight,
-  type UseDragTargetHighlightResult,
-} from '../use-drag-target-highlight';
-import type { CanvasNode } from '../../components/types';
-import type { CardNode } from '../../../../store/slices/cards-slice';
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../../config/canvas-constants';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
 import { CONTAINER_PAD, CONTAINER_HEADER_H } from '../../utils/container-bounds';
+import { useDragTargetHighlight, type UseDragTargetHighlightResult } from '../use-drag-target-highlight';
+import type { CardNode } from '../../../../store/slices/cards-slice';
+import type { CanvasNode } from '../../components/types';
 
 // ─── Store builder ──────────────────────────────────────────────────────────
 // The hook DISPATCHES `updateCardNodeParent`, `updateCardNodePositions`,
@@ -79,8 +73,7 @@ const cardsStubSlice = createSlice({
 const makeStore = () =>
   configureStore({
     reducer: { cards: cardsStubSlice.reducer },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 
 type TestStore = ReturnType<typeof makeStore>;
@@ -94,10 +87,7 @@ interface ProbeArgs {
   getDescendantIds?: (nodeId: string) => string[];
 }
 
-const captureHook = (
-  store: TestStore,
-  args: ProbeArgs,
-): UseDragTargetHighlightResult => {
+const captureHook = (store: TestStore, args: ProbeArgs): UseDragTargetHighlightResult => {
   const captured: { current?: UseDragTargetHighlightResult } = {};
   const Probe: React.FC = () => {
     captured.current = useDragTargetHighlight({
@@ -131,7 +121,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -513,9 +503,7 @@ describe('useDragTargetHighlight — handleDragEnd post-reparent expansion', () 
     expect(outerUpdate.position.x).toBe(0 - (PAD - 5));
 
     // Resize update: outer's pw grew by overflowL.
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeDefined();
     const resizePayload = (resizeAction![0] as { type: string; payload: { id: string; width: number; height: number } })
       .payload;
@@ -574,9 +562,7 @@ describe('useDragTargetHighlight — handleDragEnd post-reparent expansion', () 
     // Drop at (5, 5) — small left+top overflow.
     result.handleDragEnd('child', 5, 5, true);
 
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     const resizePayload = (resizeAction![0] as { type: string; payload: { width: number; height: number } }).payload;
     // Width: starting 200 + small overflowL = something < 240 → clamped to 240.
     expect(resizePayload.width).toBe(MIN_CONTAINER_WIDTH);
@@ -608,9 +594,7 @@ describe('useDragTargetHighlight — handleDragEnd post-reparent expansion', () 
 
     expect(mocks.computeCompactNodeHeightSpy).toHaveBeenCalled();
 
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     const resizePayload = (resizeAction![0] as { type: string; payload: { height: number } }).payload;
     // Height grew by overflowB = 150 + PAD.
     expect(resizePayload.height).toBe(300 + 150 + CONTAINER_PAD);
@@ -676,9 +660,7 @@ describe('useDragTargetHighlight — handleDragEnd post-reparent expansion', () 
     expect(payload.parentId).toBeNull();
 
     // No resize dispatch — no expansion runs without newParent.
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeUndefined();
   });
 
@@ -706,9 +688,7 @@ describe('useDragTargetHighlight — handleDragEnd post-reparent expansion', () 
     expect(reparentAction).toBeDefined();
 
     // No resize/position dispatch — no overflow, no expansion.
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeUndefined();
     const positionsAction = dispatchSpy.mock.calls.find(
       (c) => (c[0] as { type: string }).type === 'cards/updateCardNodePositions',
@@ -850,9 +830,7 @@ describe('useDragTargetHighlight — post-reparent expansion (L327-330, L355-357
       (c) => (c[0] as { type: string }).type === 'cards/updateCardNodeParent',
     );
     expect(reparentAction).toBeDefined();
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeDefined();
   });
 
@@ -926,9 +904,7 @@ describe('useDragTargetHighlight — post-reparent expansion (L327-330, L355-357
     // inside outer. overflowR = 420 - (400 - PAD) = 20 + PAD > 0. L355 true.
     result.handleDragEnd('child', 370, 50, true);
 
-    const resizeAction = dispatchSpy.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
-    );
+    const resizeAction = dispatchSpy.mock.calls.find((c) => (c[0] as { type: string }).type === 'cards/resizeCardNode');
     expect(resizeAction).toBeDefined();
     const resizePayload = (resizeAction![0] as { type: string; payload: { width: number; height: number } }).payload;
     // Width grew by overflowR.

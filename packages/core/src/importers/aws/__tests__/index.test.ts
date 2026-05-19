@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as awsBarrel from '../index';
+import * as awsBarrel from '..';
 import { import_aws as import_aws_src, import_aws_to_graph as import_aws_to_graph_src } from '../aws-importer';
 import { aws_result_to_graph as aws_result_to_graph_src } from '../graph-conversion';
 import {

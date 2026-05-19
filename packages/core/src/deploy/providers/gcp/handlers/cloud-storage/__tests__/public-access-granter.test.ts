@@ -79,8 +79,14 @@ describe('cloud-storage/public-access-granter', () => {
       // Version echoed back; here the policy was version 1, so we keep 1.
       expect(setArg.version).toBe(1);
       // Existing bindings are preserved + new objectViewer:allUsers appended.
-      expect(setArg.bindings).toContainEqual({ role: 'roles/storage.objectAdmin', members: ['serviceAccount:sa@p.iam'] });
-      expect(setArg.bindings).toContainEqual({ role: 'roles/storage.legacyBucketReader', members: ['user:owner@example.com'] });
+      expect(setArg.bindings).toContainEqual({
+        role: 'roles/storage.objectAdmin',
+        members: ['serviceAccount:sa@p.iam'],
+      });
+      expect(setArg.bindings).toContainEqual({
+        role: 'roles/storage.legacyBucketReader',
+        members: ['user:owner@example.com'],
+      });
       expect(setArg.bindings).toContainEqual({ role: 'roles/storage.objectViewer', members: ['allUsers'] });
     });
 
@@ -88,9 +94,7 @@ describe('cloud-storage/public-access-granter', () => {
       const policy = {
         etag: 'e2',
         version: 3,
-        bindings: [
-          { role: 'roles/storage.objectViewer', members: ['user:reader@example.com'] },
-        ],
+        bindings: [{ role: 'roles/storage.objectViewer', members: ['user:reader@example.com'] }],
       };
       const bucket = makeBucket({ iam: { getPolicy: vi.fn().mockResolvedValue([policy]) } });
       const { ctx } = makeCtx();

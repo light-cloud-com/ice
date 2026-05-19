@@ -108,9 +108,7 @@ describe('format_ts_value — objects', () => {
   });
 
   it('recursively formats nested objects', () => {
-    expect(format_ts_value({ outer: { inner: 1 } })).toBe(
-      '{ outer: { inner: 1 } }',
-    );
+    expect(format_ts_value({ outer: { inner: 1 } })).toBe('{ outer: { inner: 1 } }');
   });
 });
 
@@ -121,9 +119,7 @@ describe('to_typescript — imports', () => {
       runtime: 'nodejs',
       resources: [],
     };
-    expect(to_typescript(program, { provider: 'gcp' })).toBe(
-      'import * as pulumi from "@pulumi/pulumi";\n',
-    );
+    expect(to_typescript(program, { provider: 'gcp' })).toBe('import * as pulumi from "@pulumi/pulumi";\n');
   });
 
   it('emits a provider import with alias substitution', () => {
@@ -133,9 +129,7 @@ describe('to_typescript — imports', () => {
       resources: [{ type: 'azure-native:storage/account:Account', name: 'a', properties: {} }],
     };
     const out = to_typescript(program, { provider: 'azure-native' });
-    expect(out).toContain(
-      'import * as azure_native from "@pulumi/azure-native";',
-    );
+    expect(out).toContain('import * as azure_native from "@pulumi/azure-native";');
   });
 
   it('deduplicates providers across multiple resources', () => {
@@ -229,13 +223,9 @@ describe('to_typescript — resources block', () => {
     const program: PulumiProgram = {
       name: 'test',
       runtime: 'nodejs',
-      resources: [
-        { type: 'gcp:compute/instance:Instance', name: 'web', properties: {} },
-      ],
+      resources: [{ type: 'gcp:compute/instance:Instance', name: 'web', properties: {} }],
     };
-    expect(to_typescript(program, { provider: 'gcp' })).toContain(
-      'const web = new gcp.compute.Instance("web", {\n});',
-    );
+    expect(to_typescript(program, { provider: 'gcp' })).toContain('const web = new gcp.compute.Instance("web", {\n});');
   });
 
   it('emits property lines with 4-space indent and trailing comma', () => {
@@ -277,9 +267,7 @@ describe('to_typescript — resources block', () => {
     const program: PulumiProgram = {
       name: 'test',
       runtime: 'nodejs',
-      resources: [
-        { type: 't:m/r:C', name: 'my-resource', properties: {} },
-      ],
+      resources: [{ type: 't:m/r:C', name: 'my-resource', properties: {} }],
     };
     const out = to_typescript(program, { provider: 'gcp' });
     // 'my-resource' -> 'my_resource' (sanitize_var_name replaces - with _)
@@ -294,18 +282,14 @@ describe('to_typescript — resources block', () => {
       runtime: 'nodejs',
       resources: [{ type: 't:m/r:C', name: 'a', properties: {} }],
     };
-    expect(to_typescript(program, { provider: 'gcp', include_comments: true })).toContain(
-      '// Resources',
-    );
+    expect(to_typescript(program, { provider: 'gcp', include_comments: true })).toContain('// Resources');
   });
 
   it('emits per-resource name comment when include_comments is true', () => {
     const program: PulumiProgram = {
       name: 'test',
       runtime: 'nodejs',
-      resources: [
-        { type: 't:m/r:C', name: 'web', properties: {} },
-      ],
+      resources: [{ type: 't:m/r:C', name: 'web', properties: {} }],
     };
     const out = to_typescript(program, { provider: 'gcp', include_comments: true });
     expect(out).toContain('// web');
@@ -355,9 +339,7 @@ describe('to_typescript — outputs block', () => {
       resources: [],
       outputs: { primary_endpoint: 'x' },
     };
-    expect(to_typescript(program, { provider: 'gcp' })).toContain(
-      'export const primaryEndpoint = "x";',
-    );
+    expect(to_typescript(program, { provider: 'gcp' })).toContain('export const primaryEndpoint = "x";');
   });
 });
 

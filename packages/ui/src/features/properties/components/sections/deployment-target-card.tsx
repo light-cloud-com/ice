@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { t } from '../../../../i18n';
 import { IceSelect } from '../../../../shared/components/ui/ice-select';
 import { PROVIDER_REGIONS } from '../../../deploy/utils/provider-regions';
 
@@ -29,22 +30,24 @@ export const DeploymentTargetCard: React.FC<DeploymentTargetCardProps> = ({ prov
 
   return (
     <div className="px-3 py-3 border-b border-ice-border space-y-2.5">
-      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50">Deployment</div>
+      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50">
+        {t('canvas.properties.deployment.sectionLabel')}
+      </div>
 
       <div className="flex items-center justify-between gap-2">
-        <span className="text-ice-xs text-ice-text-3 shrink-0">Region</span>
+        <span className="text-ice-xs text-ice-text-3 shrink-0">{t('canvas.properties.deployment.regionLabel')}</span>
         {provider ? (
           <IceSelect
             value={region}
             onChange={(v) => onUpdate('region', v)}
             options={regionOptions}
-            placeholder="auto"
+            placeholder={t('canvas.properties.deployment.regionAuto')}
             allowEmpty
-            emptyLabel="auto"
+            emptyLabel={t('canvas.properties.deployment.regionAuto')}
             width="140px"
           />
         ) : (
-          <span className="text-ice-xs text-ice-text-3/40 italic">auto</span>
+          <span className="text-ice-xs text-ice-text-3/40 italic">{t('canvas.properties.deployment.regionAuto')}</span>
         )}
       </div>
     </div>

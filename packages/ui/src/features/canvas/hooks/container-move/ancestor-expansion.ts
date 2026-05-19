@@ -14,16 +14,10 @@
  * have subtly different rules per blueprint risk #2.
  */
 
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../../config/canvas-constants';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../utils/container-bounds';
-import type { CanvasNode } from '../../components/types';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../utils/container-bounds';
 import type { PositionUpdate, SizeUpdate } from './types';
+import type { CanvasNode } from '../../components/types';
 
 /**
  * Override the bounds of one sibling during the bbox computation.
@@ -71,7 +65,14 @@ function readAncestorBounds(
   parent: CanvasNode,
   positionUpdates: PositionUpdate[],
   sizeUpdates: SizeUpdate[],
-): { px: number; py: number; pw: number; ph: number; existingPosUpdate?: PositionUpdate; existingSizeUpdate?: SizeUpdate } {
+): {
+  px: number;
+  py: number;
+  pw: number;
+  ph: number;
+  existingPosUpdate?: PositionUpdate;
+  existingSizeUpdate?: SizeUpdate;
+} {
   const existingPosUpdate = positionUpdates.find((u) => u.id === parent.id);
   const existingSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
   return {
@@ -162,11 +163,9 @@ export function expandAncestorOnce(args: {
 }): { changed: boolean; px: number; py: number; pw: number; ph: number } | undefined {
   const { parent, visibleNodes, positionUpdates, sizeUpdates, siblingPosLookup, siblingBoundsOverride } = args;
 
-  let { px, py, pw, ph, existingPosUpdate, existingSizeUpdate } = readAncestorBounds(
-    parent,
-    positionUpdates,
-    sizeUpdates,
-  );
+  const bounds = readAncestorBounds(parent, positionUpdates, sizeUpdates);
+  let { px, py, pw, ph } = bounds;
+  const { existingPosUpdate, existingSizeUpdate } = bounds;
 
   const bbox = computeChildrenBoundingBox(parent, visibleNodes, siblingPosLookup, siblingBoundsOverride);
   if (!bbox) return undefined;

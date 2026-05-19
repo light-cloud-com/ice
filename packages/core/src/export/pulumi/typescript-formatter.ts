@@ -92,10 +92,7 @@ export function format_ts_value(value: unknown): string {
  * Set iteration order (insertion order — determined by resource
  * traversal order, which matches the pre-extraction class).
  */
-export function to_typescript(
-  program: PulumiProgram,
-  options: PulumiExportOptions,
-): string {
+export function to_typescript(program: PulumiProgram, options: PulumiExportOptions): string {
   const lines: string[] = [];
 
   // Imports

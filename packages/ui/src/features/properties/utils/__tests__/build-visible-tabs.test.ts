@@ -89,14 +89,7 @@ describe('buildVisibleTabs', () => {
       hasDeployment: true,
       incomingEdgesCount: 2,
     });
-    expect(tabs.map((t) => t.id)).toEqual([
-      'config',
-      'scaling',
-      'domain',
-      'source',
-      'connections',
-      'deploy',
-    ]);
+    expect(tabs.map((t) => t.id)).toEqual(['config', 'scaling', 'domain', 'source', 'connections', 'deploy']);
   });
 
   it('uses the supplied t() function for labels', () => {

@@ -72,7 +72,11 @@ describe('UnifiedTypeResolver constructor', () => {
 
   it('uses the injected EmbeddedSchemaProvider when supplied', () => {
     EmbeddedCtor.mockClear();
-    const supplied = { initialize: vi.fn(async () => ({})), query: vi.fn(async () => ({})), get_implementation: vi.fn() };
+    const supplied = {
+      initialize: vi.fn(async () => ({})),
+      query: vi.fn(async () => ({})),
+      get_implementation: vi.fn(),
+    };
     // @ts-expect-error simplified shape good enough for the consumer
     new UnifiedTypeResolver(supplied);
     expect(EmbeddedCtor).not.toHaveBeenCalled();
@@ -117,9 +121,7 @@ describe('UnifiedTypeResolver.initialize', () => {
     expect(tfResult.is_exact_match).toBe(true);
 
     // ICE -> native (the `ice_to_native` map should also have populated)
-    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe(
-      'google_compute_instance',
-    );
+    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe('google_compute_instance');
   });
 
   it('extends an existing ICE entry when a second schema reuses the same ice_type', async () => {
@@ -128,15 +130,11 @@ describe('UnifiedTypeResolver.initialize', () => {
         schemas: [
           {
             ice_type: 'compute.instance',
-            implementations: [
-              { source: 'gcp', provider: 'google', native_type: 'compute#instance' },
-            ],
+            implementations: [{ source: 'gcp', provider: 'google', native_type: 'compute#instance' }],
           },
           {
             ice_type: 'compute.instance',
-            implementations: [
-              { source: 'aws', provider: 'aws', native_type: 'AWS::EC2::Instance' },
-            ],
+            implementations: [{ source: 'aws', provider: 'aws', native_type: 'AWS::EC2::Instance' }],
           },
         ],
       },
@@ -180,9 +178,7 @@ describe('UnifiedTypeResolver.initialize', () => {
     expect(result.ice_type).toBe('compute.instance');
     expect(result.is_exact_match).toBe(true);
     expect(result.resolution_source).toBe('schema');
-    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe(
-      'google_compute_instance',
-    );
+    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe('google_compute_instance');
   });
 
   it('handles an empty Result-shape payload without crashing', async () => {
@@ -224,7 +220,9 @@ describe('UnifiedTypeResolver.initialize', () => {
 // resolveToICE / fallbacks
 // ---------------------------------------------------------------------------
 
-async function buildLoadedResolver(extra: { ice_type: string; implementations: { source: string; provider: string; native_type: string }[] }[] = []) {
+async function buildLoadedResolver(
+  extra: { ice_type: string; implementations: { source: string; provider: string; native_type: string }[] }[] = [],
+) {
   providerSpy.query.mockResolvedValue({
     data: {
       schemas: [
@@ -286,9 +284,7 @@ describe('UnifiedTypeResolver.resolveToICE — fallback per source', () => {
   it('GCP googleapis.com/Resource fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('compute.googleapis.com/Instance', 'gcp').ice_type).toBe(
-      'gcp.compute.instance',
-    );
+    expect(r.resolveToICE('compute.googleapis.com/Instance', 'gcp').ice_type).toBe('gcp.compute.instance');
   });
 
   it('GCP plain string fallback', async () => {
@@ -330,9 +326,7 @@ describe('UnifiedTypeResolver.resolveToICE — fallback per source', () => {
   it('Azure Microsoft.X/Y fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('Microsoft.Network/virtualNetworks', 'azure').ice_type).toBe(
-      'azure.network.virtualnetworks',
-    );
+    expect(r.resolveToICE('Microsoft.Network/virtualNetworks', 'azure').ice_type).toBe('azure.network.virtualnetworks');
   });
 
   it('Azure plain fallback', async () => {
@@ -344,17 +338,13 @@ describe('UnifiedTypeResolver.resolveToICE — fallback per source', () => {
   it('Terraform google_compute_instance -> gcp.compute.instance fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('google_compute_instance', 'terraform').ice_type).toBe(
-      'gcp.compute.instance',
-    );
+    expect(r.resolveToICE('google_compute_instance', 'terraform').ice_type).toBe('gcp.compute.instance');
   });
 
   it('Terraform azurerm_virtual_machine -> azure.virtual.machine fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('azurerm_virtual_machine', 'terraform').ice_type).toBe(
-      'azure.virtual.machine',
-    );
+    expect(r.resolveToICE('azurerm_virtual_machine', 'terraform').ice_type).toBe('azure.virtual.machine');
   });
 
   it('Terraform single-part token -> identity fallback', async () => {
@@ -366,16 +356,15 @@ describe('UnifiedTypeResolver.resolveToICE — fallback per source', () => {
   it('Pulumi gcp:compute/instance:Instance fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('gcp:compute/instance:Instance', 'pulumi').ice_type).toBe(
-      'gcp.compute.instance',
-    );
+    expect(r.resolveToICE('gcp:compute/instance:Instance', 'pulumi').ice_type).toBe('gcp.compute.instance');
   });
 
   it('Pulumi azure-native:compute/virtualMachine:VirtualMachine fallback', async () => {
     const r = new UnifiedTypeResolver();
     await r.initialize();
-    expect(r.resolveToICE('azure-native:compute/virtualMachine:VirtualMachine', 'pulumi').ice_type)
-      .toBe('azure.compute.virtualmachine');
+    expect(r.resolveToICE('azure-native:compute/virtualMachine:VirtualMachine', 'pulumi').ice_type).toBe(
+      'azure.compute.virtualmachine',
+    );
   });
 
   it('Pulumi unknown shape fallback', async () => {
@@ -400,9 +389,7 @@ describe('UnifiedTypeResolver.resolveToICE — fallback per source', () => {
 describe('UnifiedTypeResolver.resolveToNative', () => {
   it('returns the native type when an ICE entry exists', async () => {
     const r = await buildLoadedResolver();
-    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe(
-      'google_compute_instance',
-    );
+    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe('google_compute_instance');
   });
 
   it('returns undefined when no ICE entry exists', async () => {
@@ -431,7 +418,11 @@ describe('UnifiedTypeResolver.hasMapping', () => {
 describe('UnifiedTypeResolver.getImplementation', () => {
   it('forwards to schema_provider.get_implementation', () => {
     const r = new UnifiedTypeResolver();
-    providerSpy.get_implementation.mockReturnValue({ source: 'terraform', provider: 'aws', native_type: 'aws_instance' });
+    providerSpy.get_implementation.mockReturnValue({
+      source: 'terraform',
+      provider: 'aws',
+      native_type: 'aws_instance',
+    });
     const out = r.getImplementation('aws.ec2.instance' as IceType, 'terraform', 'aws');
     expect(out?.native_type).toBe('aws_instance');
     expect(providerSpy.get_implementation).toHaveBeenCalledWith('aws.ec2.instance', 'terraform', 'aws');

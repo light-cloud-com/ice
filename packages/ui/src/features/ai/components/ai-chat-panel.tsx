@@ -18,22 +18,18 @@
 import { Sparkles, Loader2, Undo2, Send, Plus, MessageSquare, Cpu, Cloud, KeyRound } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useTranslation } from '../../../i18n';
+import { ConversationHistorySidebar } from './conversation-history-sidebar';
+import { EmptyState } from './empty-state';
+import { MessageRow } from './message-row';
 import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
+import { useTranslation } from '../../../i18n';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
 import { useChatEffects, type ProviderInfo } from '../hooks/use-chat-effects';
-import {
-  useChatHandlers,
-  type ChatMessage,
-  type ConversationSummary,
-} from '../hooks/use-chat-handlers';
-import { ConversationHistorySidebar } from './conversation-history-sidebar';
-import { EmptyState } from './empty-state';
-import { MessageRow } from './message-row';
+import { useChatHandlers, type ChatMessage, type ConversationSummary } from '../hooks/use-chat-handlers';
 import type { AppDispatch, RootState } from '../../../store';
 
 // =============================================================================

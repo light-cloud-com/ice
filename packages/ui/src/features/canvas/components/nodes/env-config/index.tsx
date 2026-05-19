@@ -9,6 +9,7 @@
 import { CARD_FOOTER_HEIGHT, EC_HEADER_HEIGHT, EC_PADDING, EC_ROW_HEIGHT } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -53,8 +54,10 @@ export const SvgEnvConfigNode: React.FC<SvgCompactNodeProps> = ({
 
   const liveConfig =
     variables.length > 0
-      ? `${variables.length} ${variables.length === 1 ? 'variable' : 'variables'}`
-      : 'No variables yet';
+      ? variables.length === 1
+        ? t('canvas.blocks.envConfig.one')
+        : t('canvas.blocks.envConfig.many', { n: variables.length })
+      : t('canvas.blocks.envConfig.none');
 
   return (
     <CardShell
@@ -66,12 +69,12 @@ export const SvgEnvConfigNode: React.FC<SvgCompactNodeProps> = ({
       lod={lod}
       pipelineStatus={pipelineStatus}
       icon={Cog}
-      title={node.label || 'Env Config'}
+      title={node.label || t('canvas.blocks.titles.envConfig')}
       liveConfig={liveConfig}
       headerHeight={EC_HEADER_HEIGHT}
     >
       {variables.length === 0 ? (
-        <EmptyHint message="edit in properties →" />
+        <EmptyHint message={t('canvas.blocks.common.editInProperties')} />
       ) : (
         variables.map((v, i) => <KvLine key={i} name={v.key} value={v.value} />)
       )}

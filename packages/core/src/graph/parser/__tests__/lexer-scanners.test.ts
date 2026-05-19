@@ -31,16 +31,8 @@
  * scanners have).
  */
 import { describe, it, expect } from 'vitest';
-import {
-  type LexerState,
-  make_lexer_state,
-} from '../lexer-state';
-import {
-  scan_block_comment,
-  scan_identifier,
-  scan_line_comment,
-  scan_number,
-} from '../lexer-scanners';
+import { scan_block_comment, scan_identifier, scan_line_comment, scan_number } from '../lexer-scanners';
+import { type LexerState, make_lexer_state } from '../lexer-state';
 
 /**
  * Helper: build a state and advance past `prefix_len` chars to
@@ -109,27 +101,24 @@ describe('scan_number', () => {
     expect(s.errors[0]?.message).toBe('Invalid number: expected exponent');
   });
 
-  it(
-    'RISK #3 — _negative param preserved but does not affect output',
-    () => {
-      // Sanity: when called with `_negative=true` the literal value
-      // MATCHES the value computed from the chars in the slice. The
-      // sign is consumed by the dispatch site, so scan_number sees
-      // only the digits. If the param ever started doing something
-      // here, this test would catch it.
-      const { s: s_with, start_pos, start_line, start_column } = setup('5', 0);
-      scan_number(s_with, start_pos, start_line, start_column, true);
+  it('RISK #3 — _negative param preserved but does not affect output', () => {
+    // Sanity: when called with `_negative=true` the literal value
+    // MATCHES the value computed from the chars in the slice. The
+    // sign is consumed by the dispatch site, so scan_number sees
+    // only the digits. If the param ever started doing something
+    // here, this test would catch it.
+    const { s: s_with, start_pos, start_line, start_column } = setup('5', 0);
+    scan_number(s_with, start_pos, start_line, start_column, true);
 
-      const { s: s_without } = setup('5', 0);
-      scan_number(s_without, 0, 1, 1, false);
+    const { s: s_without } = setup('5', 0);
+    scan_number(s_without, 0, 1, 1, false);
 
-      // Both produce the SAME literal (5 — positive), regardless of
-      // the flag. The dispatch site is what produces -5 by setting
-      // start_pos to where the '-' sat; we don't simulate that here.
-      expect(s_with.tokens[0]?.literal).toBe(s_without.tokens[0]?.literal);
-      expect(s_with.tokens[0]?.literal).toBe(5);
-    },
-  );
+    // Both produce the SAME literal (5 — positive), regardless of
+    // the flag. The dispatch site is what produces -5 by setting
+    // start_pos to where the '-' sat; we don't simulate that here.
+    expect(s_with.tokens[0]?.literal).toBe(s_without.tokens[0]?.literal);
+    expect(s_with.tokens[0]?.literal).toBe(5);
+  });
 });
 
 describe('scan_identifier', () => {
@@ -149,78 +138,60 @@ describe('scan_identifier', () => {
     expect(s.tokens[0]?.value).toBe('foo_bar2');
   });
 
-  it(
-    'RISK #4a — TRUE keyword emits BOOLEAN with literal=true',
-    () => {
-      const { s, start_pos, start_line, start_column } = setup('true', 1);
-      scan_identifier(s, start_pos, start_line, start_column);
-      expect(s.tokens[0]?.type).toBe('BOOLEAN');
-      expect(s.tokens[0]?.value).toBe('true');
-      expect(s.tokens[0]?.literal).toBe(true);
-    },
-  );
+  it('RISK #4a — TRUE keyword emits BOOLEAN with literal=true', () => {
+    const { s, start_pos, start_line, start_column } = setup('true', 1);
+    scan_identifier(s, start_pos, start_line, start_column);
+    expect(s.tokens[0]?.type).toBe('BOOLEAN');
+    expect(s.tokens[0]?.value).toBe('true');
+    expect(s.tokens[0]?.literal).toBe(true);
+  });
 
-  it(
-    'RISK #4b — FALSE keyword emits BOOLEAN with literal=false',
-    () => {
-      const { s, start_pos, start_line, start_column } = setup('false', 1);
-      scan_identifier(s, start_pos, start_line, start_column);
-      expect(s.tokens[0]?.type).toBe('BOOLEAN');
-      expect(s.tokens[0]?.literal).toBe(false);
-    },
-  );
+  it('RISK #4b — FALSE keyword emits BOOLEAN with literal=false', () => {
+    const { s, start_pos, start_line, start_column } = setup('false', 1);
+    scan_identifier(s, start_pos, start_line, start_column);
+    expect(s.tokens[0]?.type).toBe('BOOLEAN');
+    expect(s.tokens[0]?.literal).toBe(false);
+  });
 
-  it(
-    'RISK #4c — null keyword emits NULL with literal=null',
-    () => {
-      const { s, start_pos, start_line, start_column } = setup('null', 1);
-      scan_identifier(s, start_pos, start_line, start_column);
-      expect(s.tokens[0]?.type).toBe('NULL');
-      expect(s.tokens[0]?.literal).toBeNull();
-    },
-  );
+  it('RISK #4c — null keyword emits NULL with literal=null', () => {
+    const { s, start_pos, start_line, start_column } = setup('null', 1);
+    scan_identifier(s, start_pos, start_line, start_column);
+    expect(s.tokens[0]?.type).toBe('NULL');
+    expect(s.tokens[0]?.literal).toBeNull();
+  });
 
-  it(
-    'RISK #4d — other keywords fall through to plain add_token (no literal)',
-    () => {
-      const { s, start_pos, start_line, start_column } = setup('resource', 1);
-      scan_identifier(s, start_pos, start_line, start_column);
-      expect(s.tokens[0]?.type).toBe('RESOURCE');
-      expect(s.tokens[0]?.value).toBe('resource');
-      expect(s.tokens[0]?.literal).toBeUndefined();
-    },
-  );
+  it('RISK #4d — other keywords fall through to plain add_token (no literal)', () => {
+    const { s, start_pos, start_line, start_column } = setup('resource', 1);
+    scan_identifier(s, start_pos, start_line, start_column);
+    expect(s.tokens[0]?.type).toBe('RESOURCE');
+    expect(s.tokens[0]?.value).toBe('resource');
+    expect(s.tokens[0]?.literal).toBeUndefined();
+  });
 
-  it(
-    'RISK #5a — uppercase-start identifier emits TYPE_IDENTIFIER',
-    () => {
-      const { s, start_pos, start_line, start_column } = setup('Service', 1);
-      scan_identifier(s, start_pos, start_line, start_column);
-      expect(s.tokens[0]?.type).toBe('TYPE_IDENTIFIER');
-      expect(s.tokens[0]?.value).toBe('Service');
-    },
-  );
+  it('RISK #5a — uppercase-start identifier emits TYPE_IDENTIFIER', () => {
+    const { s, start_pos, start_line, start_column } = setup('Service', 1);
+    scan_identifier(s, start_pos, start_line, start_column);
+    expect(s.tokens[0]?.type).toBe('TYPE_IDENTIFIER');
+    expect(s.tokens[0]?.value).toBe('Service');
+  });
 
-  it(
-    'RISK #5b — dot-bearing identifier emits TYPE_IDENTIFIER (qualified name)',
-    () => {
-      // For a real qualified name we'd need a different scanner path
-      // (the lexer treats `.` as a token), but the regex test fires
-      // on any dot in the value — make sure the contract is what we
-      // said. We can't easily get a `.` into the scanned value via
-      // the standard scanner loop (it stops on non-alphanumerics),
-      // so we synthesize a token that DID include a dot via a
-      // post-hoc state surgery. This pins the regex contract.
-      // (In real usage, qualified names like `gcp.Service` come
-      // through as IDENTIFIER + DOT + TYPE_IDENTIFIER, not as a
-      // single TYPE_IDENTIFIER. The dot branch is defensive against
-      // hypothetical future scanners. Preserve verbatim per RISK #5.)
-      // Plain lowercase passes through:
-      const { s: s_low, start_pos, start_line, start_column } = setup('service', 1);
-      scan_identifier(s_low, start_pos, start_line, start_column);
-      expect(s_low.tokens[0]?.type).toBe('IDENTIFIER');
-    },
-  );
+  it('RISK #5b — dot-bearing identifier emits TYPE_IDENTIFIER (qualified name)', () => {
+    // For a real qualified name we'd need a different scanner path
+    // (the lexer treats `.` as a token), but the regex test fires
+    // on any dot in the value — make sure the contract is what we
+    // said. We can't easily get a `.` into the scanned value via
+    // the standard scanner loop (it stops on non-alphanumerics),
+    // so we synthesize a token that DID include a dot via a
+    // post-hoc state surgery. This pins the regex contract.
+    // (In real usage, qualified names like `gcp.Service` come
+    // through as IDENTIFIER + DOT + TYPE_IDENTIFIER, not as a
+    // single TYPE_IDENTIFIER. The dot branch is defensive against
+    // hypothetical future scanners. Preserve verbatim per RISK #5.)
+    // Plain lowercase passes through:
+    const { s: s_low, start_pos, start_line, start_column } = setup('service', 1);
+    scan_identifier(s_low, start_pos, start_line, start_column);
+    expect(s_low.tokens[0]?.type).toBe('IDENTIFIER');
+  });
 
   it('lowercase plain identifier is IDENTIFIER (negative regex test)', () => {
     // "myvar" — neither uppercase-start nor dot-bearing.
@@ -276,23 +247,20 @@ describe('scan_block_comment', () => {
     expect(s.pos).toBe(8);
   });
 
-  it(
-    'RISK #6 — nested block comment depth-counts both open and close',
-    () => {
-      // "/* /* inner */ outer */" — must match the outer close, not
-      // the inner one. If the open-increment is dropped, the scanner
-      // exits at the first */ leaving "outer */" to be lexed as
-      // tokens. If the close-decrement is dropped, the scanner never
-      // exits and reports "Unterminated".
-      const s = make_lexer_state('/* /* inner */ outer */');
-      s.pos = 2;
-      s.column = 3;
-      scan_block_comment(s, 0, 1, 1);
-      expect(s.errors).toHaveLength(0);
-      // Cursor should be at end of source (23 chars consumed).
-      expect(s.pos).toBe(23);
-    },
-  );
+  it('RISK #6 — nested block comment depth-counts both open and close', () => {
+    // "/* /* inner */ outer */" — must match the outer close, not
+    // the inner one. If the open-increment is dropped, the scanner
+    // exits at the first */ leaving "outer */" to be lexed as
+    // tokens. If the close-decrement is dropped, the scanner never
+    // exits and reports "Unterminated".
+    const s = make_lexer_state('/* /* inner */ outer */');
+    s.pos = 2;
+    s.column = 3;
+    scan_block_comment(s, 0, 1, 1);
+    expect(s.errors).toHaveLength(0);
+    // Cursor should be at end of source (23 chars consumed).
+    expect(s.pos).toBe(23);
+  });
 
   it('reports unterminated block comment', () => {
     // "/* never ends" — no closing */.
@@ -304,24 +272,20 @@ describe('scan_block_comment', () => {
     expect(s.errors[0]?.message).toBe('Unterminated block comment');
   });
 
-  it(
-    'RISK #1 — newline inside block comment sets line++ and column=0 ' +
-      '(then ls_advance bumps column to 1)',
-    () => {
-      // "/* foo\nbar */" — line should be 2 after the newline pass.
-      const s = make_lexer_state('/* foo\nbar */');
-      s.pos = 2;
-      s.column = 3;
-      scan_block_comment(s, 0, 1, 1);
-      expect(s.line).toBe(2);
-      // After "bar */" was consumed, column is 1 (from line start)
-      // + 7 (b, a, r, space, *, /, plus column=0 prep step).
-      // We don't pin the exact column here — what matters is the
-      // line bump and the absence of stale column carry-over from
-      // line 1.
-      expect(s.errors).toHaveLength(0);
-    },
-  );
+  it('RISK #1 — newline inside block comment sets line++ and column=0 ' + '(then ls_advance bumps column to 1)', () => {
+    // "/* foo\nbar */" — line should be 2 after the newline pass.
+    const s = make_lexer_state('/* foo\nbar */');
+    s.pos = 2;
+    s.column = 3;
+    scan_block_comment(s, 0, 1, 1);
+    expect(s.line).toBe(2);
+    // After "bar */" was consumed, column is 1 (from line start)
+    // + 7 (b, a, r, space, *, /, plus column=0 prep step).
+    // We don't pin the exact column here — what matters is the
+    // line bump and the absence of stale column carry-over from
+    // line 1.
+    expect(s.errors).toHaveLength(0);
+  });
 
   it('emits COMMENT token when include_comments=true', () => {
     const s = make_lexer_state('/* hi */');

@@ -96,7 +96,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
   }) => {
     const [isHover, setIsHover] = useState(false);
     const reducedMotion = useReducedMotion();
-    const isActive = isSelected || isHighlighted;
+    const _isActive = isSelected || isHighlighted;
     const gRef = useRef<SVGGElement>(null);
 
     const relationship = useMemo(() => {

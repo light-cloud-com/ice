@@ -45,10 +45,10 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { clearAiState } from '../../../store/slices/ai-slice';
-import type { Card } from '../../../store/slices/cards-slice';
-import type { AppDispatch } from '../../../store';
-import type { AiCanvasOp, AiResponse } from '@ice/types';
 import type { ChatMessage, ConversationSummary } from './use-chat-handlers';
+import type { AppDispatch } from '../../../store';
+import type { Card } from '../../../store/slices/cards-slice';
+import type { AiCanvasOp, AiResponse } from '@ice/types';
 
 export interface ProviderInfo {
   ok: boolean;

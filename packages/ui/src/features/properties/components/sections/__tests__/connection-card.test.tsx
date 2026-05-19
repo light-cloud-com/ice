@@ -41,25 +41,16 @@ vi.mock('../../../../../i18n', () => ({
   t: vi.fn((key: string) => `t:${key}`),
 }));
 
-import { ConnectionCard } from '../connection-card';
 import { getIcon } from '../../../../../assets/icons';
-import {
-  deleteCardEdge,
-  type CardEdge,
-  type CardNode,
-} from '../../../../../store/slices/cards-slice';
+import { deleteCardEdge, type CardEdge, type CardNode } from '../../../../../store/slices/cards-slice';
+import { ConnectionCard } from '../connection-card';
 
 // ─── Tree-walker (same shape as rf-props-6/9/10/11) ─────────────────────────
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -73,10 +64,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -108,10 +96,7 @@ interface ButtonProps {
   children?: React.ReactNode;
 }
 
-const makeNode = (
-  id: string,
-  data: Partial<CardNode['data']> = {},
-): CardNode => ({
+const makeNode = (id: string, data: Partial<CardNode['data']> = {}): CardNode => ({
   id,
   type: 'block',
   position: { x: 0, y: 0 },
@@ -120,12 +105,14 @@ const makeNode = (
   data,
 });
 
-const renderCard = (overrides: {
-  edge?: Partial<CardEdge>;
-  nodes?: CardNode[];
-  thisNodeId?: string;
-  dispatch?: ReturnType<typeof vi.fn>;
-} = {}): {
+const renderCard = (
+  overrides: {
+    edge?: Partial<CardEdge>;
+    nodes?: CardNode[];
+    thisNodeId?: string;
+    dispatch?: ReturnType<typeof vi.fn>;
+  } = {},
+): {
   tree: React.ReactElement;
   dispatch: ReturnType<typeof vi.fn>;
 } => {
@@ -151,8 +138,7 @@ const renderCard = (overrides: {
   return { tree, dispatch };
 };
 
-const findImgs = (tree: React.ReactNode): React.ReactElement[] =>
-  findByType(tree, 'img');
+const findImgs = (tree: React.ReactNode): React.ReactElement[] => findByType(tree, 'img');
 
 // "Initial-letter" spans are <span>s with className containing 'font-semibold'
 // (the source uses `text-ice-sm text-ice-text-3 font-semibold` for them).
@@ -162,7 +148,7 @@ const findInitialSpans = (tree: React.ReactNode): React.ReactElement[] =>
     (el) =>
       el.type === 'span' &&
       typeof (el.props as Partial<SpanProps>).className === 'string' &&
-      ((el.props as SpanProps).className.includes('font-semibold')),
+      (el.props as SpanProps).className.includes('font-semibold'),
   );
 
 // "Label" spans are <span>s with className containing 'font-medium'
@@ -173,7 +159,7 @@ const findLabelSpans = (tree: React.ReactNode): React.ReactElement[] =>
     (el) =>
       el.type === 'span' &&
       typeof (el.props as Partial<SpanProps>).className === 'string' &&
-      ((el.props as SpanProps).className.includes('font-medium')),
+      (el.props as SpanProps).className.includes('font-medium'),
   );
 
 // Port pill span (className includes 'font-mono text-ice-accent').
@@ -183,20 +169,16 @@ const findPortSpan = (tree: React.ReactNode): React.ReactElement | undefined =>
     (el) =>
       el.type === 'span' &&
       typeof (el.props as Partial<SpanProps>).className === 'string' &&
-      ((el.props as SpanProps).className.includes('text-ice-accent')),
+      (el.props as SpanProps).className.includes('text-ice-accent'),
   )[0];
 
 // Relationship label span (className: 'text-ice-2xs text-ice-text-3').
 // Distinct from initial-letter span which has 'font-semibold' AND from the
 // port span which has 'font-mono text-ice-accent'. Match exactly.
-const findRelationshipSpan = (
-  tree: React.ReactNode,
-): React.ReactElement | undefined =>
+const findRelationshipSpan = (tree: React.ReactNode): React.ReactElement | undefined =>
   findByPredicate(
     tree,
-    (el) =>
-      el.type === 'span' &&
-      (el.props as Partial<SpanProps>).className === 'text-ice-2xs text-ice-text-3',
+    (el) => el.type === 'span' && (el.props as Partial<SpanProps>).className === 'text-ice-2xs text-ice-text-3',
   )[0];
 
 const findDeleteButton = (tree: React.ReactNode): React.ReactElement => {

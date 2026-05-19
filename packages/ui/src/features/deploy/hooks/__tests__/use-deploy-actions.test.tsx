@@ -14,10 +14,10 @@
  * dispatch trace explicitly so this contract stays observable.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React, { useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Helper to inspect dispatched actions. Redux Toolkit types its dispatch
@@ -76,11 +76,7 @@ interface Captured {
   pendingRetryRef: React.MutableRefObject<'plan' | 'deploy' | null>;
 }
 
-function captureHook(args: {
-  activeCard?: Card | null;
-  deploy?: Partial<DeployState>;
-  store: TestStore;
-}): Captured {
+function captureHook(args: { activeCard?: Card | null; deploy?: Partial<DeployState>; store: TestStore }): Captured {
   const captured: { current?: Captured } = {};
   const baseDeploy: DeployState = args.store.getState().deploy;
   const deploy = { ...baseDeploy, ...args.deploy };
@@ -188,7 +184,9 @@ describe('handleAuthenticate', () => {
 
   it('on throw without err.message, falls back to "Authentication failed"', async () => {
     const store = makeStore();
-    mockDeployApi.authenticate.mockRejectedValueOnce({ /* no .message */ } as any);
+    mockDeployApi.authenticate.mockRejectedValueOnce({
+      /* no .message */
+    } as any);
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const { actions } = captureHook({ activeCard: ACTIVE_CARD, store });
     dispatchSpy.mockClear();
@@ -233,11 +231,12 @@ describe('fetchRequirements', () => {
 
     await actions.fetchRequirements();
 
-    expect(mockDeployApi.requirements).toHaveBeenCalledWith(
-      'card-1',
-      ACTIVE_CARD.nodes,
-      { provider: 'gcp', gcpProject: 'lc-ice', region: 'us-central1', environment: 'production' },
-    );
+    expect(mockDeployApi.requirements).toHaveBeenCalledWith('card-1', ACTIVE_CARD.nodes, {
+      provider: 'gcp',
+      gcpProject: 'lc-ice',
+      region: 'us-central1',
+      environment: 'production',
+    });
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
     expect(types).toEqual(['deploy/startRequirementsFetch', 'deploy/setRequirements']);
     const setReq = dispatchSpy.mock.calls[1][0] as unknown as { payload: unknown[] };
@@ -582,11 +581,7 @@ describe('handleDeploy', () => {
     await actions.handleDeploy();
 
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
-    expect(types).toEqual([
-      'deploy/startDeploying',
-      'deploy/deploySuccess',
-      'deploy/setDeployedResources',
-    ]);
+    expect(types).toEqual(['deploy/startDeploying', 'deploy/deploySuccess', 'deploy/setDeployedResources']);
     const success = dispatchSpy.mock.calls[1][0] as unknown as {
       payload: { duration_ms: number; results: unknown[] };
     };
@@ -631,11 +626,7 @@ describe('handleDeploy', () => {
     await actions.handleDeploy();
 
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
-    expect(types).toEqual([
-      'deploy/startDeploying',
-      'deploy/deployError',
-      'deploy/setDeployedResources',
-    ]);
+    expect(types).toEqual(['deploy/startDeploying', 'deploy/deployError', 'deploy/setDeployedResources']);
     const errPayload = dispatchSpy.mock.calls[1][0] as unknown as {
       payload: { error: string; results: unknown[] };
     };
@@ -682,13 +673,11 @@ describe('handleDeploy', () => {
 
   it('needsAuth → auth=true → re-dispatches startDeploying BEFORE retry → deploySuccess on retry', async () => {
     const store = makeStore();
-    mockDeployApi.apply
-      .mockResolvedValueOnce({ success: false, needsAuth: true })
-      .mockResolvedValueOnce({
-        success: true,
-        duration_ms: 999,
-        result: { resources: [{ type: 't', name: 'a', success: true }] },
-      });
+    mockDeployApi.apply.mockResolvedValueOnce({ success: false, needsAuth: true }).mockResolvedValueOnce({
+      success: true,
+      duration_ms: 999,
+      result: { resources: [{ type: 't', name: 'a', success: true }] },
+    });
     mockDeployApi.authenticate.mockResolvedValueOnce({ success: true });
     mockDeployApi.getResources.mockResolvedValueOnce({ success: true, resources: [{ id: 'r' }] });
     const dispatchSpy = vi.spyOn(store, 'dispatch');
@@ -700,10 +689,7 @@ describe('handleDeploy', () => {
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
     // RISK #2: startDeploying must be dispatched TWICE (once before initial,
     // once before retry).
-    const deployingIdx = types.reduce<number[]>(
-      (acc, t, i) => (t === 'deploy/startDeploying' ? [...acc, i] : acc),
-      [],
-    );
+    const deployingIdx = types.reduce<number[]>((acc, t, i) => (t === 'deploy/startDeploying' ? [...acc, i] : acc), []);
     expect(deployingIdx).toHaveLength(2);
     expect(types).toEqual([
       'deploy/startDeploying',
@@ -741,17 +727,15 @@ describe('handleDeploy', () => {
 
   it('needsAuth → auth=true → retry success with partial failure → deployError on retry', async () => {
     const store = makeStore();
-    mockDeployApi.apply
-      .mockResolvedValueOnce({ success: false, needsAuth: true })
-      .mockResolvedValueOnce({
-        success: true,
-        result: {
-          resources: [
-            { type: 'gcp.sql', name: 'db1', success: false },
-            { type: 'gcp.run', name: 'svc', success: true },
-          ],
-        },
-      });
+    mockDeployApi.apply.mockResolvedValueOnce({ success: false, needsAuth: true }).mockResolvedValueOnce({
+      success: true,
+      result: {
+        resources: [
+          { type: 'gcp.sql', name: 'db1', success: false },
+          { type: 'gcp.run', name: 'svc', success: true },
+        ],
+      },
+    });
     mockDeployApi.authenticate.mockResolvedValueOnce({ success: true });
     mockDeployApi.getResources.mockResolvedValueOnce({ success: true, resources: [] });
     const dispatchSpy = vi.spyOn(store, 'dispatch');
@@ -774,12 +758,10 @@ describe('handleDeploy', () => {
 
   it('needsAuth → auth=true → retry success with duration_ms missing falls back to 0', async () => {
     const store = makeStore();
-    mockDeployApi.apply
-      .mockResolvedValueOnce({ success: false, needsAuth: true })
-      .mockResolvedValueOnce({
-        success: true,
-        result: { resources: [{ type: 't', name: 'a', success: true }] },
-      });
+    mockDeployApi.apply.mockResolvedValueOnce({ success: false, needsAuth: true }).mockResolvedValueOnce({
+      success: true,
+      result: { resources: [{ type: 't', name: 'a', success: true }] },
+    });
     mockDeployApi.authenticate.mockResolvedValueOnce({ success: true });
     mockDeployApi.getResources.mockResolvedValueOnce({ success: true, resources: [] });
     const dispatchSpy = vi.spyOn(store, 'dispatch');
@@ -796,13 +778,11 @@ describe('handleDeploy', () => {
 
   it('needsAuth → auth=true → retry getResources throw is silently caught', async () => {
     const store = makeStore();
-    mockDeployApi.apply
-      .mockResolvedValueOnce({ success: false, needsAuth: true })
-      .mockResolvedValueOnce({
-        success: true,
-        duration_ms: 5,
-        result: { resources: [{ type: 't', name: 'a', success: true }] },
-      });
+    mockDeployApi.apply.mockResolvedValueOnce({ success: false, needsAuth: true }).mockResolvedValueOnce({
+      success: true,
+      duration_ms: 5,
+      result: { resources: [{ type: 't', name: 'a', success: true }] },
+    });
     mockDeployApi.authenticate.mockResolvedValueOnce({ success: true });
     mockDeployApi.getResources.mockRejectedValueOnce(new Error('boom'));
     const dispatchSpy = vi.spyOn(store, 'dispatch');
@@ -817,13 +797,11 @@ describe('handleDeploy', () => {
 
   it('needsAuth → auth=true → retry success with getResources success:false skips setDeployedResources', async () => {
     const store = makeStore();
-    mockDeployApi.apply
-      .mockResolvedValueOnce({ success: false, needsAuth: true })
-      .mockResolvedValueOnce({
-        success: true,
-        duration_ms: 5,
-        result: { resources: [{ type: 't', name: 'a', success: true }] },
-      });
+    mockDeployApi.apply.mockResolvedValueOnce({ success: false, needsAuth: true }).mockResolvedValueOnce({
+      success: true,
+      duration_ms: 5,
+      result: { resources: [{ type: 't', name: 'a', success: true }] },
+    });
     mockDeployApi.authenticate.mockResolvedValueOnce({ success: true });
     mockDeployApi.getResources.mockResolvedValueOnce({ success: false });
     const dispatchSpy = vi.spyOn(store, 'dispatch');

@@ -29,9 +29,8 @@
  */
 
 import React from 'react';
-
-import { t } from '../../../i18n';
 import { EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
+import { t } from '../../../i18n';
 
 export interface ConnectionTooltipProps {
   /** The currently-hovered connection's tooltip data, or `null` when no

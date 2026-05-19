@@ -89,17 +89,13 @@ describe('import_result_to_graph', () => {
   });
 
   it('lifts the resource id into the node id property when present', () => {
-    const graph = import_result_to_graph(
-      make_result([make_resource({ id: 'vpc-12345678' })]),
-    );
+    const graph = import_result_to_graph(make_result([make_resource({ id: 'vpc-12345678' })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.properties.id).toBe('vpc-12345678');
   });
 
   it('flips the protected/external labels when those flags are set', () => {
-    const graph = import_result_to_graph(
-      make_result([make_resource({ protect: true, external: true })]),
-    );
+    const graph = import_result_to_graph(make_result([make_resource({ protect: true, external: true })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.metadata.labels.protected).toBe('true');
     expect(node.metadata.labels.external).toBe('true');

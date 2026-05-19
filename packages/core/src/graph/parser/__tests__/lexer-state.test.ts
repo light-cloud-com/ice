@@ -152,8 +152,7 @@ describe('ls_advance', () => {
   });
 
   it(
-    'RISK #1 — column starts at 0 then advance increments to 1 ' +
-      '(matches scan_block_comment newline sequence)',
+    'RISK #1 — column starts at 0 then advance increments to 1 ' + '(matches scan_block_comment newline sequence)',
     () => {
       // This pins the two-step dance: caller sets `column = 0` after
       // a newline, then `ls_advance` moves it to 1. The lexer relies
@@ -310,18 +309,14 @@ describe('ls_add_error', () => {
     expect(s.errors[0]?.recoverable).toBe(false);
   });
 
-  it(
-    'does NOT push an ERROR token when recoverable=false',
-    () => {
-      const s = make_lexer_state('abc');
-      ls_add_error(s, 'fatal', false);
-      expect(s.tokens).toHaveLength(0);
-    },
-  );
+  it('does NOT push an ERROR token when recoverable=false', () => {
+    const s = make_lexer_state('abc');
+    ls_add_error(s, 'fatal', false);
+    expect(s.tokens).toHaveLength(0);
+  });
 
   it(
-    'RISK #2 — recoverable=true pushes an ERROR token whose value is ' +
-      'source[pos - 1] (post-advance snapshot)',
+    'RISK #2 — recoverable=true pushes an ERROR token whose value is ' + 'source[pos - 1] (post-advance snapshot)',
     () => {
       // Simulate the canonical caller shape: scan_token consumed the
       // bad char with `ls_advance` (pos is now 1, column is 2), then
@@ -341,19 +336,16 @@ describe('ls_add_error', () => {
     },
   );
 
-  it(
-    'RISK #2 — recoverable error at end of source emits empty-string token',
-    () => {
-      // Edge case: ls_advance off the end leaves pos > source.length,
-      // so source[pos - 1] is the last char OR `'\0'` from advance.
-      // Here we hit add_error after consuming the only char, so pos=1
-      // and source[0] = '&' which is the bad char.
-      const s = make_lexer_state('&');
-      ls_advance(s); // pos=1
-      ls_add_error(s, `Unexpected character '&'`, true);
-      expect(s.tokens[0]?.value).toBe('&');
-    },
-  );
+  it('RISK #2 — recoverable error at end of source emits empty-string token', () => {
+    // Edge case: ls_advance off the end leaves pos > source.length,
+    // so source[pos - 1] is the last char OR `'\0'` from advance.
+    // Here we hit add_error after consuming the only char, so pos=1
+    // and source[0] = '&' which is the bad char.
+    const s = make_lexer_state('&');
+    ls_advance(s); // pos=1
+    ls_add_error(s, `Unexpected character '&'`, true);
+    expect(s.tokens[0]?.value).toBe('&');
+  });
 
   it('accumulates multiple errors with their own snapshots', () => {
     const s = make_lexer_state('Xy');

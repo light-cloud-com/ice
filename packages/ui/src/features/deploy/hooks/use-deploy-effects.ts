@@ -49,9 +49,9 @@ import {
   type DeployResourceResult,
   type DeployState,
 } from '../../../store/slices/deploy-slice';
-import type { Card } from '../../../store/slices/cards-slice';
 import { PROVIDER_REGIONS, detectDominantProvider } from '../utils/provider-regions';
 import type { AppDispatch } from '../../../store';
+import type { Card } from '../../../store/slices/cards-slice';
 
 export interface UseDeployEffectsArgs {
   isOpen: boolean;
@@ -171,7 +171,7 @@ export function useDeployEffects(args: UseDeployEffectsArgs): UseDeployEffectsRe
           results?: { resources?: DeployResourceResult[] } | null;
         }>;
         if (cancelled) return;
-        // eslint-disable-next-line no-console -- diagnostic: helps the user verify hydrate fired
+
         console.log('[deploy-panel] hydrate fetch', {
           cardId: activeCard.id,
           historyLen: Array.isArray(history) ? history.length : 0,
@@ -185,14 +185,13 @@ export function useDeployEffects(args: UseDeployEffectsArgs): UseDeployEffectsRe
             ['success', 'partial', 'failed', 'cancelled'].includes(d.status),
         );
         if (!latest) {
-          // eslint-disable-next-line no-console
           console.log('[deploy-panel] hydrate: no terminal apply in history', {
             statuses: history.map((d) => `${d.action_type}:${d.status}`),
           });
           return;
         }
         const resources = Array.isArray(latest.results?.resources) ? latest.results!.resources : [];
-        // eslint-disable-next-line no-console
+
         console.log('[deploy-panel] hydrate dispatch', {
           status: latest.status,
           resourcesLen: resources.length,
@@ -211,16 +210,16 @@ export function useDeployEffects(args: UseDeployEffectsArgs): UseDeployEffectsRe
           }),
         );
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn('[deploy-panel] hydrate failed', err);
       }
     })();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch
-    //   when the active card actually changes; deploy.status flipping to
-    //   'deploying' inside this effect would re-fetch unnecessarily.
+    // Depending on `activeCard.id` (not the whole object) is intentional —
+    // re-fire only when the active card actually changes; deploy.status
+    // flipping to 'deploying' inside this effect would re-fetch unnecessarily.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCard?.id, dispatch]);
 
   return { logEndRef };

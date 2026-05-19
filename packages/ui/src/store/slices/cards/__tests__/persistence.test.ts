@@ -14,7 +14,6 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { loadPersistedCards } from '../persistence';
 
 // Module-private in `persistence.ts`; mirrored here as test fixtures so

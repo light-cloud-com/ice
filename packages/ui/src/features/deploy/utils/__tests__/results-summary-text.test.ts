@@ -17,11 +17,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  buildResultsSummaryText,
-  summaryCounts,
-  type ResultLike,
-} from '../results-summary-text';
+import { buildResultsSummaryText, summaryCounts, type ResultLike } from '../results-summary-text';
 
 // ─── Test fixtures ──────────────────────────────────────────────────────────
 
@@ -125,9 +121,7 @@ describe('buildResultsSummaryText (header)', () => {
       makeResult({ name: 'c', success: false, duration_ms: 2000 }),
     ];
     const out = buildResultsSummaryText(results, { errorsOnly: false });
-    expect(out.split('\n')[0]).toBe(
-      'Deploy summary: 2/3 succeeded, 1 failed, 4.5s',
-    );
+    expect(out.split('\n')[0]).toBe('Deploy summary: 2/3 succeeded, 1 failed, 4.5s');
   });
 
   it('emits the errors-only header form with the failed/total ratio', () => {
@@ -137,17 +131,12 @@ describe('buildResultsSummaryText (header)', () => {
       makeResult({ name: 'c', success: false }),
     ];
     const out = buildResultsSummaryText(results, { errorsOnly: true });
-    expect(out.split('\n')[0]).toBe(
-      'Deploy errors (1 of 3 resource(s) failed)',
-    );
+    expect(out.split('\n')[0]).toBe('Deploy errors (1 of 3 resource(s) failed)');
   });
 
   it('rounds seconds with toFixed(1) — 999ms → "1.0s", 0ms → "0.0s"', () => {
     expect(
-      buildResultsSummaryText(
-        [makeResult({ success: true, duration_ms: 999 })],
-        { errorsOnly: false },
-      ).split('\n')[0],
+      buildResultsSummaryText([makeResult({ success: true, duration_ms: 999 })], { errorsOnly: false }).split('\n')[0],
     ).toBe('Deploy summary: 1/1 succeeded, 0 failed, 1.0s');
 
     expect(
@@ -162,10 +151,9 @@ describe('buildResultsSummaryText (header)', () => {
 
 describe('buildResultsSummaryText (body lines)', () => {
   it('uses ✓ (U+2713) for success rows — byte-identical glyph defended against Unicode normalization', () => {
-    const out = buildResultsSummaryText(
-      [makeResult({ name: 'svc', type: 'CloudRunService', success: true })],
-      { errorsOnly: false },
-    );
+    const out = buildResultsSummaryText([makeResult({ name: 'svc', type: 'CloudRunService', success: true })], {
+      errorsOnly: false,
+    });
     // Two assertions: `toContain` for any occurrence, and explicit codepoint
     // for the byte-equality — together they pin both the literal and the
     // intended Unicode codepoint U+2713.
@@ -176,10 +164,9 @@ describe('buildResultsSummaryText (body lines)', () => {
   });
 
   it('uses ✗ (U+2717) for failure rows — byte-identical glyph defended against Unicode normalization', () => {
-    const out = buildResultsSummaryText(
-      [makeResult({ name: 'svc', type: 'CloudRunService', success: false })],
-      { errorsOnly: false },
-    );
+    const out = buildResultsSummaryText([makeResult({ name: 'svc', type: 'CloudRunService', success: false })], {
+      errorsOnly: false,
+    });
     expect(out).toContain('✗');
     expect(out).toContain(String.fromCodePoint(0x2717));
     expect(out).not.toContain('✓');
@@ -222,10 +209,9 @@ describe('buildResultsSummaryText (body lines)', () => {
   it('OMITS the duration suffix when duration_ms === 0 (the `r.duration_ms ?` ternary treats 0 as falsy)', () => {
     // Mirrors the `r.duration_ms || 0` quirk in summaryCounts and the
     // `r.duration_ms ? ` ternary in the body — both are intentional.
-    const out = buildResultsSummaryText(
-      [makeResult({ name: 'svc', success: true, duration_ms: 0 })],
-      { errorsOnly: false },
-    );
+    const out = buildResultsSummaryText([makeResult({ name: 'svc', success: true, duration_ms: 0 })], {
+      errorsOnly: false,
+    });
     const bodyLines = out.split('\n').slice(2);
     expect(bodyLines).toEqual(['✓ CloudRunService svc [create]']);
   });
@@ -242,10 +228,7 @@ describe('buildResultsSummaryText (body lines)', () => {
       { errorsOnly: false },
     );
     const bodyLines = out.split('\n').slice(2);
-    expect(bodyLines).toEqual([
-      '✗ CloudRunService svc [create]',
-      '  error: permission denied',
-    ]);
+    expect(bodyLines).toEqual(['✗ CloudRunService svc [create]', '  error: permission denied']);
   });
 
   it('emits an indented "  resource: ..." line below the row when provider_id is present', () => {
@@ -260,10 +243,7 @@ describe('buildResultsSummaryText (body lines)', () => {
       { errorsOnly: false },
     );
     const bodyLines = out.split('\n').slice(2);
-    expect(bodyLines).toEqual([
-      '✓ CloudRunService svc [create]',
-      '  resource: projects/x/services/svc',
-    ]);
+    expect(bodyLines).toEqual(['✓ CloudRunService svc [create]', '  resource: projects/x/services/svc']);
   });
 
   it('emits BOTH error and resource indent lines (in that order) when both are present', () => {
@@ -304,11 +284,7 @@ describe('buildResultsSummaryText (errorsOnly filter)', () => {
     ];
     const out = buildResultsSummaryText(results, { errorsOnly: true });
     const bodyLines = out.split('\n').slice(2);
-    expect(bodyLines).toEqual([
-      '✗ CloudRunService bad [create] (2.0s)',
-      '  error: boom',
-      '  resource: p/bad',
-    ]);
+    expect(bodyLines).toEqual(['✗ CloudRunService bad [create] (2.0s)', '  error: boom', '  resource: p/bad']);
     // Negative: no successful row name should appear in the body.
     expect(out).not.toContain('ok-1');
     expect(out).not.toContain('ok-2');
@@ -328,15 +304,11 @@ describe('buildResultsSummaryText (errorsOnly filter)', () => {
 
 describe('buildResultsSummaryText (edge cases + joiner)', () => {
   it('emits the full-summary header + blank line for an empty results array', () => {
-    expect(buildResultsSummaryText([], { errorsOnly: false })).toBe(
-      'Deploy summary: 0/0 succeeded, 0 failed, 0.0s\n',
-    );
+    expect(buildResultsSummaryText([], { errorsOnly: false })).toBe('Deploy summary: 0/0 succeeded, 0 failed, 0.0s\n');
   });
 
   it('emits the errors-only header + blank line for an empty results array', () => {
-    expect(buildResultsSummaryText([], { errorsOnly: true })).toBe(
-      'Deploy errors (0 of 0 resource(s) failed)\n',
-    );
+    expect(buildResultsSummaryText([], { errorsOnly: true })).toBe('Deploy errors (0 of 0 resource(s) failed)\n');
   });
 
   it('joins lines with "\\n" (LF) — never "\\r\\n" (CRLF)', () => {

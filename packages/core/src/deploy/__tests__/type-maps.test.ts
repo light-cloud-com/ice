@@ -11,13 +11,7 @@
  *     to GCP). The default returns `{}` per the original switch statement.
  */
 import { describe, it, expect } from 'vitest';
-import {
-  GCP_TYPE_MAP,
-  AWS_TYPE_MAP,
-  AZURE_TYPE_MAP,
-  DESIGN_ONLY_PROVIDERS,
-  get_type_map,
-} from '../type-maps';
+import { GCP_TYPE_MAP, AWS_TYPE_MAP, AZURE_TYPE_MAP, DESIGN_ONLY_PROVIDERS, get_type_map } from '../type-maps';
 import type { DeployProvider } from '../card-translator';
 
 describe('GCP_TYPE_MAP', () => {
@@ -134,11 +128,7 @@ describe('DESIGN_ONLY_PROVIDERS', () => {
   });
 
   it('lists alibaba, digitalocean, and kubernetes', () => {
-    expect([...DESIGN_ONLY_PROVIDERS].sort()).toEqual([
-      'alibaba',
-      'digitalocean',
-      'kubernetes',
-    ]);
+    expect([...DESIGN_ONLY_PROVIDERS].sort()).toEqual(['alibaba', 'digitalocean', 'kubernetes']);
   });
 
   it('has(alibaba) → true', () => {

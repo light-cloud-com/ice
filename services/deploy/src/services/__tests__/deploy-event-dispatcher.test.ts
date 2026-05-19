@@ -38,13 +38,9 @@ vi.mock('../deploy-locks', () => ({
   updateDeploySnapshotNode: vi.fn(),
 }));
 
-import {
-  emitDeployEvent,
-  emitLog,
-  emitDestroyNodeStatus,
-} from '../deploy-event-dispatcher';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import * as iceShared from '@ice/shared';
+import { emitDeployEvent, emitLog, emitDestroyNodeStatus } from '../deploy-event-dispatcher';
 import * as deployEventLog from '../deploy-event-log';
 import * as deployLocks from '../deploy-locks';
 
@@ -289,9 +285,7 @@ describe('deploy-event-dispatcher', () => {
       emitDeployEvent('card-z', event);
 
       expect(logSpy).toHaveBeenCalledTimes(1);
-      expect(logSpy).toHaveBeenCalledWith(
-        '[deploy] emit cardId=card-z type=node_status seq=11 detail=api → applying',
-      );
+      expect(logSpy).toHaveBeenCalledWith('[deploy] emit cardId=card-z type=node_status seq=11 detail=api → applying');
     });
   });
 
@@ -400,11 +394,7 @@ describe('deploy-event-dispatcher', () => {
         });
 
         expect(updateDeploySnapshotNodeMock).toHaveBeenCalledTimes(1);
-        expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith(
-          'card-1',
-          'canvas-7',
-          overlayStatus,
-        );
+        expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith('card-1', 'canvas-7', overlayStatus);
       }
     });
 
@@ -421,12 +411,7 @@ describe('deploy-event-dispatcher', () => {
       expect(nextDeploySeqMock).toHaveBeenCalledWith('card-1');
       const [, forwardedEvent] = emitDeployNodeStatusMock.mock.calls[0] as [string, any];
       expect(forwardedEvent.seq).toBe(55);
-      expect(recordDeployEventMock).toHaveBeenCalledWith(
-        'card-1',
-        55,
-        'node_status',
-        forwardedEvent,
-      );
+      expect(recordDeployEventMock).toHaveBeenCalledWith('card-1', 55, 'node_status', forwardedEvent);
     });
   });
 });

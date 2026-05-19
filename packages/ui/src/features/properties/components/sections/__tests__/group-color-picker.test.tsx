@@ -14,21 +14,15 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
-import { GroupColorPicker } from '../group-color-picker';
 import { GROUP_COLOR_PRESETS } from '../../../../../config/color-palette';
+import { GroupColorPicker } from '../group-color-picker';
 
 // ─── Tree-walker (same shape as rf-props-6/9/10) ────────────────────────────
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -42,10 +36,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -105,12 +96,14 @@ interface ResetButtonProps {
   className: string;
 }
 
-const renderPicker = (overrides: {
-  color?: string;
-  opacity?: number;
-  onChange?: (c: string) => void;
-  onOpacityChange?: (o: number) => void;
-} = {}): React.ReactElement => {
+const renderPicker = (
+  overrides: {
+    color?: string;
+    opacity?: number;
+    onChange?: (c: string) => void;
+    onOpacityChange?: (o: number) => void;
+  } = {},
+): React.ReactElement => {
   const props = {
     color: overrides.color ?? '#3b82f6',
     opacity: overrides.opacity ?? 0.1,
@@ -135,8 +128,7 @@ const swatchButtons = (tree: React.ReactNode): React.ReactElement[] => {
 const sliderInput = (tree: React.ReactNode): React.ReactElement => {
   const inputs = findByPredicate(
     tree,
-    (el) =>
-      el.type === 'input' && (el.props as Partial<SliderProps>).type === 'range',
+    (el) => el.type === 'input' && (el.props as Partial<SliderProps>).type === 'range',
   );
   expect(inputs).toHaveLength(1);
   return inputs[0];
@@ -146,9 +138,7 @@ const resetButton = (tree: React.ReactNode): React.ReactElement => {
   // Reset button: no `title`, no `backgroundColor` style (i.e. not a swatch).
   const btns = findByPredicate(
     tree,
-    (el) =>
-      el.type === 'button' &&
-      typeof (el.props as Partial<SwatchProps>).title !== 'string',
+    (el) => el.type === 'button' && typeof (el.props as Partial<SwatchProps>).title !== 'string',
   );
   expect(btns).toHaveLength(1);
   return btns[0];
@@ -242,7 +232,7 @@ describe('GroupColorPicker', () => {
       (el) =>
         el.type === 'span' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className.includes('font-mono')),
+        (el.props as { className: string }).className.includes('font-mono'),
     )[0];
     expect(badge).toBeDefined();
     const children = (badge.props as { children: React.ReactNode }).children as unknown[];

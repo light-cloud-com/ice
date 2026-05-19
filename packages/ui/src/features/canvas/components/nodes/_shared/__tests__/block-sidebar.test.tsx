@@ -43,8 +43,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
 const renderInner = (props: React.ComponentProps<typeof BlockSidebar>): React.ReactElement => {
   return BlockSidebar(props) as React.ReactElement;
@@ -81,9 +80,7 @@ describe('BlockSidebar', () => {
       iceType: 'Compute.Function',
       accent: '#22c55e',
     });
-    const iconEls = [...walk(tree)].filter(
-      (el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'icon',
-    );
+    const iconEls = [...walk(tree)].filter((el) => (el.props as { 'data-stub'?: string })['data-stub'] === 'icon');
     expect(iconEls).toHaveLength(1);
   });
 
@@ -198,11 +195,9 @@ describe('BlockSidebar', () => {
     });
     const els = [...walk(tree)];
     // Last <div> is the flex-fill bottom strip; its style.flex = 1.
-    const bottom = els.reverse().find(
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: Record<string, string | number> }).style?.flex === 1,
-    )!;
+    const bottom = els
+      .reverse()
+      .find((el) => el.type === 'div' && (el.props as { style?: Record<string, string | number> }).style?.flex === 1)!;
     const style = (bottom.props as { style: Record<string, string | undefined> }).style;
     expect(style.borderTop).toBeUndefined();
   });
@@ -216,11 +211,9 @@ describe('BlockSidebar', () => {
       accent: '#000',
     });
     const els = [...walk(tree)];
-    const bottom = els.reverse().find(
-      (el) =>
-        el.type === 'div' &&
-        (el.props as { style?: Record<string, string | number> }).style?.flex === 1,
-    )!;
+    const bottom = els
+      .reverse()
+      .find((el) => el.type === 'div' && (el.props as { style?: Record<string, string | number> }).style?.flex === 1)!;
     const style = (bottom.props as { style: Record<string, string | undefined> }).style;
     expect(style.borderTop).toBe('1px solid var(--ice-border-subtle, var(--ice-border))');
   });

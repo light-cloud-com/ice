@@ -28,7 +28,10 @@ export function extract_cloud_run_properties(data: Record<string, unknown>, regi
   };
 }
 
-export function extract_cloud_run_job_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_cloud_run_job_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   return {
     region,
     image: (data.image as string) || '',
@@ -43,7 +46,10 @@ export function extract_cloud_run_job_properties(data: Record<string, unknown>, 
   };
 }
 
-export function extract_cloud_functions_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_cloud_functions_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   return {
     region,
     runtime: normalize_runtime(data.runtime as string) || 'nodejs20',
@@ -56,7 +62,10 @@ export function extract_cloud_functions_properties(data: Record<string, unknown>
   };
 }
 
-export function extract_cloud_scheduler_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_cloud_scheduler_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   const schedule_map: Record<string, string> = {
     daily: '0 0 * * *',
     hourly: '0 * * * *',

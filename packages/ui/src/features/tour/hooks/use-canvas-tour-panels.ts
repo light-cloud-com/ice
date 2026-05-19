@@ -17,7 +17,6 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-
 import type { AppDispatch, RootState } from '../../../store';
 import { toSlug } from '../../../shared/utils/slug';
 import {

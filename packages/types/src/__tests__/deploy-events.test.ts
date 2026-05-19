@@ -247,12 +247,7 @@ describe('isTerminalNodeStatus', () => {
 
 describe('TERMINAL_NODE_STATUSES', () => {
   it('lists the four terminal statuses in the documented order', () => {
-    expect(TERMINAL_NODE_STATUSES).toEqual([
-      'succeeded',
-      'failed',
-      'skipped',
-      'cancelled-due-to-dep',
-    ]);
+    expect(TERMINAL_NODE_STATUSES).toEqual(['succeeded', 'failed', 'skipped', 'cancelled-due-to-dep']);
   });
 });
 

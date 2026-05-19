@@ -13,10 +13,10 @@
  * verified by re-rendering the Probe and re-capturing the result.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -63,13 +63,11 @@ import type { UseRenameStateResult } from '../use-rename-state';
 // `getState()` directly).
 
 const makeStore = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialCards = cardsReducer(undefined as any, { type: '@@INIT' });
   return configureStore({
     reducer: { cards: cardsReducer },
     preloadedState: { cards: initialCards },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 };
 

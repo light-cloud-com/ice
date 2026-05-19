@@ -62,8 +62,7 @@ vi.mock('react', async (orig) => {
 
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({
-    t: (k: string, vars?: Record<string, string>) =>
-      vars ? `${k}:${JSON.stringify(vars)}` : k,
+    t: (k: string, vars?: Record<string, string>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),
   }),
 }));
 
@@ -192,10 +191,7 @@ describe('ProviderConnectModal — header + dialog plumbing', () => {
 
   it('renders the icon image with the providerIcon URL', () => {
     const tree = render();
-    const img = findFirst(
-      tree,
-      (el) => el.type === 'img' && el.props.src === 'https://example/aws.svg',
-    );
+    const img = findFirst(tree, (el) => el.type === 'img' && el.props.src === 'https://example/aws.svg');
     expect(img).toBeDefined();
   });
 
@@ -363,9 +359,7 @@ describe('ProviderConnectModal — connect form', () => {
   it('renders a textarea for textarea-type fields', () => {
     mocks.useStateOverrides = { [SLOT_LOADING]: false };
     const tree = render({
-      fields: [
-        { name: 'sa_key', label: 'Service Account Key', type: 'textarea', required: true },
-      ],
+      fields: [{ name: 'sa_key', label: 'Service Account Key', type: 'textarea', required: true }],
     });
     expect(findFirst(tree, (el) => el.type === 'textarea')).toBeDefined();
     expect(findAll(tree, (el) => el.type === 'input').length).toBe(0);
@@ -414,9 +408,7 @@ describe('ProviderConnectModal — connect form', () => {
   it('typing in a textarea updates formValues', () => {
     mocks.useStateOverrides = { [SLOT_LOADING]: false, [SLOT_FORM]: {} };
     const tree = render({
-      fields: [
-        { name: 'k', label: 'Key', type: 'textarea', required: false },
-      ],
+      fields: [{ name: 'k', label: 'Key', type: 'textarea', required: false }],
     });
     const ta = findFirst(tree, (el) => el.type === 'textarea')!;
     (ta.props.onChange as (e: { target: { value: string } }) => void)({
@@ -544,7 +536,9 @@ describe('ProviderConnectModal — handleConnect', () => {
     await (connectBtn.props.onClick as () => Promise<void>)();
     expect(mocks.setters[SLOT_CONNECTED]).toHaveBeenCalledWith(true);
     expect(mocks.setters[SLOT_PROJECT_ID]).toHaveBeenCalledWith('p-99');
-    expect(mocks.setters[SLOT_SUCCESS]).toHaveBeenCalledWith(expect.stringContaining('providerConnect.success.connected'));
+    expect(mocks.setters[SLOT_SUCCESS]).toHaveBeenCalledWith(
+      expect.stringContaining('providerConnect.success.connected'),
+    );
   });
 
   it('on success: falls back to formValues.project_id when result.project_id is missing', async () => {
@@ -733,7 +727,9 @@ describe('ProviderConnectModal — GCP-specific UI', () => {
     mocks.gcpOAuth.connect();
     // After the synchronous setters fire:
     expect(mocks.setters[SLOT_CONNECTED]).toHaveBeenCalledWith(true);
-    expect(mocks.setters[SLOT_SUCCESS]).toHaveBeenCalledWith(expect.stringContaining('providerConnect.success.connectedViaGoogle'));
+    expect(mocks.setters[SLOT_SUCCESS]).toHaveBeenCalledWith(
+      expect.stringContaining('providerConnect.success.connectedViaGoogle'),
+    );
     // The async getCredentials call resolves on a microtask:
     await new Promise<void>((r) => setTimeout(r, 0));
     expect(mocks.api.getCredentials).toHaveBeenCalledWith('gcp');

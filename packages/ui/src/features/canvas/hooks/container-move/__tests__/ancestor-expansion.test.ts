@@ -12,14 +12,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  expandAncestorOnce,
-  walkAncestorsAndExpand,
-} from '../ancestor-expansion';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../../utils/container-bounds';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../../utils/container-bounds';
+import { expandAncestorOnce, walkAncestorsAndExpand } from '../ancestor-expansion';
 import type { CanvasNode } from '../../../components/types';
 import type { PositionUpdate, SizeUpdate } from '../types';
 
@@ -38,7 +32,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 // ─── expandAncestorOnce — single-step ────────────────────────────────────────
 
@@ -83,12 +77,8 @@ describe('expandAncestorOnce — happy path (single-step expansion)', () => {
     expect(result!.px).toBe(100 - (50 + PAD));
     expect(result!.pw).toBe(400 + 50 + PAD);
 
-    expect(positionUpdates).toEqual([
-      { id: 'p', position: { x: 100 - (50 + PAD), y: 100 } },
-    ]);
-    expect(sizeUpdates).toEqual([
-      { id: 'p', width: 400 + 50 + PAD, height: 300 },
-    ]);
+    expect(positionUpdates).toEqual([{ id: 'p', position: { x: 100 - (50 + PAD), y: 100 } }]);
+    expect(sizeUpdates).toEqual([{ id: 'p', width: 400 + 50 + PAD, height: 300 }]);
   });
 
   it('top overflow → shifts py up by PAD+HEADER, grows ph', () => {
@@ -244,7 +234,7 @@ describe('expandAncestorOnce — MIN_CONTAINER floor', () => {
 });
 
 describe('expandAncestorOnce — siblingBoundsOverride', () => {
-  it('substitutes the override sibling\'s bounds in the bbox computation', () => {
+  it("substitutes the override sibling's bounds in the bbox computation", () => {
     const parent = mkNode({ id: 'p', x: 0, y: 0, width: 400, height: 300 });
     const moving = mkNode({ id: 'm', x: 100, y: 100, width: 50, height: 30, parentId: 'p' });
     const visibleNodes = [parent, moving];
@@ -363,9 +353,7 @@ describe('walkAncestorsAndExpand — multi-level walks', () => {
 
     // Pre-seed positionUpdates as if handleNodeMove pushed the child move
     // (from x=200 to x=600 say) — overflow chain forces parent + gp grow.
-    const positionUpdates: PositionUpdate[] = [
-      { id: 'c', position: { x: 600, y: 200 } },
-    ];
+    const positionUpdates: PositionUpdate[] = [{ id: 'c', position: { x: 600, y: 200 } }];
     const sizeUpdates: SizeUpdate[] = [];
 
     walkAncestorsAndExpand({

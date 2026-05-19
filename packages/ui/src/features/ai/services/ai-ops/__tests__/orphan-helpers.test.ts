@@ -10,8 +10,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { connectOrphanHelpers } from '../orphan-helpers';
-import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../../store';
+import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 
 function makeCard(nodes: CardNode[], edges: Card['edges'] = []): Card {
   return {
@@ -47,18 +47,14 @@ function makeDispatch() {
 describe('rf-aiop-6 connectOrphanHelpers', () => {
   it('returns 0 when no backends exist', () => {
     const { dispatch, calls } = makeDispatch();
-    const card = makeCard([
-      makeNode({ id: 'helper', data: { iceType: 'Security.IAM' } }),
-    ]);
+    const card = makeCard([makeNode({ id: 'helper', data: { iceType: 'Security.IAM' } })]);
     expect(connectOrphanHelpers(dispatch, card)).toBe(0);
     expect(calls).toEqual([]);
   });
 
   it('returns 0 when no orphan helpers exist', () => {
     const { dispatch, calls } = makeDispatch();
-    const card = makeCard([
-      makeNode({ id: 'backend', data: { iceType: 'Compute.Container' } }),
-    ]);
+    const card = makeCard([makeNode({ id: 'backend', data: { iceType: 'Compute.Container' } })]);
     expect(connectOrphanHelpers(dispatch, card)).toBe(0);
     expect(calls).toEqual([]);
   });

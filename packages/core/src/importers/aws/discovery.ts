@@ -13,12 +13,7 @@
  * load-bearing — same reason as in `sdk-init.ts`.
  */
 
-import {
-  extract_name_from_arn,
-  extract_account_from_arn,
-  extract_region_from_arn,
-  parse_tags,
-} from './arn-helpers';
+import { extract_name_from_arn, extract_account_from_arn, extract_region_from_arn, parse_tags } from './arn-helpers';
 import type { AWSSdk } from './sdk-init';
 import type { AWSImportOptions, AWSResource } from './types';
 
@@ -84,10 +79,7 @@ export function map_config_result(result: string): AWSResource | null {
  * Throws if Resource Explorer isn't enabled in the account; the caller
  * (in `aws-importer.ts`) catches that and falls back to Config.
  */
-export async function discover_with_resource_explorer(
-  sdk: AWSSdk,
-  _opts: ResolvedOptions,
-): Promise<AWSResource[]> {
+export async function discover_with_resource_explorer(sdk: AWSSdk, _opts: ResolvedOptions): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 
   const re_module_name = '@aws-sdk/client-resource-explorer-2';
@@ -123,10 +115,7 @@ export async function discover_with_resource_explorer(
  * result is mapped via `map_config_result`; null returns (JSON parse
  * failures) are silently skipped.
  */
-export async function discover_with_config(
-  sdk: AWSSdk,
-  _opts: ResolvedOptions,
-): Promise<AWSResource[]> {
+export async function discover_with_config(sdk: AWSSdk, _opts: ResolvedOptions): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 
   const config_module_name = '@aws-sdk/client-config-service';

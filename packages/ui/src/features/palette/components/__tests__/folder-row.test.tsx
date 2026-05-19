@@ -13,7 +13,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { FolderRow, type FolderRowProps } from '../folder-row';
 import type { Project, ProjectFolder } from '../../../../store/slices/projects-slice';
 
@@ -78,10 +77,7 @@ const baseProps = (overrides: Partial<FolderRowProps> = {}): FolderRowProps => (
 const render = (overrides: Partial<FolderRowProps> = {}): React.ReactElement =>
   (FolderRow as unknown as Fn)(baseProps(overrides));
 
-function findAll(
-  el: unknown,
-  pred: (e: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findAll(el: unknown, pred: (e: React.ReactElement) => boolean): React.ReactElement[] {
   if (el == null || typeof el !== 'object') return [];
   // Arrays of React nodes (e.g. children inside a Fragment) — recurse into each.
   if (Array.isArray(el)) {
@@ -100,9 +96,7 @@ function findAll(
   return out;
 }
 
-const collectText = (
-  el: React.ReactElement | string | number | boolean | null | undefined,
-): string => {
+const collectText = (el: React.ReactElement | string | number | boolean | null | undefined): string => {
   if (el == null || typeof el === 'boolean') return '';
   if (typeof el === 'string' || typeof el === 'number') return String(el);
   const children = (el as React.ReactElement).props?.children;
@@ -110,8 +104,7 @@ const collectText = (
   return arr.map((c) => collectText(c)).join('');
 };
 
-const classOf = (el: React.ReactElement): string =>
-  (el.props?.className as string | undefined) ?? '';
+const classOf = (el: React.ReactElement): string => (el.props?.className as string | undefined) ?? '';
 
 const getHeaderRow = (tree: React.ReactElement): React.ReactElement => {
   const arr = Array.isArray(tree.props?.children) ? tree.props.children : [tree.props.children];
@@ -234,8 +227,9 @@ describe('FolderRow — header click + context menu', () => {
   it('More button calls onContextMenu with stopPropagation', () => {
     const onContextMenu = vi.fn();
     const tree = render({ onContextMenu });
-    const moreButton = findAll(tree, (el) =>
-      el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
+    const moreButton = findAll(
+      tree,
+      (el) => el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
     )[0];
     expect(moreButton).toBeDefined();
     const stopPropagation = vi.fn();
@@ -266,8 +260,9 @@ describe('FolderRow — edit mode', () => {
     const tree = render({ editingId: 'f-root' });
     const badges = findAll(tree, (el) => classOf(el).includes('tabular-nums'));
     expect(badges).toHaveLength(0);
-    const moreButtons = findAll(tree, (el) =>
-      el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
+    const moreButtons = findAll(
+      tree,
+      (el) => el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
     );
     expect(moreButtons).toHaveLength(0);
   });

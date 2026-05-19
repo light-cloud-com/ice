@@ -5,6 +5,14 @@
  * Handles ID remapping, blueprint resolution, validation, and undo snapshots.
  */
 
+import { autoResizeContainers } from './ai-ops/auto-resize';
+import { resolveBlueprint } from './ai-ops/blueprint-resolver';
+import { generateNodeId, generateEdgeId, resolveId, nodeExists } from './ai-ops/id-utils';
+import { pickNodeDefaults } from './ai-ops/node-defaults';
+import { connectOrphanHelpers } from './ai-ops/orphan-helpers';
+import { findPosition, findChildPosition } from './ai-ops/position-finder';
+import { validateReparent } from './ai-ops/reparent-validator';
+import { MAX_OPS, NODE_WIDTH, NODE_HEIGHT } from './ai-ops/types';
 import { store } from '../../../store';
 import {
   addNodeToCard,
@@ -19,23 +27,15 @@ import {
   autoOrganizeCard,
   selectActiveCard,
 } from '../../../store/slices/cards-slice';
+import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 import type { AppDispatch } from '../../../store';
 import type { Card } from '../../../store/slices/cards-slice';
 import type { AiCanvasOp } from '@ice/types';
-import { MAX_OPS, NODE_WIDTH, NODE_HEIGHT } from './ai-ops/types';
-import { generateNodeId, generateEdgeId, resolveId, nodeExists } from './ai-ops/id-utils';
-import { findPosition, findChildPosition } from './ai-ops/position-finder';
-import { resolveBlueprint } from './ai-ops/blueprint-resolver';
-import { autoResizeContainers } from './ai-ops/auto-resize';
-import { pickNodeDefaults } from './ai-ops/node-defaults';
-import { connectOrphanHelpers } from './ai-ops/orphan-helpers';
-import { validateReparent } from './ai-ops/reparent-validator';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
 // =============================================================================
 
-import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 export type { SkippedOp, ExecutionResult } from './ai-ops/types';
 
 // =============================================================================

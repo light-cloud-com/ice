@@ -33,7 +33,6 @@
  *     `useCanvasInteractions` test pattern.
  */
 import { useEffect, useRef, useState } from 'react';
-
 import type { SerializableRect } from '../utils/target-rect';
 
 /** Public resolver phases. `'idle'` is also the disabled state. */

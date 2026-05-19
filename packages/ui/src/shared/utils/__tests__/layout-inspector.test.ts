@@ -14,13 +14,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import {
-  inspectLayout,
-  installInspector,
-  updateInspectorState,
-  type InspectResult,
-} from '../layout-inspector';
+import { inspectLayout, installInspector, updateInspectorState, type InspectResult } from '../layout-inspector';
 
 // ─── Fixture helpers ────────────────────────────────────────────────────────
 
@@ -180,10 +174,7 @@ describe('inspectLayout — node table', () => {
       {
         zoom: 1,
         lod: 3,
-        nodes: [
-          n({ id: 'root', type: 'container', label: longLabel }),
-          n({ id: 'leaf', parentId: 'root' }),
-        ],
+        nodes: [n({ id: 'root', type: 'container', label: longLabel }), n({ id: 'leaf', parentId: 'root' })],
         edges: [],
       },
       { silent: true },
@@ -200,10 +191,7 @@ describe('inspectLayout — node table', () => {
       {
         zoom: 1,
         lod: 3,
-        nodes: [
-          n({ id: 'p-id-only', type: 'container', label: '' }),
-          n({ id: 'leaf', parentId: 'p-id-only' }),
-        ],
+        nodes: [n({ id: 'p-id-only', type: 'container', label: '' }), n({ id: 'leaf', parentId: 'p-id-only' })],
         edges: [],
       },
       { silent: true },
@@ -618,9 +606,9 @@ describe('inspectLayout — non-silent path drives logResult', () => {
       ],
       edges: [],
     });
-    const overflowMessages = logSpy.mock.calls.flat().filter(
-      (msg: unknown) => typeof msg === 'string' && msg.includes('overflows'),
-    );
+    const overflowMessages = logSpy.mock.calls
+      .flat()
+      .filter((msg: unknown) => typeof msg === 'string' && msg.includes('overflows'));
     expect(overflowMessages.length).toBeGreaterThanOrEqual(4); // 4 sides
   });
 
@@ -634,9 +622,9 @@ describe('inspectLayout — non-silent path drives logResult', () => {
       ],
       edges: [],
     });
-    const collisionLogs = logSpy.mock.calls.flat().filter(
-      (msg: unknown) => typeof msg === 'string' && msg.includes('COLLISIONS'),
-    );
+    const collisionLogs = logSpy.mock.calls
+      .flat()
+      .filter((msg: unknown) => typeof msg === 'string' && msg.includes('COLLISIONS'));
     expect(collisionLogs.length).toBe(1);
   });
 
@@ -650,9 +638,9 @@ describe('inspectLayout — non-silent path drives logResult', () => {
       ],
       edges: [],
     });
-    const pcLogs = logSpy.mock.calls.flat().filter(
-      (msg: unknown) => typeof msg === 'string' && msg.includes('parent-child overlaps'),
-    );
+    const pcLogs = logSpy.mock.calls
+      .flat()
+      .filter((msg: unknown) => typeof msg === 'string' && msg.includes('parent-child overlaps'));
     expect(pcLogs.length).toBe(1);
   });
 

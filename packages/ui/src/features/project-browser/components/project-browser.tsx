@@ -13,14 +13,14 @@ import { Folder, FolderOpen, Loader2, FolderPlus, FilePlus } from 'lucide-react'
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { TreeItem } from './tree-item';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { openDialog } from '../../../store/slices/ui-slice';
-import type { RootState, AppDispatch } from '../../../store';
 import { useProjectBrowserActions } from '../hooks/use-project-browser-actions';
 import { useProjectBrowserData } from '../hooks/use-project-browser-data';
-import { TreeItem } from './tree-item';
+import type { RootState, AppDispatch } from '../../../store';
 
 export function ProjectBrowser() {
   const { t } = useTranslation();
@@ -33,32 +33,17 @@ export function ProjectBrowser() {
   const activeNodeId = resolved.id;
   const activeSubpage = resolved.type === 'project' ? resolved.subpage || 'canvas' : null;
 
-  const {
-    items,
-    flatFolders,
-    loading,
-    expanded,
-    setExpanded,
-    search,
-    setSearch,
-    fetchProjects,
-    toggleExpand,
-  } = useProjectBrowserData(selectedOrg?.id);
+  const { items, flatFolders, loading, expanded, setExpanded, search, setSearch, fetchProjects, toggleExpand } =
+    useProjectBrowserData(selectedOrg?.id);
 
-  const {
-    handleCreate,
-    handleRename,
-    handleDelete,
-    handleMove,
-    handleNavigateSubpage,
-    handleOpen,
-  } = useProjectBrowserActions({
-    items,
-    flatFolders,
-    fetchProjects,
-    setExpanded,
-    selectedOrg,
-  });
+  const { handleCreate, handleRename, handleDelete, handleMove, handleNavigateSubpage, handleOpen } =
+    useProjectBrowserActions({
+      items,
+      flatFolders,
+      fetchProjects,
+      setExpanded,
+      selectedOrg,
+    });
 
   return (
     <div className="flex flex-col h-full">

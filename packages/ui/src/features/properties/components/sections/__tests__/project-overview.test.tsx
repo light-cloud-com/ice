@@ -47,8 +47,7 @@ const mocks = vi.hoisted(() => ({
   toggleProperties: vi.fn(() => ({ type: 'ui/toggleProperties' })),
   // Canvas pattern analyzer — default empty (overridden per-test).
   analyzeCanvasPatternsSpy: vi.fn(
-    (_nodes: unknown, _edges: unknown) =>
-      [] as Array<{ nodeId: string; message: string; type: 'hint' | 'warning' }>,
+    (_nodes: unknown, _edges: unknown) => [] as Array<{ nodeId: string; message: string; type: 'hint' | 'warning' }>,
   ),
 }));
 
@@ -95,12 +94,7 @@ import type { Card, CardNode, CardEdge } from '../../../../../store/slices/cards
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -114,10 +108,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -153,11 +144,7 @@ function collectText(tree: React.ReactNode): string {
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
-const makeNode = (
-  id: string,
-  data: Record<string, unknown> = {},
-  overrides: Partial<CardNode> = {},
-): CardNode => ({
+const makeNode = (id: string, data: Record<string, unknown> = {}, overrides: Partial<CardNode> = {}): CardNode => ({
   id,
   type: 'block',
   position: { x: 0, y: 0 },
@@ -185,9 +172,7 @@ const makeCard = (overrides: Partial<Card> = {}): Card => ({
   ...overrides,
 });
 
-const renderSection = (
-  props: { activeCard?: Card | null } = {},
-): React.ReactElement => {
+const renderSection = (props: { activeCard?: Card | null } = {}): React.ReactElement => {
   // Distinguish "no override" from "explicit null" with hasOwnProperty —
   // see rf-props-21 `nullish-coalesce-default-in-test-helper-silently-clobbers-explicit-null-overrides`.
   const card = Object.prototype.hasOwnProperty.call(props, 'activeCard')
@@ -238,10 +223,7 @@ describe('ProjectOverview', () => {
   it('renders node count and connection count from activeCard.nodes/edges', () => {
     const card = makeCard({
       nodes: [makeNode('a'), makeNode('b'), makeNode('c')],
-      edges: [
-        makeEdge({ id: 'e-1' }),
-        makeEdge({ id: 'e-2' }),
-      ],
+      edges: [makeEdge({ id: 'e-1' }), makeEdge({ id: 'e-2' })],
     });
     const tree = renderSection({ activeCard: card });
     const text = collectText(tree);
@@ -340,10 +322,7 @@ describe('ProjectOverview', () => {
     const card = makeCard({
       // With the local copy this combined to 0 (`$0.50` regex no-match → 0,
       // `$5` → 5). Canonical sums 0.5 + 5 = 5.5 → '~$6/mo' (rounded).
-      nodes: [
-        makeNode('svc-1', { estimatedCost: '$0.50' }),
-        makeNode('svc-2', { estimatedCost: '$5' }),
-      ],
+      nodes: [makeNode('svc-1', { estimatedCost: '$0.50' }), makeNode('svc-2', { estimatedCost: '$5' })],
     });
     const tree = renderSection({ activeCard: card });
     const text = collectText(tree);
@@ -357,10 +336,7 @@ describe('ProjectOverview', () => {
     // callsite means `formatCost(0)` is never invoked, so the canonical
     // `'Free'` return value is not observable in the rendered output.
     const card = makeCard({
-      nodes: [
-        makeNode('svc-1', { estimatedCost: 'Free' }),
-        makeNode('svc-2', { estimatedCost: '' }),
-      ],
+      nodes: [makeNode('svc-1', { estimatedCost: 'Free' }), makeNode('svc-2', { estimatedCost: '' })],
     });
     const tree = renderSection({ activeCard: card });
     const text = collectText(tree);
@@ -391,9 +367,7 @@ describe('ProjectOverview', () => {
     const headers = findByType(tree, mocks.MockPanelHeader);
     expect((headers[0].props as { title: string }).title).toBe('t:properties.title');
     const sections = findByType(tree, mocks.MockSection);
-    expect((sections[0].props as { title: string }).title).toBe(
-      't:properties.overview.title',
-    );
+    expect((sections[0].props as { title: string }).title).toBe('t:properties.overview.title');
   });
 
   // ── Select-hint ──────────────────────────────────────────────────────────
@@ -460,13 +434,8 @@ describe('ProjectOverview', () => {
   it('passes node id+data and edge source+target shape to analyzeCanvasPatterns', () => {
     mocks.analyzeCanvasPatternsSpy.mockReturnValue([]);
     const card = makeCard({
-      nodes: [
-        makeNode('n-1', { iceType: 'Compute.Service' }),
-        makeNode('n-2', { iceType: 'Database.PostgreSQL' }),
-      ],
-      edges: [
-        makeEdge({ id: 'e-1', source: 'n-1', target: 'n-2' }),
-      ],
+      nodes: [makeNode('n-1', { iceType: 'Compute.Service' }), makeNode('n-2', { iceType: 'Database.PostgreSQL' })],
+      edges: [makeEdge({ id: 'e-1', source: 'n-1', target: 'n-2' })],
     });
     renderSection({ activeCard: card });
     const [nodesArg, edgesArg] = mocks.analyzeCanvasPatternsSpy.mock.calls[0] as [
@@ -486,24 +455,17 @@ describe('ProjectOverview', () => {
     const tree = renderSection({ activeCard: null });
     const sections = findByType(tree, mocks.MockSection);
     expect(sections.length).toBeGreaterThanOrEqual(1);
-    expect((sections[0].props as { title: string }).title).toBe(
-      't:properties.overview.title',
-    );
+    expect((sections[0].props as { title: string }).title).toBe('t:properties.overview.title');
   });
 
   it('renders a SECOND Section for suggestions when analyzeCanvasPatterns returns entries', () => {
-    mocks.analyzeCanvasPatternsSpy.mockReturnValue([
-      { nodeId: 'a', message: 'm', type: 'hint' },
-    ]);
+    mocks.analyzeCanvasPatternsSpy.mockReturnValue([{ nodeId: 'a', message: 'm', type: 'hint' }]);
     const card = makeCard({ nodes: [makeNode('a')] });
     const tree = renderSection({ activeCard: card });
     const sections = findByType(tree, mocks.MockSection);
     expect(sections).toHaveLength(2);
     const titles = sections.map((s) => (s.props as { title: string }).title);
-    expect(titles).toEqual([
-      't:properties.overview.title',
-      't:properties.overview.suggestions',
-    ]);
+    expect(titles).toEqual(['t:properties.overview.title', 't:properties.overview.suggestions']);
   });
 
   // ── Root container shape ─────────────────────────────────────────────────

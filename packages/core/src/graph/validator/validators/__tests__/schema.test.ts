@@ -18,15 +18,16 @@ interface PropDef {
   required?: boolean;
 }
 
-const mkProvider = (schemas: Record<string, PropDef[]>): SchemaProvider => ({
-  has_schema: vi.fn((type: IceType) => Object.prototype.hasOwnProperty.call(schemas, type as string)),
-  get_schema: vi.fn(async (type: IceType) => {
-    if (Object.prototype.hasOwnProperty.call(schemas, type as string)) {
-      return { ok: true, value: { properties: schemas[type as string] } } as any;
-    }
-    return { ok: false, error: 'unknown' } as any;
-  }),
-} as any);
+const mkProvider = (schemas: Record<string, PropDef[]>): SchemaProvider =>
+  ({
+    has_schema: vi.fn((type: IceType) => Object.prototype.hasOwnProperty.call(schemas, type as string)),
+    get_schema: vi.fn(async (type: IceType) => {
+      if (Object.prototype.hasOwnProperty.call(schemas, type as string)) {
+        return { ok: true, value: { properties: schemas[type as string] } } as any;
+      }
+      return { ok: false, error: 'unknown' } as any;
+    }),
+  }) as any;
 
 // ─── TypeValidator ────────────────────────────────────────────────────────────
 

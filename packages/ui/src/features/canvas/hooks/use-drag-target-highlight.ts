@@ -96,24 +96,18 @@
 
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
-} from '../../../config/canvas-constants';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../utils/container-bounds';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../config/canvas-constants';
 import { canContain } from '../../../config/containment-rules';
-import { findSmallestContainerHit } from '../utils/drop-target';
-import { isContainerNode as isContainerNodeUtil } from '../utils/node-classification';
-import { computeCompactNodeHeight } from '../components/nodes/compact-node';
 import {
   updateCardNodePositions,
   resizeCardNode,
   updateCardNodeParent,
   type CardNode,
 } from '../../../store/slices/cards-slice';
+import { computeCompactNodeHeight } from '../components/nodes/compact-node';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../utils/container-bounds';
+import { findSmallestContainerHit } from '../utils/drop-target';
+import { isContainerNode as isContainerNodeUtil } from '../utils/node-classification';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
 
@@ -164,9 +158,7 @@ export interface UseDragTargetHighlightResult {
   handleDragEnd: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
 }
 
-export function useDragTargetHighlight(
-  args: UseDragTargetHighlightArgs,
-): UseDragTargetHighlightResult {
+export function useDragTargetHighlight(args: UseDragTargetHighlightArgs): UseDragTargetHighlightResult {
   const { visibleNodes, nodes, selectedNodes, getDescendantIds } = args;
   const dispatch = useDispatch<AppDispatch>();
 

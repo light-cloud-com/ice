@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const named = (name: string): React.FC<Record<string, unknown>> => {
@@ -27,7 +27,6 @@ vi.mock('../../_shared/connection-ports', () => ({
   ConnectionPorts: mocks.ConnectionPorts,
 }));
 
-import { vi } from 'vitest';
 import { CompactLod1 } from '../compact-lod1';
 import type { NodePipelineStatus } from '../types';
 
@@ -49,10 +48,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -61,12 +57,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderLod1 = (
-  props: Partial<React.ComponentProps<typeof CompactLod1>> = {},
-): React.ReactElement => {
-  const Inner = (CompactLod1 as unknown as {
-    type: (p: React.ComponentProps<typeof CompactLod1>) => React.ReactElement;
-  }).type;
+const renderLod1 = (props: Partial<React.ComponentProps<typeof CompactLod1>> = {}): React.ReactElement => {
+  const Inner = (
+    CompactLod1 as unknown as {
+      type: (p: React.ComponentProps<typeof CompactLod1>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof CompactLod1> = {
     nodeId: 'node-1',
     x: 100,
@@ -145,7 +141,10 @@ describe('CompactLod1 — outer <g> attributes', () => {
 
 describe('CompactLod1 — inner card geometry / colors', () => {
   const findCard = (tree: React.ReactElement): React.ReactElement | undefined =>
-    findByPredicate(tree, (el) => el.type === 'div' && (el.props as { style?: { boxSizing?: string } }).style?.boxSizing === 'border-box')[0];
+    findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { style?: { boxSizing?: string } }).style?.boxSizing === 'border-box',
+    )[0];
 
   it('inner border becomes #22c55e on valid-target', () => {
     const tree = renderLod1({ connectionDragState: 'valid-target', border: '#444' });
@@ -222,13 +221,19 @@ describe('CompactLod1 — icon source priority', () => {
 describe('CompactLod1 — label rendering', () => {
   it('renders label text inside a span', () => {
     const tree = renderLod1({ label: 'Hello' });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Hello');
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Hello',
+    );
     expect(span).toHaveLength(1);
   });
 
   it('renders empty string when label empty', () => {
     const tree = renderLod1({ label: '' });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '');
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '',
+    );
     expect(span.length).toBeGreaterThan(0);
   });
 });

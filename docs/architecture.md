@@ -36,7 +36,7 @@ flowchart LR
     ai -->|SSE| claude
 ```
 
-The **web app** is the only UI surface in development mode. The **Electron desktop app** re-uses the same web bundle with an embedded gateway inside the Electron main process — see [desktop.md](desktop.md).
+The **web app** is the only UI surface in development mode. The **Electron desktop app** re-uses the same web bundle with an embedded gateway inside the Electron main process - see [desktop.md](desktop.md).
 
 ## Monorepo layout
 
@@ -46,7 +46,7 @@ ice/
 │   ├── gateway/          Express composition of all services; routes, CORS, auth middleware
 │   └── desktop/          Electron main process, IPC, window management, auto-update
 ├── packages/
-│   ├── core/             Graph engine, schemas, deploy planner, importers — no UI, no network
+│   ├── core/             Graph engine, schemas, deploy planner, importers - no UI, no network
 │   ├── ui/               Shared React components (canvas, palette, panels, AI chat)
 │   ├── web/              Vite shell that boots the UI as a web app
 │   ├── blocks/           Cloud resource block definitions (concepts + provider-specific variants)
@@ -58,7 +58,7 @@ ice/
 │   ├── shared/           Auth middleware, crypto, Socket.IO helpers
 │   ├── constants/        Shared constants used across packages
 │   ├── ai/               AI provider abstraction (Anthropic + OpenAI-compatible)
-│   └── types/            Shared TypeScript interfaces — API contracts, DTOs, events
+│   └── types/            Shared TypeScript interfaces - API contracts, DTOs, events
 └── services/
     ├── canvas/           CanvasProject + environments CRUD
     ├── deploy/           Plan, apply, pipelines, GitHub webhooks, queue workers
@@ -103,8 +103,8 @@ sequenceDiagram
 
 The two interesting boundary crossings:
 
-1. **`translate_card_to_graph`** (`packages/core/src/deploy/card-translator.ts`) — converts the UI's "cards" (visual blocks with properties) into the core engine's provider-agnostic graph. This is where the visual representation and the deploy model actually meet.
-2. **Per-handler apply** (`packages/providers/gcp/src/handlers/*`, `packages/core/src/deploy/providers/gcp/handlers/*`) — one handler per cloud service (Cloud Run, Cloud SQL, Pub/Sub, Firestore, BigQuery, Vertex AI, …). Each handler knows how to create, update, delete, and diff one resource type.
+1. **`translate_card_to_graph`** (`packages/core/src/deploy/card-translator.ts`) - converts the UI's "cards" (visual blocks with properties) into the core engine's provider-agnostic graph. This is where the visual representation and the deploy model actually meet.
+2. **Per-handler apply** (`packages/providers/gcp/src/handlers/*`, `packages/core/src/deploy/providers/gcp/handlers/*`) - one handler per cloud service (Cloud Run, Cloud SQL, Pub/Sub, Firestore, BigQuery, Vertex AI, …). Each handler knows how to create, update, delete, and diff one resource type.
 
 ## Data flow: canvas → graph → cloud
 
@@ -136,7 +136,7 @@ Long-running operations (deploys, imports, AI streams) push live updates over a 
 
 ## Authentication model (honest description)
 
-Today ICE Community Edition is **single-user by design**. The gateway auto-seeds a local user on startup and stamps all data with their ID. There is no login screen. This is deliberate — the self-hosted Community Edition is not a multi-tenant system.
+Today ICE Community Edition is **single-user by design**. The gateway auto-seeds a local user on startup and stamps all data with their ID. There is no login screen. This is deliberate - the self-hosted Community Edition is not a multi-tenant system.
 
 For a multi-user setup you would run ICE Cloud (managed) or adapt the gateway's auth middleware (`packages/shared/src/auth`) to your organisation's needs. Multi-user RBAC is tracked on the [roadmap](../ROADMAP.md).
 
@@ -164,7 +164,7 @@ The deploy engine is provider-agnostic at the top level. Each supported cloud ha
 5. Calls handlers for each operation, in order, streaming progress.
 6. Writes the new state back on success; rolls forward to the last good state on partial failure.
 
-GCP coverage is the most complete (20 service handlers, full lifecycle). AWS and Azure are intentionally partial — they exist, they compile, many handlers work, but GCP is the only provider where we claim "production-ready" at this stage. See [core-engine.md](core-engine.md) for the plan/apply implementation and [ROADMAP.md](../ROADMAP.md) for provider coverage plans.
+GCP coverage is the most complete (20 service handlers, full lifecycle). AWS and Azure are intentionally partial - they exist, they compile, many handlers work, but GCP is the only provider where we claim "production-ready" at this stage. See [core-engine.md](core-engine.md) for the plan/apply implementation and [ROADMAP.md](../ROADMAP.md) for provider coverage plans.
 
 ## AI assistant
 
@@ -184,5 +184,5 @@ See [`../SECURITY.md`](../SECURITY.md) for the disclosure process.
 ## See also
 
 - [core-engine.md](core-engine.md), [frontend.md](frontend.md), [services.md](services.md), [database.md](database.md), [desktop.md](desktop.md).
-- [deploying-to-gcp.md](deploying-to-gcp.md) — the end-to-end flow as a tutorial.
-- [`packages/core/src/`](../packages/core/src/) — the canonical implementation of everything on this page.
+- [deploying-to-gcp.md](deploying-to-gcp.md) - the end-to-end flow as a tutorial.
+- [`packages/core/src/`](../packages/core/src/) - the canonical implementation of everything on this page.

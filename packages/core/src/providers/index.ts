@@ -5,7 +5,7 @@
  */
 
 // Provider registry
-export type { ProviderManagerOptions } from './provider-registry.js';
+export type { ProviderManagerOptions } from './provider-registry';
 
 export {
   DefaultProviderRegistry,
@@ -14,4 +14,4 @@ export {
   create_provider_manager,
   get_global_registry,
   set_global_registry,
-} from './provider-registry.js';
+} from './provider-registry';

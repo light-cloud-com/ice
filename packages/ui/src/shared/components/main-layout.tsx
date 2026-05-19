@@ -94,6 +94,11 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
     const saved = localStorage.getItem(storageKey);
     return saved ? Math.max(minWidth, Math.min(maxWidth, parseInt(saved, 10))) : defaultWidth;
   });
+  // Tour engine can force a width via Redux. When set, we render at
+  // that width without touching the persisted local value, so the
+  // user's preferred sidebar width comes back when the tour ends.
+  const overrideWidth = useSelector((s: RootState) => s.ui?.sidebarOverride?.[side] ?? null);
+  const effectiveWidth = overrideWidth ?? width;
   const dragging = React.useRef(false);
   const startX = React.useRef(0);
   const startW = React.useRef(0);
@@ -135,7 +140,7 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
   );
 
   return (
-    <div className="h-full flex shrink-0" style={{ width }}>
+    <div className="h-full flex shrink-0" style={{ width: effectiveWidth }}>
       {side === 'right' && handle}
       <div className={`flex-1 min-w-0 overflow-hidden bg-ice-surface ${side === 'left' ? 'ice-sidebar-shadow' : ''}`}>
         {children}

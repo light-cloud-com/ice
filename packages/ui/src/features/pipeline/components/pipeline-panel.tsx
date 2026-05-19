@@ -5,29 +5,24 @@
  * Deployment history with live log streaming.
  *
  * Opens from: clicking ⚡ badge on canvas node, right-click → Pipeline
+ *
+ * Sub-component splits (rf-ppanel series):
+ *   - `../utils/format.ts`              — formatRelativeTime / formatDuration / formatFramework (rf-ppanel-1)
+ *   - `./section.tsx`                   — Section collapsible wrapper (rf-ppanel-2)
+ *   - `./status-pill.tsx`               — StatusPill status badge (rf-ppanel-3)
+ *   - `./build-row.tsx`                 — BuildRow label/value row (rf-ppanel-4)
+ *   - `./event-row.tsx`                 — EventRow deployment-history row (rf-ppanel-5)
+ *   - `../sections/trigger-row.tsx`     — TriggerRow per-rule trigger config (rf-ppanel-6)
+ *   - `../sections/active-deployment.tsx` — ActiveDeployment live progress (rf-ppanel-7)
  */
 
-import {
-  X,
-  Zap,
-  GitBranch,
-  ChevronDown,
-  Plus,
-  Trash2,
-  Loader2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Rocket,
-  Circle,
-  ArrowRight,
-} from 'lucide-react';
+import { X, Zap, GitBranch, Plus, Loader2, Clock, Rocket } from 'lucide-react';
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
+
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
-import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
@@ -41,11 +36,15 @@ import {
   triggerManualDeploy,
   receivePipelineUpdate,
   receiveCardPipelineUpdate,
-  type DeploymentRule,
-  type DeploymentEvent,
-  type DeployStep,
 } from '../../../store/slices/pipeline-slice';
 import type { RootState, AppDispatch } from '../../../store';
+import { ActiveDeployment } from '../sections/active-deployment';
+import { TriggerRow } from '../sections/trigger-row';
+import { formatFramework } from '../utils/format';
+import { BuildRow } from './build-row';
+import { EventRow } from './event-row';
+import { Section } from './section';
+import { StatusPill } from './status-pill';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -440,285 +439,4 @@ export const PipelinePanel: React.FC = () => {
   );
 };
 
-// ─── Sub-components ─────────────────────────────────────────────────────────
 
-const Section: React.FC<{
-  title: string;
-  icon: React.ElementType;
-  iconClassName?: string;
-  children: React.ReactNode;
-}> = ({ title, icon: Icon, iconClassName, children }) => (
-  <div className="px-4 py-3 border-b border-ice-border">
-    <div className="flex items-center gap-1.5 mb-2">
-      <Icon className={cn('w-3.5 h-3.5 text-ice-text-3', iconClassName)} />
-      <span className="text-xs font-semibold text-ice-text-2 uppercase tracking-wider">{title}</span>
-    </div>
-    {children}
-  </div>
-);
-
-const StatusPill: React.FC<{ status: string }> = ({ status }) => {
-  const { t } = useTranslation();
-  const config: Record<string, { label: string; className: string }> = {
-    queued: { label: t('pipeline.status.queued'), className: 'bg-yellow-500/10 text-yellow-500' },
-    building: { label: t('pipeline.status.building'), className: 'bg-blue-500/10 text-blue-500' },
-    deploying: { label: t('pipeline.status.deploying'), className: 'bg-purple-500/10 text-purple-500' },
-    success: { label: t('pipeline.status.success'), className: 'bg-emerald-500/10 text-emerald-500' },
-    failed: { label: t('pipeline.status.failed'), className: 'bg-red-500/10 text-red-500' },
-  };
-  const c = config[status] || { label: status, className: 'bg-ice-hover text-ice-text-3' };
-  return <span className={cn('px-1.5 py-0.5 text-ice-2xs font-semibold rounded-full', c.className)}>{c.label}</span>;
-};
-
-interface BranchInfo {
-  name: string;
-  commit: { sha: string };
-  protected: boolean;
-}
-
-const TriggerRow: React.FC<{
-  rule: DeploymentRule;
-  branches: BranchInfo[];
-  onToggle: (enabled: boolean) => void;
-  onDelete: () => void;
-  onChangeBranch: (branch: string) => void;
-  onChangeEnvironment: (env: string) => void;
-}> = ({ rule, branches, onToggle, onDelete, onChangeBranch, onChangeEnvironment }) => {
-  const { t } = useTranslation();
-  // Ensure current branch_pattern is in the list
-  const branchNames = branches.map((b) => b.name);
-  const currentInList = branchNames.includes(rule.branch_pattern) || rule.branch_pattern === '*';
-
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors',
-        rule.enabled ? 'border-ice-border bg-ice-raised' : 'border-ice-border/50 bg-ice-base opacity-60',
-      )}
-    >
-      {/* Toggle */}
-      <button
-        onClick={() => onToggle(!rule.enabled)}
-        className={cn(
-          'w-7 h-4 rounded-full relative transition-colors flex-shrink-0',
-          rule.enabled ? 'bg-emerald-500' : 'bg-ice-border',
-        )}
-      >
-        <div
-          className={cn(
-            'absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform',
-            rule.enabled ? 'left-3.5' : 'left-0.5',
-          )}
-        />
-      </button>
-
-      {/* Trigger type + branch */}
-      <span className="text-ice-text-2 text-xs">
-        {rule.trigger_type === 'merge' ? t('pipeline.mergeTo') : t('pipeline.pushTo')}
-      </span>
-      <select
-        value={rule.branch_pattern}
-        onChange={(e) => onChangeBranch(e.target.value)}
-        className="px-1.5 py-0.5 text-xs rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono max-w-[100px]"
-      >
-        {branches.length > 0 ? (
-          <>
-            {branches.map((b) => (
-              <option key={b.name} value={b.name}>
-                {b.name}
-                {b.protected ? ` ${t('pipeline.branchProtected')}` : ''}
-              </option>
-            ))}
-            <option value="*">{t('pipeline.anyBranch')}</option>
-          </>
-        ) : (
-          <>
-            {/* Fallback while loading */}
-            {!currentInList && rule.branch_pattern !== '*' && (
-              <option value={rule.branch_pattern}>{rule.branch_pattern}</option>
-            )}
-            <option value="main">main</option>
-            <option value="master">master</option>
-            <option value="*">{t('pipeline.anyBranch')}</option>
-          </>
-        )}
-      </select>
-
-      <ArrowRight className="w-3 h-3 text-ice-text-3 flex-shrink-0" />
-
-      {/* Environment */}
-      <select
-        value={rule.environment}
-        onChange={(e) => onChangeEnvironment(e.target.value)}
-        className="px-1.5 py-0.5 text-xs rounded border border-ice-border bg-ice-base text-ice-text-1"
-      >
-        <option value="production">{t('pipeline.envProduction')}</option>
-        <option value="staging">{t('pipeline.envStaging')}</option>
-        <option value="development">{t('pipeline.envDevelopment')}</option>
-      </select>
-
-      {/* Delete */}
-      <button onClick={onDelete} className="ml-auto p-0.5 text-ice-text-3 hover:text-red-500 transition-colors">
-        <Trash2 className="w-3 h-3" />
-      </button>
-    </div>
-  );
-};
-
-const BuildRow: React.FC<{ label: string; value: string | null }> = ({ label, value }) => (
-  <div className="flex items-center justify-between text-xs">
-    <span className="text-ice-text-3">{label}</span>
-    <span className="font-mono text-ice-text-2">{value || '—'}</span>
-  </div>
-);
-
-const ActiveDeployment: React.FC<{
-  status: { status: string; stage?: string; progress?: number; commitSha?: string; commitMessage?: string };
-  logs: DeployStep[];
-}> = ({ status, logs }) => (
-  <div className="space-y-2">
-    {/* Progress bar */}
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-ice-text-2">{status.stage || status.status}</span>
-        <span className="font-mono text-ice-text-3">{status.progress || 0}%</span>
-      </div>
-      <div className="h-1.5 bg-ice-border rounded-full overflow-hidden">
-        <div
-          className={cn(
-            'h-full rounded-full transition-all duration-500',
-            status.status === 'failed' ? 'bg-red-500' : 'bg-emerald-500',
-          )}
-          style={{ width: `${status.progress || 0}%` }}
-        />
-      </div>
-    </div>
-
-    {/* Commit info */}
-    {status.commitSha && (
-      <div className="text-xs text-ice-text-3 font-mono truncate">
-        {status.commitSha.slice(0, 7)} {status.commitMessage}
-      </div>
-    )}
-
-    {/* Log steps */}
-    {logs.length > 0 && (
-      <div className="rounded-md border border-ice-border bg-slate-950 p-2 space-y-0.5 max-h-40 overflow-y-auto">
-        {logs.map((log, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-ice-xs font-mono">
-            {log.status === 'completed' ? (
-              <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-            ) : log.status === 'failed' ? (
-              <XCircle className="w-3 h-3 text-red-500 flex-shrink-0" />
-            ) : (
-              <Loader2 className="w-3 h-3 text-blue-400 animate-spin flex-shrink-0" />
-            )}
-            <span className={cn(log.status === 'failed' ? 'text-red-400' : 'text-slate-300')}>{log.message}</span>
-            {log.duration_ms && <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
-
-const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
-  const { t } = useTranslation();
-  const [showLogs, setShowLogs] = useState(false);
-
-  return (
-    <div className="rounded-md border border-ice-border overflow-hidden">
-      <div
-        className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-ice-hover transition-colors"
-        onClick={() => setShowLogs(!showLogs)}
-      >
-        {/* Status icon */}
-        {event.status === 'success' ? (
-          <Circle className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500 flex-shrink-0" />
-        ) : event.status === 'failed' ? (
-          <Circle className="w-2.5 h-2.5 fill-red-500 text-red-500 flex-shrink-0" />
-        ) : event.status === 'cancelled' ? (
-          <Circle className="w-2.5 h-2.5 fill-ice-text-3 text-ice-text-3 flex-shrink-0" />
-        ) : (
-          <Loader2 className="w-2.5 h-2.5 text-blue-500 animate-spin flex-shrink-0" />
-        )}
-
-        {/* Commit */}
-        <span className="font-mono text-ice-text-2">{event.commit_sha.slice(0, 7)}</span>
-        <span className="text-ice-text-2 truncate flex-1">{event.commit_message}</span>
-
-        {/* Metadata */}
-        <span className="text-ice-text-3 flex-shrink-0">{event.rule?.environment || event.branch}</span>
-        <span className="text-ice-text-3 flex-shrink-0">{formatRelativeTime(event.started_at)}</span>
-
-        <ChevronDown
-          className={cn('w-3 h-3 text-ice-text-3 transition-transform flex-shrink-0', showLogs && 'rotate-180')}
-        />
-      </div>
-
-      {/* Expanded logs */}
-      {showLogs && (
-        <div className="border-t border-ice-border bg-slate-950 p-2 space-y-0.5 max-h-32 overflow-y-auto">
-          {((event.deployment_logs || []) as DeployStep[]).map((log, i) => (
-            <div key={i} className="flex items-center gap-1.5 text-ice-xs font-mono">
-              {log.status === 'completed' ? (
-                <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-              ) : log.status === 'failed' ? (
-                <XCircle className="w-3 h-3 text-red-500 flex-shrink-0" />
-              ) : (
-                <Circle className="w-3 h-3 text-slate-500 flex-shrink-0" />
-              )}
-              <span className={cn(log.status === 'failed' ? 'text-red-400' : 'text-slate-300')}>{log.message}</span>
-            </div>
-          ))}
-          {event.error && (
-            <div className="text-ice-xs font-mono text-red-400 mt-1 pt-1 border-t border-slate-800">{event.error}</div>
-          )}
-          {event.duration_seconds && (
-            <div className="text-ice-xs font-mono text-slate-500 mt-1">
-              {t('pipeline.duration')} {formatDuration(event.duration_seconds)}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function formatRelativeTime(date: string): string {
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-}
-
-function formatFramework(framework: string): string {
-  const names: Record<string, string> = {
-    nextjs: 'Next.js',
-    nuxt: 'Nuxt',
-    sveltekit: 'SvelteKit',
-    react: 'React',
-    vue: 'Vue',
-    angular: 'Angular',
-    express: 'Express',
-    fastify: 'Fastify',
-    docker: 'Docker',
-    python: 'Python',
-    go: 'Go',
-    node: 'Node.js',
-  };
-  return names[framework] || framework;
-}

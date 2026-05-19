@@ -4,9 +4,9 @@
  * Orchestrates deployment of infrastructure changes to cloud providers.
  */
 
-import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages.js';
-import { diff_graphs } from '../diff/diff.js';
-import { run_parallel_apply, wrap_on_progress_for_node_progress, type SchedulerPhase } from './scheduler.js';
+import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages';
+import { diff_graphs } from '../diff/diff';
+import { run_parallel_apply, wrap_on_progress_for_node_progress, type SchedulerPhase } from './scheduler';
 import type {
   DeployOptions,
   DeployResult,
@@ -15,9 +15,9 @@ import type {
   DeployWarning,
   ResourceDeployResult,
   ProviderDeployer,
-} from './types.js';
-import type { DiffResult, ResourceChange } from '../diff/types.js';
-import type { Graph } from '../types/graph.js';
+} from './types';
+import type { DiffResult, ResourceChange } from '../diff/types';
+import type { Graph } from '../types/graph';
 
 /**
  * Default deployment options.

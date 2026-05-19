@@ -4,9 +4,9 @@
  * Core logic for executing deployment plans.
  */
 
-import { get_plan_execution_layers } from '../plan/plan-engine.js';
-import { create_mock_provider } from '../providers/mock-provider.js';
-import { create_deployment_id } from '../types/deployment.js';
+import { get_plan_execution_layers } from '../plan/plan-engine';
+import { create_mock_provider } from '../providers/mock-provider';
+import { create_deployment_id } from '../types/deployment';
 import type {
   ApplyOptions,
   ApplyResult,
@@ -14,11 +14,11 @@ import type {
   ApplyContext,
   ResourceApplyResult,
   ExecutionLayer,
-} from './types.js';
-import type { MutableGraph } from '../graph/mutable-graph.js';
-import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment.js';
-import type { Node } from '../types/graph.js';
-import type { ProviderClient, ResourceState } from '../types/providers.js';
+} from './types';
+import type { MutableGraph } from '../graph/mutable-graph';
+import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment';
+import type { Node } from '../types/graph';
+import type { ProviderClient, ResourceState } from '../types/providers';
 
 // =============================================================================
 // Apply Function
@@ -51,10 +51,12 @@ export async function apply_plan(
       mock: options.mock ?? true, // Default to mock mode
       provider: options.provider ?? 'mock',
       on_progress: options.on_progress,
+      signal: options.signal,
     },
     results: [],
     errors: [],
     start_time,
+    cancelled: false,
   };
 
   // Get provider (mock for now)
@@ -76,8 +78,25 @@ export async function apply_plan(
   });
 
   // Execute each layer
-  for (const layer of layers) {
-    const should_continue = await execute_layer(layer, graph, provider, context);
+  // findings.md #23 — check the AbortSignal between layers. The
+  // contract: in-flight provider operations within the current
+  // batch are NOT interrupted (we await Promise.all to settle), but
+  // no new layers or batches start once the signal is aborted.
+  // Remaining unprocessed changes are recorded as CANCELLED so the
+  // result reflects the partial-completion state honestly.
+  for (let layer_index = 0; layer_index < layers.length; layer_index++) {
+    if (context.options.signal?.aborted) {
+      record_cancellation(context, layers.slice(layer_index));
+      break;
+    }
+    const should_continue = await execute_layer(layers[layer_index]!, graph, provider, context);
+    if (context.options.signal?.aborted) {
+      // Aborted mid-layer — pending later layers stay unrecorded as
+      // run, but `record_cancellation` covers them so the summary
+      // and errors[] reflect the stop-point.
+      record_cancellation(context, layers.slice(layer_index + 1));
+      break;
+    }
     if (!should_continue && context.options.abort_on_error) {
       break;
     }
@@ -131,6 +150,20 @@ async function execute_layer(
 
   // Execute changes in parallel batches
   for (let i = 0; i < changes_to_apply.length; i += parallelism) {
+    // findings.md #23 — check the signal at each batch boundary so a
+    // long-running layer (many parallelism-sized batches) can be
+    // cancelled without waiting for the entire layer to drain.
+    if (context.options.signal?.aborted) {
+      record_cancelled_changes(context, changes_to_apply.slice(i));
+      emit_progress(context, {
+        type: 'layer_completed',
+        layer_index: layer.index,
+        success_count,
+        failure_count: failure_count + (changes_to_apply.length - i),
+      });
+      return false;
+    }
+
     const batch = changes_to_apply.slice(i, i + parallelism);
 
     const results = await Promise.all(batch.map((change) => execute_change(change, graph, provider, context)));
@@ -326,6 +359,14 @@ async function execute_provider_operation(
 
     case 'replace':
       // Replace = destroy + create
+      // findings.md #25 — when current_state is missing the destroy
+      // step used to be silently skipped. That diverges from the
+      // scheduler's stricter destroy/create choreography and produces
+      // orphaned cloud resources for any caller that didn't pass a
+      // current_state alongside a 'replace' action. We can't destroy
+      // what we don't know about, so emit a warning before falling
+      // through to deploy-only — the log makes the "create-only on
+      // replace" mode observable.
       if (current_state) {
         const destroy_result = await provider.destroy(node, current_state);
         if (!destroy_result.success) {
@@ -334,6 +375,10 @@ async function execute_provider_operation(
             error: destroy_result.error,
           };
         }
+      } else {
+        console.warn(
+          `[apply-engine] replace action for node ${node.id} has no current_state; skipping destroy and proceeding as create-only. Existing cloud resources for this node may be orphaned.`,
+        );
       }
       return provider.deploy(node);
 
@@ -422,14 +467,68 @@ function emit_progress(context: ApplyContext, event: any): void {
 function build_result(context: ApplyContext): ApplyResult {
   const summary = build_summary(context.results);
 
+  // findings.md #24 — derive overall success from the summary, not
+  // from `errors.length`. A handler that returns `{ success: false }`
+  // without pushing an error onto `context.errors` would otherwise
+  // produce a result that says "1 failed" in the summary AND
+  // `success: true` overall. Using `summary.failed === 0` makes the
+  // two views of success consistent.
   return {
-    success: context.errors.length === 0,
+    success: summary.failed === 0 && context.errors.length === 0 && !context.cancelled,
+    cancelled: context.cancelled || undefined,
     deployment_id: context.deployment_id,
     summary,
     results: context.results,
     errors: context.errors,
     duration_ms: Date.now() - context.start_time,
   };
+}
+
+/**
+ * Record every change in the given remaining layers as a CANCELLED
+ * result + ApplyError. Called when the AbortSignal fires between
+ * layers — the changes never started, so we synthesise their result
+ * rows here for the summary to count them as failures and for the
+ * caller to see exactly which work was abandoned.
+ *
+ * findings.md #23.
+ */
+function record_cancellation(context: ApplyContext, remaining_layers: ExecutionLayer[]): void {
+  context.cancelled = true;
+  for (const layer of remaining_layers) {
+    record_cancelled_changes(context, layer.changes.filter((c) => c.action !== 'no_op'));
+  }
+}
+
+/**
+ * Record every change in the slice as a CANCELLED result. Used both
+ * by the between-layers path and the between-batches path.
+ *
+ * findings.md #23.
+ */
+function record_cancelled_changes(context: ApplyContext, changes: PlannedChange[]): void {
+  context.cancelled = true;
+  const error = {
+    code: 'CANCELLED',
+    message: 'Apply aborted via AbortSignal before this change started',
+    retryable: true,
+  } as const;
+  for (const change of changes) {
+    context.results.push({
+      node_id: change.node_id,
+      action: change.action,
+      success: false,
+      error,
+      duration_ms: 0,
+      dry_run: context.options.dry_run,
+    });
+    context.errors.push({
+      node_id: change.node_id,
+      action: change.action,
+      error,
+      recoverable: true,
+    });
+  }
 }
 
 /**

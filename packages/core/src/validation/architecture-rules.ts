@@ -19,8 +19,8 @@ import {
   isDomain,
   isContainer,
   isGateway,
-} from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+} from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 /**
  * Validate architectural patterns and best practices.
@@ -32,21 +32,22 @@ export function validateArchitecture(
 ): CanvasIssue[] {
   const issues: CanvasIssue[] = [];
 
-  // Build adjacency for quick lookups
+  // Build adjacency for quick lookups. We track outgoing edges only —
+  // the previous `incoming` Map was built but never read (findings #35).
   const nodeMap = new Map<string, ValidatableNode>();
   const outgoing = new Map<string, Set<string>>(); // nodeId → set of target nodeIds
-  const incoming = new Map<string, Set<string>>(); // nodeId → set of source nodeIds
 
   for (const n of nodes) nodeMap.set(n.id, n);
   for (const e of edges) {
     if (e.data?.relationship === 'contains') continue;
     if (!outgoing.has(e.source)) outgoing.set(e.source, new Set());
-    if (!incoming.has(e.target)) incoming.set(e.target, new Set());
     outgoing.get(e.source)!.add(e.target);
-    incoming.get(e.target)!.add(e.source);
   }
 
-  // Classify nodes
+  // Classify nodes. The if/elseif order matters: isCache must run BEFORE
+  // isDatabase because Database.Redis matches `isDatabase` (Database.
+  // prefix) first, so the Redis-as-cache classification was silently lost
+  // and the MULTI_DB_NO_CACHE rule below could never fire (findings #19).
   const frontends: ValidatableNode[] = [];
   const backends: ValidatableNode[] = [];
   const databases: ValidatableNode[] = [];
@@ -61,8 +62,8 @@ export function validateArchitecture(
 
     if (isFrontend(t)) frontends.push(node);
     else if (isBackend(t)) backends.push(node);
-    else if (isDatabase(t)) databases.push(node);
     else if (isCache(t)) caches.push(node);
+    else if (isDatabase(t)) databases.push(node);
 
     if (isAuth(t)) hasAuth = true;
     if (isMonitoring(t)) hasMonitoring = true;

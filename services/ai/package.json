@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ice/ai": "workspace:*",
+    "@ice/constants": "workspace:*",
     "@ice/db": "workspace:*",
     "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",

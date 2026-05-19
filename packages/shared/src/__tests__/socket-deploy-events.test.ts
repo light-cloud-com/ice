@@ -67,7 +67,7 @@ function makeFakeIo(rooms: Map<string, Set<string>> = new Map()): {
  */
 async function freshSocketService() {
   vi.resetModules();
-  return import('../socket/service.js');
+  return import('../socket/service');
 }
 
 afterEach(() => {

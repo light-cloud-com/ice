@@ -5,8 +5,8 @@
  * Used primarily for RabbitMQ on GKE.
  */
 
-import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short, HANDLER_MESSAGES } from '../messages.js';
-import type { GCPResourceHandler } from '../types.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short, HANDLER_MESSAGES } from '../messages';
+import type { GCPResourceHandler } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.container.cluster';

@@ -14,7 +14,7 @@ export {
   getCloudProviderColor,
   getCloudProviderShortName,
   type CloudProviderMeta,
-} from './cloud-providers.js';
+} from './cloud-providers';
 
 // Blueprint factory
 export {
@@ -23,7 +23,7 @@ export {
   type BlueprintProviderVariant,
   type BlueprintOverrides,
   type GeneratedBlueprint,
-} from './blueprint-factory.js';
+} from './blueprint-factory';
 
 // High-level resource definitions
 export {
@@ -38,7 +38,7 @@ export {
   type HighLevelCategory,
   type NodeBehavior,
   type ProviderImplementation,
-} from './high-level-resources.js';
+} from './high-level-resources';
 
 // Scale presets — AI assistant uses these for auto-configuration
 export {
@@ -49,7 +49,7 @@ export {
   getAllPresetsForResource,
   type ScaleTier,
   type TierPreset,
-} from './scale-presets.js';
+} from './scale-presets';
 
 // Cloud blocks
 export {
@@ -69,4 +69,4 @@ export {
   type BlockConfig,
   type BlockTemplate,
   type EnvVar,
-} from './cloud-blocks.js';
+} from './cloud-blocks';

@@ -5,8 +5,8 @@
  * Uses REST API.
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler } from '../types.js';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler } from '../types';
 
 const TYPE = 'gcp.dataflow.job';
 const BASE_URL = 'https://dataflow.googleapis.com/v1b3';

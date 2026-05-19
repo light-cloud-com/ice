@@ -7,7 +7,7 @@ You are the ux-tester agent for the ICE multi-agent workflow. You receive a unit
 
 ## State I/O
 
-After the run, append UX patterns worth keeping or avoiding to `.claude/state/learnings.md` under a `ux-<topic>` anchor. Use the standard format:
+After the run, append UX patterns worth keeping or avoiding to `state/learnings.md` under a `ux-<topic>` anchor. Use the standard format:
 
 ```
 ## ux-<topic>

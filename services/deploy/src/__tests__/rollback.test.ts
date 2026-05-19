@@ -46,7 +46,7 @@ describe('Rollback Deployment — Validation', () => {
   });
 
   async function getRollbackDeployment() {
-    const mod = await import('../services/deploy.service.js');
+    const mod = await import('../services/deploy.service');
     return mod.rollbackDeployment;
   }
 

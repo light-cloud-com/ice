@@ -11,9 +11,9 @@ export type {
   GraphValidationResult,
   ValidationOptions,
   Validator,
-} from './base-validator.js';
+} from './base-validator';
 
-export { ValidationContext, GraphValidator, create_graph_validator, create_validator } from './base-validator.js';
+export { ValidationContext, GraphValidator, create_graph_validator, create_validator } from './base-validator';
 
 // Built-in validators
 export {
@@ -27,4 +27,4 @@ export {
   BestPracticesValidator,
   create_builtin_validators,
   create_configured_validator,
-} from './validators.js';
+} from './validators';

@@ -1,24 +1,32 @@
 /**
- * Database Seed
+ * Database Seed (development only)
  *
  * Creates a default user with no organisation.
- * The user creates their first team via the app.
+ * Reads credentials from env: ICE_SEED_EMAIL, ICE_SEED_PASSWORD.
+ * Generates a random password if ICE_SEED_PASSWORD is unset and prints it.
  * Run: pnpm seed
  */
 
+import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+function generatePassword(): string {
+  return randomBytes(12).toString('base64url');
+}
+
 async function main() {
+  const email = process.env.ICE_SEED_EMAIL ?? 'dev@example.local';
+  const password = process.env.ICE_SEED_PASSWORD ?? generatePassword();
+  const generated = !process.env.ICE_SEED_PASSWORD;
+
   console.log('Seeding database...');
 
-  // ── User ─────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('password123', 10);
+  const passwordHash = await bcrypt.hash(password, 10);
 
-  // Ensure org exists
-  const existingUser = await prisma.user.findUnique({ where: { email: 'test@ice-saas.dev' } });
+  const existingUser = await prisma.user.findUnique({ where: { email } });
   let orgId = existingUser?.organisation_id;
 
   if (!orgId) {
@@ -30,7 +38,7 @@ async function main() {
   }
 
   const user = await prisma.user.upsert({
-    where: { email: 'test@ice-saas.dev' },
+    where: { email },
     update: {
       password_hash: passwordHash,
       organisation_id: orgId,
@@ -38,7 +46,7 @@ async function main() {
       onboarding_step: 1,
     },
     create: {
-      email: 'test@ice-saas.dev',
+      email,
       name: 'Test User',
       password_hash: passwordHash,
       organisation_id: orgId,
@@ -48,7 +56,6 @@ async function main() {
   });
   console.log(`  Upserted user: ${user.email} (${user.id}) — onboarding pending`);
 
-  // Ensure org membership exists
   await prisma.organisationMember.upsert({
     where: { user_id_organisation_id: { user_id: user.id, organisation_id: orgId! } },
     update: { role: 'owner' },
@@ -57,7 +64,12 @@ async function main() {
   console.log(`  Org membership: owner`);
 
   console.log('\nSeed complete!');
-  console.log(`\n  Login: test@ice-saas.dev / password123\n`);
+  console.log(`\n  Login: ${email}`);
+  if (generated) {
+    console.log(`  Password (generated, save it): ${password}\n`);
+  } else {
+    console.log(`  Password: (from ICE_SEED_PASSWORD env)\n`);
+  }
 }
 
 main()

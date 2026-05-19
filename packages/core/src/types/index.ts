@@ -30,9 +30,9 @@ export type {
   NodeCategory,
   InferenceConfidence,
   InferenceSource,
-} from './graph.js';
+} from './graph';
 
-export { create_node_id, create_edge_id, create_graph_id } from './graph.js';
+export { create_node_id, create_edge_id, create_graph_id } from './graph';
 
 // Provider types
 export type {
@@ -55,9 +55,9 @@ export type {
   ProviderRegistry,
   ProviderFactory,
   ProviderCapabilities,
-} from './providers.js';
+} from './providers';
 
-export { create_provider_id } from './providers.js';
+export { create_provider_id } from './providers';
 
 // Deployment types
 export type {
@@ -81,12 +81,12 @@ export type {
   StateDiff,
   DriftResult,
   DriftedResource,
-} from './deployment.js';
+} from './deployment';
 
-export { create_deployment_id } from './deployment.js';
+export { create_deployment_id } from './deployment';
 
 // Error types
-export type { ErrorCategory, ErrorCode, ErrorJson, ValidationViolation } from './errors.js';
+export type { ErrorCategory, ErrorCode, ErrorJson, ValidationViolation } from './errors';
 
 export {
   IceError,
@@ -104,10 +104,10 @@ export {
   is_ice_error,
   is_retryable,
   wrap_error,
-} from './errors.js';
+} from './errors';
 
 // Result types
-export type { Result, Success, Failure, IceResult, AsyncIceResult, MultiResult } from './result.js';
+export type { Result, Success, Failure, IceResult, AsyncIceResult, MultiResult } from './result';
 
 export {
   success,
@@ -128,4 +128,4 @@ export {
   from_promise,
   from_try,
   from_nullable,
-} from './result.js';
+} from './result';

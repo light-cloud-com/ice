@@ -5,7 +5,7 @@
  * Defines interfaces for deploying resources to AWS, Azure, GCP, etc.
  */
 
-import type { Node, NodeId } from './graph.js';
+import type { Node, NodeId } from './graph';
 
 // =============================================================================
 // Provider Identification

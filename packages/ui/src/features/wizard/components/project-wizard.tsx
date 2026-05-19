@@ -154,34 +154,44 @@ export const ProjectWizard: React.FC = () => {
         {/* Step content */}
         <div className="px-5 pb-2 min-h-[320px] flex-1 overflow-y-auto">
           {state.step === 1 && (
-            <ProjectInfoStep
-              projectName={state.projectName}
-              projectDescription={state.projectDescription}
-              provider={state.provider}
-              onNameChange={wizard.setProjectName}
-              onDescriptionChange={wizard.setProjectDescription}
-              onProviderChange={wizard.setProvider}
-            />
+            <div data-tour-id="wizard-step-1">
+              <ProjectInfoStep
+                projectName={state.projectName}
+                projectDescription={state.projectDescription}
+                provider={state.provider}
+                onNameChange={wizard.setProjectName}
+                onDescriptionChange={wizard.setProjectDescription}
+                onProviderChange={wizard.setProvider}
+              />
+            </div>
           )}
           {state.step === 2 && (
-            <EnvironmentStep
-              environments={state.environments}
-              onToggle={wizard.toggleEnvironment}
-              onRegionChange={wizard.setEnvironmentRegion}
-              onSecurityChange={wizard.setEnvironmentSecurity}
-              onAllSecurityChange={wizard.setAllSecurityLevel}
-            />
+            <div data-tour-id="wizard-step-2">
+              <EnvironmentStep
+                environments={state.environments}
+                onToggle={wizard.toggleEnvironment}
+                onRegionChange={wizard.setEnvironmentRegion}
+                onSecurityChange={wizard.setEnvironmentSecurity}
+                onAllSecurityChange={wizard.setAllSecurityLevel}
+              />
+            </div>
           )}
           {state.step === 3 && (
-            <TemplateStep
-              selectedTemplateId={state.selectedTemplateId}
-              searchQuery={state.searchQuery}
-              provider={state.provider}
-              onSelect={wizard.setSelectedTemplateId}
-              onSearchChange={wizard.setSearchQuery}
-            />
+            <div data-tour-id="wizard-step-3">
+              <TemplateStep
+                selectedTemplateId={state.selectedTemplateId}
+                searchQuery={state.searchQuery}
+                provider={state.provider}
+                onSelect={wizard.setSelectedTemplateId}
+                onSearchChange={wizard.setSearchQuery}
+              />
+            </div>
           )}
-          {state.step === 4 && <ReviewStep state={state} />}
+          {state.step === 4 && (
+            <div data-tour-id="wizard-step-4">
+              <ReviewStep state={state} />
+            </div>
+          )}
         </div>
 
         {/* Footer — navigation buttons */}
@@ -191,6 +201,7 @@ export const ProjectWizard: React.FC = () => {
             <button
               onClick={wizard.goBack}
               className="flex items-center gap-1 text-xs text-ice-text-2 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
+              data-tour-id="wizard-btn-back"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               {t('wizard.backButton')}
@@ -210,6 +221,7 @@ export const ProjectWizard: React.FC = () => {
                   ? 'bg-ice-accent text-ice-text-1 hover:bg-ice-accent-hover'
                   : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
               )}
+              data-tour-id="wizard-btn-next"
             >
               {t('wizard.nextButton')}
               <ChevronRight className="w-3.5 h-3.5" />
@@ -218,6 +230,7 @@ export const ProjectWizard: React.FC = () => {
             <button
               onClick={handleCreate}
               className="flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-green text-ice-text-1 hover:bg-ice-green/90 transition-colors"
+              data-tour-id="wizard-btn-create"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {t('wizard.createButton')}

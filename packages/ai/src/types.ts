@@ -46,17 +46,32 @@ export interface ChatMessage {
   content: string;
 }
 
+/**
+ * Wire-level finish reasons reported by OpenAI-compatible providers.
+ * findings.md #18 — the previous types pinned this to 'stop' and the
+ * provider implementations unconditionally returned 'stop', hiding
+ * length-cap truncations, content filtering, and tool-call boundaries.
+ */
+export type ChatFinishReason =
+  | 'stop'
+  | 'length'
+  | 'content_filter'
+  | 'tool_calls'
+  | 'function_call'
+  | string;
+
 export interface ChatChunk {
   /** Token text (may be empty on final chunk) */
   content: string;
-  /** Set to 'stop' on the final chunk */
-  finishReason?: 'stop' | null;
+  /** Set on the final chunk; null/undefined while tokens are still streaming. */
+  finishReason?: ChatFinishReason | null;
 }
 
 export interface ChatResponse {
   /** Full response text */
   content: string;
-  finishReason: 'stop';
+  /** The wire-level finish reason; defaults to 'stop' when the wire didn't supply one. */
+  finishReason: ChatFinishReason;
 }
 
 // =============================================================================
@@ -107,10 +122,15 @@ export class NullProvider implements AiProvider {
     throw new Error('No AI provider configured. Set ANTHROPIC_API_KEY or ICE_AI_URL.');
   }
 
+  // findings.md #54 — the previous body did `yield undefined as ChatChunk`
+  // before throwing to satisfy eslint's require-yield. That made
+  // `for await (const c of provider.streamChat())` deliver an
+  // undefined chunk to consumers that didn't check `c.content`,
+  // which silently corrupted partial outputs. The eslint rule is
+  // suppressed for this single function so the generator can throw
+  // on first iteration without an observable undefined first.
+  // eslint-disable-next-line require-yield
   async *streamChat(): AsyncIterable<ChatChunk> {
-    // Generator throws before yielding; explicit empty yield satisfies
-    // eslint's require-yield and doesn't change observed behaviour.
-    yield undefined as unknown as ChatChunk;
     throw new Error('No AI provider configured. Set ANTHROPIC_API_KEY or ICE_AI_URL.');
   }
 }

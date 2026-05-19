@@ -32,7 +32,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { DeployEvent, DeployNodeStatus } from '@ice/types';
+import type { DeployEvent } from '@ice/types';
+import { mapStatusToOverlay, overlayToWireStatus } from '@ice/types';
 import { getApi } from '../../../shared/api/api-adapter';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
@@ -44,48 +45,23 @@ import {
   setDeployedResources,
   startDeploying,
 } from '../../../store/slices/deploy-slice';
+import type {
+  DeployNodeProgressEvent,
+  DeployNodeStatusEvent,
+} from '@ice/types';
 import type { AppDispatch, RootState } from '../../../store';
 
 /**
- * Map a wire `DeployNodeStatus` to the canvas overlay status string the
- * compact-node renderer reads from `data.deploy_status`. Mirrors the
- * service-layer mapping in `deploy.service.ts:mapStatusToOverlay`.
+ * Re-exported from `@ice/types` (rf-0c dedup). Historically the
+ * service-side and UI-side had separate copies of the wire→overlay
+ * mapping, kept in sync by hand. The canonical home is now next to
+ * {@link DeployNodeStatus} so drift is impossible.
  *
- *   queued                  → 'queued'
- *   applying                → 'deploying'
- *   succeeded               → 'active'
- *   failed                  → 'error'
- *   skipped                 → 'skipped'
- *   cancelled-due-to-dep    → 'cancelled'  // upstream-failure cascade,
- *                                          // distinct from operator skip
- *
- * Must agree with the service-side `mapStatusToOverlay` in
- * `services/deploy/src/services/deploy.service.ts:191` — the snapshot
- * path goes through the service mapping; the live-event path goes
- * through this one. Divergence means a tab opened mid-deploy snapshots
- * with one color and live-event-overwrites with a different one for
- * the same wire status. The corresponding `STATUS_COLORS` entries for
- * `'queued'` / `'skipped'` / `'cancelled'` live in
- * `packages/ui/src/config/canvas-constants.ts`.
+ * Old name `mapWireStatusToOverlay` kept as an alias here so the
+ * existing UI consumers (deploy-node-row, etc.) don't have to all
+ * migrate at once.
  */
-export function mapWireStatusToOverlay(
-  status: DeployNodeStatus,
-): 'queued' | 'deploying' | 'active' | 'error' | 'skipped' | 'cancelled' {
-  switch (status) {
-    case 'queued':
-      return 'queued';
-    case 'applying':
-      return 'deploying';
-    case 'succeeded':
-      return 'active';
-    case 'failed':
-      return 'error';
-    case 'skipped':
-      return 'skipped';
-    case 'cancelled-due-to-dep':
-      return 'cancelled';
-  }
-}
+export { mapStatusToOverlay as mapWireStatusToOverlay, overlayToWireStatus };
 
 /**
  * Handle a single typed deploy event — used by both the live socket
@@ -119,7 +95,7 @@ export function applyDeployEvent(
       dispatch(applyNodeStatusEvent(event));
       // Mirror the per-block overlay onto the canvas. event.node_id is
       // the canvas node id (post-pdl-4 service-layer translation).
-      const overlay = mapWireStatusToOverlay(event.status);
+      const overlay = mapStatusToOverlay(event.status);
       const data: Record<string, unknown> = {
         deploy_status: overlay,
       };
@@ -295,18 +271,25 @@ export function useDeploySubscription(cardId: string | undefined): void {
             return;
           }
           dispatch(startDeploying({ cardId }));
-          // pdl-5 — removed the legacy `setDeployProgress` seed. The
-          // panel + canvas banner now derive every in-flight signal from
-          // `nodesById`, populated immediately afterwards by the Phase
-          // 2.5 replay loop (which dispatches the real `node_status` /
-          // `node_progress` events from the deploy event tape). Until
-          // replay lands, the panel shows a "Preparing…" sentinel — same
-          // user-visible behavior as the old "0% Deploying…" header.
+          // pdl-5 critic finding #7 — warm-seed `nodesById` from the
+          // snapshot's per-node overlay so the deploy panel's per-row
+          // list renders immediately, instead of showing the
+          // "Preparing…" sentinel for the brief window between this
+          // Phase 2 hydrate and the Phase 2.5 replay loop. Each
+          // synthetic event is dispatched with seq=0 so any live event
+          // (or replayed event from the tape) with seq>0 dedup-wins on
+          // the same node, overwriting the warm-seed entry with full
+          // resource_name / resource_type / action / error fields.
           //
-          // Mirror per-node status from the snapshot to the canvas blocks
-          // so the per-block overlay shows up before the replay arrives.
+          // Resource name/type aren't in the snapshot — they live on
+          // the deploy-event-log rows that the Phase 2.5 replay walks.
+          // Empty strings are placeholder; the live or replayed
+          // node_status will overwrite within the same tick once the
+          // event-log fetch returns.
           const nodeStatuses = snapshot.nodeStatuses || {};
+          const nowIso = new Date().toISOString();
           for (const [nodeId, status] of Object.entries(nodeStatuses) as [string, any][]) {
+            // Mirror per-node status onto canvas blocks (existing behavior).
             dispatch(
               updateCardNodeData({
                 nodeId,
@@ -322,6 +305,44 @@ export function useDeploySubscription(cardId: string | undefined): void {
                 },
               }),
             );
+
+            // Warm-seed nodesById via a synthetic node_status event.
+            const wireStatus = overlayToWireStatus(status.deploy_status);
+            if (wireStatus === null) continue;
+            const synthetic: DeployNodeStatusEvent = {
+              type: 'node_status',
+              card_id: cardId,
+              node_id: nodeId,
+              resource_name: '',
+              resource_type: '',
+              action: 'create',
+              status: wireStatus,
+              at: nowIso,
+              seq: 0,
+            };
+            dispatch(applyNodeStatusEvent(synthetic));
+
+            // Forward the snapshot's per-node step (when present) so the
+            // panel's per-row "Step 2 of 5: foo" indicator survives the
+            // tab join. applyNodeStatusEvent preserves `existing?.step`
+            // when the slot is already populated, so dispatch order
+            // doesn't matter.
+            if (status.step && wireStatus === 'applying') {
+              const progress: DeployNodeProgressEvent = {
+                type: 'node_progress',
+                card_id: cardId,
+                node_id: nodeId,
+                resource_name: '',
+                step: {
+                  label: status.step.label,
+                  index: status.step.index,
+                  total: status.step.total,
+                },
+                at: nowIso,
+                seq: 0,
+              };
+              dispatch(applyNodeProgressEvent(progress));
+            }
           }
         }
       } catch {

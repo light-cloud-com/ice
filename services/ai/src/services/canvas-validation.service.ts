@@ -30,6 +30,11 @@ interface ValidationResult {
   errors: ValidationError[];
   warnings: ValidationWarning[];
   summary: string;
+  // findings.md #16 — frontends need to tell "engine ran and the
+  // canvas is clean" apart from "engine couldn't run". Without this
+  // field both look like `valid:true` and a deploy that depends on
+  // schema validation can fire against an unvalidated canvas.
+  validatedBy: 'engine' | 'skipped';
 }
 
 export async function validateCanvas(nodes: any[], edges: any[]): Promise<ValidationResult> {
@@ -78,7 +83,7 @@ export async function validateCanvas(nodes: any[], edges: any[]): Promise<Valida
       ? `Canvas valid: ${nodes.length} nodes, ${edges.length} edges — no issues found`
       : `Canvas invalid: ${errors.length} error(s), ${warnings.length} warning(s)`;
 
-    return { valid, errors, warnings, summary };
+    return { valid, errors, warnings, summary, validatedBy: 'engine' };
   } catch (err) {
     // Fallback: if core engine import fails, return a basic valid result
     console.error('Canvas validation error:', err);
@@ -87,6 +92,7 @@ export async function validateCanvas(nodes: any[], edges: any[]): Promise<Valida
       errors: [],
       warnings: [],
       summary: `Canvas: ${nodes.length} nodes, ${edges.length} edges — validation skipped (engine unavailable)`,
+      validatedBy: 'skipped',
     };
   }
 }

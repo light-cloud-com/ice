@@ -9,18 +9,18 @@
  *   const result = validateCanvas(nodes, edges, { mode: 'pre-deploy', provider: 'aws' });
  */
 
-import { validateArchitecture } from './architecture-rules.js';
-import { validateConnections } from './connection-rules.js';
-import { validateDeployability } from './deploy-rules.js';
-import { validateProperties } from './property-rules.js';
-import { validateStructure } from './structure-rules.js';
+import { validateArchitecture } from './architecture-rules';
+import { validateConnections } from './connection-rules';
+import { validateDeployability } from './deploy-rules';
+import { validateProperties } from './property-rules';
+import { validateStructure } from './structure-rules';
 import type {
   CanvasIssue,
   CanvasValidationResult,
   ValidatableNode,
   ValidatableEdge,
   ValidationContext,
-} from './types.js';
+} from './types';
 
 /**
  * Validate an entire canvas (nodes + edges).

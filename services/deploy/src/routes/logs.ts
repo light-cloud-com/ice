@@ -18,7 +18,7 @@
 
 import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
 import { Router, type Router as RouterType, type Response } from 'express';
-import * as logStreamService from '../services/log-stream.service.js';
+import * as logStreamService from '../services/log-stream.service';
 
 const router: RouterType = Router();
 router.use(requireAuth);

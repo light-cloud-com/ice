@@ -11,7 +11,7 @@ export {
   is_destructive_change,
   summarize_changes,
   format_property_change,
-} from './diff.js';
+} from './diff';
 
 // Export plan engine
 export {
@@ -23,4 +23,4 @@ export {
   serialize_plan,
   deserialize_plan,
   type CreatePlanOptions,
-} from './plan-engine.js';
+} from './plan-engine';

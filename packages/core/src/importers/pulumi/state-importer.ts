@@ -6,27 +6,26 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
+import { is_provider_resource, is_stack_resource } from './type-mapper';
 import {
-  get_ice_type,
-  get_provider_from_type,
-  parse_urn,
-  is_provider_resource,
-  is_stack_resource,
-} from './type-mapper.js';
-import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
+  get_deployment,
+  get_stack_info,
+  is_secret_value,
+  unwrap_secret,
+  create_empty_metadata,
+} from './parsing';
+import { import_resource } from './resource-conversion';
+import type { MutableGraph } from '../../graph/mutable-graph';
 import type {
   PulumiStackState,
   PulumiStackExport,
-  PulumiResource,
-  PulumiDeployment,
   PulumiImportResult,
   PulumiImportedResource,
   PulumiImportedOutput,
   PulumiImportError,
   PulumiImportWarning,
   PulumiImportMetadata,
-} from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+} from './types';
 
 // =============================================================================
 // Import Options
@@ -272,293 +271,8 @@ export function import_pulumi_state_object(
   };
 }
 
-/**
- * Import a single Pulumi resource.
- */
-function import_resource(
-  resource: PulumiResource,
-  options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
-  warnings: PulumiImportWarning[],
-): PulumiImportedResource {
-  const pulumi_type = resource.type;
-  const ice_type = get_ice_type(pulumi_type);
-  const provider = get_provider_from_type(pulumi_type);
-
-  // Parse the URN to get name
-  const parsed_urn = parse_urn(resource.urn);
-  let name = parsed_urn?.name ?? extract_name_from_urn(resource.urn);
-
-  // Apply name prefix
-  if (options.name_prefix) {
-    name = `${options.name_prefix}${name}`;
-  }
-
-  // Process properties from outputs (the actual state) or inputs
-  let properties: Record<string, unknown> = {};
-  if (resource.outputs) {
-    properties = process_properties(resource.outputs, options);
-  } else if (resource.inputs) {
-    properties = process_properties(resource.inputs, options);
-    warnings.push({
-      code: 'NO_OUTPUTS',
-      message: 'Resource has no outputs, using inputs instead',
-      resource: resource.urn,
-    });
-  }
-
-  // Extract dependencies
-  const dependencies: string[] = [];
-  if (resource.dependencies) {
-    dependencies.push(...resource.dependencies);
-  }
-  if (resource.parent) {
-    dependencies.push(resource.parent);
-  }
-
-  // Extract secret outputs
-  const secret_outputs: string[] = [];
-  if (resource.additional_secret_outputs) {
-    secret_outputs.push(...resource.additional_secret_outputs);
-  }
-
-  return {
-    pulumi_urn: resource.urn,
-    pulumi_type,
-    ice_type,
-    name,
-    id: resource.id,
-    properties,
-    dependencies,
-    provider,
-    parent: resource.parent,
-    protect: resource.protect ?? false,
-    external: resource.external ?? false,
-    secret_outputs,
-  };
-}
-
-/**
- * Process properties, handling secrets.
- */
-function process_properties(
-  props: Record<string, unknown>,
-  options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(props)) {
-    if (is_secret_value(value)) {
-      result[key] = options.include_secrets ? unwrap_secret(value) : '***SECRET***';
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      result[key] = process_properties(value as Record<string, unknown>, options);
-    } else {
-      result[key] = value;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Check if a value is a Pulumi secret.
- */
-function is_secret_value(value: unknown): boolean {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const obj = value as Record<string, unknown>;
-  return obj['4dabf18193072939515e22aab3b80af9'] === '1b47061264138c4ac30d75fd1eb44270';
-}
-
-/**
- * Unwrap a Pulumi secret value.
- */
-function unwrap_secret(value: unknown): unknown {
-  if (!is_secret_value(value)) {
-    return value;
-  }
-  const obj = value as Record<string, unknown>;
-  return obj['ciphertext'] ?? obj['plaintext'] ?? value;
-}
-
-/**
- * Get the deployment from state data.
- */
-function get_deployment(state_data: PulumiStackState | PulumiStackExport): PulumiDeployment | null {
-  // Check for export format first
-  if ('deployment' in state_data && state_data.deployment) {
-    return state_data.deployment;
-  }
-
-  // Check for stack state format
-  if ('checkpoint' in state_data && state_data.checkpoint?.latest) {
-    return state_data.checkpoint.latest;
-  }
-
-  return null;
-}
-
-/**
- * Get stack and project info from state data.
- */
-function get_stack_info(state_data: PulumiStackState | PulumiStackExport): {
-  stack: string;
-  project: string;
-} {
-  if ('checkpoint' in state_data && state_data.checkpoint) {
-    return {
-      stack: state_data.checkpoint.stack,
-      project: state_data.checkpoint.stack.split('/').pop() ?? 'unknown',
-    };
-  }
-
-  // Try to get from stack resource
-  if ('deployment' in state_data && state_data.deployment?.resources) {
-    const stack_resource = state_data.deployment.resources.find((r) => is_stack_resource(r.type));
-    if (stack_resource) {
-      const parsed = parse_urn(stack_resource.urn);
-      if (parsed) {
-        return { stack: parsed.stack, project: parsed.project };
-      }
-    }
-  }
-
-  return { stack: 'unknown', project: 'unknown' };
-}
-
-/**
- * Extract name from URN when parsing fails.
- */
-function extract_name_from_urn(urn: string): string {
-  const parts = urn.split('::');
-  return parts[parts.length - 1] ?? urn;
-}
-
-/**
- * Create empty metadata for error cases.
- */
-function create_empty_metadata(): PulumiImportMetadata {
-  return {
-    pulumi_version: 'unknown',
-    stack: 'unknown',
-    project: 'unknown',
-    deployment_time: new Date().toISOString(),
-    resource_count: 0,
-    output_count: 0,
-    imported_at: new Date().toISOString(),
-  };
-}
-
 // =============================================================================
-// Graph Conversion
+// Graph Conversion (re-exports)
 // =============================================================================
 
-/**
- * Convert imported resources to an ICE graph.
- */
-export function import_result_to_graph(result: PulumiImportResult, graph_name: string = 'pulumi-import'): MutableGraph {
-  const graph = create_mutable_graph(graph_name, {
-    description: `Imported from Pulumi stack ${result.metadata.stack}`,
-    labels: {
-      source: 'pulumi',
-      pulumi_version: result.metadata.pulumi_version,
-      stack: result.metadata.stack,
-      project: result.metadata.project,
-    },
-  });
-
-  // Track URN to node ID mapping
-  const urn_to_node_id = new Map<string, string>();
-
-  // Add nodes for each resource
-  for (const resource of result.resources) {
-    const node_input: NodeInput = {
-      type: resource.ice_type,
-      name: resource.name,
-      properties: {
-        ...resource.properties,
-        _pulumi_urn: resource.pulumi_urn,
-        _pulumi_type: resource.pulumi_type,
-      },
-      labels: {
-        provider: resource.provider,
-        pulumi_type: resource.pulumi_type,
-      },
-      annotations: {
-        imported_from: 'pulumi',
-        pulumi_urn: resource.pulumi_urn,
-      },
-    };
-
-    if (resource.id) {
-      node_input.properties!['id'] = resource.id;
-    }
-
-    if (resource.protect) {
-      node_input.labels!['protected'] = 'true';
-    }
-
-    if (resource.external) {
-      node_input.labels!['external'] = 'true';
-    }
-
-    const add_result = graph.add_node(node_input);
-    if (add_result.success && add_result.node) {
-      urn_to_node_id.set(resource.pulumi_urn, add_result.node.id);
-    }
-  }
-
-  // Add edges for dependencies
-  for (const resource of result.resources) {
-    const source_id = urn_to_node_id.get(resource.pulumi_urn);
-    if (!source_id) continue;
-
-    for (const dep_urn of resource.dependencies) {
-      const target_id = urn_to_node_id.get(dep_urn);
-      if (!target_id) continue;
-
-      // Skip self-dependencies
-      if (source_id === target_id) continue;
-
-      const edge_input: EdgeInput = {
-        source: source_id,
-        target: target_id,
-        relationship: 'depends_on',
-        labels: {
-          source: 'pulumi',
-        },
-      };
-
-      graph.add_edge(edge_input);
-    }
-  }
-
-  return graph;
-}
-
-/**
- * Import Pulumi state directly to a graph.
- */
-export async function import_pulumi_to_graph(
-  state_path: string,
-  options: PulumiImportOptions = {},
-): Promise<{ graph: MutableGraph; result: PulumiImportResult }> {
-  const result = await import_pulumi_state(state_path, options);
-  const graph = options.target_graph ?? import_result_to_graph(result);
-
-  if (options.target_graph) {
-    // Merge into existing graph
-    const merge_result = import_result_to_graph(result, 'temp');
-    for (const node of merge_result.nodes.values()) {
-      options.target_graph.add_node({
-        type: node.type,
-        name: node.name,
-        properties: node.properties,
-        labels: node.metadata.labels,
-        annotations: node.metadata.annotations,
-      });
-    }
-  }
-
-  return { graph, result };
-}
+export { import_result_to_graph, import_pulumi_to_graph } from './graph-conversion';

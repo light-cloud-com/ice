@@ -146,6 +146,7 @@ import { gcpSecretsBlueprint } from './gcp/security/secrets';
 import { gcpSslCertificateBlueprint } from './gcp/security/ssl-certificate';
 import { gcpWafBlueprint } from './gcp/security/waf';
 import { gcpStorageBlueprint } from './gcp/storage/storage';
+import { isIceTypeEnabledForProvider } from '@ice/constants';
 import { kubernetesLlmGatewayBlueprint } from './kubernetes/ai/llm-gateway';
 import { kubernetesSearchBlueprint } from './kubernetes/analytics/search';
 import { kubernetesScalableBackendBlueprint } from './kubernetes/backend/scalable-backend';
@@ -369,7 +370,14 @@ for (const bp of BLOCK_BLUEPRINTS) {
  */
 export function getBlueprint(iceType: string, provider?: string): BlockBlueprint | undefined {
   if (provider) {
+    // Provider-keyed lookup honors the (category × provider) feature flag —
+    // a disabled combo returns undefined so every downstream surface that
+    // already handles "no blueprint" (palette filter, template expansion,
+    // drag-drop, AI resolver, deploy validation) degrades naturally.
+    if (!isIceTypeEnabledForProvider(iceType, provider)) return undefined;
     return blueprintByTypeAndProvider.get(`${iceType}|${provider}`);
   }
+  // Provider-agnostic lookup stays open — used for cost categorization,
+  // info panels, and other read-paths that don't pick a concrete provider.
   return blueprintByType.get(iceType);
 }

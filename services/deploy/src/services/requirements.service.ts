@@ -23,8 +23,8 @@ import {
   checkSearchConsoleVerification,
   fetchSslCertificateStatus,
   generateVerificationToken,
-} from './google-verification.service.js';
-import { getResourceMap } from './resource-mapping.service.js';
+} from './google-verification.service';
+import { getResourceMap } from './resource-mapping.service';
 
 // ── Resolver ─────────────────────────────────────────────────────────────────
 

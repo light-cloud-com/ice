@@ -9,7 +9,7 @@
  */
 
 import { DEFAULT_PORTS, DEFAULT_ENV_VARS } from '@ice/constants';
-import type { PropagationRule, AggregateRule, PropagationNode } from './types.js';
+import type { PropagationRule, AggregateRule, PropagationNode } from './types';
 
 // ─── Block Type Classifiers ─────────────────────────────────────────────────
 // Minimal copies of the classifiers from @ice/types/connection-rules.

@@ -86,7 +86,21 @@ export const createEnvironment = createAsyncThunk(
 
 export const deleteEnvironment = createAsyncThunk(
   'environments/delete',
-  async ({ envId, projectId }: { envId: string; projectId: string }, { rejectWithValue }) => {
+  async (
+    { envId, projectId }: { envId: string; projectId: string },
+    { rejectWithValue, getState },
+  ) => {
+    // findings.md #29 — `is_protected` was only checked at UI render
+    // (the trash button was hidden for protected envs). Any callsite
+    // that dispatched the thunk directly bypassed the guard. The
+    // server still rejects with "Production environment cannot be
+    // deleted", but a thunk-level check turns a wasted round-trip
+    // into an immediate, structured rejection.
+    const state = getState() as { environments: EnvironmentsState };
+    const env = state.environments.byProject[projectId]?.find((e) => e.id === envId);
+    if (env?.is_protected) {
+      return rejectWithValue('Cannot delete a protected environment');
+    }
     try {
       const res = await getApi().environments.delete(envId);
       if (!res.success) return rejectWithValue(res.error);
@@ -143,6 +157,14 @@ const environmentsSlice = createSlice({
   initialState,
   reducers: {
     setActiveEnvironment(state, action: PayloadAction<{ projectId: string; envId: string }>) {
+      // findings.md #30 — only pin an envId that actually exists in
+      // the project's bucket. The previous unconditional write let a
+      // stale callsite point activeEnvId at a deleted env, and
+      // downstream selectors quietly resolved to undefined.
+      const exists = state.byProject[action.payload.projectId]?.some(
+        (e) => e.id === action.payload.envId,
+      );
+      if (!exists) return;
       state.activeEnvId[action.payload.projectId] = action.payload.envId;
     },
     clearPendingDiff(state) {

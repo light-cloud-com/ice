@@ -83,7 +83,14 @@ export function finalizeAuditEntry(
 }
 
 /**
- * Write audit entry to database. Fire-and-forget — errors are swallowed.
+ * Write audit entry to database. Fire-and-forget on the request path —
+ * audit logging must never break the AI flow — but failures are now
+ * logged so operators can see when audit-log persistence is broken.
+ *
+ * findings.md #21 — the previous `.catch(() => {})` silently dropped
+ * audit rows during a DB outage. Audit logs are a compliance artifact
+ * and "logged nothing for two hours" is exactly the failure mode that
+ * needs operator visibility.
  */
 export function writeAuditEntry(entry: AuditEntry): void {
   // Fire-and-forget
@@ -103,8 +110,14 @@ export function writeAuditEntry(entry: AuditEntry): void {
         error: entry.error ?? null,
       },
     })
-    .catch(() => {
-      // Silently fail — audit logging should never break the request
+    .catch((err: unknown) => {
+      // Audit logging failures stay non-throwing on the request path
+      // (see contract above) but must reach the deploy log channel so
+      // a sustained outage is observable.
+      console.error(
+        `[ai-audit] writeAuditEntry failed for entry ${entry.id} (model=${entry.model}):`,
+        err,
+      );
     });
 }
 

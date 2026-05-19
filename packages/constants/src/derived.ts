@@ -4,7 +4,7 @@
  * The tree in ice-types.ts is the source of truth.
  */
 
-import { TREE, type NodeCategory, type ResourceEntry } from './ice-types.js';
+import { TREE, type NodeCategory, type ResourceEntry } from './ice-types';
 
 const resourceIds: Record<string, string> = {};
 const primaryTypes = new Set<string>();

@@ -353,6 +353,41 @@
       "linkRepo": "Link repo",
       "clear": "Unlink",
       "connectGitHub": "Connect GitHub"
+    },
+    "anthropic": {
+      "title": "Claude (Anthropic)",
+      "description": "Connect your Anthropic API key to enable the in-app AI assistant. The key is encrypted at rest and never leaves this machine.",
+      "connected": "Connected",
+      "connectedSubtitle": "AI panel and deploy diagnosis are enabled",
+      "disconnect": "Disconnect",
+      "apiKeyLabel": "API key",
+      "apiKeyPlaceholder": "sk-ant-...",
+      "apiKeyHelp": "Don't have one?",
+      "createKey": "Create a key on console.anthropic.com",
+      "connectButton": "Connect Claude",
+      "appBarTip": "Claude (Anthropic)",
+      "settingsLabel": "Claude (Anthropic)",
+      "settingsDescription": "Bring your own Anthropic API key to enable the in-app AI assistant"
+    },
+    "settings": {
+      "sectionTitle": "Integrations",
+      "sectionDescription": "Bring-your-own-key connections — GitHub for repo deploys, Claude for the AI assistant, plus your cloud provider credentials. All stored encrypted in the workspace database.",
+      "github": {
+        "label": "GitHub",
+        "description": "PAT or device flow — required for git-push pipelines"
+      },
+      "gcp": {
+        "label": "Google Cloud Platform",
+        "description": "Service account key or OAuth — primary deploy target"
+      },
+      "aws": {
+        "label": "Amazon Web Services",
+        "description": "Access keys — experimental, see docs/provider-status.md"
+      },
+      "azure": {
+        "label": "Microsoft Azure",
+        "description": "Service principal — experimental, see docs/provider-status.md"
+      }
     }
   },
 
@@ -501,7 +536,9 @@
       "createAccount": "Create account",
       "chooseProvider": "Choose cloud provider",
       "connectCloud": "Connect cloud credentials",
-      "connectGithub": "Connect GitHub"
+      "connectGithub": "Connect GitHub",
+      "takeCanvasTour": "Take the canvas tour",
+      "openProjectForTour": "Open a project to start the tour."
     }
   },
 
@@ -735,11 +772,22 @@
       "thinking": "Thinking...",
       "undoLastAi": "Undo last AI change",
       "inputPlaceholder": "Describe what you want to build...",
+      "disconnectedPlaceholder": "Connect Claude to chat",
       "doneMessage": "Done.",
       "noChangesMessage": "No changes to apply.",
       "collapsedTitle": "AI Assistant",
       "sendMessage": "Send message",
-      "inputHint": "Enter to send · Shift+Enter for new line"
+      "inputHint": "Enter to send · Shift+Enter for new line",
+      "disconnectedBadge": "Not connected",
+      "disconnectedBadgeTooltip": "No AI provider configured — click to add your Anthropic API key",
+      "disconnectedTitle": "AI assistant not connected",
+      "disconnectedDesc": "Add your Anthropic API key to enable Claude. The key is encrypted and stored locally.",
+      "connectClaude": "Connect Claude"
+    },
+    "diagnosis": {
+      "diagnoseWithAi": "Diagnose with AI",
+      "connectToDiagnose": "Connect Claude to diagnose",
+      "connectToDiagnoseTooltip": "Add an Anthropic API key to enable AI deploy diagnosis"
     }
   },
 
@@ -1162,6 +1210,10 @@
         "clientIdLabel": "Client ID",
         "clientSecretLabel": "Client Secret"
       }
+    },
+    "help": {
+      "tooltip": "Help",
+      "showMeAround": "Show me around"
     }
   },
 
@@ -1561,5 +1613,84 @@
     "monitoringTerminal": { "name": "Log Terminal", "description": "Live streaming log viewer.", "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services." },
     "sourceRepository": { "name": "GitHub Repo", "description": "Source code. Connect to a service to deploy.", "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push." },
     "configEnvironment": { "name": "Env Variables", "description": "Key-value environment variables.", "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them." }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close",
+      "showMeHow": "Show me how"
+    },
+    "dashboard": {
+      "title": "Welcome to ICE",
+      "overview": {
+        "title": "Your dashboard",
+        "body": "Every project you build lives here. Folders let you group related projects."
+      },
+      "createProject": {
+        "title": "Create your first project",
+        "body": "Click here to start a project. You'll land on the canvas where you compose blocks into a deployable architecture."
+      }
+    },
+    "canvas": {
+      "title": "Tour your project",
+      "overview": {
+        "title": "Your canvas",
+        "body": "This is where you compose blocks into a deployable architecture."
+      },
+      "projects": {
+        "title": "Projects",
+        "body": "All your projects live here. Switch between them or create a new one."
+      },
+      "blocks": {
+        "title": "Blocks",
+        "body": "Drag any block onto the canvas — services, databases, networking, anything."
+      },
+      "templates": {
+        "title": "Templates",
+        "body": "Start from a pre-built architecture instead of an empty canvas."
+      },
+      "properties": {
+        "title": "Properties",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "AI assistant",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      },
+      "cost": {
+        "title": "Cost estimate",
+        "body": "Live monthly cost for the architecture you're building, broken out per service."
+      },
+      "cloud": {
+        "title": "Connect a cloud",
+        "body": "Hook up GCP, AWS, or Azure here so ICE can deploy on your behalf."
+      },
+      "github": {
+        "title": "Connect GitHub",
+        "body": "Link a repository to deploy on push and review changes from PRs."
+      },
+      "deploy": {
+        "title": "Deploy",
+        "body": "When the canvas is ready, hit Deploy to provision the infrastructure."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
   }
 }

@@ -4,9 +4,9 @@
  * Dynamic provider registration and management.
  */
 
-import { InternalError, ProviderError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
-import type { IceError } from '../types/errors.js';
+import { InternalError, ProviderError } from '../types/errors';
+import { success, failure } from '../types/result';
+import type { IceError } from '../types/errors';
 import type {
   ProviderName,
   ProviderConfig,
@@ -15,8 +15,8 @@ import type {
   ProviderRegistry,
   ProviderCapabilities,
   HealthCheckResult,
-} from '../types/providers.js';
-import type { Result } from '../types/result.js';
+} from '../types/providers';
+import type { Result } from '../types/result';
 
 // =============================================================================
 // Provider Registry Implementation
@@ -32,8 +32,20 @@ export class DefaultProviderRegistry implements ProviderRegistry {
 
   /**
    * Register a provider client factory.
+   *
+   * findings.md #41 — registering the same name twice silently
+   * replaced the factory, so a typo or accidental double-register
+   * during plugin discovery quietly broke whichever caller hit the
+   * registry first. We now warn on collision (and keep the
+   * last-write-wins behaviour, since a future opt-in plugin host
+   * may legitimately replace a built-in provider).
    */
   register(name: ProviderName, factory: ProviderFactory): void {
+    if (this.factories.has(name)) {
+      console.warn(
+        `[provider-registry] register("${name}") replacing an existing factory — last write wins. Investigate the duplicate registration.`,
+      );
+    }
     this.factories.set(name, factory);
   }
 
@@ -113,7 +125,17 @@ export class DefaultProviderRegistry implements ProviderRegistry {
   }
 
   /**
-   * Health check all providers.
+   * Health check all providers that have been instantiated.
+   *
+   * findings.md #42 — this method only iterates `this.clients`,
+   * which is populated by `get(config)` on first use. Providers
+   * that are registered but never instantiated stay invisible to
+   * the health report. The lazy semantics are intentional:
+   * instantiating a provider has side effects (env-credential
+   * lookups, network probes during construction, etc.) and a
+   * health-check call should not silently force them. Callers that
+   * want a "register-and-probe" sweep should call `get()` for each
+   * registered provider explicitly before calling this method.
    */
   async health_check_all(): Promise<Map<ProviderName, HealthCheckResult>> {
     const results = new Map<ProviderName, HealthCheckResult>();

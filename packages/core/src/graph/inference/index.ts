@@ -10,4 +10,4 @@ export {
   infer_relationships,
   type InferredRelationship,
   type InferenceOptions,
-} from './relationship-inferrer.js';
+} from './relationship-inferrer';

@@ -11,12 +11,12 @@ export * from "./parser";
 export * from "./validator";
 
 // Mutable graph implementation
-export type { GraphStats, SerializedGraph } from './mutable-graph.js';
+export type { GraphStats, SerializedGraph } from './mutable-graph';
 
-export { MutableGraph, create_mutable_graph } from './mutable-graph.js';
+export { MutableGraph, create_mutable_graph } from './mutable-graph';
 
 // Graph algorithms
-export type { GraphMetrics } from './algorithms.js';
+export type { GraphMetrics } from './algorithms';
 
 export {
   topological_sort,
@@ -30,7 +30,7 @@ export {
   get_execution_layers,
   get_critical_path,
   calculate_metrics,
-} from './algorithms.js';
+} from './algorithms';
 
 // Classifier module
 export {

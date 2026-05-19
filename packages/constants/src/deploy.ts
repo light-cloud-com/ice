@@ -7,7 +7,7 @@
  * call site.
  */
 
-import type { Provider } from './providers.js';
+import type { Provider } from './providers';
 
 export const DEFAULT_PROVIDER: Provider = 'gcp';
 export const DEFAULT_REGION = 'us-central1';

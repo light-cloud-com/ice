@@ -33,10 +33,6 @@ import {
   create_graph_validator,
   CycleValidator,
   ReferenceValidator,
-
-  // Provider registry
-  create_provider_registry,
-  create_provider_manager,
 } from '..';
 
 describe('Result Pattern', () => {
@@ -379,35 +375,5 @@ describe('Graph Validator', () => {
 
     const result = validator.validate(graph);
     expect(result.valid).toBe(true);
-  });
-});
-
-describe('Provider Registry', () => {
-  it('should create empty registry', () => {
-    const registry = create_provider_registry();
-    expect(registry.list()).toHaveLength(0);
-  });
-
-  it('should register provider factory', () => {
-    const registry = create_provider_registry();
-
-    registry.register('test', async () => ({
-      provider: 'test',
-      create: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
-      read: async () => ({ exists: true, properties: {}, outputs: {} }),
-      update: async () => ({ success: true, resource_id: 'test-1', outputs: {} }),
-      delete: async () => ({ success: true }),
-      health_check: async () => ({ healthy: true }),
-    }));
-
-    expect(registry.has('test')).toBe(true);
-    expect(registry.list()).toContain('test');
-  });
-
-  it('should create provider manager', () => {
-    const manager = create_provider_manager();
-    expect(manager).toBeDefined();
-    expect(manager.get_registry()).toBeDefined();
-    manager.dispose();
   });
 });

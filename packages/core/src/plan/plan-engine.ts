@@ -5,10 +5,10 @@
  * desired state (graph) against current state.
  */
 
-import { diff_properties, is_destructive_change } from './diff.js';
-import { get_execution_layers } from '../graph/algorithms.js';
-import { MutableGraph } from '../graph/mutable-graph.js';
-import { create_deployment_id } from '../types/deployment.js';
+import { diff_properties, is_destructive_change } from './diff';
+import { get_execution_layers } from '../graph/algorithms';
+import { MutableGraph } from '../graph/mutable-graph';
+import { create_deployment_id } from '../types/deployment';
 import type {
   DeploymentPlan,
   PlannedChange,
@@ -16,9 +16,9 @@ import type {
   PlanOptions,
   DeploymentAction,
   ProviderRequirement,
-} from '../types/deployment.js';
-import type { Node, NodeId } from '../types/graph.js';
-import type { ResourceState } from '../types/providers.js';
+} from '../types/deployment';
+import type { Node, NodeId } from '../types/graph';
+import type { ResourceState } from '../types/providers';
 
 // =============================================================================
 // Plan Engine

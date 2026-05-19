@@ -1,6 +1,8 @@
-import { Sparkles, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import React, { useCallback } from 'react';
+import { Sparkles, Loader2, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from '../../../i18n';
+import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
 import { getAccessToken } from '../../../shared/api/axios-instance';
 import { startDiagnosis, setDiagnosis, diagnosisError, clearDiagnosis } from '../../../store/slices/deploy-slice';
 import { serializeCanvas } from '../../ai/utils/serialize-canvas';
@@ -18,6 +20,10 @@ export const DeployDiagnosis: React.FC<DeployDiagnosisProps> = ({ error, results
   const diagnosis = useSelector((s: RootState) => s.deploy.diagnosis);
   const provider = useSelector((s: RootState) => s.deploy.provider);
   const region = useSelector((s: RootState) => s.deploy.region);
+  const anthropicStatus = useSelector((s: RootState) => s.integrations.integrations.anthropic?.status);
+  const aiConnected = anthropicStatus === 'connected';
+  const [showAnthropicModal, setShowAnthropicModal] = useState(false);
+  const { t } = useTranslation();
 
   const handleDiagnose = useCallback(async () => {
     dispatch(startDiagnosis());
@@ -73,13 +79,28 @@ export const DeployDiagnosis: React.FC<DeployDiagnosisProps> = ({ error, results
   }, [dispatch, error, results, provider, region]);
 
   if (diagnosis.status === 'idle') {
+    if (!aiConnected) {
+      return (
+        <>
+          <button
+            onClick={() => setShowAnthropicModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-xs rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+            title={t('ai.diagnosis.connectToDiagnoseTooltip')}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            {t('ai.diagnosis.connectToDiagnose')}
+          </button>
+          <AnthropicConnectModal isOpen={showAnthropicModal} onClose={() => setShowAnthropicModal(false)} />
+        </>
+      );
+    }
     return (
       <button
         onClick={handleDiagnose}
         className="flex items-center gap-1.5 px-3 py-1.5 text-ice-xs rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
       >
         <Sparkles className="w-3.5 h-3.5" />
-        Diagnose with AI
+        {t('ai.diagnosis.diagnoseWithAi')}
       </button>
     );
   }

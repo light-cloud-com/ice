@@ -24,21 +24,14 @@ import {
 } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { parseCostRange } from '../../features/cost/utils/cost-calculator';
 import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
-import { deriveRollup } from '../../store/slices/deploy-slice';
+import { deriveRollup, deriveRollupPercentage } from '../../store/slices/deploy-slice';
 import { openValidation } from '../../store/slices/ui-slice';
 import { useSystemStats } from '../hooks/use-system-stats';
 import type { RootState } from '../../store';
-
-function parseCostRange(cost: string): number {
-  const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
-  if (!matches) return 0;
-  const low = parseInt(matches[1]);
-  const high = matches[2] ? parseInt(matches[2]) : low;
-  return (low + high) / 2;
-}
 
 export const StatusBar: React.FC = () => {
   const { t } = useTranslation();
@@ -215,12 +208,7 @@ const DeployStatusIndicator: React.FC = () => {
     shallowEqual,
   );
   const rollup = useMemo(() => deriveRollup(deployNodesById), [deployNodesById]);
-  const deployProgress =
-    rollup.total === 0
-      ? 0
-      : rollup.terminal === rollup.total
-        ? 100
-        : Math.min(99, Math.round((rollup.terminal / Math.max(rollup.total, 1)) * 100));
+  const deployProgress = deriveRollupPercentage(rollup);
 
   if (deployStatus === 'idle') return null;
 

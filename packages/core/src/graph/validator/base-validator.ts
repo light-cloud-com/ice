@@ -4,8 +4,8 @@
  * Foundation for graph validation with composable rules.
  */
 
-import type { NodeId } from '../../types/graph.js';
-import type { MutableGraph } from '../mutable-graph.js';
+import type { NodeId } from '../../types/graph';
+import type { MutableGraph } from '../mutable-graph';
 
 // =============================================================================
 // Validation Types

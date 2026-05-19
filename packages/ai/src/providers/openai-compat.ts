@@ -23,7 +23,14 @@ export class OpenAICompatProvider implements AiProvider {
   protected readonly apiKey: string | undefined;
 
   constructor(options?: { baseUrl?: string; model?: string; apiKey?: string; name?: string; isLocal?: boolean }) {
-    this.baseUrl = (options?.baseUrl || process.env.ICE_AI_URL || 'http://localhost:8000').replace(/\/+$/, '');
+    const explicitUrl = options?.baseUrl || process.env.ICE_AI_URL;
+    if (!explicitUrl && process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'OpenAICompatProvider requires ICE_AI_URL (or an explicit baseUrl) in production. ' +
+          'Localhost defaults are only allowed in development.',
+      );
+    }
+    this.baseUrl = (explicitUrl || 'http://localhost:8000').replace(/\/+$/, '');
     this.model = options?.model || process.env.ICE_AI_MODEL || 'default';
     this.apiKey = options?.apiKey;
     this.name = options?.name || 'openai-compat';
@@ -31,14 +38,28 @@ export class OpenAICompatProvider implements AiProvider {
   }
 
   async healthCheck(): Promise<HealthCheckResult> {
+    // findings.md #17 — distinguish "endpoint missing" (404 / network)
+    // from "endpoint there but rejected our auth" (401 / 403). The
+    // previous catch-all fell through to /v1/models on every non-OK
+    // response, so a misconfigured API key looked identical to "no
+    // /health endpoint" and the user was sent to debug the wrong layer.
     try {
-      // Try /health first
       const healthRes = await this.httpGet('/health');
       if (healthRes.ok) {
         return { ok: true, provider: this.name, model: this.model, isLocal: this.isLocal };
       }
+      if (healthRes.status === 401 || healthRes.status === 403) {
+        return {
+          ok: false,
+          provider: this.name,
+          error: `Authentication failed against ${this.baseUrl}/health (status ${healthRes.status}). Check ICE_AI_API_KEY / Authorization header.`,
+        };
+      }
+      // Other non-OK statuses (404 → endpoint missing, 5xx → server
+      // bug) are treated the same as the previous fall-through:
+      // /health is optional; try /v1/models next.
     } catch {
-      // /health not available, try /v1/models
+      // /health not reachable (network / timeout) — try /v1/models.
     }
 
     try {
@@ -53,6 +74,13 @@ export class OpenAICompatProvider implements AiProvider {
           isLocal: this.isLocal,
         };
       }
+      if (modelsRes.status === 401 || modelsRes.status === 403) {
+        return {
+          ok: false,
+          provider: this.name,
+          error: `Authentication failed against ${this.baseUrl}/v1/models (status ${modelsRes.status}).`,
+        };
+      }
     } catch {
       // Server not reachable
     }
@@ -61,11 +89,19 @@ export class OpenAICompatProvider implements AiProvider {
   }
 
   async chat(params: ChatParams): Promise<ChatResponse> {
+    // findings.md #18 — surface the wire-level finish reason. The
+    // stream parser already extracts it from the SSE payload; the
+    // previous version threw it away and returned 'stop' even when
+    // the model actually hit a length cap or content filter.
     let content = '';
+    let finishReason: ChatResponse['finishReason'] = 'stop';
     for await (const chunk of this.streamChat(params)) {
       content += chunk.content;
+      if (chunk.finishReason) {
+        finishReason = chunk.finishReason as ChatResponse['finishReason'];
+      }
     }
-    return { content, finishReason: 'stop' };
+    return { content, finishReason };
   }
 
   async *streamChat(params: ChatParams): AsyncIterable<ChatChunk> {

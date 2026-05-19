@@ -1,6 +1,6 @@
 # Blocks Reference
 
-ICE's canvas is built from **concept blocks** — provider-neutral building blocks like *Static Site*, *Scalable Backend*, *Postgres*, *Message Queue*. Each concept resolves, at deploy time, to a specific cloud primitive depending on the selected provider (Cloud Run on GCP, ECS on AWS, App Service on Azure).
+ICE's canvas is built from **concept blocks** - provider-neutral building blocks like *Static Site*, *Scalable Backend*, *Postgres*, *Message Queue*. Each concept resolves, at deploy time, to a specific cloud primitive depending on the selected provider (Cloud Run on GCP, ECS on AWS, App Service on Azure).
 
 This page enumerates the concept palette and points at where each concept is defined, validated, and implemented.
 
@@ -43,9 +43,9 @@ packages/blocks/src/
 
 Each concept folder contains:
 
-- `index.ts` — the concept's definition (id, label, category, default properties, edges it legally accepts).
-- `blueprint.ts` — a template "blueprint" shown when the concept is first dropped on a canvas.
-- `info.ts` — long-form description (what it is, why you'd use it, what it maps to per provider).
+- `index.ts` - the concept's definition (id, label, category, default properties, edges it legally accepts).
+- `blueprint.ts` - a template "blueprint" shown when the concept is first dropped on a canvas.
+- `info.ts` - long-form description (what it is, why you'd use it, what it maps to per provider).
 
 ## The canvas palette
 
@@ -84,7 +84,7 @@ GCP is the most complete provider today; AWS and Azure are intentionally partial
 
 ## Requirements and validation
 
-Concepts advertise *requirements* — "to be useful, a Scalable Backend needs either a GitHub Repo or an Object Storage for code, plus a Public Traffic upstream." Requirements live in `packages/blocks/src/requirements/` and are enforced by the canvas validator (`packages/core/src/validation/`).
+Concepts advertise *requirements* - "to be useful, a Scalable Backend needs either a GitHub Repo or an Object Storage for code, plus a Public Traffic upstream." Requirements live in `packages/blocks/src/requirements/` and are enforced by the canvas validator (`packages/core/src/validation/`).
 
 When a requirement is unmet, the block shows a badge; hovering the badge explains what's missing. The validator prevents deploys on unmet hard requirements and warns on soft ones.
 
@@ -92,15 +92,15 @@ When a requirement is unmet, the block shows a badge; hovering the badge explain
 
 The typical shape of a new concept PR:
 
-1. `packages/blocks/src/common/concepts/<name>/index.ts` — define id, label, default properties, category.
-2. `packages/blocks/src/common/concepts/<name>/blueprint.ts` — the drop-to-canvas initial state.
-3. `packages/blocks/src/common/concepts/<name>/info.ts` — description.
-4. `packages/core/src/resources/high-level-resources.ts` — register the high-level resource and its mapping.
-5. `packages/providers/<cloud>/src/handlers/<resource>.ts` — per-provider deploy/update/delete handler.
-6. `packages/ui/src/features/canvas/components/nodes/<name>/` — custom node rendering (if needed).
-7. Tests — usually a card-translator test + a handler test.
+1. `packages/blocks/src/common/concepts/<name>/index.ts` - define id, label, default properties, category.
+2. `packages/blocks/src/common/concepts/<name>/blueprint.ts` - the drop-to-canvas initial state.
+3. `packages/blocks/src/common/concepts/<name>/info.ts` - description.
+4. `packages/core/src/resources/high-level-resources.ts` - register the high-level resource and its mapping.
+5. `packages/providers/<cloud>/src/handlers/<resource>.ts` - per-provider deploy/update/delete handler.
+6. `packages/ui/src/features/canvas/components/nodes/<name>/` - custom node rendering (if needed).
+7. Tests - usually a card-translator test + a handler test.
 
-See `packages/blocks/src/common/concepts/static-site/` as a reference implementation — it covers every piece.
+See `packages/blocks/src/common/concepts/static-site/` as a reference implementation - it covers every piece.
 
 ## Templates vs. blocks
 
@@ -124,18 +124,18 @@ Current templates:
 | SaaS Multi-Tenant | Tenant-isolated SaaS shape |
 | SaaS Analytics Dashboard | Dashboard + data pipeline |
 
-Templates are just compositions — every block they produce is one you could drop individually. Nothing magic.
+Templates are just compositions - every block they produce is one you could drop individually. Nothing magic.
 
 ## Entry points worth reading
 
-- [`packages/blocks/src/common/concepts/static-site/index.ts`](../packages/blocks/src/common/concepts/static-site/index.ts) — simplest concept.
-- [`packages/blocks/src/common/concepts/scalable-backend/index.ts`](../packages/blocks/src/common/concepts/scalable-backend/index.ts) — a more complex one.
-- [`packages/core/src/resources/high-level-resources.ts`](../packages/core/src/resources/high-level-resources.ts) — concept-to-cloud mapping.
-- [`packages/core/src/validation/`](../packages/core/src/validation) — canvas-level validation rules.
-- [`packages/templates/src/`](../packages/templates/src) — template compositions.
+- [`packages/blocks/src/common/concepts/static-site/index.ts`](../packages/blocks/src/common/concepts/static-site/index.ts) - simplest concept.
+- [`packages/blocks/src/common/concepts/scalable-backend/index.ts`](../packages/blocks/src/common/concepts/scalable-backend/index.ts) - a more complex one.
+- [`packages/core/src/resources/high-level-resources.ts`](../packages/core/src/resources/high-level-resources.ts) - concept-to-cloud mapping.
+- [`packages/core/src/validation/`](../packages/core/src/validation) - canvas-level validation rules.
+- [`packages/templates/src/`](../packages/templates/src) - template compositions.
 
 ## See also
 
-- [deploying-to-gcp.md](deploying-to-gcp.md) — concepts in action.
-- [core-engine.md](core-engine.md) — the graph model concepts translate into.
-- [frontend.md](frontend.md) — how concepts are rendered on the canvas.
+- [deploying-to-gcp.md](deploying-to-gcp.md) - concepts in action.
+- [core-engine.md](core-engine.md) - the graph model concepts translate into.
+- [frontend.md](frontend.md) - how concepts are rendered on the canvas.

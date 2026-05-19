@@ -11,7 +11,7 @@ describe('Card Translator Type Maps', () => {
   describe('GCP Type Map', () => {
     it('should map Messaging.Topic to pubsub (not dataflow)', async () => {
       // ENGINE-15: Messaging.Topic was incorrectly mapped to gcp.dataflow.job
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       // Access via translate — check that Topic produces pubsub type
       const result = mod.translate_card_to_graph({
         nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Messaging.Topic', label: 'topic-1' } }],
@@ -24,7 +24,7 @@ describe('Card Translator Type Maps', () => {
     });
 
     it('should map all standard GCP iceTypes', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const gcpTypes = [
         'Compute.StaticSite',
         'Compute.Container',
@@ -52,7 +52,7 @@ describe('Card Translator Type Maps', () => {
     // AWS deploy path is not yet wired up — PROPERTY_EXTRACTORS only covers
     // GCP resource types today. Unskip when AWS extractors land.
     it('should map AWS iceTypes (ENGINE-1)', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const awsTypes = [
         'Compute.Container',
         'Compute.ServerlessFunction',
@@ -73,7 +73,7 @@ describe('Card Translator Type Maps', () => {
     });
 
     it('should not return empty results for AWS anymore', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const result = mod.translate_card_to_graph({
         nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'app' } }],
         edges: [],
@@ -87,7 +87,7 @@ describe('Card Translator Type Maps', () => {
   describe.skip('Azure Type Map', () => {
     // Azure deploy path not yet wired up — unskip when extractors land.
     it('should map Azure iceTypes (ENGINE-2)', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const result = mod.translate_card_to_graph({
         nodes: [
           { id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'app' } },
@@ -103,7 +103,7 @@ describe('Card Translator Type Maps', () => {
 
   describe('Design-only providers (ENGINE-3)', () => {
     it('should emit warning for unsupported providers', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
 
       for (const provider of ['alibaba', 'digitalocean', 'kubernetes']) {
         const result = mod.translate_card_to_graph({
@@ -119,7 +119,7 @@ describe('Card Translator Type Maps', () => {
 
   describe('UI-only and group nodes', () => {
     it('should skip group nodes', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const result = mod.translate_card_to_graph({
         nodes: [{ id: 'n1', type: 'group', data: { label: 'VPC' } }],
         edges: [],
@@ -131,7 +131,7 @@ describe('Card Translator Type Maps', () => {
     });
 
     it('should skip UI-only types', async () => {
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const result = mod.translate_card_to_graph({
         nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Monitoring.Terminal', label: 'logs' } }],
         edges: [],
@@ -149,7 +149,7 @@ describe('Card Translator Type Maps', () => {
       // The sink resource identifier here must stay aligned with the
       // handler at packages/core/src/deploy/providers/gcp/handlers/logging.ts
       // and with the LT-3 filter resolver's resource-type expectations.
-      const mod = await import('../deploy/card-translator.js');
+      const mod = await import('../deploy/card-translator');
       const result = mod.translate_card_to_graph({
         nodes: [{ id: 'log-1', type: 'resource', data: { iceType: 'Monitoring.Log', label: 'app-logs' } }],
         edges: [],

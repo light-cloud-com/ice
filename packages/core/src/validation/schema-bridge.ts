@@ -13,7 +13,7 @@ import {
   HIGH_LEVEL_CATEGORIES,
   type HighLevelResource,
   type HighLevelProperty,
-} from '../resources/high-level-resources.js';
+} from '../resources/high-level-resources';
 
 // ─── Build lookup maps on first access ──────────────────────────────────────
 

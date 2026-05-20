@@ -20,7 +20,7 @@
     "@ice/service-credentials": "workspace:*",
     "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",
-    "bullmq": "^5.71.0",
+    "bullmq": "^5.76.10",
     "express": "^4.22.1",
     "google-auth-library": "^10.6.2",
     "ioredis": "^5.10.1",

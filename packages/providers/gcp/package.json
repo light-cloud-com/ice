@@ -14,8 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@google-cloud/asset": "^6.3.1",
-    "@google-cloud/compute": "^6.9.0",
+    "@google-cloud/asset": "^6.3.2",
+    "@google-cloud/compute": "^6.11.0",
     "@google-cloud/storage": "^7.19.0",
     "@ice/core": "workspace:*",
     "@ice/types": "workspace:*",

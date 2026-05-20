@@ -1,52 +1,26 @@
 /**
  * Persistence-path coverage for ui-slice.
  *
- * The slice's `loadPersistedPanels` and `loadPersistedPanes` functions
- * run once at module-init time. To exercise their happy paths we seed
- * `localStorage` BEFORE importing the module — using `vi.resetModules`
- * + dynamic import so each test gets a fresh module instance.
+ * UI prefs no longer round-trip through localStorage — the slice exposes
+ * `loadUiPrefs` which is dispatched by the user-preferences hydration
+ * flow. These tests exercise the reducer's hydrate branches.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import uiReducer, { loadUiPrefs } from '../ui-slice';
 
-// In-memory localStorage stub. Keys are seeded per-test before the
-// dynamic import so the slice's module-init reads them.
-const memStorage: Record<string, string> = {};
-
-beforeEach(() => {
-  for (const k of Object.keys(memStorage)) delete memStorage[k];
-  Object.defineProperty(globalThis, 'localStorage', {
-    value: {
-      getItem: (k: string) => memStorage[k] ?? null,
-      setItem: (k: string, v: string) => {
-        memStorage[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete memStorage[k];
-      },
-      clear: () => {
-        for (const k of Object.keys(memStorage)) delete memStorage[k];
-      },
-    },
-    writable: true,
-    configurable: true,
-  });
-  vi.resetModules();
-});
-
-async function importFresh() {
-  return await import('../ui-slice');
-}
-
-describe('ui-slice persistence', () => {
-  it('reads a persisted panels payload and merges over defaults', async () => {
-    memStorage['ice-ui-panels'] = JSON.stringify({
-      showPalette: false,
-      showProperties: true,
-      showCostPanel: true,
-    });
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
+describe('ui-slice — loadUiPrefs hydration', () => {
+  it('merges a panels payload over defaults', () => {
+    const state = uiReducer(
+      undefined,
+      loadUiPrefs({
+        panels: {
+          showPalette: false,
+          showProperties: true,
+          showCostPanel: true,
+        },
+      }),
+    );
     expect(state.showPalette).toBe(false);
     expect(state.showProperties).toBe(true);
     expect(state.showCostPanel).toBe(true);
@@ -55,23 +29,31 @@ describe('ui-slice persistence', () => {
     expect(state.showMinimap).toBe(true);
   });
 
-  it('falls back to defaults when panels JSON is malformed', async () => {
-    memStorage['ice-ui-panels'] = 'not-json';
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
-    expect(state.showPalette).toBe(true);
-    expect(state.showBlocks).toBe(true);
+  it('is a no-op when payload is null', () => {
+    const initial = uiReducer(undefined, { type: '@@INIT' });
+    const next = uiReducer(initial, loadUiPrefs(null));
+    expect(next).toBe(initial);
   });
 
-  it('reads persisted panes with a custom direction and openCardIds', async () => {
-    memStorage['ice-ui-panes'] = JSON.stringify({
-      enabled: true,
-      direction: 'vertical',
-      panes: [{ id: 'p-stored', cardId: 'c-stored', openCardIds: ['c-stored', 'c-tab2'] }],
-      activePaneId: 'p-stored',
-    });
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
+  it('hydrates splitView with a custom direction and openCardIds', () => {
+    const state = uiReducer(
+      undefined,
+      loadUiPrefs({
+        splitView: {
+          enabled: true,
+          direction: 'vertical',
+          panes: [
+            {
+              id: 'p-stored',
+              cardId: 'c-stored',
+              openCardIds: ['c-stored', 'c-tab2'],
+              viewport: { panX: 0, panY: 0, scale: 1 },
+            },
+          ],
+          activePaneId: 'p-stored',
+        },
+      }),
+    );
     expect(state.splitView.enabled).toBe(true);
     expect(state.splitView.direction).toBe('vertical');
     expect(state.splitView.panes).toHaveLength(1);
@@ -81,32 +63,34 @@ describe('ui-slice persistence', () => {
     expect(state.splitView.activePaneId).toBe('p-stored');
   });
 
-  it('falls back to defaults when persisted panes payload has empty panes array', async () => {
-    memStorage['ice-ui-panes'] = JSON.stringify({ panes: [] });
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
+  it('skips splitView hydration when panes array is empty', () => {
+    const state = uiReducer(
+      undefined,
+      loadUiPrefs({
+        splitView: {
+          enabled: true,
+          direction: 'horizontal',
+          panes: [],
+          activePaneId: 'pane-1',
+        },
+      }),
+    );
+    // Defaults survive.
     expect(state.splitView.panes).toHaveLength(1);
     expect(state.splitView.panes[0].id).toBe('pane-1');
     expect(state.splitView.panes[0].cardId).toBe('demo');
   });
 
-  it('uses pane defaults when stored pane omits id/cardId/openCardIds', async () => {
-    memStorage['ice-ui-panes'] = JSON.stringify({
-      panes: [{ id: '', cardId: '' }],
-    });
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
-    const pane = state.splitView.panes[0];
-    expect(pane.id).toBe('pane-1');
-    expect(pane.cardId).toBe('demo');
-    expect(pane.openCardIds).toEqual(['demo']);
-  });
-
-  it('falls back to defaults when panes JSON is malformed', async () => {
-    memStorage['ice-ui-panes'] = '{not-json';
-    const mod = await importFresh();
-    const state = mod.default(undefined, { type: '@@INIT' });
-    expect(state.splitView.panes).toHaveLength(1);
-    expect(state.splitView.panes[0].id).toBe('pane-1');
+  it('ignores non-boolean panel values', () => {
+    const state = uiReducer(
+      undefined,
+      loadUiPrefs({
+        panels: {
+          // @ts-expect-error — exercise runtime guard against bad payloads
+          showPalette: 'maybe',
+        },
+      }),
+    );
+    expect(state.showPalette).toBe(true);
   });
 });

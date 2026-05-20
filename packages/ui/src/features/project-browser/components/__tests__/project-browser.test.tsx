@@ -61,7 +61,16 @@ const mocks = vi.hoisted(() => ({
   MockPanelHeader: vi.fn((p: unknown) => p),
   MockPanelHeaderAction: vi.fn((p: unknown) => p),
   MockTreeItem: vi.fn((p: unknown) => p),
+  createEmptyProjectAndNavigate: vi.fn(),
 }));
+
+vi.mock('react', async (orig) => {
+  const r = (await orig()) as typeof import('react');
+  return {
+    ...r,
+    useCallback: <F,>(fn: F) => fn,
+  };
+});
 
 vi.mock('react-redux', () => ({
   useSelector: (sel: (s: unknown) => unknown) => sel(mocks.state),
@@ -100,6 +109,10 @@ vi.mock('../../../../shared/components/ui/panel-header', () => ({
 
 vi.mock('../tree-item', () => ({
   TreeItem: mocks.MockTreeItem,
+}));
+
+vi.mock('../../../wizard/utils/create-empty-project', () => ({
+  createEmptyProjectAndNavigate: mocks.createEmptyProjectAndNavigate,
 }));
 
 import { PanelHeader, PanelHeaderAction } from '../../../../shared/components/ui/panel-header';
@@ -151,6 +164,7 @@ beforeEach(() => {
   mocks.data.setSearch = vi.fn();
   mocks.data.fetchProjects = vi.fn();
   mocks.data.toggleExpand = vi.fn();
+  mocks.createEmptyProjectAndNavigate.mockReset();
   mocks.actions.handleCreate = vi.fn();
   mocks.actions.handleRename = vi.fn();
   mocks.actions.handleDelete = vi.fn();
@@ -191,16 +205,15 @@ describe('ProjectBrowser — header', () => {
     expect(actions.length).toBe(2);
   });
 
-  it('clicking the new-project action dispatches openDialog("projectWizard")', () => {
+  it('clicking the new-project action calls createEmptyProjectAndNavigate', () => {
     const tree = render();
     const header = findFirst(tree, (el) => el.type === PanelHeader);
     const actions = findAll(header!.props.actions, (el) => el.type === PanelHeaderAction);
     const newProjectAction = actions.find((a) => a.props.label === 'projectBrowser.newProject');
     (newProjectAction!.props.onClick as () => void)();
-    expect(mocks.dispatch).toHaveBeenCalledWith({
-      type: 'ui/openDialog',
-      payload: 'projectWizard',
-    });
+    expect(mocks.createEmptyProjectAndNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ organisationId: 'org-1', organisationName: 'Acme' }),
+    );
   });
 
   it('clicking the new-folder action calls handleCreate("folder")', () => {
@@ -248,7 +261,7 @@ describe('ProjectBrowser — empty state', () => {
     expect(createBtn).toBeDefined();
   });
 
-  it('clicking the empty-state Create button dispatches openDialog', () => {
+  it('clicking the empty-state Create button calls createEmptyProjectAndNavigate', () => {
     mocks.data.items = [];
     const tree = render();
     const createBtn = findFirst(
@@ -259,10 +272,9 @@ describe('ProjectBrowser — empty state', () => {
         (el.props.className as string).includes('bg-ice-accent'),
     );
     (createBtn!.props.onClick as () => void)();
-    expect(mocks.dispatch).toHaveBeenCalledWith({
-      type: 'ui/openDialog',
-      payload: 'projectWizard',
-    });
+    expect(mocks.createEmptyProjectAndNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ organisationId: 'org-1', organisationName: 'Acme' }),
+    );
   });
 });
 

@@ -137,7 +137,8 @@ describe('store — card persistence subscriber', () => {
     ).not.toHaveBeenCalledWith('ice-cards', expect.any(String));
   });
 
-  it('persists active-card snapshot to localStorage when a card exists', async () => {
+  it('persists active-card snapshot via the backend when authenticated', async () => {
+    mocks.isAuthenticated.mockReturnValue(true);
     const mod = await import('..');
     mod.store.dispatch({
       type: 'cards/createCard',
@@ -145,40 +146,32 @@ describe('store — card persistence subscriber', () => {
     });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    const calls = setItem.mock.calls.filter((c) => c[0] === 'ice-cards');
-    expect(calls.length).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    expect(mocks.graphSave).toHaveBeenCalledWith('c1');
   });
 
-  it('skips the localStorage write when the card hash is unchanged', async () => {
+  it('skips the backend save when the card hash is unchanged', async () => {
+    mocks.isAuthenticated.mockReturnValue(true);
     const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    setItem.mockClear();
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    mocks.graphSave.mockClear();
     // Dispatch a no-op state change that doesn't touch the active card.
     mod.store.dispatch({ type: 'ui/openDialog', payload: 'projectWizard' });
     await vi.advanceTimersByTimeAsync(2100);
-    const cardWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-cards');
-    // The hash is unchanged → no new ice-cards write.
-    expect(cardWrites.length).toBe(0);
-  });
-
-  it('still completes when localStorage.setItem throws (quota error swallowed)', async () => {
-    const mod = await import('..');
-    mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
-    mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
-    (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mockImplementationOnce(() => {
-      throw new Error('quota');
-    });
-    let threw: unknown = null;
-    try {
-      await vi.advanceTimersByTimeAsync(2100);
-    } catch (e) {
-      threw = e;
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
     }
-    expect(threw).toBeNull();
+    expect(mocks.graphSave).not.toHaveBeenCalled();
   });
 
   it('calls api.graph.save when isAuthenticated returns true', async () => {
@@ -227,7 +220,8 @@ describe('store — card persistence subscriber', () => {
     expect(threw).toBeNull();
   });
 
-  it('debounces multiple rapid dispatches into one persisted snapshot', async () => {
+  it('debounces multiple rapid dispatches into one backend save', async () => {
+    mocks.isAuthenticated.mockReturnValue(true);
     const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
@@ -235,92 +229,45 @@ describe('store — card persistence subscriber', () => {
     mod.store.dispatch({ type: 'cards/renameCard', payload: { id: 'c1', name: 'T2' } });
     mod.store.dispatch({ type: 'cards/renameCard', payload: { id: 'c1', name: 'T3' } });
     await vi.advanceTimersByTimeAsync(2100);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    const cardWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-cards');
-    // The debounce collapses rapid dispatches; we expect at most one write
-    // for the final state.
-    expect(cardWrites.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-describe('store — UI persistence subscriber', () => {
-  it('writes splitView to localStorage after the 300ms debounce', async () => {
-    const mod = await import('..');
-    // The first dispatch flips splitView identity → triggers the subscriber.
-    mod.store.dispatch({
-      type: 'ui/openTabInPane',
-      payload: { paneId: 'p0', cardId: 'c1' },
-    });
-    await vi.advanceTimersByTimeAsync(400);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    const uiWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-ui-panes');
-    expect(uiWrites.length).toBeGreaterThan(0);
-  });
-
-  it('skips the write when splitView identity is unchanged', async () => {
-    const mod = await import('..');
-    // First change → write
-    mod.store.dispatch({
-      type: 'ui/openTabInPane',
-      payload: { paneId: 'p0', cardId: 'c1' },
-    });
-    await vi.advanceTimersByTimeAsync(400);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    setItem.mockClear();
-    // Dispatch an action that does NOT touch ui.splitView (a different slice
-    // entirely so the splitView reference doesn't change). Use a no-op
-    // unknown action type so the reducer leaves splitView identical.
-    mod.store.dispatch({ type: 'noop/action' });
-    await vi.advanceTimersByTimeAsync(400);
-    const uiWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-ui-panes');
-    expect(uiWrites.length).toBe(0);
-  });
-
-  it('swallows localStorage.setItem errors during UI persistence', async () => {
-    const mod = await import('..');
-    (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mockImplementation(() => {
-      throw new Error('quota');
-    });
-    mod.store.dispatch({
-      type: 'ui/openTabInPane',
-      payload: { paneId: 'p0', cardId: 'c1' },
-    });
-    let threw: unknown = null;
-    try {
-      await vi.advanceTimersByTimeAsync(400);
-    } catch (e) {
-      threw = e;
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
     }
-    expect(threw).toBeNull();
+    // The debounce collapses rapid dispatches; we expect one save call for
+    // the final state.
+    expect(mocks.graphSave).toHaveBeenCalledTimes(1);
   });
 });
+
+// UI persistence (panel visibility, split-view layout) now lives in
+// `store/user-preferences.ts` and is exercised by its own test file.
 
 describe('store — cardHash function', () => {
   it('returns empty string for null/undefined card', async () => {
-    // The function lives in module scope; we drive it indirectly via the
-    // subscriber by ensuring the setTimeout body returns early when no
-    // active card exists. The early-return covers the same statements the
-    // direct call would.
+    mocks.isAuthenticated.mockReturnValue(true);
     const mod = await import('..');
-    expect(mod.store).toBeDefined();
     // No active card → setTimeout body returns early before invoking cardHash
     await vi.advanceTimersByTimeAsync(2100);
-    expect(
-      (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem.mock.calls.filter(
-        (c) => c[0] === 'ice-cards',
-      ).length,
-    ).toBe(0);
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    expect(mocks.graphSave).not.toHaveBeenCalled();
   });
 
   it('produces different hashes for cards with different node counts', async () => {
+    mocks.isAuthenticated.mockReturnValue(true);
     const mod = await import('..');
     mod.store.dispatch({ type: 'cards/createCard', payload: { id: 'c1', name: 'T' } });
     mod.store.dispatch({ type: 'cards/setActiveCard', payload: 'c1' });
     await vi.advanceTimersByTimeAsync(2100);
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    const initialWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-cards').length;
-    setItem.mockClear();
-    // Add a node — hash differs → new write
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    const initialSaves = mocks.graphSave.mock.calls.length;
+    mocks.graphSave.mockClear();
+    // Add a node — hash differs → new save
     mod.store.dispatch({
       type: 'cards/addNodeToCard',
       payload: {
@@ -329,8 +276,12 @@ describe('store — cardHash function', () => {
       },
     });
     await vi.advanceTimersByTimeAsync(2100);
-    const afterWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-cards').length;
-    expect(initialWrites + afterWrites).toBeGreaterThanOrEqual(1);
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    const afterSaves = mocks.graphSave.mock.calls.length;
+    expect(initialSaves + afterSaves).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -365,16 +316,16 @@ describe('store — defensive branches in card persistence', () => {
     expect(cardWrites.length).toBe(0);
   });
 
-  it('cardHash returns "" for null card (test via divergent activeCard with empty nodes/edges fields)', async () => {
+  it('cardHash handles cards with missing nodes/edges fields', async () => {
     // Reach the `card.nodes || []` and `card.edges || []` fallback branches
     // by injecting a card whose nodes/edges fields are missing entirely.
+    mocks.isAuthenticated.mockReturnValue(true);
     const { combineReducers } = await import('@reduxjs/toolkit');
     const mod = await import('..');
     const realState = mod.store.getState();
     type AnyAction = { type: string; payload?: unknown };
     const customCardsReducer = (s = realState.cards, a: AnyAction): typeof realState.cards => {
       if (a.type === '__test__/sparseCard') {
-        // Card without nodes/edges to exercise `card.nodes || []`
         return {
           ...s,
           activeCardId: 'sparse',
@@ -391,10 +342,12 @@ describe('store — defensive branches in card persistence', () => {
     mod.store.replaceReducer(combineReducers({ ...passthroughReducers, cards: customCardsReducer }) as never);
     mod.store.dispatch({ type: '__test__/sparseCard' });
     await vi.advanceTimersByTimeAsync(2100);
-    // Should write to localStorage successfully (no throw on missing fields)
-    const setItem = (globalThis.localStorage as unknown as { setItem: ReturnType<typeof vi.fn> }).setItem;
-    const cardWrites = setItem.mock.calls.filter((c) => c[0] === 'ice-cards');
-    expect(cardWrites.length).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    // The subscriber must reach api.graph.save without throwing on missing fields.
+    expect(mocks.graphSave).toHaveBeenCalledWith('sparse');
   });
 
   it('skips backend save when one is already in flight', async () => {

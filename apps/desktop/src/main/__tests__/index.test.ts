@@ -194,6 +194,25 @@ const h = vi.hoisted(() => {
     }),
     mkdirSync: vi.fn(),
     cpSync: vi.fn(),
+    readFileSync: vi.fn((p: string) => {
+      // Bundled prisma-client identity is always the same.
+      if (p.includes('/fake/resources/prisma-client/package.json')) {
+        return JSON.stringify({ name: 'prisma-client-abc123' });
+      }
+      // userData prisma-client identity matches only when targetDirExists is true.
+      if (p.includes('node_modules/.prisma/client/package.json')) {
+        if (bag.targetDirExists) {
+          return JSON.stringify({ name: 'prisma-client-abc123' });
+        }
+        const err: any = new Error('ENOENT');
+        err.code = 'ENOENT';
+        throw err;
+      }
+      throw new Error('readFileSync not mocked: ' + p);
+    }),
+    writeFileSync: vi.fn(),
+    chmodSync: vi.fn(),
+    rmSync: vi.fn(),
   };
 
   const cryptoMod = {
@@ -348,6 +367,10 @@ describe('main process bootstrap', () => {
   beforeEach(() => {
     resetBag();
     process.env = { ...origEnv };
+    // bootstrapLocalSecrets() is a no-op when both are pre-set. Tests that
+    // need to drive the secrets-regenerate branch should delete these.
+    process.env.JWT_SECRET = 'test-jwt-secret';
+    process.env.CREDENTIAL_ENCRYPTION_KEY = 'test-credential-encryption-key';
     (process as any).resourcesPath = '/fake/resources';
   });
 

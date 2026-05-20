@@ -22,8 +22,25 @@
  * a real instance; nodes / edges are added via the public API to
  * mirror real consumer setups.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MutableGraph } from '../../../graph/mutable-graph';
+
+// The unmapped-path tests need `fallback_type_mapping` to return null on
+// demand. A statically-hoisted flag controls a thin proxy in front of the
+// real implementation — much sturdier than `vi.doMock` + dynamic import,
+// which races with vitest's module cache when many test files run in
+// parallel.
+const typeMappingState = vi.hoisted(() => ({ forceFallbackNull: false }));
+
+vi.mock('../type-mapping', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../type-mapping')>();
+  return {
+    ...actual,
+    fallback_type_mapping: (...args: Parameters<typeof actual.fallback_type_mapping>) =>
+      typeMappingState.forceFallbackNull ? null : actual.fallback_type_mapping(...args),
+  };
+});
+
 import { build_dependency_map, export_graph, node_to_resource } from '../converter';
 import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider';
 
@@ -411,56 +428,44 @@ describe('export_graph — error and unmapped paths', () => {
    * to return null via a vitest module mock; this is the cleanest way
    * to drive the branch without modifying source.
    */
-  beforeEach(() => {
-    vi.resetModules();
+  afterEach(() => {
+    typeMappingState.forceFallbackNull = false;
   });
 
   it('records unmapped types in warnings + unmapped_types when fallback is null', async () => {
-    vi.doMock('../type-mapping.js', () => ({
-      fallback_type_mapping: () => null,
-    }));
-    const { export_graph: exg } = await import('../converter');
+    typeMappingState.forceFallbackNull = true;
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     g.add_node({ type: 'foo', name: 'x', properties: {} });
 
-    const result = await exg(provider, g, { provider: 'gcp' });
+    const result = await export_graph(provider, g, { provider: 'gcp' });
     expect(result.success).toBe(true); // unmapped is a warning, not an error
     expect(result.warnings).toContain('No Terraform mapping for ICE type: foo');
     expect(result.unmapped_types).toEqual(['foo']);
-    vi.doUnmock('../type-mapping.js');
   });
 
   it('dedupes unmapped_types but keeps duplicate warnings', async () => {
-    vi.doMock('../type-mapping.js', () => ({
-      fallback_type_mapping: () => null,
-    }));
-    const { export_graph: exg } = await import('../converter');
+    typeMappingState.forceFallbackNull = true;
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     g.add_node({ type: 'foo', name: 'x', properties: {} });
     g.add_node({ type: 'foo', name: 'y', properties: {} });
 
-    const result = await exg(provider, g, { provider: 'gcp' });
+    const result = await export_graph(provider, g, { provider: 'gcp' });
     expect(result.unmapped_types).toEqual(['foo']);
     expect(result.warnings.filter((w) => w.includes('foo'))).toHaveLength(2);
-    vi.doUnmock('../type-mapping.js');
   });
 
   it('node_to_resource returns the unmapped error shape when fallback is null', async () => {
-    vi.doMock('../type-mapping.js', () => ({
-      fallback_type_mapping: () => null,
-    }));
-    const { node_to_resource: ntr } = await import('../converter');
+    typeMappingState.forceFallbackNull = true;
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     const a = g.add_node({ type: 'foo', name: 'x', properties: {} });
     if (!a.success) throw new Error('node add failed');
 
-    const result = await ntr(provider, a.node, { provider: 'gcp' }, new Map());
+    const result = await node_to_resource(provider, a.node, { provider: 'gcp' }, new Map());
     expect(result.success).toBe(false);
     expect(result.unmapped).toBe(true);
     expect(result.error).toBe('No Terraform mapping for foo with provider gcp');
-    vi.doUnmock('../type-mapping.js');
   });
 });

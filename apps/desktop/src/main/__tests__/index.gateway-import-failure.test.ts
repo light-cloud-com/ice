@@ -120,6 +120,14 @@ const h = vi.hoisted(() => {
     existsSync: vi.fn(() => false),
     mkdirSync: vi.fn(),
     cpSync: vi.fn(),
+    readFileSync: vi.fn(() => {
+      const err: any = new Error('ENOENT');
+      err.code = 'ENOENT';
+      throw err;
+    }),
+    writeFileSync: vi.fn(),
+    chmodSync: vi.fn(),
+    rmSync: vi.fn(),
   };
 
   const cryptoMod = { randomBytes: vi.fn(() => Buffer.from('beef', 'hex')) };
@@ -163,6 +171,9 @@ describe('main process bootstrap — gateway import failure', () => {
     });
     h.bag.appReadyDeferred = { resolve, promise };
     process.env = { ...origEnv };
+    // bootstrapLocalSecrets() is a no-op when both env vars are pre-set.
+    process.env.JWT_SECRET = 'test-jwt-secret';
+    process.env.CREDENTIAL_ENCRYPTION_KEY = 'test-credential-encryption-key';
     (process as any).resourcesPath = '/fake/resources';
     h.electron.app.whenReady.mockClear();
     h.electron.app.on.mockClear();

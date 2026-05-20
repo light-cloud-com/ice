@@ -63,6 +63,8 @@ const mocks = vi.hoisted(() => ({
   toggleFolderExpanded: vi.fn((id: string) => ({ type: 'projects/toggleFolderExpanded', payload: id })),
   toggleProjectExpanded: vi.fn((id: string) => ({ type: 'projects/toggleProjectExpanded', payload: id })),
   openDialog: vi.fn((name: string) => ({ type: 'ui/openDialog', payload: name })),
+  fetchProjectTree: vi.fn((orgId: string) => ({ type: 'projects/fetchProjectTree', payload: orgId })),
+  createEmptyProjectAndNavigate: vi.fn(),
   // Mock leaf components
   MockFolderRow: vi.fn((p: unknown) => p),
   MockProjectRow: vi.fn((p: unknown) => p),
@@ -97,6 +99,7 @@ vi.mock('react', async (orig) => {
     ...r,
     useState,
     useEffect: vi.fn(),
+    useCallback: <F,>(fn: F) => fn,
   };
 });
 
@@ -107,6 +110,14 @@ vi.mock('react-redux', () => ({
     if (typeof sel === 'function') return (sel as (s: unknown) => unknown)(mocks.state);
     return undefined;
   },
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+vi.mock('../../../wizard/utils/create-empty-project', () => ({
+  createEmptyProjectAndNavigate: mocks.createEmptyProjectAndNavigate,
 }));
 
 vi.mock('../../../../i18n', () => ({
@@ -142,6 +153,7 @@ vi.mock('../../../../store/slices/projects-slice', () => ({
   })(),
   toggleFolderExpanded: mocks.toggleFolderExpanded,
   toggleProjectExpanded: mocks.toggleProjectExpanded,
+  fetchProjectTree: mocks.fetchProjectTree,
 }));
 
 vi.mock('../../../../store/slices/ui-slice', () => ({
@@ -232,6 +244,7 @@ beforeEach(() => {
   mocks.MockFolderRow.mockClear();
   mocks.MockProjectRow.mockClear();
   mocks.MockTreeContextMenu.mockClear();
+  mocks.createEmptyProjectAndNavigate.mockReset();
   Object.values(mocks.useTreeHandlersRet).forEach((h) => (h as ReturnType<typeof vi.fn>).mockReset());
   mocks.useTreeDragRet.dragOverId = null;
   mocks.useTreeDragRet.handleDragStart.mockReset();
@@ -241,7 +254,7 @@ beforeEach(() => {
 });
 
 describe('ProjectTree — header buttons', () => {
-  it('renders the New Project button with onClick=dispatch(openDialog("projectWizard"))', () => {
+  it('renders the New Project button with onClick=createEmptyProjectAndNavigate', () => {
     const tree = render();
     const buttons = findAll(tree, (el) => el.type === 'button');
     const newProj = buttons.find((b) => {
@@ -250,8 +263,9 @@ describe('ProjectTree — header buttons', () => {
     });
     expect(newProj).toBeDefined();
     (newProj!.props.onClick as () => void)();
-    expect(mocks.openDialog).toHaveBeenCalledWith('projectWizard');
-    expect(mocks.dispatch).toHaveBeenCalled();
+    expect(mocks.createEmptyProjectAndNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ organisationId: 'org-1', organisationName: 'Acme' }),
+    );
   });
 
   it('renders the New Folder button with onClick=handleCreateFolder', () => {

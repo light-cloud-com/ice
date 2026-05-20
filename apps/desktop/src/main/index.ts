@@ -203,20 +203,6 @@ function bootstrapLocalSecrets(): void {
     } catch {
       // fall through — regenerate
     }
-    // When .prisma/client tries to require @prisma/client/*, resolve from the asar
-    if (request.startsWith('@prisma/client') && parent?.filename?.includes('Application Support')) {
-      const asarPath = join(app.getAppPath(), 'node_modules', request);
-      if (existsSync(asarPath)) return asarPath;
-      // Try with .js extension
-      if (existsSync(asarPath + '.js')) return asarPath + '.js';
-    }
-    return origResolve.call(this, request, parent, ...args);
-  }
-
-  try {
-    await import('@ice/gateway');
-  } catch (err: any) {
-    console.error('[desktop] Gateway start error:', err.message);
   }
 
   if (!secrets) {

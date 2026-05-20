@@ -21,8 +21,35 @@ import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { import_terraform_state, import_terraform_state_json, import_terraform_state_object } from '../state-importer';
 import type { TerraformState } from '../types';
+
+// The per-resource-error tests need `import_resource_instance` to throw
+// on demand. A statically-hoisted slot lets each test plug in a custom
+// implementation — much sturdier than `vi.doMock` + dynamic import,
+// which races with vitest's module cache when many test files run in
+// parallel.
+const conversionOverride = vi.hoisted<{
+  current: ((resource: unknown) => unknown) | null;
+}>(() => ({ current: null }));
+
+vi.mock('../resource-conversion', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../resource-conversion')>();
+  return {
+    ...actual,
+    import_resource_instance: (...args: Parameters<typeof actual.import_resource_instance>) => {
+      if (conversionOverride.current) {
+        return conversionOverride.current(args[0]) as ReturnType<typeof actual.import_resource_instance>;
+      }
+      return actual.import_resource_instance(...args);
+    },
+    infer_dependencies: (...args: Parameters<typeof actual.infer_dependencies>) => {
+      if (conversionOverride.current) return undefined;
+      return actual.infer_dependencies(...args);
+    },
+  };
+});
+
+import { import_terraform_state, import_terraform_state_json, import_terraform_state_object } from '../state-importer';
 
 // =============================================================================
 // Sample
@@ -171,65 +198,47 @@ describe('import_terraform_state_json — non-Error JSON.parse throw', () => {
 });
 
 describe('import_terraform_state_object — per-resource error capture', () => {
-  it('Error throws inside import_resource_instance are captured as IMPORT_ERROR with the message', async () => {
-    // The orchestrator wraps each instance import in try/catch — a
-    // throw becomes an IMPORT_ERROR entry in errors[]. The cleanest way
-    // to drive the throw without engineering a fragile state shape is
-    // via vi.doMock on the conversion module.
-    vi.resetModules();
-    vi.doMock('../resource-conversion.js', () => ({
-      import_resource_instance: () => {
-        throw new Error('explicit-failure');
-      },
-      infer_dependencies: () => undefined,
-    }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer');
-    const result = fresh(SAMPLE_STATE);
+  afterEach(() => {
+    conversionOverride.current = null;
+  });
+
+  it('Error throws inside import_resource_instance are captured as IMPORT_ERROR with the message', () => {
+    conversionOverride.current = () => {
+      throw new Error('explicit-failure');
+    };
+    const result = import_terraform_state_object(SAMPLE_STATE);
     expect(result.success).toBe(false);
     expect(result.errors[0]!.code).toBe('IMPORT_ERROR');
     expect(result.errors[0]!.message).toContain('explicit-failure');
     expect(result.errors[0]!.resource).toBe('aws_vpc.main');
-    vi.doUnmock('../resource-conversion.js');
-    vi.resetModules();
   });
 
-  it('non-Error throws inside import_resource_instance are stringified', async () => {
-    vi.resetModules();
-    vi.doMock('../resource-conversion.js', () => ({
-      import_resource_instance: () => {
-        throw 'oops-not-error';
-      },
-      infer_dependencies: () => undefined,
-    }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer');
-    const result = fresh(SAMPLE_STATE);
+  it('non-Error throws inside import_resource_instance are stringified', () => {
+    conversionOverride.current = () => {
+      throw 'oops-not-error';
+    };
+    const result = import_terraform_state_object(SAMPLE_STATE);
     expect(result.errors[0]!.code).toBe('IMPORT_ERROR');
     expect(result.errors[0]!.message).toContain('oops-not-error');
-    vi.doUnmock('../resource-conversion.js');
-    vi.resetModules();
   });
 
-  it('continues importing subsequent resources after one fails', async () => {
-    vi.resetModules();
+  it('continues importing subsequent resources after one fails', () => {
     let calls = 0;
-    vi.doMock('../resource-conversion.js', () => ({
-      import_resource_instance: (resource: { name: string }) => {
-        calls++;
-        if (resource.name === 'fail') throw new Error('fail-1');
-        return {
-          terraform_address: `${resource.name}.address`,
-          terraform_type: 'aws_vpc',
-          ice_type: 'aws.vpc.vpc',
-          name: resource.name,
-          properties: {},
-          dependencies: [],
-          provider: 'aws',
-          sensitive_attributes: [],
-        };
-      },
-      infer_dependencies: () => undefined,
-    }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer');
+    conversionOverride.current = (resource) => {
+      calls++;
+      const name = (resource as { name: string }).name;
+      if (name === 'fail') throw new Error('fail-1');
+      return {
+        terraform_address: `${name}.address`,
+        terraform_type: 'aws_vpc',
+        ice_type: 'aws.vpc.vpc',
+        name,
+        properties: {},
+        dependencies: [],
+        provider: 'aws',
+        sensitive_attributes: [],
+      };
+    };
     const state: TerraformState = {
       ...SAMPLE_STATE,
       resources: [
@@ -249,13 +258,11 @@ describe('import_terraform_state_object — per-resource error capture', () => {
         },
       ],
     };
-    const result = fresh(state);
+    const result = import_terraform_state_object(state);
     expect(calls).toBe(2);
     expect(result.errors).toHaveLength(1);
     expect(result.resources).toHaveLength(1);
     expect(result.resources[0]!.name).toBe('ok');
-    vi.doUnmock('../resource-conversion.js');
-    vi.resetModules();
   });
 
   it('honours pre-supplied errors[] and warnings[] arrays', () => {

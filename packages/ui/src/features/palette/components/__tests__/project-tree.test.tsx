@@ -21,6 +21,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock useEffect to no-op (we don't want side-effects firing during smoke render)
@@ -70,7 +71,9 @@ beforeEach(() => {
 const renderTree = (store: ReturnType<typeof makeStore> = makeStore()): string =>
   renderToString(
     <Provider store={store}>
-      <ProjectTree />
+      <MemoryRouter>
+        <ProjectTree />
+      </MemoryRouter>
     </Provider>,
   );
 

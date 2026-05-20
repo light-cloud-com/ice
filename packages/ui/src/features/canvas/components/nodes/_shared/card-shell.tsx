@@ -199,6 +199,12 @@ export const CardShell: React.FC<CardShellProps> = ({
   const displayTitle = titleText;
 
   // ─── Icon container (custom-domain style) ─────────────────────────────
+  // Header icon is ALWAYS the generic lucide `icon`. Brand identity
+  // (framework, GitHub mark, etc.) is the consumer's responsibility to
+  // render in the body — see static-site, github-repo. Keeping the
+  // header generic means every block reads as "type first, brand
+  // second", and `brandOverride` only changes the low-LOD render
+  // (where there is no body to host the brand).
   const IconContainer = (
     <div
       style={{
@@ -213,18 +219,7 @@ export const CardShell: React.FC<CardShellProps> = ({
         flexShrink: 0,
       }}
     >
-      {brand?.url ? (
-        <img
-          src={brand.url}
-          alt={brand.label}
-          width={18}
-          height={18}
-          draggable={false}
-          style={{ objectFit: 'contain' }}
-        />
-      ) : (
-        <Icon size={16} style={{ color: ACCENT }} />
-      )}
+      <Icon size={16} style={{ color: ACCENT }} />
     </div>
   );
 
@@ -262,30 +257,57 @@ export const CardShell: React.FC<CardShellProps> = ({
             }}
             data-testid={`cardshell-lod1-${node.id}`}
           >
+            {/* Low-LOD center: when a brand is available, show BOTH the
+                generic lucide icon AND the brand mark side-by-side so
+                the user can read both "what type" and "which
+                framework/vendor" without zooming in. Without a brand,
+                we fall back to the lucide-only block to preserve the
+                existing visual weight. */}
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
-                background: `${ACCENT}25`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: ACCENT,
+                gap: 8,
                 flexShrink: 0,
               }}
             >
-              {brand?.url ? (
-                <img
-                  src={brand.url}
-                  alt={brand.label}
-                  width={36}
-                  height={36}
-                  draggable={false}
-                  style={{ objectFit: 'contain' }}
-                />
-              ) : (
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 12,
+                  background: `${ACCENT}25`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: ACCENT,
+                  flexShrink: 0,
+                }}
+              >
                 <Icon size={32} style={{ color: ACCENT }} />
+              </div>
+              {brand?.url && (
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 12,
+                    background: 'var(--ice-bg-hover)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src={brand.url}
+                    alt={brand.label}
+                    width={36}
+                    height={36}
+                    draggable={false}
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
               )}
             </div>
             <span

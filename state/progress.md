@@ -9,7 +9,7 @@ _(none)_
 ## Done this week
 
 - **2026-05-02 — Parallel-deploy + dedup follow-ups (carry-over from pdl + rf-0c) — COMPLETE.** Six deferred items from the parallel-deploy initiative and the LOC-discipline initiative landed in one batch:
-  - ✅ **pdl-11** canvas-block-default-provider — `useCanvasDrop` reads `state.deploy.provider` and threads it into both `getBlueprint` / `expandBlueprint` (when palette didn't pin one) and into `newNodeData.provider` for resource drops. Group drops are unchanged. logBlueprint still records the *palette* provider (analytics tracks user intent). 21 → 23 tests in `use-canvas-drop.test.tsx`. Commit `b062b6c`.
+  - ✅ **pdl-11** canvas-block-default-provider — `useCanvasDrop` reads `state.deploy.provider` and threads it into both `getBlueprint` / `expandBlueprint` (when palette didn't pin one) and into `newNodeData.provider` for resource drops. Group drops are unchanged. logBlueprint still records the _palette_ provider (analytics tracks user intent). 21 → 23 tests in `use-canvas-drop.test.tsx`. Commit `b062b6c`.
   - ✅ **rollupPercentage extraction** — `deriveRollupPercentage(rollup)` extracted next to `deriveRollup` in `store/slices/deploy/derive.ts`; three identical inline copies (deploy-in-flight-panel, deploy-banner, status-bar) collapsed to a single import. 14 → 19 tests in `derive.test.ts` (+5 cases: empty / full / cap-at-99 boundary / rounding / defensive zero-total). Commit `6e637e9`.
   - ✅ **Phase 2 `nodesById` warm-seed** — `useDeploySubscription` Phase 2 now dispatches synthetic `node_status` (and `node_progress` when step descriptor present) events for each node in `snapshot.nodeStatuses`, with seq=0 so any live event with seq>0 dedup-wins. New `overlayToWireStatus` helper inverts `mapWireStatusToOverlay` (returns null for non-wire overlay strings). 14 → 17 tests in `use-deploy-subscription.test.ts` (+3 inverse-map cases). Commit `47ffecd`.
   - ✅ **DeployProgressSnapshot dead fields** — dropped `progress` / `currentResource` / `currentStep` from the interface (deploy-locks.ts), the `startDeploySnapshot` / `finishDeploySnapshot` writers, the `scheduler-callbacks.ts` writes (totals.completed.count bump preserved), the `canvas-deploy.ts` /current/:cardId fallback, and the now-orphan `updateDeploySnapshot` helper. 32 → 30 tests in `scheduler-callbacks.test.ts` (caps-99 + only-currentResource cases dropped — they tested the dead-field semantics specifically). Commit `63fb76b`.
@@ -18,7 +18,7 @@ _(none)_
 - **2026-05-02 — Concepts palette: Auth + Data Warehouse + Search shipped.** Three blocks originally deferred from the 23-block cut on 2026-04-14 are now built. New `auth` high-level resource added to `core/src/resources/high-level-resources/categories/security.ts` (Cognito / Firebase Auth / Entra ID); `data-warehouse` and `search-engine` resources already existed in `database.ts`. Three concept blueprints + info content + family registrations under `packages/blocks/src/common/concepts/{auth,data-warehouse,search-engine}/`. Palette grows 25 → 28; new "Analytics" group between Data and Messaging in `CONCEPT_BLUEPRINTS`. SaaS-key path (Clerk/Auth0 in Secret Store) and library path (NextAuth/Lucia + Postgres) still work — the new Auth block is for users who explicitly want managed identity. 8261 unit tests passing; 0 typecheck regressions. Commits `614bd80`, `7d291ff`.
 - **2026-05-02 — Quarterly compaction of `learnings.md` (Q2-2026).** 204 → 113 anchors (-44%); 1676 → 780 lines (-53%). Pre-compaction snapshot archived to `state/archive/learnings-2026-Q2.md`. All 25 must-preserve anchors retained verbatim (24 `_Promoted to: /docs/refactoring-patterns.md_` + the `read-state-first` anchor cited from `decisions.md` and `CLAUDE.md`). All `_Promoted to:_` and `_Fixed:_` trailers preserved. Representative cluster merges: `ux-log-terminal-pitfalls` (5 sub-anchors), `ux-deploy-real-cloud-pitfalls` (3), `pdl-7-wire-contract-trims-downstream-ui` (3), `pdl-10-destroy-snapshot-and-dedup-traps` (3), `inline-classification-duplications-are-not-actually-duplicates` (4 rf-canv siblings), `test-helper-defaults-traps-coalesce-and-spread` (3), `brief-numerics-are-approximate-source-is-canonical` (3 brief-vs-source variants). Commits `8ef2e25`, `763457a`.
 - **2026-05-02 — Merge story decision for the refactoring branch.** Decision recorded in `decisions.md` (2026-05-02 entry): merge as a single PR rather than splitting per phase. 511 commits ahead of `main`, ~1,724 files touched, +251,866 / −50,621 LOC. PR body prepared at `/tmp/refactoring-pr-body.md` for use after `gh auth login -h github.com`. Pre-PR sanity: typecheck clean across all 22 packages except for the documented 25 TS2834 baseline errors in `packages/core` barrel files (pre-existing); 1 typecheck error in `apply-pipeline-helpers.test.ts` fixed inline (cast `source_node_id` reads on the inline result fixture). Commits `78bbd83`, `7e7b7b0`.
-- **2026-05-02 — Housekeeping pass on `progress.md`.** Reduced 322 → 216 lines. The In flight section's pdl-1..10 status block + 7 rf-* per-file refactor subsections (all complete) moved verbatim under Archive so anchor and commit references stayed searchable. Commit `c2c7b2f`.
+- **2026-05-02 — Housekeeping pass on `progress.md`.** Reduced 322 → 216 lines. The In flight section's pdl-1..10 status block + 7 rf-\* per-file refactor subsections (all complete) moved verbatim under Archive so anchor and commit references stayed searchable. Commit `c2c7b2f`.
 - **2026-04-27 LT-1 through LT-9** — Consolidated `Monitoring.Terminal` into `Monitoring.Log`; built the live Cloud Logging stream backend (filter resolver + log-stream service + routes + Socket.IO room) and frontend (`logs-slice` + `useLogStream` hook + properties section + canvas placeholder). 365+ tests added. Real-deploy verification deferred behind the parallel-deploy work because the deploy engine was too fragile for clean iteration. See `decisions.md` 2026-04-27 entry.
 - **2026-04-28 pdl-1** — Parallel scheduler in deploy engine. Commit `c60bd1b`.
 - **2026-04-28 pdl-2** — Per-node deploy event types (`packages/types/src/deploy-events.ts`) + 5 typed wire emitters in `@ice/shared` socket service; legacy `emitDeployProgress` removed. 8 new tests. Critic APPROVE WITH NITS (deferred to pdl-4/pdl-7).
@@ -33,7 +33,7 @@ _(none)_
 - **2026-04-28 pdl-7** — Frontend Redux `nodesById` state + channel name flipped to `DEPLOY_EVENT_CHANNEL`. The deploy-panel black-hole window from pdl-4 is closed. 38 new tests; 306 total in `@ice/ui` + `@ice/service-deploy`. All five typechecks green.
 - **2026-04-28 pdl-6** — Canvas overlay badges for queued/skipped/cancelled wire states. 8 new tests. Mostly cosmetic; no critic dispatch.
 - **2026-04-28 pdl-5** — Deploy panel rewrite. Per-node live list from `nodesById`, action-aware destroy labels, honest progress rollup. Legacy `progress`/`currentResource`/`currentStep` fields dropped. 9 new tests; 244 total in `@ice/ui`.
-- **2026-04-28 pdl-8 + pdl-9** — Cross-unit seq-roundtrip test (wire ↔ persistent log) + `/docs/core-engine.md` and `/docs/frontend.md` updates for the parallel scheduler architecture. 477 tests passing across the monorepo.
+- **2026-04-28 pdl-8 + pdl-9** — Cross-unit seq-roundtrip test (wire ↔ persistent log) + `/docs/architecture/core-engine.md` and `/docs/architecture/frontend.md` updates for the parallel scheduler architecture. 477 tests passing across the monorepo.
 - **2026-04-28 pdl-10** — Destroy parity. Both destroy paths now emit `node_status` events with `action: 'delete'`; frontend slice now action-aware-dedups so destroy events land in `nodesById`. Closes the smoke-test regression `ux-destroy-action-bypasses-node-status-wire`. 487 tests passing (+10 net).
 
 ## Blocked
@@ -56,7 +56,7 @@ The deploy engine was refactored from sequential apply to a parallel work-steali
 - ✅ **pdl-6 per-block canvas overlay** — `getDeployBadge` extracted to `compact-node/helpers.ts` covering all 6 wire overlay strings. New badges for `queued` / `skipped` / `cancelled`; `skipped`/`cancelled` blocks render at `opacity: 0.6`. 8 tests.
 - ✅ **pdl-7 Redux nodesById state** — `deploy-slice` extended with `nodesById: Record<string, NodeDeployState>`; three new typed reducers with seq-based dedup. Frontend listener flipped to `DEPLOY_EVENT_CHANNEL`. API method renamed `onDeployProgress → onDeployEvent`. Hook's `applyDeployEvent` rewritten as `switch (event.type)` over typed `DeployEvent` union. 38 tests across 3 new test files; 227 → 306 total. Learning anchors: `frontend-channel-flip-needs-eager-init-callsite-sweep`, `test-the-channel-name-constant-not-the-string`, `complete-event-without-results-needs-post-complete-fetch`, `deploy-overlay-mapping-must-match-status-colors-keyset`, `complete-event-must-thread-error-message`.
 - ✅ **pdl-8 tests** — gap-fill from critic findings: seq-roundtrip integration test in `deploy-event-translation.test.ts` asserting every wire-emit seq lands on the persistent log row with the same value.
-- ✅ **pdl-9 docs** — `/docs/core-engine.md` Apply paragraph rewritten to describe the parallel scheduler + per-handler caps + failure isolation; new "Live event wire contract" section documents the `DeployEvent` discriminated union and the three id namespaces. `/docs/frontend.md` deploy-slice description updated.
+- ✅ **pdl-9 docs** — `/docs/architecture/core-engine.md` Apply paragraph rewritten to describe the parallel scheduler + per-handler caps + failure isolation; new "Live event wire contract" section documents the `DeployEvent` discriminated union and the three id namespaces. `/docs/architecture/frontend.md` deploy-slice description updated.
 - ✅ **pdl-10 destroy parity** — `destroyDeployment` and `destroyAllForCard` emit `node_status` events with `action: 'delete'`. Built per-resource canvas-node-id correlation from `res.source_node_id` (destroyDeployment) and `prisma.deployedResourceMapping` rows + historical fallback (destroyAllForCard). Both paths now open + close `startDeploySnapshot`/`finishDeploySnapshot` so `nextDeploySeq` allocates contiguous integers. Action-aware dedup + reset on `queued`-after-terminal added to slice. Snapshot lifecycle wrap with try/catch + defensive prisma update. 10 net new tests; 487 total.
 
 **UX smoke test (2026-04-28).** ux-tester drove the parallel-deploy work end-to-end against `lc-ice` (pre-flight clean after orchestrator deleted leaked `ice-full-sta-prod-bucket-3bf3f9d3`). Canvas: 3× `Storage.Bucket` blocks. Result:
@@ -73,6 +73,7 @@ The deploy engine was refactored from sequential apply to a parallel work-steali
 Multi-day effort to bring every actionable source file in the monorepo within the 200-500 LOC range. ~470 commits, ~7,500 new tests, 73 files refactored, 4 latent bugs fixed.
 
 **Phase 1 — 5 monster files (>2000 LOC each)**:
+
 - `services/deploy/src/services/deploy.service.ts` (2843 → 1572 → eventually 107 in final round)
 - `packages/ui/src/features/properties/components/properties-panel.tsx` (3268 → 94)
 - `packages/ui/src/features/canvas/components/svg-canvas.tsx` (3234 → 909 → eventually 453)
@@ -80,6 +81,7 @@ Multi-day effort to bring every actionable source file in the monorepo within th
 - `packages/core/src/deploy/card-translator.ts` (1585 → 401)
 
 **Phase 2 cohorts** (1000-2000 LOC files):
+
 - 5 files via various patterns (cards-slice, firebase-hosting, parser, lexer, deploy-slice, cloud-storage)
 - 12 UI components via rf-pdpl section pattern
 - 12 code-heavy files (sqlite-state-store, auto-layout, scheduler, mutable-graph, ai.service, pulumi-exporter, operation-executor, pipeline.service, log-stream.service, etc.)
@@ -91,16 +93,19 @@ Multi-day effort to bring every actionable source file in the monorepo within th
 **Final round** — 8 documented exceptions decomposed (excluding generated `resource-types.ts` per user instruction). Reduced 12,754 → 1,082 orchestrator LOC across remaining files.
 
 **Bug fixes** (2026-05-02):
+
 - `bugfix-1` — graph-nodes-keyed-by-type-colon-name (5 callsites switched to `graph.get_node_by_name`)
 - `bugfix-2` — `get_base_db_path` lazy `require.resolve`
 - `bugfix-3` — `get_critical_path` distance propagation
 - `bugfix-4` — `detectJsFramework` pnpm-lock detection
 
 **Documentation**:
+
 - `/docs/refactoring-patterns.md` — 6 proven decomposition patterns + test patterns + gotchas, distilled from the initiative
 - 24 stabilized learnings promoted from `state/learnings.md` to the new doc
 
 **Final state of the codebase**:
+
 - Every actionable file within 200-500 LOC band.
 - 4 documented data-leaf exceptions remain (high-level-resources category files, all carrying SIZE EXCEPTION headers).
 - 1 generated file excluded per user instruction (`resource-types.ts`).
@@ -108,12 +113,13 @@ Multi-day effort to bring every actionable source file in the monorepo within th
 - 162 fine-grained learning anchors retained in `state/learnings.md` for future reference.
 
 The codebase decomposition initiative is complete. Future contributors have:
+
 - A documented set of patterns to follow (`/docs/refactoring-patterns.md`).
 - A clean LOC discipline across the workspace.
 - ~7,500 tests covering every extracted module.
 - A concrete audit trail in `refactor-targets.md` of every file touched.
 
-#### Per-file detail trail (rf-* refactor initiative)
+#### Per-file detail trail (rf-\* refactor initiative)
 
 Detailed unit-by-unit history. Preserved verbatim because individual learning anchors and commit hashes are referenced from `learnings.md`, `decisions.md`, and `/docs/refactoring-patterns.md`. The `blueprints/rf-*.md` files capture the architecture per series; this section captures the unit-by-unit narration.
 
@@ -190,7 +196,7 @@ Detailed unit-by-unit history. Preserved verbatim because individual learning an
 
 **rf-cards — `cards-slice.ts` (1195 → 162)**
 
-16-unit blueprint at [`blueprints/rf-cards.md`](blueprints/rf-cards.md). 5 utils → 9 reducer groups → orchestrator. 11 behavior-risks: Immer two-field atomicity, two-pass position update, applyEdgeRoutes ordering, _lastSnapshotAction module-level coalescing, cascadeContainerReflow eslint-disable, clearCardDeployOverlay 24-field completeness, ingestion-path migration parity, groupSelectedNodes Z-order, scaleLayoutForZoom intentional `scaleX/Y = 1`, JSON deep-clone, non-memoized inline selectors.
+16-unit blueprint at [`blueprints/rf-cards.md`](blueprints/rf-cards.md). 5 utils → 9 reducer groups → orchestrator. 11 behavior-risks: Immer two-field atomicity, two-pass position update, applyEdgeRoutes ordering, \_lastSnapshotAction module-level coalescing, cascadeContainerReflow eslint-disable, clearCardDeployOverlay 24-field completeness, ingestion-path migration parity, groupSelectedNodes Z-order, scaleLayoutForZoom intentional `scaleX/Y = 1`, JSON deep-clone, non-memoized inline selectors.
 
 - ✅ **rf-cards-1..3** utils — `types` / `migration` / `edge-routes`. Commits `4659ec2` / `47c0953` / `7f9173b`. Learnings `brief-import-list-may-include-transitively-referenced-types`, `jsdoc-comment-block-closes-on-asterisk-slash`, `stacked-jsdocs-precede-only-the-immediate-next-decl`.
 - ✅ **rf-cards-4..5** helpers — `persistence` / `snapshot`. Commits `bec0639` / `fe79306`. Learning `reset-module-let-via-synthetic-call-not-vi-resetModules`.
@@ -209,7 +215,7 @@ Detailed unit-by-unit history. Preserved verbatim because individual learning an
 
 8-unit blueprint at [`blueprints/rf-parse.md`](blueprints/rf-parse.md). Approach B chosen: standalone functions taking `ParserState` interface; `Parser` class becomes constructor + delegation shell. 14 behavior-risks pinned including: ps_consume no-advance, synchronize two exits, type-identifier silent dot-skip, create_span name collision, parse_equality operator ternary, parse_postfix error-but-continue, 10-level precedence chain order, parse_primary pre-advance snapshot, **parse_for_expression key/value identity** (highest-risk), parse_reference path undefined, parse_block zero-label nested, unknown-attribute discard advances cursor, output_block emits both error AND null literal, import_statement non-`"as"` silent discard.
 
-- ✅ **rf-parse-1** `parser-state.ts` — `ParserState` interface + 9 ps_* navigation helpers. 31 tests. 147 callsites replaced. Commit `92778f7`. Learning `sed-greedy-dot-star-eats-chained-calls-on-one-line`.
+- ✅ **rf-parse-1** `parser-state.ts` — `ParserState` interface + 9 ps\_\* navigation helpers. 31 tests. 147 callsites replaced. Commit `92778f7`. Learning `sed-greedy-dot-star-eats-chained-calls-on-one-line`.
 - ✅ **rf-parse-2** `parser-literals.ts` — 6 helpers. 23 tests. 67 callsites. Commit `2f7a3f7`. Learning `sed-empty-arg-substitution-glues-state-to-next-token`.
 - ✅ **rf-parse-3+4** `parser-binary-exprs.ts` + `parser-primary.ts` — combined atomically due to circular import resolved at function-call time. 94 tests. Commit `667df94`. Learning `bootstrap-fnarg-vs-direct-import-for-circular-grammar-pair`.
 - ✅ **rf-parse-5+6** `parser-block-body.ts` + `parser-statements.ts` — 4 block parsers + 5 statement parsers. 31 tests. Commit `2ee35e5`. Learning `co-locate-mutually-recursive-helpers-to-skip-cycle-bootstrap`.

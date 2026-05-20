@@ -116,6 +116,7 @@ export function getProviderIcon(provider: CloudProvider): string {
     alibaba: 'alibaba',
     oci: 'oci',
     digitalocean: 'digitalocean',
+    ibm: 'ibm',
     custom: 'cloud',
   };
   return icons[provider];

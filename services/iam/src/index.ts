@@ -6,6 +6,7 @@ import profileRoutes from './routes/profile';
 export { AuthError } from './services/auth.service';
 export * from './services/project-access.service';
 export * from './services/email.service';
+export { seedAcmeDemo, seedDemoIfEmpty } from './services/seed-demo.service';
 
 export function createIamRouter(): Router {
   const router = Router();

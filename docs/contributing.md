@@ -43,13 +43,13 @@ Bigger projects (multi-week) live in [ROADMAP.md](../ROADMAP.md) - please open a
 
 ## Where things are documented
 
-| Topic | Doc |
-|---|---|
-| Commit messages, PR shape, what-we-wont-merge | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
-| How to run the test suites | [testing.md](testing.md) |
-| Reporting a security vulnerability | [`../SECURITY.md`](../SECURITY.md) |
-| Licensing of contributions | Apache 2.0, section 5 - no CLA |
-| Conduct | [`../CONTRIBUTING.md#conduct`](../CONTRIBUTING.md#conduct) - be kind, call out behaviour not people |
+| Topic                                         | Doc                                                                                                 |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Commit messages, PR shape, what-we-wont-merge | [`../CONTRIBUTING.md`](../CONTRIBUTING.md)                                                          |
+| How to run the test suites                    | [testing.md](testing.md)                                                                            |
+| Reporting a security vulnerability            | [`../SECURITY.md`](../SECURITY.md)                                                                  |
+| Licensing of contributions                    | Apache 2.0, section 5 - no CLA                                                                      |
+| Conduct                                       | [`../CONTRIBUTING.md#conduct`](../CONTRIBUTING.md#conduct) - be kind, call out behaviour not people |
 
 ## Writing docs
 
@@ -72,7 +72,7 @@ Bug reports go through the GitHub issue tracker with the bug template. Please in
 
 ## Proposing features
 
-Open an issue with the feature template *before* writing code. A short problem statement beats a long design - we'd rather have a 10-minute conversation about approach than review a 2,000-line PR that doesn't fit. If a feature is already on the roadmap, add your use case to the existing issue.
+Open an issue with the feature template _before_ writing code. A short problem statement beats a long design - we'd rather have a 10-minute conversation about approach than review a 2,000-line PR that doesn't fit. If a feature is already on the roadmap, add your use case to the existing issue.
 
 ## See also
 

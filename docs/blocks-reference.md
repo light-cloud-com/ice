@@ -1,6 +1,6 @@
 # Blocks Reference
 
-ICE's canvas is built from **concept blocks** - provider-neutral building blocks like *Static Site*, *Scalable Backend*, *Postgres*, *Message Queue*. Each concept resolves, at deploy time, to a specific cloud primitive depending on the selected provider (Cloud Run on GCP, ECS on AWS, App Service on Azure).
+ICE's canvas is built from **concept blocks** - provider-neutral building blocks like _Static Site_, _Scalable Backend_, _Postgres_, _Message Queue_. Each concept resolves, at deploy time, to a specific cloud primitive depending on the selected provider (Cloud Run on GCP, ECS on AWS, App Service on Azure).
 
 This page enumerates the concept palette and points at where each concept is defined, validated, and implemented.
 
@@ -51,16 +51,16 @@ Each concept folder contains:
 
 The palette (left sidebar in the UI) groups concepts by category:
 
-| Category | Example concepts |
-|---|---|
-| Compute | Scalable Backend, Worker, Serverless Function, SSR Site, Static Site |
-| Data | Postgres, MySQL, MongoDB, Redis Cache, Object Storage, Vector DB |
-| Messaging | Message Queue, Event Stream |
-| AI | LLM Gateway, Private AI Service, Vector DB |
-| Networking | Public Traffic, Private Network, API Gateway, Custom Domain |
-| Observability | Observability |
-| Security | Secret Store, Env Config |
-| Integration | GitHub Repo, Email Service, Scheduled Task |
+| Category      | Example concepts                                                     |
+| ------------- | -------------------------------------------------------------------- |
+| Compute       | Scalable Backend, Worker, Serverless Function, SSR Site, Static Site |
+| Data          | Postgres, MySQL, MongoDB, Redis Cache, Object Storage, Vector DB     |
+| Messaging     | Message Queue, Event Stream                                          |
+| AI            | LLM Gateway, Private AI Service, Vector DB                           |
+| Networking    | Public Traffic, Private Network, API Gateway, Custom Domain          |
+| Observability | Observability                                                        |
+| Security      | Secret Store, Env Config                                             |
+| Integration   | GitHub Repo, Email Service, Scheduled Task                           |
 
 Some concepts planned for the palette are deferred (authentication, analytics data warehouse, search). See [ROADMAP.md](../ROADMAP.md) for status.
 
@@ -68,23 +68,23 @@ Some concepts planned for the palette are deferred (authentication, analytics da
 
 Each concept has one mapped primitive per provider. The mapping lives in `packages/core/src/resources/` and the per-provider handlers in `packages/providers/<cloud>/src/handlers/`. Examples:
 
-| Concept | GCP | AWS | Azure |
-|---|---|---|---|
-| Static Site | Cloud Storage + CDN | S3 + CloudFront | Storage Account + CDN |
-| Scalable Backend | Cloud Run | ECS Fargate | App Service / Container Apps |
-| Serverless Function | Cloud Functions | Lambda | Functions |
-| Postgres | Cloud SQL (Postgres) | RDS (Postgres) | Database for PostgreSQL |
-| Object Storage | Cloud Storage | S3 | Blob Storage |
-| Message Queue | Pub/Sub | SQS | Service Bus |
-| Vector DB | Vertex AI Vector Search | OpenSearch | AI Search |
-| LLM Gateway | Vertex AI endpoints | Bedrock | Azure OpenAI |
-| Observability | Cloud Logging | CloudWatch | Monitor |
+| Concept             | GCP                     | AWS             | Azure                        |
+| ------------------- | ----------------------- | --------------- | ---------------------------- |
+| Static Site         | Cloud Storage + CDN     | S3 + CloudFront | Storage Account + CDN        |
+| Scalable Backend    | Cloud Run               | ECS Fargate     | App Service / Container Apps |
+| Serverless Function | Cloud Functions         | Lambda          | Functions                    |
+| Postgres            | Cloud SQL (Postgres)    | RDS (Postgres)  | Database for PostgreSQL      |
+| Object Storage      | Cloud Storage           | S3              | Blob Storage                 |
+| Message Queue       | Pub/Sub                 | SQS             | Service Bus                  |
+| Vector DB           | Vertex AI Vector Search | OpenSearch      | AI Search                    |
+| LLM Gateway         | Vertex AI endpoints     | Bedrock         | Azure OpenAI                 |
+| Observability       | Cloud Logging           | CloudWatch      | Monitor                      |
 
 GCP is the most complete provider today; AWS and Azure are intentionally partial. Provider parity is tracked on the roadmap.
 
 ## Requirements and validation
 
-Concepts advertise *requirements* - "to be useful, a Scalable Backend needs either a GitHub Repo or an Object Storage for code, plus a Public Traffic upstream." Requirements live in `packages/blocks/src/requirements/` and are enforced by the canvas validator (`packages/core/src/validation/`).
+Concepts advertise _requirements_ - "to be useful, a Scalable Backend needs either a GitHub Repo or an Object Storage for code, plus a Public Traffic upstream." Requirements live in `packages/blocks/src/requirements/` and are enforced by the canvas validator (`packages/core/src/validation/`).
 
 When a requirement is unmet, the block shows a badge; hovering the badge explains what's missing. The validator prevents deploys on unmet hard requirements and warns on soft ones.
 
@@ -108,21 +108,21 @@ A **template** is a pre-built composition of concepts with edges and default pro
 
 Current templates:
 
-| Template | What it builds |
-|---|---|
-| SaaS Starter | Static site, backend, Postgres, auth, custom domain |
-| Full-Stack | SSR site + backend + Postgres + object storage |
-| RAG Chatbot | Static site + LLM gateway + vector DB + backend |
-| Budget Web App | Minimal budget-friendly web stack |
-| Backend API | Scalable backend + Postgres + observability |
-| Microservices | Multiple backends + event stream + shared DB |
-| Serverless API | API gateway + serverless functions + DB |
-| Event-Driven Serverless | Event stream + multiple serverless functions |
-| Secure API | Backend with locked-down networking and secrets |
-| AI/ML | LLM + vector DB + model endpoints |
-| EU Compliance | Same as SaaS Starter but region-locked |
-| SaaS Multi-Tenant | Tenant-isolated SaaS shape |
-| SaaS Analytics Dashboard | Dashboard + data pipeline |
+| Template                 | What it builds                                      |
+| ------------------------ | --------------------------------------------------- |
+| SaaS Starter             | Static site, backend, Postgres, auth, custom domain |
+| Full-Stack               | SSR site + backend + Postgres + object storage      |
+| RAG Chatbot              | Static site + LLM gateway + vector DB + backend     |
+| Budget Web App           | Minimal budget-friendly web stack                   |
+| Backend API              | Scalable backend + Postgres + observability         |
+| Microservices            | Multiple backends + event stream + shared DB        |
+| Serverless API           | API gateway + serverless functions + DB             |
+| Event-Driven Serverless  | Event stream + multiple serverless functions        |
+| Secure API               | Backend with locked-down networking and secrets     |
+| AI/ML                    | LLM + vector DB + model endpoints                   |
+| EU Compliance            | Same as SaaS Starter but region-locked              |
+| SaaS Multi-Tenant        | Tenant-isolated SaaS shape                          |
+| SaaS Analytics Dashboard | Dashboard + data pipeline                           |
 
 Templates are just compositions - every block they produce is one you could drop individually. Nothing magic.
 

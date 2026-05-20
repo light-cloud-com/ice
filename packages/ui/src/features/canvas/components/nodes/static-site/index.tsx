@@ -11,6 +11,7 @@
 import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Globe } from 'lucide-react';
 import React from 'react';
+import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
@@ -94,6 +95,10 @@ export const SvgStaticSiteNode: React.FC<SvgCompactNodeProps> = ({
   const rawFramework = (node.data?.framework as string) || 'react';
   const framework = FRAMEWORK_DISPLAY[rawFramework.toLowerCase()] || rawFramework;
   const liveConfig = buildLiveConfig(node.data);
+  // Brand mark for the body. Resolved at the consumer so we control
+  // size and placement; CardShell receives `brandOverride` only so the
+  // zoomed-out LOD can render the brand next to the generic icon.
+  const brand = getBrandIcon(rawFramework);
 
   return (
     <CardShell
@@ -121,41 +126,30 @@ export const SvgStaticSiteNode: React.FC<SvgCompactNodeProps> = ({
         }}
         data-testid={`static-body-${node.id}`}
       >
-        <GlobeWithEdges color={STATIC_ACCENT} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-          <span
-            style={{
-              fontSize: 10,
-              fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-              color: 'var(--ice-text-tertiary)',
-              opacity: 0.7,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}
-          >
-            {t('canvas.blocks.site.framework')}
-          </span>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: STATIC_ACCENT,
-              fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-            }}
-            data-testid={`static-framework-${node.id}`}
-          >
-            {framework}
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: 'var(--ice-text-tertiary)',
-              opacity: 0.6,
-            }}
-          >
-            {t('canvas.blocks.site.servedFromEdge')}
-          </span>
-        </div>
+        {brand?.url ? (
+          <img
+            src={brand.url}
+            alt={brand.label}
+            width={48}
+            height={48}
+            draggable={false}
+            style={{ objectFit: 'contain', flexShrink: 0 }}
+            data-testid={`static-framework-icon-${node.id}`}
+          />
+        ) : (
+          <GlobeWithEdges color={STATIC_ACCENT} />
+        )}
+        <span
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: STATIC_ACCENT,
+            fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
+          }}
+          data-testid={`static-framework-${node.id}`}
+        >
+          {framework}
+        </span>
       </div>
     </CardShell>
   );

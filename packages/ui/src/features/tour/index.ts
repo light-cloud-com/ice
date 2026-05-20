@@ -36,7 +36,6 @@ export {
   recordAdvance,
   resetTour,
   persistCompletedTour,
-  COMPLETED_TOURS_STORAGE_KEY,
   selectActiveTourId,
   selectStepIdx,
   selectPhase,

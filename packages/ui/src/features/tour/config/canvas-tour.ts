@@ -2,8 +2,9 @@
  * Canvas tour — the single comprehensive product tour.
  *
  * Walks the user through every panel on both sidebars, the cloud +
- * git integration buttons, and the deploy entry point. Order is
- * top-to-bottom / left-to-right so it reads naturally as you advance.
+ * git integration buttons, and the deploy entry point. Order reads
+ * project setup → block configuration → cost preview → deployment
+ * surfaces → AI assistant → free-form canvas exploration.
  *
  * Anchor visibility is guaranteed by `use-canvas-tour-panels.ts`:
  * before each step we dispatch the right `setShow*(true)` actions so
@@ -29,16 +30,7 @@ export const canvasTour: Tour = {
     return true;
   },
   steps: [
-    // ── 1. Canvas itself ───────────────────────────────────────────
-    {
-      id: 'canvas-overview',
-      target: '#ice-canvas-svg',
-      title: 'tour.canvas.overview.title',
-      body: 'tour.canvas.overview.body',
-      placement: 'auto',
-      pad: 16,
-    },
-    // ── 2. Left sidebar — Projects ─────────────────────────────────
+    // ── 1. Left sidebar — Projects ─────────────────────────────────
     {
       id: 'projects',
       target: '#ice-palette-projects-section',
@@ -47,7 +39,7 @@ export const canvasTour: Tour = {
       placement: 'right',
       pad: 6,
     },
-    // ── 3. Left sidebar — Blocks ───────────────────────────────────
+    // ── 2. Left sidebar — Blocks ───────────────────────────────────
     {
       id: 'blocks',
       target: '#ice-palette-blocks-section',
@@ -55,6 +47,14 @@ export const canvasTour: Tour = {
       body: 'tour.canvas.blocks.body',
       placement: 'right',
       pad: 6,
+    },
+    // ── 3. Right sidebar — Properties ──────────────────────────────
+    {
+      id: 'properties',
+      target: '#ice-properties-panel',
+      title: 'tour.canvas.properties.title',
+      body: 'tour.canvas.properties.body',
+      placement: 'left',
     },
     // ── 4. Left sidebar — Templates ────────────────────────────────
     {
@@ -65,23 +65,7 @@ export const canvasTour: Tour = {
       placement: 'right',
       pad: 6,
     },
-    // ── 5. Right sidebar — Properties ──────────────────────────────
-    {
-      id: 'properties',
-      target: '#ice-properties-panel',
-      title: 'tour.canvas.properties.title',
-      body: 'tour.canvas.properties.body',
-      placement: 'left',
-    },
-    // ── 6. Right sidebar — AI assistant ────────────────────────────
-    {
-      id: 'ai',
-      target: '#ice-ai-panel',
-      title: 'tour.canvas.ai.title',
-      body: 'tour.canvas.ai.body',
-      placement: 'left',
-    },
-    // ── 7. Right sidebar — Cost ────────────────────────────────────
+    // ── 5. Right sidebar — Cost ────────────────────────────────────
     {
       id: 'cost',
       target: '#ice-cost-panel',
@@ -89,7 +73,7 @@ export const canvasTour: Tour = {
       body: 'tour.canvas.cost.body',
       placement: 'left',
     },
-    // ── 8. Top bar — Cloud integration ─────────────────────────────
+    // ── 6. Top bar — Cloud integration ─────────────────────────────
     {
       id: 'integration-cloud',
       target: '#ice-appbar-btn-gcp',
@@ -98,7 +82,7 @@ export const canvasTour: Tour = {
       placement: 'bottom',
       pad: 4,
     },
-    // ── 9. Top bar — GitHub ───────────────────────────────────────
+    // ── 7. Top bar — GitHub ───────────────────────────────────────
     {
       id: 'integration-github',
       target: '#ice-appbar-btn-github',
@@ -107,7 +91,7 @@ export const canvasTour: Tour = {
       placement: 'bottom',
       pad: 4,
     },
-    // ── 10. Deploy ─────────────────────────────────────────────────
+    // ── 8. Deploy ─────────────────────────────────────────────────
     {
       id: 'deploy',
       target: '#ice-btn-deploy',
@@ -115,6 +99,23 @@ export const canvasTour: Tour = {
       body: 'tour.canvas.deploy.body',
       placement: 'bottom',
       pad: 4,
+    },
+    // ── 9. Right sidebar — AI assistant ────────────────────────────
+    {
+      id: 'ai',
+      target: '#ice-ai-panel',
+      title: 'tour.canvas.ai.title',
+      body: 'tour.canvas.ai.body',
+      placement: 'left',
+    },
+    // ── 10. Canvas itself (terminal step) ──────────────────────────
+    {
+      id: 'canvas-overview',
+      target: '#ice-canvas-svg',
+      title: 'tour.canvas.overview.title',
+      body: 'tour.canvas.overview.body',
+      placement: 'auto',
+      pad: 16,
       actions: { hideSkip: true, nextLabel: 'tour.actions.finish' },
     },
   ],

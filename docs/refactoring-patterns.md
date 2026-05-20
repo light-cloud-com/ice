@@ -17,6 +17,7 @@ Each pattern below has been applied to 2+ files with consistent results. Pick th
 **When**: Single React.FC that exceeds 500 LOC by accreting subcomponents, hooks, utils, and inline render helpers.
 
 **Shape**: Extract leaves-first into a parallel directory:
+
 - `feature/utils/<topic>.ts` for pure functions
 - `feature/components/<name>.tsx` for leaf subcomponents
 - `feature/sections/<name>.tsx` for composing sections
@@ -24,6 +25,7 @@ Each pattern below has been applied to 2+ files with consistent results. Pick th
 - Orchestrator becomes a thin compose-and-route shell
 
 **Hooks frequently extract into 2-3 bundles**:
+
 - `useXActions` - useCallback handlers (often dispatching Redux thunks)
 - `useXEffects` - useEffect blocks (auto-scroll, hydrate, subscribe-listeners)
 - `useXState` or domain-specific (e.g. `useDestroyAction`)
@@ -81,14 +83,17 @@ export function dispatch(ctx: SchedulerContext, node_id: string): void {
 // scheduler.ts
 export class ParallelChangeScheduler {
   private readonly ctx: SchedulerContext;
-  constructor(input: SchedulerRunInput) { this.ctx = make_scheduler_context(input); }
+  constructor(input: SchedulerRunInput) {
+    this.ctx = make_scheduler_context(input);
+  }
   async run(): Promise<ResourceDeployResult[]> {
-    return run_loop(this.ctx);  // standalone function
+    return run_loop(this.ctx); // standalone function
   }
 }
 ```
 
 **Decision rule per method**:
+
 - Pure (no state read/write) → extract.
 - Reads state only → extract, take state as arg.
 - Writes state → extract IF the state mutation is well-scoped; keep on class IF it touches many fields.
@@ -120,6 +125,7 @@ export { createDeploymentEvent, updateEventProgress } from './pipeline/events.js
 **When**: A file with mostly data (a giant `Record`, array, or `Map`) plus a few helpers.
 
 **Shape**: Three files:
+
 - `<name>-data.ts` - the giant data dict (size exception, document in file header)
 - `<name>-types.ts` - interfaces and types
 - `<name>.ts` - re-export shim + small helpers (`<200 LOC`)
@@ -177,16 +183,23 @@ The monorepo doesn't ship jsdom or `@testing-library/react`. UI tests use `react
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 
-function findByPredicate(el: ReactElement, predicate: (e) => boolean) { /* recurse */ }
-function collectText(el: ReactElement): string { /* concat strings */ }
+function findByPredicate(el: ReactElement, predicate: (e) => boolean) {
+  /* recurse */
+}
+function collectText(el: ReactElement): string {
+  /* concat strings */
+}
 
 it('renders the section header', () => {
-  const tree = createElement(MyComponent, { /* props */ });
+  const tree = createElement(MyComponent, {
+    /* props */
+  });
   expect(collectText(tree)).toContain('Expected text');
 });
 ```
 
 **Common gotchas**:
+
 - `findByPredicate` must recurse into ARRAY children for Fragments (`<>{x.map(...)}{y.map(...)}</>`). Children aren't always primitive trees.
 - `collectText` must handle array-of-strings children for icon-followed-by-text patterns.
 - `lucide-react` icons are `forwardRef` objects, not FCs. Filter on `className` or reference equality, not `typeof el.type === 'function'`.
@@ -202,7 +215,7 @@ function Probe() {
   return null;
 }
 renderToStaticMarkup(createElement(Provider, { store }, createElement(Probe)));
-captured.handleClick();  // invoke directly
+captured.handleClick(); // invoke directly
 ```
 
 ### Multi-state useState mock
@@ -213,7 +226,7 @@ For FCs with 3+ `useState` calls:
 const states: Array<{ value: any; setter: ReturnType<typeof vi.fn> }> = [];
 let callIdx = 0;
 vi.mock('react', async (orig) => {
-  const r = await orig() as any;
+  const r = (await orig()) as any;
   return {
     ...r,
     useState: (init: any) => {
@@ -235,7 +248,7 @@ The orchestrator drives `states` and `callIdx` between renders.
 import { bar } from '../../../store';
 
 // Test at packages/ui/src/features/deploy/components/__tests__/foo.test.tsx
-vi.mock('../../../../store', /* ... */);  // 4 dots, not 3
+vi.mock('../../../../store' /* ... */); // 4 dots, not 3
 ```
 
 ### vi.hoisted for stable mock identity
@@ -254,8 +267,8 @@ Without `vi.hoisted`, the mock factory runs in module-init scope where the mocke
 `packages/core` and `services/*` are Node ESM packages. **Imports must include `.js` extensions** even when source files are `.ts`:
 
 ```ts
-import { foo } from './foo.js';   // ✓ resolves at runtime
-import { foo } from './foo';      // ✗ fails Node resolution
+import { foo } from './foo.js'; // ✓ resolves at runtime
+import { foo } from './foo'; // ✗ fails Node resolution
 ```
 
 UI/web packages use bundler resolution and don't require `.js`. Mixing the two is the most common cross-package import bug.
@@ -263,6 +276,7 @@ UI/web packages use bundler resolution and don't require `.js`. Mixing the two i
 ### Pre-commit hook auto-bumps package.json
 
 The pre-commit hook runs `npm version patch` on every commit. This means:
+
 - `package.json` is included in every commit (acceptable, expected).
 - Don't manually edit `package.json` version.
 - Don't be alarmed when `0.1.X` increments unexpectedly.

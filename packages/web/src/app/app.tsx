@@ -24,9 +24,7 @@
 // Account components not needed in community (single user)
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
-import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { TourRunner } from '@ui/features/tour/components/tour-runner';
-import { ProjectWizard } from '@ui/features/wizard';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { AppBar } from '@ui/shared/components/app-bar';
 import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
@@ -39,10 +37,11 @@ import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
+import { hydrateUserPreferences } from '@ui/store/user-preferences';
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import type { RootState, AppDispatch } from '@ui/store';
+import type { AppDispatch } from '@ui/store';
 import { AppSettings } from '@/pages/app-settings';
 import { FolderView } from '@/pages/folder-view';
 import { ProjectActivity } from '@/pages/project/activity';
@@ -94,7 +93,6 @@ const DynamicContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const segments = pathname.split('/').filter(Boolean);
   const resolved = useResolvePath(segments);
-  const user = useSelector((s: RootState) => s.account.user);
   const activeCard = useSelector(selectActiveCard);
 
   // Cross-tab deploy visibility — subscribe to the active card's deploy
@@ -106,14 +104,10 @@ const DynamicContent: React.FC = () => {
   useEffect(() => {
     dispatch(initializeGraph());
     dispatch(fetchProfile());
+    // Hydrate UI panel / split-view / project-tree prefs from the DB
+    // so a refresh lands the user back on the layout they had.
+    void hydrateUserPreferences(dispatch);
   }, [dispatch]);
-
-  // Redirect to onboarding if user hasn't completed it
-  useEffect(() => {
-    if (user && user.onboardingCompleted === false) {
-      navigate('/onboarding', { replace: true });
-    }
-  }, [user, navigate]);
 
   // Sync resolved project ID into Redux so child components (AI chat) can access it
   useEffect(() => {
@@ -221,8 +215,6 @@ const DynamicContent: React.FC = () => {
             DeployPanel is mounted inside MainLayout's right sidebar and
             rendered alongside the canvas, identical to Cost / Properties. */}
         {resolved.subpage === 'deploy' && <DeployRouteOpener />}
-
-        <ProjectWizard />
       </div>
     );
   }
@@ -241,8 +233,6 @@ const DynamicContent: React.FC = () => {
           <FolderView folderId={folderId} folderName={folderName} basePath={folderBasePath} />
         </div>
       </MainLayout>
-      <ProjectWizard />
-      <OnboardingChecklist />
     </div>
   );
 };
@@ -261,7 +251,6 @@ const App: React.FC = () => (
               dispatch). See blueprint §2.1. */}
           <TourRunner />
           <Routes>
-            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route
               path="/settings"
               element={

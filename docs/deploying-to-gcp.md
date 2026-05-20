@@ -116,30 +116,30 @@ Canvas blocks can be wired to a GitHub repo so that `git push` to a branch trigg
 
 ## Supported GCP services
 
-| Category | Services |
-|---|---|
-| Compute | Cloud Run (services + jobs), Cloud Functions, GKE |
-| Database | Cloud SQL (PostgreSQL, MySQL), Firestore, Memorystore Redis |
-| Storage | Cloud Storage |
-| Messaging | Pub/Sub, Cloud Scheduler |
-| AI/ML | Vertex AI endpoints, Vector Search, ML models |
-| Analytics | BigQuery, Discovery Engine |
-| Security | Secret Manager, Identity Platform |
-| Networking | API Gateway, Load Balancer, Domain Mapping |
-| Observability | Cloud Logging |
+| Category      | Services                                                    |
+| ------------- | ----------------------------------------------------------- |
+| Compute       | Cloud Run (services + jobs), Cloud Functions, GKE           |
+| Database      | Cloud SQL (PostgreSQL, MySQL), Firestore, Memorystore Redis |
+| Storage       | Cloud Storage                                               |
+| Messaging     | Pub/Sub, Cloud Scheduler                                    |
+| AI/ML         | Vertex AI endpoints, Vector Search, ML models               |
+| Analytics     | BigQuery, Discovery Engine                                  |
+| Security      | Secret Manager, Identity Platform                           |
+| Networking    | API Gateway, Load Balancer, Domain Mapping                  |
+| Observability | Cloud Logging                                               |
 
 All of these support create, update, and delete with real-time progress streaming. Anything not on this list is either AWS-specific (see `packages/providers/aws/`) or not yet implemented.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "API not enabled: `cloudrun.googleapis.com`" | The GCP service hasn't been enabled on the project | Click the "Enable API" link in the error, or run `gcloud services enable cloudrun.googleapis.com` |
-| "Permission denied: roles/…" | Service account is missing a role | Add the role in IAM & Admin → IAM |
-| Plan shows `DELETE` for resources you didn't create via ICE | State store drift | Reset the environment's state under Settings → Reset, or manually import first |
-| Deploy hangs at "Creating Cloud SQL instance" | Cloud SQL first-provision is 5-10 minutes | Be patient. Progress is streamed but infrequent |
-| "Quota exceeded" | Your GCP project quota | Request a quota increase in GCP Console |
-| Custom domain stays "pending SSL" | Managed cert provisioning | Can take up to 60 minutes first time; verify your domain's DNS points at the load balancer |
+| Symptom                                                     | Likely cause                                       | Fix                                                                                               |
+| ----------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| "API not enabled: `cloudrun.googleapis.com`"                | The GCP service hasn't been enabled on the project | Click the "Enable API" link in the error, or run `gcloud services enable cloudrun.googleapis.com` |
+| "Permission denied: roles/…"                                | Service account is missing a role                  | Add the role in IAM & Admin → IAM                                                                 |
+| Plan shows `DELETE` for resources you didn't create via ICE | State store drift                                  | Reset the environment's state under Settings → Reset, or manually import first                    |
+| Deploy hangs at "Creating Cloud SQL instance"               | Cloud SQL first-provision is 5-10 minutes          | Be patient. Progress is streamed but infrequent                                                   |
+| "Quota exceeded"                                            | Your GCP project quota                             | Request a quota increase in GCP Console                                                           |
+| Custom domain stays "pending SSL"                           | Managed cert provisioning                          | Can take up to 60 minutes first time; verify your domain's DNS points at the load balancer        |
 
 For anything not in this table, look at the deploy event log on the canvas (bottom panel) - it streams real GCP API responses.
 

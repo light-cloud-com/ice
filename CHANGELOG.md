@@ -5,12 +5,14 @@ All notable changes to ICE are recorded here. The format follows [Keep a Changel
 ## [Unreleased]
 
 ### Security
+
 - Seed script (`packages/db/prisma/seed.ts`) no longer hard-codes a password - reads `ICE_SEED_EMAIL` / `ICE_SEED_PASSWORD` from env, generates a random password when unset, and prints it to stdout for first-run convenience.
 - Gateway CSP `connectSrc` only allows `ws://localhost:*` / `http://localhost:*` when `NODE_ENV` is `development` or `test`.
 - `OpenAICompatProvider` now throws at construction time in production if neither `ICE_AI_URL` nor an explicit `baseUrl` is configured, instead of silently defaulting to `http://localhost:8000`.
 - Desktop secrets now persist across launches. Previously `apps/desktop/src/main/index.ts` regenerated `JWT_SECRET` / `CREDENTIAL_ENCRYPTION_KEY` with `randomBytes` on every boot, silently invalidating every DB-encrypted provider credential. Replaced with `ensureLocalSecrets()` which writes to a per-user config file (chmod 600).
 
 ### Added
+
 - `ensureLocalSecrets()` helper in `@ice/shared` that auto-generates and persists `JWT_SECRET` and `CREDENTIAL_ENCRYPTION_KEY` to a platform-stable per-user config path. Called from the gateway boot - since the desktop runs the gateway in-process (production) or as a child (dev), the bootstrap fires for both paths. Community Edition needs zero env vars.
 - `PROVIDER_READINESS` constant in `packages/constants/src/providers.ts` (GCP=stable, AWS/Azure=experimental, K8s/Alibaba/OCI/DO=design-only) plus a `readiness` field on `CloudProviderMeta`. Source-of-truth for in-app badges and docs.
 - `docs/provider-status.md` - per-provider readiness matrix with the supported handler set spelled out.
@@ -27,22 +29,27 @@ All notable changes to ICE are recorded here. The format follows [Keep a Changel
 - `OSS_LAUNCH_CHECKLIST.md` tracking the open-source release prep.
 
 ### Changed (this batch)
+
 - AI assistant docs now describe the in-app **Settings → AI** flow, the unset/invalid-key behavior, typical per-turn token cost, and the `ICE_AI_PROVIDER` / `ICE_AI_URL` / `ICE_AI_MODEL` knobs for OpenAI-compatible backends.
 - Desktop docs include explicit first-run instructions for unsigned macOS / Windows / Linux v0.1 binaries and the v0.2 code-signing plan (Apple Developer ID + Windows EV cert + auto-update activation).
 - ROADMAP Providers / Blocks / Templates sections tagged `help-wanted` with a pointer to the new extending-providers guide.
 
 ### UI
+
 - Onboarding cloud-provider buttons and the provider-connect modal now show an "Experimental" or "Preview" badge for providers whose `PROVIDER_READINESS` is not `stable` - GCP looks normal, AWS/Azure get a clear caveat, and design-only providers get an inline note pointing to `docs/provider-status.md`.
 
 ### Build
+
 - Generated schemas no longer ship in the repo. The whole `packages/core/src/schemas/generated/` tree (resource-types.ts, raw provider extracts, unified-types.json - ~550 MB) is gitignored. Contributors run `pnpm schemas:build` once per clone; it caches to `.schema-cache/` so subsequent builds are seconds. Four stale build-artifact companions (`index.d.ts`, `index.js`, `resource-types.d.ts`, `resource-types.js`) that were tracked from before the gitignore landed are removed from the index. README + CONTRIBUTING + docs/getting-started + docs/troubleshooting all document the new bootstrap step.
 
 ### Accessibility
+
 - Onboarding-page Back / Skip / Next buttons gained `aria-label`; decorative `lucide` icons inside them are `aria-hidden`.
 - `SidebarStrip` buttons gained `aria-label` and `aria-pressed`; icons and the active-indicator bar are `aria-hidden`.
 - Canvas `NodeHeader` gained `role="group"` and a synthesised `aria-label` (`"{category} block: {label}"`) so screen readers can describe block selection.
 
 ### Changed
+
 - **`.env.example` collapsed to optional dev overrides only.** Community Edition runs with no env-var configuration. All credentials (GCP / AWS / Azure / Anthropic / GitHub) go through the in-app Settings → Providers UI and live encrypted in the workspace DB.
 - `ICE_TEST_*` env vars (used only by `pnpm test:gcp` / `pnpm test:scenarios`) are now documented exclusively in `docs/testing.md` rather than in the user-facing `.env.example`.
 - `JWT_SECRET` / `CREDENTIAL_ENCRYPTION_KEY` resolution made lazy in `packages/shared/src/auth/middleware.ts` and `packages/shared/src/crypto/index.ts` - so a single `ensureLocalSecrets()` call at boot suffices, with no module-load order traps.

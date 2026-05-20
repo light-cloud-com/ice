@@ -22,13 +22,13 @@ Append-only log of architectural and process decisions for the multi-agent ICE w
 - `progress.md` — living document, owned exclusively by the orchestrator (main session).
 - `learnings.md` — append-only log of non-obvious gotchas and patterns.
 
-State files live in `.claude/state/` (agent-managed operational state) and are cross-linked from `/docs/agents.md` (human entry point). Stabilized learnings — cited 3+ times or generalizing beyond one unit — get promoted into `/docs` as proper documentation, and the original learning entry is annotated with a `_Promoted to:_` back-reference.
+State files live in `.claude/state/` (agent-managed operational state) and are cross-linked from `/docs/refactoring-patterns.md` (human entry point). Stabilized learnings — cited 3+ times or generalizing beyond one unit — get promoted into `/docs` as proper documentation, and the original learning entry is annotated with a `_Promoted to:_` back-reference.
 
 **Alternatives considered.**
 
-- *Single `state.json`.* Rejected. Markdown reads well in diffs, tolerates partial writes, and surfaces in `git blame`. JSON encourages whole-file overwrites; we want append-only.
-- *Per-agent memory frontmatter inside each `.claude/agents/*.md`.* Rejected. Couples state to the agent definition (so editing an agent's role would churn its memory), prevents cross-agent reads (the critic should see what the implementer learned), and fragments the orchestrator's view.
-- *State in `/docs/state/`.* Rejected. `/docs` is human-authored documentation that ships with the repo; mixing agent-managed operational state into it muddies that contract. We cross-link from `/docs/agents.md` instead of co-locating.
+- _Single `state.json`._ Rejected. Markdown reads well in diffs, tolerates partial writes, and surfaces in `git blame`. JSON encourages whole-file overwrites; we want append-only.
+- _Per-agent memory frontmatter inside each `.claude/agents/_.md`.\* Rejected. Couples state to the agent definition (so editing an agent's role would churn its memory), prevents cross-agent reads (the critic should see what the implementer learned), and fragments the orchestrator's view.
+- _State in `/docs/state/`._ Rejected. `/docs` is human-authored documentation that ships with the repo; mixing agent-managed operational state into it muddies that contract. We cross-link from `/docs/refactoring-patterns.md` instead of co-locating.
 
 **Consequences.**
 
@@ -37,7 +37,7 @@ State files live in `.claude/state/` (agent-managed operational state) and are c
 - Quarterly compaction: cluster duplicates in `learnings.md`, archive the prior version to `.claude/state/archive/learnings-YYYY-Qn.md`.
 - Stabilized learnings get promoted to `/docs`; the original entry gets a `_Promoted to:_` line appended (the only legal post-hoc edit).
 
-**Related.** [`/docs/agents.md`](../../docs/agents.md)
+**Related.** `state/learnings.md` (compacted patterns archive)
 
 ---
 
@@ -58,18 +58,18 @@ The apply-engine in `packages/core/src/apply/` (which has plan-execution-layer b
 
 **Alternatives considered.**
 
-- *Adopt `apply-engine.ts`'s execution-layer batching.* Rejected. Layer-batched `Promise.all` waits for the slowest node in layer N before starting layer N+1, even when a fast node in N+1 has only one dep already finished. Work-stealing over the DAG is strictly better.
-- *New socket room `deploy:<deployId>`.* Rejected. The existing `deploy:<cardId>` is what the canvas hydration is shaped around (per-card lifecycle, per-card snapshot in `deploy-locks.ts`). The deployId is unknown to clients before the HTTP roundtrip.
-- *Keep emitting legacy `type: 'progress'` for one release.* Rejected per user direction. ICE is pre-1.0; no external clients to protect; cleaner cut.
-- *Single global concurrency limit, no per-handler caps.* Rejected. GCP quotas (Cloud SQL 1/min, Memorystore IP-range races) make >1 concurrent unsafe for those resource types specifically.
-- *Fail-fast on first error.* Rejected per user direction (failure isolates per branch). The partial-success rollup gives users the actionable diff: which resources succeeded, which failed.
+- _Adopt `apply-engine.ts`'s execution-layer batching._ Rejected. Layer-batched `Promise.all` waits for the slowest node in layer N before starting layer N+1, even when a fast node in N+1 has only one dep already finished. Work-stealing over the DAG is strictly better.
+- _New socket room `deploy:<deployId>`._ Rejected. The existing `deploy:<cardId>` is what the canvas hydration is shaped around (per-card lifecycle, per-card snapshot in `deploy-locks.ts`). The deployId is unknown to clients before the HTTP roundtrip.
+- _Keep emitting legacy `type: 'progress'` for one release._ Rejected per user direction. ICE is pre-1.0; no external clients to protect; cleaner cut.
+- _Single global concurrency limit, no per-handler caps._ Rejected. GCP quotas (Cloud SQL 1/min, Memorystore IP-range races) make >1 concurrent unsafe for those resource types specifically.
+- _Fail-fast on first error._ Rejected per user direction (failure isolates per branch). The partial-success rollup gives users the actionable diff: which resources succeeded, which failed.
 
 **Consequences.**
 
 - The deploy path returns identical `DeployResult` shapes (no API break for callers); only timing and event surface change.
 - The misleading per-resource progress percentage is gone — replaced by an honest "X of N terminal" rollup. Implicitly fixes the long-standing UI wart where the bar bounces 59% → 0% → 0% as the engine moves between resources.
 - Future adopt-vs-already-exists work slots into the per-handler `create()` wrapper without touching the scheduler. The `applying` event fires at scheduler dispatch time, not handler call time, so a future adopt-detection wrapper can emit a `node.progress` like "checking for existing resource" before the actual create.
-- Per-handler caps for SQL and Redis mean a card with 3 SQL instances still serializes those three creations (correct given GCP behavior). Documented as a knob in `/docs/core-engine.md`.
+- Per-handler caps for SQL and Redis mean a card with 3 SQL instances still serializes those three creations (correct given GCP behavior). Documented as a knob in `/docs/architecture/core-engine.md`.
 - Cancellation behavior (existing `abort_signal`): in-flight nodes finish naturally; not-yet-applying nodes flip to `cancelled-due-to-dep`.
 - Two engines coexist; reconciliation is a separate refactor.
 
@@ -93,10 +93,10 @@ Workflow per file: orchestrator picks target → decomposer drafts blueprint →
 
 **Alternatives considered.**
 
-- *Replace the existing four agents with refactor-specialised ones.* Rejected. The current loop already works for the parallel-deploy initiative; replacing it would lose the planner / critic / ux-tester convention. Additive is strictly safer.
-- *Single "refactorer" agent that does decomposition, extraction, and tests in one pass.* Rejected. Too much surface area per agent; the tight feedback loop between decomposer and util-broker is what kills duplicate utils, and merging them would lose that.
-- *Coverage threshold ratchet to 90/80 across the whole repo on day one.* Rejected. Disruptive; some packages don't even have a coverage tool installed yet. Per-package baseline-on-touch with a global gate that forbids regression is the staged version.
-- *ux-tester runs per refactor unit.* Rejected per orchestrator direction (2026-04-29). Headed-browser cycles are too slow for per-unit cadence and refactor units do not change behavior. The general UI-testing rule still applies for behavior changes.
+- _Replace the existing four agents with refactor-specialised ones._ Rejected. The current loop already works for the parallel-deploy initiative; replacing it would lose the planner / critic / ux-tester convention. Additive is strictly safer.
+- _Single "refactorer" agent that does decomposition, extraction, and tests in one pass._ Rejected. Too much surface area per agent; the tight feedback loop between decomposer and util-broker is what kills duplicate utils, and merging them would lose that.
+- _Coverage threshold ratchet to 90/80 across the whole repo on day one._ Rejected. Disruptive; some packages don't even have a coverage tool installed yet. Per-package baseline-on-touch with a global gate that forbids regression is the staged version.
+- _ux-tester runs per refactor unit._ Rejected per orchestrator direction (2026-04-29). Headed-browser cycles are too slow for per-unit cadence and refactor units do not change behavior. The general UI-testing rule still applies for behavior changes.
 
 **Consequences.**
 
@@ -118,9 +118,9 @@ Workflow per file: orchestrator picks target → decomposer drafts blueprint →
 
 **Alternatives considered.**
 
-- *Keep state under `.claude/state/` and add a permission allowlist for it.* Rejected. Allowlists work per-tool but require ongoing maintenance (every new state file under the tree needs the entry refreshed); moving the directory once is structurally cleaner.
-- *Move state to `docs/state/`.* Rejected. `docs/` is human-authored documentation that ships with the repo; mixing agent-managed operational state into it muddies that contract (same reasoning as the original 2026-04-27 decision).
-- *Move state to `.claude-state/` (sibling of `.claude/`).* Rejected. The leading dot would still imply hidden / tooling-managed; explicit `state/` at the root makes the directory's purpose obvious in `ls`.
+- _Keep state under `.claude/state/` and add a permission allowlist for it._ Rejected. Allowlists work per-tool but require ongoing maintenance (every new state file under the tree needs the entry refreshed); moving the directory once is structurally cleaner.
+- _Move state to `docs/state/`._ Rejected. `docs/` is human-authored documentation that ships with the repo; mixing agent-managed operational state into it muddies that contract (same reasoning as the original 2026-04-27 decision).
+- _Move state to `.claude-state/` (sibling of `.claude/`)._ Rejected. The leading dot would still imply hidden / tooling-managed; explicit `state/` at the root makes the directory's purpose obvious in `ls`.
 
 **Consequences.**
 
@@ -140,6 +140,7 @@ Workflow per file: orchestrator picks target → decomposer drafts blueprint →
 **Decision.** Merge the `refactoring` branch into `main` as **one squash-or-merge PR**, not split per phase.
 
 Rationale:
+
 - The two initiatives (parallel-deploy + LOC discipline) are interleaved in the commit graph; phase-PR splits would require cherry-picking and lose accurate `git blame`.
 - Each refactor unit was already gated by a critic pass + test deltas; per-unit reviewability already exists in the commit messages and per-unit blueprints (`state/blueprints/rf-*.md`).
 - A single merge preserves chronological order in `main`'s history and is the cheapest path to closing the long-running branch.
@@ -148,10 +149,10 @@ Rationale:
 
 **Alternatives considered.**
 
-- *Split into Phase-1 / Phase-2 / Phase-3 / Final-round / bugfixes PRs.* Rejected. The refactor units were dispatched by file, not by phase boundary; many commits touch utilities shared across phase boundaries. Splitting would require synthetic boundaries and lose the per-unit shim-drop sequencing. Review burden is the same total but more painful when interleaved.
-- *Merge straight to `main` without a PR.* Rejected. Even though ICE is pre-1.0, the volume warrants a PR record for `main` history searchability — title + body capture the high-level summary that 509 individual commit messages don't.
-- *Keep cooking on `refactoring` and merge at end of Q2-2026.* Rejected. The branch is a closed initiative, not work-in-progress; further commits would be the deferred follow-ups (current In flight) and those are independent enough to ship as their own PRs after the merge.
-- *Merge commit vs squash.* No preference recorded — let the human PR reviewer pick. A merge commit preserves the per-unit history (richer `git log`); a squash collapses 509 → 1 (cleaner mainline graph). Both are acceptable.
+- _Split into Phase-1 / Phase-2 / Phase-3 / Final-round / bugfixes PRs._ Rejected. The refactor units were dispatched by file, not by phase boundary; many commits touch utilities shared across phase boundaries. Splitting would require synthetic boundaries and lose the per-unit shim-drop sequencing. Review burden is the same total but more painful when interleaved.
+- _Merge straight to `main` without a PR._ Rejected. Even though ICE is pre-1.0, the volume warrants a PR record for `main` history searchability — title + body capture the high-level summary that 509 individual commit messages don't.
+- _Keep cooking on `refactoring` and merge at end of Q2-2026._ Rejected. The branch is a closed initiative, not work-in-progress; further commits would be the deferred follow-ups (current In flight) and those are independent enough to ship as their own PRs after the merge.
+- _Merge commit vs squash._ No preference recorded — let the human PR reviewer pick. A merge commit preserves the per-unit history (richer `git log`); a squash collapses 509 → 1 (cleaner mainline graph). Both are acceptable.
 
 **Consequences.**
 
@@ -160,4 +161,4 @@ Rationale:
 - `state/learnings.md` Q2-2026 quarterly compaction (separate work) lands either on `refactoring` pre-merge or on `main` post-merge — both are fine, no ordering constraint.
 - The pre-commit hook auto-bumps `package.json` version on every commit, so the cut version on `main` will be wherever the bump lands. Not load-bearing.
 
-**Related.** [`state/progress.md`](progress.md) (Archive entries for both initiatives), [`docs/refactoring-patterns.md`](../docs/refactoring-patterns.md) (the playbook distilled from the LOC initiative).
+**Related.** [`state/progress.md`](progress.md) (Archive entries for both initiatives), `state/learnings.md` (the playbook distilled from the LOC initiative; doc-form deprecated).

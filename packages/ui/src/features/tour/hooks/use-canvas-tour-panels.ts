@@ -130,7 +130,7 @@ export function useCanvasTourPanels(): void {
     // project so the canvas anchors mount. The autostart predicate
     // already filters out non-canvas pathnames for canvas-tour, so this
     // path normally fires only when the tour was launched manually
-    // from the Help menu / OnboardingChecklist.
+    // from the Help menu.
     if (firstUrl && !location.pathname.match(/^\/[^/]+\/[^/]+/)) {
       navigate(firstUrl);
     }

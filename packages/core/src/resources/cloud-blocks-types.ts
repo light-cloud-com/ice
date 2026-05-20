@@ -54,7 +54,16 @@ export type BlockStatus =
 /**
  * Provider type
  */
-export type CloudProvider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'custom';
+export type CloudProvider =
+  | 'aws'
+  | 'gcp'
+  | 'azure'
+  | 'kubernetes'
+  | 'alibaba'
+  | 'oci'
+  | 'digitalocean'
+  | 'ibm'
+  | 'custom';
 
 // =============================================================================
 // Block Definition

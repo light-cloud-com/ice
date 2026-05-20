@@ -64,7 +64,7 @@ A pre-built canvas the user can clone as a starting point (SaaS Starter, RAG Cha
 
 ## <a id="ai-assistant"></a>AI assistant
 
-The Claude integration that can read and propose edits to a canvas in plain English. Off unless `ANTHROPIC_API_KEY` is set; never applies changes without user confirmation. See [ai-assistant.md](ai-assistant.md).
+The Claude integration that can read and propose edits to a canvas in plain English. Off unless `ANTHROPIC_API_KEY` is set; never applies changes without user confirmation. See [ai-assistant](architecture/ai-assistant.md).
 
 ## <a id="gateway"></a>Gateway
 
@@ -72,4 +72,4 @@ The single Express process that composes all backend service routers into one AP
 
 ## <a id="ice-cloud"></a>ICE Cloud
 
-The managed, hosted version of ICE (operated by the project maintainers as a commercial service). Same open-source code as this repo plus operational and multi-tenant layers that only make sense in a hosted context. See [community-edition.md](community-edition.md).
+The managed, hosted version of ICE (operated by the project maintainers as a commercial service). Same open-source code as this repo plus operational and multi-tenant layers that only make sense in a hosted context.

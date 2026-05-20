@@ -10,4 +10,4 @@ Where to start reading:
 - `src/stream-parser.ts` — SSE → `ChatChunk` parser used by both providers.
 - `src/types.ts` — `AiProvider`, `ChatParams`, `ChatChunk`, `ChatResponse`, `HealthCheckResult`.
 
-The API key flows in via user settings (stored encrypted in the DB), not env vars — see [docs/ai-assistant.md](../../docs/ai-assistant.md).
+The API key flows in via user settings (stored encrypted in the DB), not env vars — see [docs/architecture/ai-assistant.md](../../docs/architecture/ai-assistant.md).

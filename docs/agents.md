@@ -6,12 +6,12 @@ This page is the human entry point. The live state files are under [`state/`](..
 
 ## The four agents
 
-| Agent | Role |
-|---|---|
-| **planner** | Reads the brief and existing state, surveys the relevant code, and produces a unit-by-unit plan. Records architectural choices in `decisions.md`. |
+| Agent           | Role                                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **planner**     | Reads the brief and existing state, surveys the relevant code, and produces a unit-by-unit plan. Records architectural choices in `decisions.md`.                             |
 | **implementer** | Executes one unit of the plan: edits code, runs tests, reports back. Reads relevant learnings before touching a package; appends new ones when a non-obvious gotcha surfaces. |
-| **critic** | Reviews the implementer's diff for bugs, regressions, and convention drift. Cites a learning anchor when a finding generalizes; flags stale `/docs` pages. |
-| **ux-tester** | Drives the UI for any user-facing change and records UX patterns worth keeping or avoiding. |
+| **critic**      | Reviews the implementer's diff for bugs, regressions, and convention drift. Cites a learning anchor when a finding generalizes; flags stale `/docs` pages.                    |
+| **ux-tester**   | Drives the UI for any user-facing change and records UX patterns worth keeping or avoiding.                                                                                   |
 
 The orchestrator (the main Claude session) routes work to these agents and is the only writer of `progress.md`.
 
@@ -19,11 +19,11 @@ The orchestrator (the main Claude session) routes work to these agents and is th
 
 State lives under [`state/`](../state/) - agent-managed operational state, distinct from human-authored documentation. Three files:
 
-| File | Owner | Lifecycle |
-|---|---|---|
+| File                                    | Owner                       | Lifecycle                                                                                                                |
+| --------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | [`decisions.md`](../state/decisions.md) | any agent (usually planner) | Append-only. Each entry: `## YYYY-MM-DD - title` with Context, Decision, Alternatives considered, Consequences, Related. |
-| [`progress.md`](../state/progress.md) | orchestrator only | Living document. Sections: In flight / Done this week / Blocked / Archive. Subagents never write to it. |
-| [`learnings.md`](../state/learnings.md) | any agent | Append-only. Each entry has a kebab-case `##` anchor and a `_Discovered: YYYY-MM-DD by <agent> in <unit-id>_` line. |
+| [`progress.md`](../state/progress.md)   | orchestrator only           | Living document. Sections: In flight / Done this week / Blocked / Archive. Subagents never write to it.                  |
+| [`learnings.md`](../state/learnings.md) | any agent                   | Append-only. Each entry has a kebab-case `##` anchor and a `_Discovered: YYYY-MM-DD by <agent> in <unit-id>_` line.      |
 
 The append-only rule has one exception: once a learning is promoted to `/docs`, append a `_Promoted to: /docs/<path>_` line to the original entry. Don't edit anything else.
 

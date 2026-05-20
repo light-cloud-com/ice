@@ -161,8 +161,8 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
             <p>
               {readiness === 'experimental'
-                ? `${providerName} support is experimental — major primitives work but parity with GCP is in progress. See docs/provider-status.md.`
-                : `${providerName} blocks render on the canvas but the deployer is a stub. See docs/provider-status.md.`}
+                ? `${providerName} support is experimental — major primitives work but parity with GCP is in progress.`
+                : `${providerName} blocks render on the canvas but the deployer is a stub.`}
             </p>
           </div>
         )}

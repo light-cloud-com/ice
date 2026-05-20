@@ -4,23 +4,23 @@ Where each provider sits today. The source of truth is `PROVIDER_READINESS` in `
 
 ## Status definitions
 
-| Status | Meaning |
-|---|---|
-| **stable** | Full plan / apply / destroy lifecycle. Importer works. Real-world deploys land. |
-| **experimental** | Major primitives work end-to-end. Not at feature parity with stable. Production use at your own risk. |
-| **design-only** | Blocks render on the canvas, but the deployer is a stub. Useful for diagrams; nothing gets created in the cloud. |
+| Status           | Meaning                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **stable**       | Full plan / apply / destroy lifecycle. Importer works. Real-world deploys land.                                  |
+| **experimental** | Major primitives work end-to-end. Not at feature parity with stable. Production use at your own risk.            |
+| **design-only**  | Blocks render on the canvas, but the deployer is a stub. Useful for diagrams; nothing gets created in the cloud. |
 
 ## Current matrix (v0.1)
 
-| Provider | Status | What works |
-|---|---|---|
-| **GCP** | stable | 20+ handlers: Cloud Run (services + jobs), Cloud Functions, GKE, Cloud SQL, Firestore, Memorystore Redis, Cloud Storage, Pub/Sub, Cloud Scheduler, Vertex AI, Discovery Engine, BigQuery, Secret Manager, Identity Platform, API Gateway, Load Balancer, Domain Mapping, Cloud Logging. Full importer via Cloud Asset Inventory. |
-| **AWS** | experimental | EC2 instance, S3 bucket, Lambda function. Importer not implemented. No auto-enable for required services. Most other resource categories surface as "unsupported on AWS" in the plan modal. |
-| **Azure** | experimental | Virtual Machine, Storage Account, Web App. Importer not implemented. Most other resource categories surface as "unsupported on Azure". |
-| **Kubernetes** | design-only | 13 blocks render on canvas. Deployer is not wired. |
-| **Alibaba Cloud** | design-only | Blocks render. Deployer is the next item after AWS/Azure parity. |
-| **Oracle Cloud** | design-only | Block stubs. No deployer. |
-| **DigitalOcean** | design-only | Block stubs. No deployer. |
+| Provider          | Status       | What works                                                                                                                                                                                                                                                                                                                       |
+| ----------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GCP**           | stable       | 20+ handlers: Cloud Run (services + jobs), Cloud Functions, GKE, Cloud SQL, Firestore, Memorystore Redis, Cloud Storage, Pub/Sub, Cloud Scheduler, Vertex AI, Discovery Engine, BigQuery, Secret Manager, Identity Platform, API Gateway, Load Balancer, Domain Mapping, Cloud Logging. Full importer via Cloud Asset Inventory. |
+| **AWS**           | experimental | EC2 instance, S3 bucket, Lambda function. Importer not implemented. No auto-enable for required services. Most other resource categories surface as "unsupported on AWS" in the plan modal.                                                                                                                                      |
+| **Azure**         | experimental | Virtual Machine, Storage Account, Web App. Importer not implemented. Most other resource categories surface as "unsupported on Azure".                                                                                                                                                                                           |
+| **Kubernetes**    | design-only  | 13 blocks render on canvas. Deployer is not wired.                                                                                                                                                                                                                                                                               |
+| **Alibaba Cloud** | design-only  | Blocks render. Deployer is the next item after AWS/Azure parity.                                                                                                                                                                                                                                                                 |
+| **Oracle Cloud**  | design-only  | Block stubs. No deployer.                                                                                                                                                                                                                                                                                                        |
+| **DigitalOcean**  | design-only  | Block stubs. No deployer.                                                                                                                                                                                                                                                                                                        |
 
 ## What "experimental" looks like in practice
 

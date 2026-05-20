@@ -20,7 +20,7 @@
  * tour fires.
  *
  * Tours without `autoStart` are silently skipped — they're launched
- * via the URL param hook, the Help menu, or the OnboardingChecklist.
+ * via the URL param hook or the Help menu.
  */
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';

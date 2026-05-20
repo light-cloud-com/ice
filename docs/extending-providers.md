@@ -63,13 +63,22 @@ export class YourCloudDeployer implements ProviderDeployer {
     // Destroy clients, close pools.
   }
 
-  async create(type: string, name: string, properties: Record<string, unknown>, _options: Record<string, unknown>): Promise<ResourceDeployResult> {
+  async create(
+    type: string,
+    name: string,
+    properties: Record<string, unknown>,
+    _options: Record<string, unknown>,
+  ): Promise<ResourceDeployResult> {
     // Dispatch on `type.startsWith('your-cloud.x.y')`.
     // Each branch calls a private `create_x_y` helper that returns provider_id.
   }
 
-  async update(/* same shape */): Promise<ResourceDeployResult> { /* … */ }
-  async destroy(/* same shape */): Promise<ResourceDeployResult> { /* … */ }
+  async update(/* same shape */): Promise<ResourceDeployResult> {
+    /* … */
+  }
+  async destroy(/* same shape */): Promise<ResourceDeployResult> {
+    /* … */
+  }
 }
 
 export function create_your_cloud_deployer(): YourCloudDeployer {

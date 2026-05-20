@@ -846,12 +846,18 @@ importers:
 
   services/iam:
     dependencies:
+      '@ice/blocks':
+        specifier: workspace:*
+        version: link:../../packages/blocks
       '@ice/db':
         specifier: workspace:*
         version: link:../../packages/db
       '@ice/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@ice/templates':
+        specifier: workspace:*
+        version: link:../../packages/templates
       '@ice/types':
         specifier: workspace:*
         version: link:../../packages/types

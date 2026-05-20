@@ -101,7 +101,7 @@ export const GroupLod3: React.FC<GroupLod3Props> = memo(
         />
 
         {/* Label row above box + fold chevron */}
-        <foreignObject x={x} y={y - 22} width={nodeWidth} height={22}>
+        <foreignObject x={x} y={y} width={nodeWidth} height={22}>
           <div style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}>
             <div style={{ flex: 1 }}>
               <GroupLabelRow label={displayLabel} color={userColor} childCount={childCount} />

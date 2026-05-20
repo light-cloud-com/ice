@@ -1,13 +1,13 @@
 /**
  * tour-6 — Reducer + thunk tests for tour-slice.
  *
- * Pure RTK; node env per decision 2026-05-08 (slice has no DOM
- * dependency beyond a `localStorage` global which we stub via
- * `vi.stubGlobal`). Covers blueprint §6/tour-6's required cases plus
- * edge paths: dup id idempotence, parse-error fallback, thunk
- * dispatched without active tour, thunk failure logging.
+ * Pure RTK; node env per decision 2026-05-08. The slice no longer
+ * touches localStorage — DB is the single source of truth, hydrated
+ * via `hydrateFromUser`. Covers blueprint §6/tour-6's required cases
+ * plus edge paths: dup id idempotence, thunk dispatched without
+ * active tour, thunk failure logging.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   axiosPut: vi.fn(),
@@ -37,7 +37,6 @@ vi.mock('../../utils/tour-registry', () => ({
 
 import { configureStore } from '@reduxjs/toolkit';
 import tourReducer, {
-  COMPLETED_TOURS_STORAGE_KEY,
   flagSkipped,
   hydrateFromUser,
   markCompleted,
@@ -57,46 +56,9 @@ import tourReducer, {
   type TourState,
 } from '../tour-slice';
 
-// ---------------------------------------------------------------------------
-// localStorage stub. Real `localStorage` doesn't exist in vitest's default
-// node env; we stub a Map-backed fake at the start of every test and
-// tear it down after.
-// ---------------------------------------------------------------------------
-let storage: Map<string, string>;
-
-function installStorage(initial: Record<string, string> = {}): void {
-  storage = new Map(Object.entries(initial));
-  vi.stubGlobal('localStorage', {
-    getItem: (k: string) => storage.get(k) ?? null,
-    setItem: (k: string, v: string) => {
-      storage.set(k, String(v));
-    },
-    removeItem: (k: string) => {
-      storage.delete(k);
-    },
-    clear: () => {
-      storage.clear();
-    },
-    key: (i: number) => Array.from(storage.keys())[i] ?? null,
-    get length() {
-      return storage.size;
-    },
-  });
-}
-
-/** Re-seed storage and re-stub for the fast-path-read tests. */
-function seedAndStub(initial: Record<string, string>): void {
-  installStorage(initial);
-}
-
 beforeEach(() => {
   mocks.axiosPut.mockReset();
   mocks.registry.clear();
-  installStorage();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 function init(): TourState {
@@ -112,10 +74,10 @@ function registerTour(id: string, totalSteps = 3): void {
 }
 
 // ---------------------------------------------------------------------------
-// Initial state + localStorage fast-path
+// Initial state
 // ---------------------------------------------------------------------------
 describe('tour-slice — initial state', () => {
-  it('seeds idle / no active tour / empty completedTours when storage is empty', () => {
+  it('seeds idle / no active tour / empty completedTours', () => {
     expect(init()).toEqual({
       activeTourId: null,
       stepIdx: 0,
@@ -124,42 +86,6 @@ describe('tour-slice — initial state', () => {
       perTour: {},
       hydrated: false,
     });
-  });
-
-  it('reads localStorage fast-path on initial state computation', async () => {
-    // Must re-stub BEFORE importing the module under test so the slice
-    // file's top-level `readCompletedFromStorage()` runs with the
-    // seeded value. `vi.resetModules` busts the import cache so the
-    // re-import re-evaluates the slice's top-level expressions.
-    seedAndStub({ [COMPLETED_TOURS_STORAGE_KEY]: JSON.stringify(['canvas-tour', 'palette-tour']) });
-    vi.resetModules();
-    const mod = await import('../tour-slice');
-    const fresh = mod.default(undefined, { type: '@@INIT' });
-    expect(fresh.completedTours).toEqual(['canvas-tour', 'palette-tour']);
-  });
-
-  it('localStorage parse error falls back to empty array', async () => {
-    seedAndStub({ [COMPLETED_TOURS_STORAGE_KEY]: '{not-json' });
-    vi.resetModules();
-    const mod = await import('../tour-slice');
-    const fresh = mod.default(undefined, { type: '@@INIT' });
-    expect(fresh.completedTours).toEqual([]);
-  });
-
-  it('non-array stored payload falls back to empty array', async () => {
-    seedAndStub({ [COMPLETED_TOURS_STORAGE_KEY]: JSON.stringify({ huh: true }) });
-    vi.resetModules();
-    const mod = await import('../tour-slice');
-    const fresh = mod.default(undefined, { type: '@@INIT' });
-    expect(fresh.completedTours).toEqual([]);
-  });
-
-  it('filters non-string entries when reading the fast-path', async () => {
-    seedAndStub({ [COMPLETED_TOURS_STORAGE_KEY]: JSON.stringify(['ok', 42, null, 'good']) });
-    vi.resetModules();
-    const mod = await import('../tour-slice');
-    const fresh = mod.default(undefined, { type: '@@INIT' });
-    expect(fresh.completedTours).toEqual(['ok', 'good']);
   });
 });
 
@@ -221,7 +147,7 @@ describe('setStep / setPhase', () => {
 // markCompleted
 // ---------------------------------------------------------------------------
 describe('markCompleted', () => {
-  it('appends id, resets active state, writes localStorage', () => {
+  it('appends id and resets active state', () => {
     registerTour('canvas-tour', 3);
     let s = tourReducer(init(), startTour({ tourId: 'canvas-tour', totalSteps: 3 }));
     s = tourReducer(s, setStep(2));
@@ -230,7 +156,6 @@ describe('markCompleted', () => {
     expect(s.stepIdx).toBe(0);
     expect(s.phase).toBe('idle');
     expect(s.completedTours).toEqual(['canvas-tour']);
-    expect(JSON.parse(storage.get(COMPLETED_TOURS_STORAGE_KEY) ?? '[]')).toEqual(['canvas-tour']);
   });
 
   it('is idempotent on duplicate ids (no second push)', () => {
@@ -244,20 +169,6 @@ describe('markCompleted', () => {
     s = tourReducer(s, markCompleted('b'));
     s = tourReducer(s, markCompleted('c'));
     expect(s.completedTours).toEqual(['a', 'b', 'c']);
-  });
-
-  it('localStorage write tolerates a throwing setItem (does not crash)', () => {
-    vi.stubGlobal('localStorage', {
-      getItem: () => null,
-      setItem: () => {
-        throw new Error('quota');
-      },
-      removeItem: () => {},
-      clear: () => {},
-      key: () => null,
-      length: 0,
-    });
-    expect(() => tourReducer(init(), markCompleted('canvas-tour'))).not.toThrow();
   });
 });
 
@@ -312,12 +223,6 @@ describe('hydrateFromUser', () => {
     s = tourReducer(s, hydrateFromUser({ completedTours: ['server-1', 'local-1', 'server-2'] }));
     expect(s.completedTours).toEqual(['local-1', 'server-1', 'server-2']);
     expect(s.hydrated).toBe(true);
-  });
-
-  it('writes merged set back to localStorage', () => {
-    const s = tourReducer(init(), hydrateFromUser({ completedTours: ['alpha', 'beta'] }));
-    expect(JSON.parse(storage.get(COMPLETED_TOURS_STORAGE_KEY) ?? '[]')).toEqual(['alpha', 'beta']);
-    expect(s.completedTours).toEqual(['alpha', 'beta']);
   });
 
   it('handles missing payload field gracefully', () => {

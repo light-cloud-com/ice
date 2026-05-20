@@ -43,6 +43,9 @@ docs/.obsidian/
 *.swo
 *~
 
+# Claude Code
+.claude/
+
 # Testing
 playwright-report/
 e2e/playwright-report/

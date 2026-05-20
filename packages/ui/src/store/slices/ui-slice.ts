@@ -103,24 +103,11 @@ export interface UIState {
 }
 
 // =============================================================================
-// Persistence (pane tabs only)
+// Defaults (no localStorage — UI prefs persist via the user-preferences
+// endpoint, see task #13. Until that lands, prefs reset on reload.)
 // =============================================================================
 
-const UI_STORAGE_KEY = 'ice-ui-panes';
-const PANELS_STORAGE_KEY = 'ice-ui-panels';
-
-interface PersistedPanels {
-  showPalette: boolean;
-  showBlocks: boolean;
-  showProperties: boolean;
-  showMinimap: boolean;
-  showValidation: boolean;
-  showAiChat: boolean;
-  showCostPanel: boolean;
-  showTemplates: boolean;
-}
-
-const PANEL_DEFAULTS: PersistedPanels = {
+const PANEL_DEFAULTS = {
   showPalette: true,
   showBlocks: true,
   showProperties: false,
@@ -131,74 +118,21 @@ const PANEL_DEFAULTS: PersistedPanels = {
   showTemplates: false,
 };
 
-function loadPersistedPanels(): PersistedPanels {
-  try {
-    const raw = localStorage.getItem(PANELS_STORAGE_KEY);
-    if (raw) return { ...PANEL_DEFAULTS, ...JSON.parse(raw) };
-  } catch {
-    /* ignore */
-  }
-  return PANEL_DEFAULTS;
-}
+const PANES_DEFAULT: SplitViewState = {
+  enabled: false,
+  direction: 'horizontal',
+  panes: [
+    {
+      id: 'pane-1',
+      cardId: 'demo',
+      openCardIds: ['demo'],
+      viewport: { panX: 0, panY: 0, scale: 1 },
+    },
+  ],
+  activePaneId: 'pane-1',
+};
 
-function persistPanels(state: UIState) {
-  try {
-    localStorage.setItem(
-      PANELS_STORAGE_KEY,
-      JSON.stringify({
-        showPalette: state.showPalette,
-        showBlocks: state.showBlocks,
-        showProperties: state.showProperties,
-        showMinimap: state.showMinimap,
-        showValidation: state.showValidation,
-        showAiChat: state.showAiChat,
-        showCostPanel: state.showCostPanel,
-        showTemplates: state.showTemplates,
-      }),
-    );
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadPersistedPanes(): SplitViewState {
-  try {
-    const raw = localStorage.getItem(UI_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.panes && parsed.panes.length > 0) {
-        return {
-          enabled: parsed.enabled || false,
-          direction: parsed.direction || 'horizontal',
-          panes: parsed.panes.map((p: any) => ({
-            id: p.id || 'pane-1',
-            cardId: p.cardId || 'demo',
-            openCardIds: p.openCardIds || [p.cardId || 'demo'],
-            viewport: { panX: 0, panY: 0, scale: 1 },
-          })),
-          activePaneId: parsed.activePaneId || 'pane-1',
-        };
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  return {
-    enabled: false,
-    direction: 'horizontal',
-    panes: [
-      {
-        id: 'pane-1',
-        cardId: 'demo',
-        openCardIds: ['demo'],
-        viewport: { panX: 0, panY: 0, scale: 1 },
-      },
-    ],
-    activePaneId: 'pane-1',
-  };
-}
-
-const persistedPanels = loadPersistedPanels();
+const persistedPanels = PANEL_DEFAULTS;
 
 const initialState: UIState = {
   ...persistedPanels,
@@ -229,7 +163,7 @@ const initialState: UIState = {
     projectWizard: false,
     aiCommand: false,
   },
-  splitView: loadPersistedPanes(),
+  splitView: PANES_DEFAULT,
   sidebarOverride: { left: null, right: null },
 };
 
@@ -239,27 +173,21 @@ const uiSlice = createSlice({
   reducers: {
     togglePalette: (state) => {
       state.showPalette = !state.showPalette;
-      persistPanels(state);
     },
     toggleBlocks: (state) => {
       state.showBlocks = !state.showBlocks;
-      persistPanels(state);
     },
     toggleProperties: (state) => {
       state.showProperties = !state.showProperties;
-      persistPanels(state);
     },
     toggleMinimap: (state) => {
       state.showMinimap = !state.showMinimap;
-      persistPanels(state);
     },
     toggleAiChat: (state) => {
       state.showAiChat = !state.showAiChat;
-      persistPanels(state);
     },
     toggleCostPanel: (state) => {
       state.showCostPanel = !state.showCostPanel;
-      persistPanels(state);
     },
     /**
      * Direct boolean setters for the tour engine — `toggle*` is wrong
@@ -268,27 +196,21 @@ const uiSlice = createSlice({
      */
     setShowPalette: (state, action: PayloadAction<boolean>) => {
       state.showPalette = action.payload;
-      persistPanels(state);
     },
     setShowBlocks: (state, action: PayloadAction<boolean>) => {
       state.showBlocks = action.payload;
-      persistPanels(state);
     },
     setShowProperties: (state, action: PayloadAction<boolean>) => {
       state.showProperties = action.payload;
-      persistPanels(state);
     },
     setShowAiChat: (state, action: PayloadAction<boolean>) => {
       state.showAiChat = action.payload;
-      persistPanels(state);
     },
     setShowCostPanel: (state, action: PayloadAction<boolean>) => {
       state.showCostPanel = action.payload;
-      persistPanels(state);
     },
     setShowTemplates: (state, action: PayloadAction<boolean>) => {
       state.showTemplates = action.payload;
-      persistPanels(state);
     },
     /**
      * Override (or clear) the rendered width of one of the side
@@ -301,15 +223,12 @@ const uiSlice = createSlice({
     },
     toggleValidation: (state) => {
       state.showValidation = !state.showValidation;
-      persistPanels(state);
     },
     openValidation: (state) => {
       state.showValidation = true;
-      persistPanels(state);
     },
     toggleTemplates: (state) => {
       state.showTemplates = !state.showTemplates;
-      persistPanels(state);
     },
     openTemplateGallery: (state, action: PayloadAction<string | null>) => {
       state.templateGalleryCategory = action.payload;
@@ -491,6 +410,36 @@ const uiSlice = createSlice({
         pane.viewport = action.payload.viewport;
       }
     },
+
+    /**
+     * Hydrate panel-visibility + split-view from the user-preferences
+     * DB payload. Called once on app boot. Skips fields whose payload
+     * is null/undefined so a partial blob doesn't blow away in-memory
+     * state already changed this session.
+     */
+    loadUiPrefs: (
+      state,
+      action: PayloadAction<{
+        panels?: Partial<typeof PANEL_DEFAULTS>;
+        splitView?: SplitViewState;
+      } | null>,
+    ) => {
+      if (!action.payload) return;
+      const { panels, splitView } = action.payload;
+      if (panels && typeof panels === 'object') {
+        if (typeof panels.showPalette === 'boolean') state.showPalette = panels.showPalette;
+        if (typeof panels.showBlocks === 'boolean') state.showBlocks = panels.showBlocks;
+        if (typeof panels.showProperties === 'boolean') state.showProperties = panels.showProperties;
+        if (typeof panels.showMinimap === 'boolean') state.showMinimap = panels.showMinimap;
+        if (typeof panels.showValidation === 'boolean') state.showValidation = panels.showValidation;
+        if (typeof panels.showAiChat === 'boolean') state.showAiChat = panels.showAiChat;
+        if (typeof panels.showCostPanel === 'boolean') state.showCostPanel = panels.showCostPanel;
+        if (typeof panels.showTemplates === 'boolean') state.showTemplates = panels.showTemplates;
+      }
+      if (splitView && Array.isArray(splitView.panes) && splitView.panes.length > 0) {
+        state.splitView = splitView;
+      }
+    },
   },
 });
 
@@ -522,6 +471,7 @@ export const {
   setPaneCard,
   setActivePane,
   setPaneViewport,
+  loadUiPrefs,
   openTabInPane,
   closeTabInPane,
   closeTabsByCardIds,

@@ -9,6 +9,7 @@ Direction, not a ticket tracker. v0.1.50, Apache 2.0. Open an issue or PR to cha
 ## Next up
 
 ### AI
+
 - Live telemetry context (AI Read L3) - logs + metrics in prompt
 - Multi-step tool use (plan → read → propose → validate)
 - Full mutation surface - delete, rename, modify, group
@@ -17,16 +18,18 @@ Direction, not a ticket tracker. v0.1.50, Apache 2.0. Open an issue or PR to cha
 - Validated OpenAI-compat backend matrix (Ollama, LM Studio, vLLM)
 
 ### Providers - `help-wanted`
-- AWS + Azure to GCP parity *(top priority - see [docs/provider-status.md](docs/provider-status.md))*
+
+- AWS + Azure to GCP parity _(top priority - see [`PROVIDER_READINESS`](packages/constants/src/providers.ts))_
 - Alibaba Cloud - design-only → deployable
 - Oracle Cloud Infrastructure
 - DigitalOcean - Droplets, App Platform, Managed DBs, Spaces
 - Tencent Cloud
 - Kubernetes (any) - Helm + raw manifest outputs
 
-Adding a provider is well-scoped contributor work - see the walkthrough in [docs/extending-providers.md](docs/extending-providers.md).
+Adding a provider is well-scoped contributor work - see the walkthrough in [docs/reference/extending-providers.md](docs/reference/extending-providers.md).
 
 ### Blocks - `help-wanted`
+
 - Networking primitives - VPC, firewall, DNS, load balancer
 - Managed K8s - GKE, EKS, AKS
 - CI/CD - registries + build services
@@ -38,6 +41,7 @@ Adding a provider is well-scoped contributor work - see the walkthrough in [docs
 Each block is a self-contained PR - concept blueprint, info-panel content, per-provider handlers. Good first issues.
 
 ### Observability
+
 - Live logs in-canvas (Cloud Logging / CloudWatch / Azure Monitor)
 - Per-block metrics sparklines (rate / errors / latency)
 - Cost dashboards - projected vs actual, drift alerts
@@ -45,6 +49,7 @@ Each block is a self-contained PR - concept blueprint, info-panel content, per-p
 - Real-time resource health polling
 
 ### Security
+
 - Secret rotation UI + expiring-cert warnings + audit log
 - Pre-deploy: dep-vuln scan, IAM over-permission, region compliance (EU, HIPAA)
 - Supply chain - SBOM, notarized macOS, EV-signed Windows, provenance
@@ -52,6 +57,7 @@ Each block is a self-contained PR - concept blueprint, info-panel content, per-p
 - Electron `safeStorage` for desktop credentials
 
 ### Import / Export / Migration
+
 - UI flow for existing GCP / AWS / Azure / Terraform / Pulumi importers
 - Docker Compose → canvas
 - Provider-to-provider migration plans
@@ -59,6 +65,7 @@ Each block is a self-contained PR - concept blueprint, info-panel content, per-p
 - Version migration - no canvas loss between releases
 
 ### Collaboration & teams
+
 - Real-time canvas editing - presence, cursors, locking (CRDT/OT)
 - Comments + mentions
 - RBAC UI - editor / viewer / owner, sharing links, audit log
@@ -66,22 +73,26 @@ Each block is a self-contained PR - concept blueprint, info-panel content, per-p
 - Shared team / org template libraries
 
 ### Templates - `help-wanted`
+
 - Missing patterns - serverless API, Jamstack, microservices, event-driven, batch, analytics
 - Quick-starts - single function, container+DB, worker+queue, static site
 - Per-env overrides in one template
 - Industry templates - e-commerce, mobile, IoT, media, multi-tenant SaaS
 
 ### Deploy
+
 - CI/CD workflow templates (Cloud Run, Vercel)
 - Full AWS + Azure Apply parity
 
 ### Frontend
+
 - Design system refresh - unified tokens, proportional sans-serif
 - Property help text rendering
 - Radix context menus - keyboard + a11y
 - Canvas search + export (SVG / PNG / PDF)
 
 ### Desktop
+
 - Auto-update via `electron-updater`
 - Signed + notarized builds (`.dmg`, `.exe/.msi`, `.AppImage/.deb`)
 - IPC + credential-storage tests

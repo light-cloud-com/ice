@@ -109,8 +109,6 @@ describe('ui-slice', () => {
       expect(s.showTemplates).toBe(true);
       s = uiReducer(s, toggleValidation());
       expect(s.showValidation).toBe(true);
-      // localStorage was written.
-      expect(memStorage['ice-ui-panels']).toBeDefined();
     });
 
     it('openValidation forces showValidation to true regardless of prior state', () => {

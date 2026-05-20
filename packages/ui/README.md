@@ -11,4 +11,4 @@ Where to start reading:
 - `src/store/slices/` — Redux state. `cards-slice.ts` is the canvas of record.
 - `src/shared/` — design tokens, common UI primitives, API adapter.
 
-Component conventions are documented in [docs/frontend.md](../../docs/frontend.md).
+Component conventions are documented in [docs/architecture/frontend.md](../../docs/architecture/frontend.md).

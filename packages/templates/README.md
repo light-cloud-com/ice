@@ -8,4 +8,4 @@ Where to start reading:
 - `src/<template>/template.ts` — canvas JSON (blocks, edges, layout, default properties).
 - `src/<template>/manifest.ts` — name, description, difficulty, provider compatibility.
 
-Provider compatibility is computed from the resource types each template uses, matched against the per-provider handler matrix in [`docs/provider-status.md`](../../docs/provider-status.md).
+Provider compatibility is computed from the resource types each template uses, matched against `PROVIDER_READINESS` in `packages/constants/src/providers.ts`.

@@ -14,8 +14,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ice/blocks": "workspace:*",
     "@ice/db": "workspace:*",
     "@ice/shared": "workspace:*",
+    "@ice/templates": "workspace:*",
     "@ice/types": "workspace:*",
     "bcryptjs": "^3.0.3",
     "express": "^4.22.1",

@@ -52,7 +52,7 @@ pnpm test:int         # run integration tests
 Example suites:
 
 - `services/canvas/src/__tests__/org-isolation.int.test.ts` - verifies that projects are scoped to their org.
-- `services/canvas/src/__tests__/rbac.int.test.ts` - role-based access checks (mostly skipped today because Community Edition is single-user; see [architecture.md](architecture.md)).
+- `services/canvas/src/__tests__/rbac.int.test.ts` - role-based access checks (mostly skipped today because Community Edition is single-user; see [architecture overview](architecture/README.md)).
 
 ## End-to-end tests (Playwright)
 
@@ -79,19 +79,20 @@ pnpm test:dashboard              # interactive dashboard UI at :15200
 The dashboard (`e2e/dashboard/server.ts`) provides: template checkboxes, GCP/GitHub configuration, test-repo creation, run/stop controls, live progress, and HTML report generation.
 
 **Requirements:**
+
 - `GCP_SERVICE_ACCOUNT_JSON` (or a credential file path) - with full admin on a disposable project.
 - A GitHub personal access token if testing templates that expect a connected repo.
 - A project budget ceiling - the tests spin up real infra.
 
 **Env vars (contributor-only, set in your shell or `.env`):**
 
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `ICE_TEST_GCP_PROJECT` | yes | - | Disposable GCP project ID the tests provision in |
-| `ICE_TEST_SA_KEY_PATH` | yes | - | Absolute path to a service-account JSON key with project admin |
-| `ICE_TEST_GCP_REGION` | no | `us-central1` | Region for regional resources |
-| `ICE_TEST_GITHUB_TOKEN` | scenario-dependent | - | PAT with `repo` scope, for scenarios that pull a source repo |
-| `ICE_TEST_DOMAIN` | scenario-dependent | - | Apex domain used by the static-site-with-domain scenario |
+| Variable                | Required           | Default       | Notes                                                          |
+| ----------------------- | ------------------ | ------------- | -------------------------------------------------------------- |
+| `ICE_TEST_GCP_PROJECT`  | yes                | -             | Disposable GCP project ID the tests provision in               |
+| `ICE_TEST_SA_KEY_PATH`  | yes                | -             | Absolute path to a service-account JSON key with project admin |
+| `ICE_TEST_GCP_REGION`   | no                 | `us-central1` | Region for regional resources                                  |
+| `ICE_TEST_GITHUB_TOKEN` | scenario-dependent | -             | PAT with `repo` scope, for scenarios that pull a source repo   |
+| `ICE_TEST_DOMAIN`       | scenario-dependent | -             | Apex domain used by the static-site-with-domain scenario       |
 
 These never get baked into the app - end users running ICE don't need them. They're read by the Playwright runner only.
 
@@ -169,5 +170,5 @@ This keeps tests fast and pure (no DOM, no act warnings) at the cost of more boi
 ## See also
 
 - [`vitest.config.ts`](../vitest.config.ts), [`e2e/playwright.config.ts`](../e2e/playwright.config.ts).
-- [contributing.md](contributing.md) - where tests fit in the PR workflow.
-- [architecture.md](architecture.md) - what the integration tests actually exercise.
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - where tests fit in the PR workflow.
+- [architecture overview](architecture/README.md) - what the integration tests actually exercise.

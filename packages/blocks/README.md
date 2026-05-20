@@ -11,4 +11,4 @@ Each concept directory has three files:
 - `info.ts` — the Info-panel content (overview, "compiles to", code snippets per language).
 - `index.ts` — re-exports.
 
-To add a new block, see [`docs/blocks-reference.md`](../../docs/blocks-reference.md).
+To add a new block, see [`docs/reference/blocks.md`](../../docs/reference/blocks.md).

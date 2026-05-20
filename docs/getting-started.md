@@ -56,7 +56,7 @@ What you might want to know:
 
 - Local secrets used for session signing and at-rest credential encryption are auto-generated on first boot and persisted per-user (`~/Library/Application Support/ice/secrets.json` on macOS, `~/.config/ice/secrets.json` on Linux, `%APPDATA%\ice\secrets.json` on Windows). Keep this file safe - it's the key to your DB-encrypted provider credentials.
 - Cloud provider credentials (GCP / AWS / Azure) are entered **in-app** under Settings → Providers and live encrypted in the workspace DB.
-- The optional AI assistant reads `ANTHROPIC_API_KEY` from `.env` for now - an in-app settings flow is on the roadmap. See [ai-assistant.md](ai-assistant.md).
+- The optional AI assistant reads `ANTHROPIC_API_KEY` from `.env` for now - an in-app settings flow is on the roadmap. See [ai-assistant](architecture/ai-assistant.md).
 - `.env.example` lists optional dev overrides (alternate `DATABASE_URL`, `PORT`, seed credentials, `ANTHROPIC_API_KEY`). Only touch it if you need to override a default or enable AI.
 
 ## Run
@@ -85,7 +85,7 @@ Same canvas, running in an Electron window with an embedded gateway. No external
 4. Select the Static Site block - the **properties panel** opens on the right. Fill in a GitHub repo (or leave blank for now).
 5. Click **Deploy** in the top toolbar. If you have GCP credentials configured, it will plan and apply real infrastructure.
 
-If you do not yet have GCP credentials, the deploy will produce a clear error message. See [deploying-to-gcp.md](deploying-to-gcp.md) for the credentials setup.
+If you do not yet have GCP credentials, the deploy will produce a clear error message. Connect a credential under **Settings → Providers** in the app; the validator tells you which IAM role is missing if a key fails.
 
 ## Production-like dev
 
@@ -93,21 +93,20 @@ If you want to develop against PostgreSQL + Redis + BullMQ workers (closer to ho
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `Cannot find module '@ice/db'` after pull | Stale install | `pnpm install && pnpm --filter @ice/db exec prisma generate` |
-| Port 5173 already in use | Another Vite app | Kill the other process or set `PORT=5174 pnpm dev:web` |
-| `ECONNREFUSED :15173` from web | Gateway not started | Check the `pnpm dev:all` terminal for gateway errors |
-| Electron window blank on macOS | First-run security prompt | System Settings → Privacy & Security → approve ICE |
-| `Error: SQLITE_READONLY` | Permissions on `.desktop-dev.db` | `rm .desktop-dev.db` and re-run `pnpm dev:setup` |
-| AI panel shows "No API key" | `ANTHROPIC_API_KEY` not set | Add `ANTHROPIC_API_KEY=sk-ant-...` to `.env` and restart |
+| Symptom                                   | Likely cause                     | Fix                                                          |
+| ----------------------------------------- | -------------------------------- | ------------------------------------------------------------ |
+| `Cannot find module '@ice/db'` after pull | Stale install                    | `pnpm install && pnpm --filter @ice/db exec prisma generate` |
+| Port 5173 already in use                  | Another Vite app                 | Kill the other process or set `PORT=5174 pnpm dev:web`       |
+| `ECONNREFUSED :15173` from web            | Gateway not started              | Check the `pnpm dev:all` terminal for gateway errors         |
+| Electron window blank on macOS            | First-run security prompt        | System Settings → Privacy & Security → approve ICE           |
+| `Error: SQLITE_READONLY`                  | Permissions on `.desktop-dev.db` | `rm .desktop-dev.db` and re-run `pnpm dev:setup`             |
+| AI panel shows "No API key"               | `ANTHROPIC_API_KEY` not set      | Add `ANTHROPIC_API_KEY=sk-ant-...` to `.env` and restart     |
 
-Still stuck? Open an issue with your OS, Node version, and the exact error. See [contributing.md](contributing.md) for the bug template.
+Still stuck? Open an issue with your OS, Node version, and the exact error. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the bug template.
 
 ## Next steps
 
-- [architecture.md](architecture.md) - how the pieces fit together.
-- [deploying-to-gcp.md](deploying-to-gcp.md) - walk through a real GCP deploy.
+- [architecture](architecture/README.md) - how the pieces fit together.
 - [testing.md](testing.md) - run the test suites.
 
 ## See also

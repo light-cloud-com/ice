@@ -68,7 +68,6 @@
       "kubernetes": "Kubernetes"
     }
   },
-
   "auth": {
     "brand": {
       "title": "ICE",
@@ -109,7 +108,6 @@
       "continueWithGithub": "Continue with GitHub"
     }
   },
-
   "canvas": {
     "title": "Infrastructure Canvas",
     "emptyState": {
@@ -616,7 +614,6 @@
       }
     }
   },
-
   "deploy": {
     "title": "Infrastructure Deploy",
     "buttons": {
@@ -722,7 +719,6 @@
       "error": "Error: {{error}}"
     }
   },
-
   "integrations": {
     "dropdownTitle": "Integrations",
     "connected": "Connected",
@@ -789,15 +785,14 @@
       },
       "aws": {
         "label": "Amazon Web Services",
-        "description": "Access keys — experimental, see docs/provider-status.md"
+        "description": "Access keys — experimental"
       },
       "azure": {
         "label": "Microsoft Azure",
-        "description": "Service principal — experimental, see docs/provider-status.md"
+        "description": "Service principal — experimental"
       }
     }
   },
-
   "pipeline": {
     "title": "Pipeline",
     "panelTitle": "Pipeline: {{name}}",
@@ -863,7 +858,6 @@
     "noLogs": "No logs recorded",
     "recent": "Recent"
   },
-
   "onboarding": {
     "nav": {
       "stepTeam": "Team",
@@ -948,7 +942,6 @@
       "openProjectForTour": "Open a project to start the tour."
     }
   },
-
   "wizard": {
     "title": "New Project",
     "description": "Create a project with environments and optional template",
@@ -1006,7 +999,6 @@
       "environments": "environments"
     }
   },
-
   "environments": {
     "tabBar": {
       "loading": "Loading environments...",
@@ -1066,7 +1058,6 @@
       "tagChanged": "changed"
     }
   },
-
   "account": {
     "avatar": {
       "ariaLabel": "User menu",
@@ -1154,7 +1145,6 @@
       "createButton": "Create organisation"
     }
   },
-
   "ai": {
     "chat": {
       "title": "AI Assistant",
@@ -1197,7 +1187,6 @@
       "connectToDiagnoseTooltip": "Add an Anthropic API key to enable AI deploy diagnosis"
     }
   },
-
   "properties": {
     "closeTitle": "Close properties",
     "title": "Properties",
@@ -1314,7 +1303,6 @@
     "removeConnection": "Remove connection",
     "noLogsRecorded": "No logs recorded"
   },
-
   "project": {
     "settings": {
       "title": "Project Settings",
@@ -1375,7 +1363,6 @@
       "noLogs": "No log steps recorded"
     }
   },
-
   "projectBrowser": {
     "title": "Projects",
     "newProject": "New Project",
@@ -1398,7 +1385,6 @@
     "subEnvironments": "Environments",
     "moreOptions": "More options"
   },
-
   "templates": {
     "triggerTitle": "Start from Template",
     "menuLabel": "Templates",
@@ -1406,24 +1392,78 @@
     "noResults": "No templates match",
     "blocks": "blocks",
     "categories": {
-      "quick-start": { "label": "Quick Starts", "description": "Minimal starters to get going fast" },
-      "full-stack": { "label": "Full Stack", "description": "Complete application stacks" },
-      "backend": { "label": "Backend & API", "description": "API services and microservices" },
-      "serverless": { "label": "Serverless", "description": "Functions-first architectures" },
-      "data-pipeline": { "label": "Data Pipelines", "description": "Event-driven and batch processing" },
-      "ai-ml": { "label": "AI & ML", "description": "Machine learning and AI workloads" },
-      "e-commerce": { "label": "E-Commerce", "description": "Online store and marketplace patterns" },
-      "mobile": { "label": "Mobile Backend", "description": "Mobile app backend patterns" },
-      "compliance": { "label": "Compliance", "description": "Security and regulatory focused" },
-      "devops": { "label": "DevOps", "description": "CI/CD, monitoring, and platform tooling" },
-      "healthcare": { "label": "Healthcare", "description": "HIPAA-compliant patient data and clinical systems" },
-      "fintech": { "label": "Fintech & Banking", "description": "Payment processing, transactions, and compliance" },
-      "media": { "label": "Media & Streaming", "description": "Video, audio, and content delivery platforms" },
-      "saas": { "label": "SaaS", "description": "Multi-tenant software-as-a-service platforms" },
-      "iot": { "label": "IoT", "description": "Device management and telemetry ingestion" },
-      "gaming": { "label": "Gaming", "description": "Game servers, leaderboards, and real-time systems" },
-      "logistics": { "label": "Logistics & Supply Chain", "description": "Fleet tracking, inventory, and warehouse management" },
-      "education": { "label": "Education", "description": "Learning platforms, course management, and assessments" }
+      "quick-start": {
+        "label": "Quick Starts",
+        "description": "Minimal starters to get going fast"
+      },
+      "full-stack": {
+        "label": "Full Stack",
+        "description": "Complete application stacks"
+      },
+      "backend": {
+        "label": "Backend & API",
+        "description": "API services and microservices"
+      },
+      "serverless": {
+        "label": "Serverless",
+        "description": "Functions-first architectures"
+      },
+      "data-pipeline": {
+        "label": "Data Pipelines",
+        "description": "Event-driven and batch processing"
+      },
+      "ai-ml": {
+        "label": "AI & ML",
+        "description": "Machine learning and AI workloads"
+      },
+      "e-commerce": {
+        "label": "E-Commerce",
+        "description": "Online store and marketplace patterns"
+      },
+      "mobile": {
+        "label": "Mobile Backend",
+        "description": "Mobile app backend patterns"
+      },
+      "compliance": {
+        "label": "Compliance",
+        "description": "Security and regulatory focused"
+      },
+      "devops": {
+        "label": "DevOps",
+        "description": "CI/CD, monitoring, and platform tooling"
+      },
+      "healthcare": {
+        "label": "Healthcare",
+        "description": "HIPAA-compliant patient data and clinical systems"
+      },
+      "fintech": {
+        "label": "Fintech & Banking",
+        "description": "Payment processing, transactions, and compliance"
+      },
+      "media": {
+        "label": "Media & Streaming",
+        "description": "Video, audio, and content delivery platforms"
+      },
+      "saas": {
+        "label": "SaaS",
+        "description": "Multi-tenant software-as-a-service platforms"
+      },
+      "iot": {
+        "label": "IoT",
+        "description": "Device management and telemetry ingestion"
+      },
+      "gaming": {
+        "label": "Gaming",
+        "description": "Game servers, leaderboards, and real-time systems"
+      },
+      "logistics": {
+        "label": "Logistics & Supply Chain",
+        "description": "Fleet tracking, inventory, and warehouse management"
+      },
+      "education": {
+        "label": "Education",
+        "description": "Learning platforms, course management, and assessments"
+      }
     },
     "gallery": {
       "title": "Templates",
@@ -1467,58 +1507,176 @@
       "noMatchFilters": "No templates match the current filters",
       "monthEst": "/month est.",
       "templateCount": "{{count}} templates",
-      "difficultyStarter": "Starter",
-      "difficultyIntermediate": "Intermediate",
-      "difficultyAdvanced": "Advanced",
-      "difficultyExpert": "Expert",
       "providerFilter": "Provider",
       "difficultyFilter": "Difficulty"
     },
     "items": {
-      "qs-website-db": { "name": "Website + Database", "description": "Server-rendered app with a managed database" },
-      "qs-webapp-api": { "name": "Web App + API", "description": "Static frontend with a backend API and database" },
-      "qs-api-only": { "name": "API Only", "description": "Backend API with database — no frontend" },
-      "qs-data-pipeline": { "name": "Data Pipeline", "description": "Queue-driven processing with storage" },
-      "qs-static-site": { "name": "Static Site", "description": "CDN-backed static site — the simplest deploy" },
-      "qs-function": { "name": "Serverless Function", "description": "Single serverless function behind an API gateway" },
-      "aiml-workbench": { "name": "AI/ML Workbench", "description": "ML workbench with inference API, training worker, model & training data storage, Redis feature cache, pipeline queue, and monitoring." },
-      "backend-rest-api": { "name": "REST API", "description": "Production backend API with gateway, service, PostgreSQL, Redis cache, and logging. API-first — no frontend." },
-      "backend-microservices": { "name": "Microservices", "description": "Three independent services behind a gateway, each with own database, shared message queue, and monitoring." },
-      "budget-webapp": { "name": "Budget Web App", "description": "Cost-optimized full-stack with CDN frontend, serverless functions (scale to zero), lightweight database, and storage. Pay only for what you use." },
-      "data-etl-pipeline": { "name": "ETL Pipeline", "description": "Batch ETL pipeline with staging, transformation workers, data warehouse, and VPC network isolation." },
-      "data-event-streaming": { "name": "Event Streaming", "description": "Real-time event streaming with stream processing, analytics dashboard, and VPC network isolation." },
-      "devops-monitoring": { "name": "Monitoring Stack", "description": "Metrics collection with alerting pipeline, observability dashboard, and VPC network isolation." },
-      "devops-cicd": { "name": "CI/CD Platform", "description": "Build pipelines with artifact storage, dashboards, deployment logs, and VPC network isolation." },
-      "ecommerce-store": { "name": "Online Store", "description": "Full e-commerce stack with product catalog, cart, checkout, search, WAF protection, and VPC network isolation." },
-      "ecommerce-marketplace": { "name": "Marketplace", "description": "Multi-vendor marketplace with buyer and seller APIs, search, WAF, and VPC isolation." },
-      "education-lms": { "name": "Learning Management System", "description": "Course delivery platform with student portal, content search, notifications, and VPC network isolation." },
-      "education-exam-platform": { "name": "Exam Platform", "description": "Online assessment platform with question banks, automated grading, proctoring, and VPC network isolation." },
-      "eu-compliance": { "name": "EU Compliance Stack", "description": "GDPR-compliant infrastructure with gateway, encrypted database & storage, Redis sessions, secrets, auth, and audit logging. EU-region pinned." },
-      "fintech-payment-gateway": { "name": "Payment Processing", "description": "PCI-DSS compliant payment gateway with fraud detection, WAF, VPC network isolation, encrypted database, and audit trails." },
-      "fintech-trading-platform": { "name": "Trading Platform", "description": "Real-time market data feed, order execution, analytics dashboard with WAF, VPC isolation, and audit logging." },
-      "fullstack-webapp": { "name": "Full-Stack Web App", "description": "Production-ready full-stack with CDN frontend, WAF, API gateway in public subnet, backend service + PostgreSQL + Redis in private subnet." },
-      "gaming-multiplayer": { "name": "Multiplayer Game Server", "description": "Real-time game server with matchmaking, leaderboards, session management, WAF, and VPC network isolation." },
-      "gaming-mobile-backend": { "name": "Mobile Game Backend", "description": "Mobile game backend with player profiles, leaderboards, push notifications, and VPC network isolation." },
-      "healthcare-patient-portal": { "name": "Patient Portal", "description": "HIPAA-compliant patient records, scheduling, and document management with network isolation, WAF, and audit logging." },
-      "healthcare-telemedicine": { "name": "Telemedicine Platform", "description": "Real-time video consultations with session recording, patient management, WAF protection, and HIPAA-compliant network isolation." },
-      "iot-device-management": { "name": "IoT Device Management", "description": "Fleet-scale device registry with telemetry ingestion, dashboards, WAF, and VPC network isolation." },
-      "iot-smart-home": { "name": "Smart Home Platform", "description": "Home automation with device control, state caching, scheduled routines, and VPC network isolation." },
-      "logistics-fleet-tracking": { "name": "Fleet Tracking", "description": "GPS-based fleet management with real-time dashboards, route optimization, and VPC network isolation." },
-      "logistics-warehouse": { "name": "Warehouse Management", "description": "Inventory tracking with barcode scanning, order queues, fulfillment, and VPC network isolation." },
-      "media-streaming": { "name": "Video Streaming Platform", "description": "CDN-backed video delivery with transcoding pipeline, search, WAF protection, and VPC network isolation." },
-      "media-podcast": { "name": "Podcast Platform", "description": "Audio hosting platform with RSS feeds, episode search, and VPC network isolation." },
-      "mobile-app-backend": { "name": "Mobile App Backend", "description": "Mobile API with push notifications, media storage, authentication, WAF, and VPC network isolation." },
-      "mobile-social-app": { "name": "Social App Backend", "description": "Social app with activity feeds, media sharing, search, notifications, WAF, and VPC network isolation." },
-      "rag-chatbot": { "name": "RAG Chatbot", "description": "Full-stack RAG chatbot with chat UI, retrieval API, LLM gateway, vector database, document ingestion pipeline, and conversation history." },
-      "saas-multi-tenant": { "name": "Multi-Tenant SaaS", "description": "Full SaaS platform with tenant isolation, background jobs, auth, WAF protection, and VPC network isolation." },
-      "saas-analytics-dashboard": { "name": "Analytics Dashboard", "description": "Metrics collection, data warehousing, real-time dashboard with WAF and VPC isolation." },
-      "saas-platform": { "name": "SaaS Platform", "description": "Multi-service SaaS with SSR frontend, gateway, microservices, PostgreSQL, Redis cache, worker queue, and observability." },
-      "secure-api": { "name": "Secure API", "description": "Security-first API with WAF, VPC network isolation, encrypted database, secrets management, TLS encryption, identity provider, and audit logging." },
-      "serverless-api": { "name": "Serverless API", "description": "Functions-first API with gateway, serverless functions, managed database, and storage. Pay only for what you use." },
-      "serverless-event-driven": { "name": "Event-Driven Functions", "description": "Pub/sub fan-out pattern: events trigger multiple subscriber functions for parallel processing with dead-letter queue." }
+      "qs-website-db": {
+        "name": "Website + Database",
+        "description": "Server-rendered app with a managed database"
+      },
+      "qs-webapp-api": {
+        "name": "Web App + API",
+        "description": "Static frontend with a backend API and database"
+      },
+      "qs-api-only": {
+        "name": "API Only",
+        "description": "Backend API with database — no frontend"
+      },
+      "qs-data-pipeline": {
+        "name": "Data Pipeline",
+        "description": "Queue-driven processing with storage"
+      },
+      "qs-static-site": {
+        "name": "Static Site",
+        "description": "CDN-backed static site — the simplest deploy"
+      },
+      "qs-function": {
+        "name": "Serverless Function",
+        "description": "Single serverless function behind an API gateway"
+      },
+      "aiml-workbench": {
+        "name": "AI/ML Workbench",
+        "description": "ML workbench with inference API, training worker, model & training data storage, Redis feature cache, pipeline queue, and monitoring."
+      },
+      "backend-rest-api": {
+        "name": "REST API",
+        "description": "Production backend API with gateway, service, PostgreSQL, Redis cache, and logging. API-first — no frontend."
+      },
+      "backend-microservices": {
+        "name": "Microservices",
+        "description": "Three independent services behind a gateway, each with own database, shared message queue, and monitoring."
+      },
+      "budget-webapp": {
+        "name": "Budget Web App",
+        "description": "Cost-optimized full-stack with CDN frontend, serverless functions (scale to zero), lightweight database, and storage. Pay only for what you use."
+      },
+      "data-etl-pipeline": {
+        "name": "ETL Pipeline",
+        "description": "Batch ETL pipeline with staging, transformation workers, data warehouse, and VPC network isolation."
+      },
+      "data-event-streaming": {
+        "name": "Event Streaming",
+        "description": "Real-time event streaming with stream processing, analytics dashboard, and VPC network isolation."
+      },
+      "devops-monitoring": {
+        "name": "Monitoring Stack",
+        "description": "Metrics collection with alerting pipeline, observability dashboard, and VPC network isolation."
+      },
+      "devops-cicd": {
+        "name": "CI/CD Platform",
+        "description": "Build pipelines with artifact storage, dashboards, deployment logs, and VPC network isolation."
+      },
+      "ecommerce-store": {
+        "name": "Online Store",
+        "description": "Full e-commerce stack with product catalog, cart, checkout, search, WAF protection, and VPC network isolation."
+      },
+      "ecommerce-marketplace": {
+        "name": "Marketplace",
+        "description": "Multi-vendor marketplace with buyer and seller APIs, search, WAF, and VPC isolation."
+      },
+      "education-lms": {
+        "name": "Learning Management System",
+        "description": "Course delivery platform with student portal, content search, notifications, and VPC network isolation."
+      },
+      "education-exam-platform": {
+        "name": "Exam Platform",
+        "description": "Online assessment platform with question banks, automated grading, proctoring, and VPC network isolation."
+      },
+      "eu-compliance": {
+        "name": "EU Compliance Stack",
+        "description": "GDPR-compliant infrastructure with gateway, encrypted database & storage, Redis sessions, secrets, auth, and audit logging. EU-region pinned."
+      },
+      "fintech-payment-gateway": {
+        "name": "Payment Processing",
+        "description": "PCI-DSS compliant payment gateway with fraud detection, WAF, VPC network isolation, encrypted database, and audit trails."
+      },
+      "fintech-trading-platform": {
+        "name": "Trading Platform",
+        "description": "Real-time market data feed, order execution, analytics dashboard with WAF, VPC isolation, and audit logging."
+      },
+      "fullstack-webapp": {
+        "name": "Full-Stack Web App",
+        "description": "Production-ready full-stack with CDN frontend, WAF, API gateway in public subnet, backend service + PostgreSQL + Redis in private subnet."
+      },
+      "gaming-multiplayer": {
+        "name": "Multiplayer Game Server",
+        "description": "Real-time game server with matchmaking, leaderboards, session management, WAF, and VPC network isolation."
+      },
+      "gaming-mobile-backend": {
+        "name": "Mobile Game Backend",
+        "description": "Mobile game backend with player profiles, leaderboards, push notifications, and VPC network isolation."
+      },
+      "healthcare-patient-portal": {
+        "name": "Patient Portal",
+        "description": "HIPAA-compliant patient records, scheduling, and document management with network isolation, WAF, and audit logging."
+      },
+      "healthcare-telemedicine": {
+        "name": "Telemedicine Platform",
+        "description": "Real-time video consultations with session recording, patient management, WAF protection, and HIPAA-compliant network isolation."
+      },
+      "iot-device-management": {
+        "name": "IoT Device Management",
+        "description": "Fleet-scale device registry with telemetry ingestion, dashboards, WAF, and VPC network isolation."
+      },
+      "iot-smart-home": {
+        "name": "Smart Home Platform",
+        "description": "Home automation with device control, state caching, scheduled routines, and VPC network isolation."
+      },
+      "logistics-fleet-tracking": {
+        "name": "Fleet Tracking",
+        "description": "GPS-based fleet management with real-time dashboards, route optimization, and VPC network isolation."
+      },
+      "logistics-warehouse": {
+        "name": "Warehouse Management",
+        "description": "Inventory tracking with barcode scanning, order queues, fulfillment, and VPC network isolation."
+      },
+      "media-streaming": {
+        "name": "Video Streaming Platform",
+        "description": "CDN-backed video delivery with transcoding pipeline, search, WAF protection, and VPC network isolation."
+      },
+      "media-podcast": {
+        "name": "Podcast Platform",
+        "description": "Audio hosting platform with RSS feeds, episode search, and VPC network isolation."
+      },
+      "mobile-app-backend": {
+        "name": "Mobile App Backend",
+        "description": "Mobile API with push notifications, media storage, authentication, WAF, and VPC network isolation."
+      },
+      "mobile-social-app": {
+        "name": "Social App Backend",
+        "description": "Social app with activity feeds, media sharing, search, notifications, WAF, and VPC network isolation."
+      },
+      "rag-chatbot": {
+        "name": "RAG Chatbot",
+        "description": "Full-stack RAG chatbot with chat UI, retrieval API, LLM gateway, vector database, document ingestion pipeline, and conversation history."
+      },
+      "saas-multi-tenant": {
+        "name": "Multi-Tenant SaaS",
+        "description": "Full SaaS platform with tenant isolation, background jobs, auth, WAF protection, and VPC network isolation."
+      },
+      "saas-analytics-dashboard": {
+        "name": "Analytics Dashboard",
+        "description": "Metrics collection, data warehousing, real-time dashboard with WAF and VPC isolation."
+      },
+      "saas-platform": {
+        "name": "SaaS Platform",
+        "description": "Multi-service SaaS with SSR frontend, gateway, microservices, PostgreSQL, Redis cache, worker queue, and observability."
+      },
+      "secure-api": {
+        "name": "Secure API",
+        "description": "Security-first API with WAF, VPC network isolation, encrypted database, secrets management, TLS encryption, identity provider, and audit logging."
+      },
+      "serverless-api": {
+        "name": "Serverless API",
+        "description": "Functions-first API with gateway, serverless functions, managed database, and storage. Pay only for what you use."
+      },
+      "serverless-event-driven": {
+        "name": "Event-Driven Functions",
+        "description": "Pub/sub fan-out pattern: events trigger multiple subscriber functions for parallel processing with dead-letter queue."
+      }
     }
   },
-
   "palette": {
     "title": "Blocks",
     "searchPlaceholder": "Search blocks...",
@@ -1527,7 +1685,6 @@
     "noBlocksFound": "No blocks found",
     "noBlocksHint": "Try a different search or provider"
   },
-
   "projectList": {
     "header": "Projects",
     "openAll": "Open all {{count}} projects",
@@ -1542,7 +1699,6 @@
     "folderCount": "{{count}} folder(s)",
     "defaultFolderName": "New Folder"
   },
-
   "projectTree": {
     "newProject": "New Project",
     "newFolder": "New Folder",
@@ -1554,7 +1710,6 @@
     "contextNewSubfolder": "New Subfolder",
     "contextDelete": "Delete"
   },
-
   "statusBar": {
     "valid": "Valid",
     "version": "ICE v0.1.0",
@@ -1583,7 +1738,6 @@
     "ram": "RAM",
     "cpu": "CPU"
   },
-
   "appBar": {
     "autoOrganize": "Auto-organize",
     "undo": "Undo (Ctrl+Z)",
@@ -1623,7 +1777,6 @@
       "showMeAround": "Show me around"
     }
   },
-
   "providerSettings": {
     "title": "Cloud Providers",
     "description": "Connect to your cloud providers to import existing infrastructure directly.",
@@ -1671,7 +1824,6 @@
       "close": "Close"
     }
   },
-
   "providerConnect": {
     "status": {
       "project": "Project: {{projectId}}",
@@ -1715,7 +1867,6 @@
       }
     }
   },
-
   "invite": {
     "loading": "Accepting invitation...",
     "success": {
@@ -1730,7 +1881,6 @@
       "button": "Go to dashboard"
     }
   },
-
   "folder": {
     "defaultProjectName": "New Project",
     "defaultFolderName": "New Folder",
@@ -1742,7 +1892,6 @@
     "typeFolder": "Folder",
     "cards": "{{count}} cards"
   },
-
   "app": {
     "notFound": {
       "code": "404",
@@ -1753,7 +1902,6 @@
       "rootName": "Projects"
     }
   },
-
   "layout": {
     "sidebar": {
       "project": "Project",
@@ -1764,7 +1912,6 @@
       "templates": "Templates"
     }
   },
-
   "cost": {
     "title": "Cost Estimation",
     "empty": "Add resources to your canvas to see cost estimates. Drag blocks from the left sidebar to get started.",
@@ -1790,14 +1937,12 @@
     "maxInstances": "Max instances",
     "estEgress": "Est. egress"
   },
-
   "error": {
     "crashed": "{{name}} crashed",
     "somethingWrong": "Something went wrong",
     "unexpected": "An unexpected error occurred",
     "tryAgain": "Try again"
   },
-
   "debug": {
     "title": "ICE Debug",
     "nodes": "Nodes",
@@ -1814,13 +1959,11 @@
     "blocks": "blocks",
     "resources": "resources"
   },
-
   "combobox": {
     "defaultPlaceholder": "Search...",
     "defaultEmptyText": "No results",
     "loading": "Loading..."
   },
-
   "validation": {
     "title": "Validation",
     "noIssues": "No issues found",
@@ -1829,7 +1972,6 @@
     "info": "Info",
     "issues": "Validation Issues"
   },
-
   "table": {
     "name": "Name",
     "type": "Type",
@@ -1916,13 +2058,13 @@
       "selected": "{{count}} selected"
     }
   },
-
   "appSettings": {
     "title": "Settings",
     "tabs": {
       "ai": "AI",
       "appearance": "Appearance",
-      "language": "Language"
+      "language": "Language",
+      "reset": "Reset"
     },
     "ai": {
       "providerTitle": "AI Provider",
@@ -1952,74 +2094,319 @@
     "language": {
       "title": "Language",
       "description": "Select your preferred language."
+    },
+    "reset": {
+      "title": "Reset workspace",
+      "description": "Permanently wipes ALL of your local workspace data. This cannot be undone.",
+      "wipesProjects": "All projects, canvases, and environments",
+      "wipesCredentials": "Encrypted cloud-provider credentials (GCP, AWS, Azure, …)",
+      "wipesGithub": "GitHub access tokens and webhook deliveries",
+      "wipesAi": "AI conversation history and audit log",
+      "wipesTour": "Completed-tour history (the canvas tour will replay)",
+      "confirmLabel": "Type RESET to confirm",
+      "resetButton": "Reset workspace",
+      "resetting": "Resetting…"
     }
   },
-
   "blocks": {
     "categories": {
-      "compute": { "label": "Compute", "tooltip": "Application servers, background workers, serverless functions, and PaaS platforms that run your code." },
-      "scheduler": { "label": "Scheduler", "tooltip": "Time-based triggers — cron jobs, periodic tasks, and scheduled workflows." },
-      "frontend": { "label": "Frontend", "tooltip": "Web frontends — static sites and server-rendered apps served to browsers." },
-      "network": { "label": "Network", "tooltip": "Traffic entry points and API gateways that route requests to your services." },
-      "database": { "label": "Database", "tooltip": "Managed databases — relational, document, key-value, and wide-column stores across all providers." },
-      "cache": { "label": "Cache", "tooltip": "In-memory data stores for fast reads, sessions, and real-time leaderboards." },
-      "messaging": { "label": "Messaging", "tooltip": "Queues, pub/sub topics, and event streams for async communication between services." },
-      "storage": { "label": "Storage", "tooltip": "Object storage for files, images, uploads, backups, and static assets. S3, GCS, Blob, OSS, OCI, Spaces." },
-      "security": { "label": "Security", "tooltip": "Authentication, authorization, and secrets management for your infrastructure." },
-      "ai": { "label": "AI", "tooltip": "AI/ML infrastructure — LLM gateways, vector databases, and model serving." },
-      "analytics": { "label": "Analytics", "tooltip": "Data warehouses and search engines for analytics, reporting, and full-text search." },
-      "monitoring": { "label": "Monitoring", "tooltip": "Logging, alerting, and performance monitoring across all your services." },
-      "source": { "label": "Source", "tooltip": "Source code repositories and CI/CD pipelines. Connect to services to deploy from." },
-      "config": { "label": "Config", "tooltip": "Environment variables and configuration. Connect to services that consume them." }
+      "compute": {
+        "label": "Compute",
+        "tooltip": "Application servers, background workers, serverless functions, and PaaS platforms that run your code."
+      },
+      "scheduler": {
+        "label": "Scheduler",
+        "tooltip": "Time-based triggers — cron jobs, periodic tasks, and scheduled workflows."
+      },
+      "frontend": {
+        "label": "Frontend",
+        "tooltip": "Web frontends — static sites and server-rendered apps served to browsers."
+      },
+      "network": {
+        "label": "Network",
+        "tooltip": "Traffic entry points and API gateways that route requests to your services."
+      },
+      "database": {
+        "label": "Database",
+        "tooltip": "Managed databases — relational, document, key-value, and wide-column stores across all providers."
+      },
+      "cache": {
+        "label": "Cache",
+        "tooltip": "In-memory data stores for fast reads, sessions, and real-time leaderboards."
+      },
+      "messaging": {
+        "label": "Messaging",
+        "tooltip": "Queues, pub/sub topics, and event streams for async communication between services."
+      },
+      "storage": {
+        "label": "Storage",
+        "tooltip": "Object storage for files, images, uploads, backups, and static assets. S3, GCS, Blob, OSS, OCI, Spaces."
+      },
+      "security": {
+        "label": "Security",
+        "tooltip": "Authentication, authorization, and secrets management for your infrastructure."
+      },
+      "ai": {
+        "label": "AI",
+        "tooltip": "AI/ML infrastructure — LLM gateways, vector databases, and model serving."
+      },
+      "analytics": {
+        "label": "Analytics",
+        "tooltip": "Data warehouses and search engines for analytics, reporting, and full-text search."
+      },
+      "monitoring": {
+        "label": "Monitoring",
+        "tooltip": "Logging, alerting, and performance monitoring across all your services."
+      },
+      "source": {
+        "label": "Source",
+        "tooltip": "Source code repositories and CI/CD pipelines. Connect to services to deploy from."
+      },
+      "config": {
+        "label": "Config",
+        "tooltip": "Environment variables and configuration. Connect to services that consume them."
+      }
     },
-    "computeContainer": { "name": "Scalable Backend", "description": "Containerized service. Auto-scales.", "tooltip": "Auto-scaling containerized service supporting any runtime — Node.js, Python, Go, Java, .NET, Rust. Runs behind a load balancer with health checks, rolling deploys, and configurable min/max instances." },
-    "computeWorker": { "name": "Worker", "description": "Background jobs: image processing, emails.", "tooltip": "Long-running background process that picks up jobs from a queue. Use for image/video processing, email sending, PDF generation, data imports, or any work that shouldn't block an API response." },
-    "computeServerlessFunction": { "name": "Serverless Function", "description": "Event-driven. Scales to zero.", "tooltip": "Serverless function (Lambda, Cloud Functions, Azure Functions) that runs your code in response to events. No servers to manage — scales automatically from zero to thousands of concurrent executions. Pay only for compute time used." },
-    "computeFunctionCompute": { "name": "Function Compute", "description": "Alibaba Cloud serverless functions. Event-driven.", "tooltip": "Alibaba Cloud Function Compute — serverless execution environment for event-driven code. Supports Node.js, Python, Java, and Go. Auto-scales from zero with pay-per-execution pricing." },
-    "computeOCIFunctions": { "name": "OCI Functions", "description": "Oracle Cloud serverless. Fn-based.", "tooltip": "Oracle Cloud Functions — serverless platform built on the open-source Fn Project. Supports multiple languages, runs in Docker containers, and integrates with OCI Events and API Gateway." },
-    "computeDOAppPlatform": { "name": "App Platform", "description": "DigitalOcean PaaS. Git push to deploy.", "tooltip": "DigitalOcean App Platform — fully managed PaaS. Connect your GitHub repo and deploy with git push. Supports static sites, web services, workers, and background jobs with automatic HTTPS." },
-    "computeCronJob": { "name": "Cron Job", "description": "Runs on a schedule. Reports, cleanup, syncs.", "tooltip": "Runs on a cron schedule. Use for nightly reports, database cleanup, cache warming, billing cycles, or periodic data syncs. Runs once and exits — not a long-lived process." },
-    "computeStaticSite": { "name": "Static Site", "description": "React/Vue app. CDN included.", "tooltip": "Pre-built HTML/CSS/JS served from a CDN. Ideal for React, Vue, or Angular SPAs. Blazing fast globally — files are cached at edge locations. No server needed." },
-    "computeSSRSite": { "name": "SSR Site", "description": "Server-rendered (Next.js, Nuxt). CDN included.", "tooltip": "Server-side rendered app (Next.js, Nuxt, Remix). Pages render on the server for fast first paint and SEO. Supports API routes, middleware, and dynamic content. CDN caches static assets." },
-    "networkVPC": { "name": "VPC", "description": "Virtual Private Cloud. Isolated network.", "tooltip": "Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC." },
-    "networkSubnet": { "name": "Subnet", "description": "Network subdivision inside a VPC.", "tooltip": "A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers." },
-    "networkPublicEndpoint": { "name": "Public Endpoint", "description": "Public HTTPS entry point with managed SSL.", "tooltip": "Single block that exposes your services to the internet. Set a domain (example.com) and toggle HTTPS to auto-provision a managed SSL certificate. Connect to one or more services and set a Subdomain on each edge to route api.example.com → API service, app.example.com → static site, etc. Replaces the old separate Internet + Custom Domain blocks." },
-    "networkCustomDomain": { "name": "Custom Domain", "description": "Route a domain to publicly-facing services.", "tooltip": "Wires a root domain to one or more publicly-facing services that already have their own public URL (Firebase Hosting, Cloud Run with --allow-unauthenticated, AWS Amplify). Set a domain (example.com) and connect to one or more targets with a Subdomain on each edge — blank = root, api = api.example.com, etc. Can also be dropped INSIDE a Private Network block to act as its public ingress gateway." },
-    "networkPrivateNetwork": { "name": "Private Network", "description": "A walled VPC. Drop services inside to keep them private.", "tooltip": "A container block that puts everything inside it on a private VPC. Drop compute blocks inside to isolate them from the public internet. Toggle Open to auto-spawn a Custom Domain child that acts as the public gateway (the Custom Domain's route ports wire to sibling services inside the network). Toggle Sealed for an internal-only network. Outbound internet access (Allow all / Allowlist / Block all) is configured in the properties panel." },
-    "networkGateway": { "name": "Gateway", "description": "Routes traffic, auth + rate limiting.", "tooltip": "API Gateway that sits between the internet and your backend services. Handles request routing, authentication, rate limiting, CORS, and request/response transformation. Includes WAF and TLS termination." },
-    "databasePostgreSQL": { "name": "PostgreSQL", "description": "Relational. ACID-compliant.", "tooltip": "Managed PostgreSQL database with automatic backups, replication, and failover. Best for structured data with complex queries, joins, and transactions. Supports JSON, full-text search, and extensions like PostGIS." },
-    "databaseMySQL": { "name": "MySQL", "description": "Relational. Web-scale classic.", "tooltip": "Managed MySQL database — the most widely deployed open-source relational database. Optimized for read-heavy workloads, web applications, and e-commerce. Simple, reliable, and well-understood." },
-    "databaseMongoDB": { "name": "MongoDB", "description": "Document store. Schema-flexible.", "tooltip": "Managed MongoDB document database. Stores data as flexible JSON-like documents — no fixed schema required. Great for content management, catalogs, user profiles, and rapidly evolving data models." },
-    "databaseDynamoDB": { "name": "DynamoDB", "description": "AWS NoSQL key-value. Single-digit ms.", "tooltip": "AWS DynamoDB — fully managed NoSQL key-value and document database. Single-digit millisecond performance at any scale. Supports on-demand and provisioned capacity, global tables, and DynamoDB Streams for change data capture." },
-    "databaseFirestore": { "name": "Firestore", "description": "Google Cloud document DB. Real-time sync.", "tooltip": "Google Cloud Firestore — serverless document database with real-time sync and offline support. Data is organized into collections and documents. Ideal for mobile and web apps that need live data updates across clients." },
-    "databaseCosmosDB": { "name": "Cosmos DB", "description": "Azure multi-model DB. Global distribution.", "tooltip": "Azure Cosmos DB — globally distributed multi-model database. Supports NoSQL, MongoDB, Cassandra, Gremlin, and Table APIs. Guaranteed single-digit millisecond reads and writes with five consistency levels and turnkey global replication." },
-    "databaseTablestore": { "name": "Tablestore", "description": "Alibaba Cloud NoSQL wide-column. Serverless.", "tooltip": "Alibaba Cloud Tablestore — serverless NoSQL wide-column store optimized for time-series, IoT, and metadata. Auto-scales with no capacity planning needed." },
-    "databaseAutonomousDB": { "name": "Autonomous DB", "description": "Oracle Cloud self-managing database.", "tooltip": "Oracle Cloud Autonomous Database — self-driving, self-securing, self-repairing. Automated tuning, patching, and scaling. Supports OLTP, data warehousing, JSON, and APEX workloads." },
-    "databaseDOManagedDB": { "name": "Managed Database", "description": "DigitalOcean managed DB. Postgres/MySQL/Redis.", "tooltip": "DigitalOcean Managed Database — simple, reliable managed databases. Supports PostgreSQL, MySQL, and Redis with automatic failover, backups, and end-to-end encryption." },
-    "databaseRedis": { "name": "Redis", "description": "In-memory store. Sub-millisecond reads.", "tooltip": "Managed Redis in-memory data store. Use for caching API responses, session storage, rate limiting counters, real-time leaderboards, and pub/sub messaging. Sub-millisecond latency." },
-    "messagingSQS": { "name": "SQS", "description": "AWS managed queue. Guaranteed delivery.", "tooltip": "AWS Simple Queue Service — fully managed message queue. Messages are stored durably and delivered at-least-once. Supports FIFO ordering and dead-letter queues for failed messages. Scales automatically." },
-    "messagingSNS": { "name": "SNS", "description": "AWS pub/sub notifications.", "tooltip": "AWS Simple Notification Service — fan-out pub/sub messaging. One message can trigger multiple subscribers (SQS queues, Lambda functions, HTTP endpoints, email, SMS). Great for event-driven architectures." },
-    "messagingRabbitMQ": { "name": "RabbitMQ", "description": "Open-source message broker.", "tooltip": "Open-source message broker supporting AMQP, MQTT, and STOMP protocols. Flexible routing with exchanges, queues, and bindings. Runs anywhere — cloud or self-hosted on Kubernetes." },
-    "messagingTopic": { "name": "Event Stream", "description": "Real-time events (Kafka, Kinesis).", "tooltip": "High-throughput event streaming platform (Kafka, Kinesis). Ordered, durable log of events that multiple consumers can read independently. Use for real-time analytics, event sourcing, and data pipelines." },
-    "messagingCloudPubSub": { "name": "Cloud Pub/Sub", "description": "Google Cloud managed pub/sub. Global.", "tooltip": "Google Cloud Pub/Sub — fully managed real-time messaging service. Publish messages to topics and deliver to multiple subscribers globally. Supports push and pull delivery, dead-letter topics, and exactly-once processing." },
-    "messagingServiceBus": { "name": "Service Bus", "description": "Azure enterprise messaging. Queues + topics.", "tooltip": "Azure Service Bus — enterprise-grade message broker with queues and publish-subscribe topics. Supports sessions, transactions, dead-lettering, and scheduled delivery. Ideal for decoupling applications and building reliable distributed systems." },
-    "storageBucket": { "name": "Storage", "description": "Files, images, uploads. S3/GCS/Blob.", "tooltip": "Object storage (S3, GCS, Azure Blob, Alibaba OSS, OCI Object Storage, DO Spaces) for files, images, videos, backups, and static assets. Virtually unlimited capacity with high durability. Supports versioning, lifecycle policies, and pre-signed URLs." },
-    "storageOSS": { "name": "OSS", "description": "Alibaba Cloud object storage. China-optimized CDN.", "tooltip": "Alibaba Cloud Object Storage Service — massively scalable object storage with China-optimized CDN integration. Supports Standard, IA, Archive, and Cold Archive storage classes." },
-    "storageOCIObjectStorage": { "name": "OCI Object Storage", "description": "Oracle Cloud enterprise object storage. Tiered.", "tooltip": "Oracle Cloud Object Storage — enterprise-grade with automatic tiering between Standard and Archive tiers. High durability with built-in redundancy across fault domains." },
-    "storageDOSpaces": { "name": "Spaces", "description": "DigitalOcean S3-compatible object storage.", "tooltip": "DigitalOcean Spaces — simple S3-compatible object storage with built-in CDN. Flat pricing, no egress surprises. Great for static assets, backups, and user uploads." },
-    "securityIdentity": { "name": "Auth", "description": "Login, signup, permissions.", "tooltip": "Managed identity and authentication service (Cognito, Firebase Auth, Entra ID). Handles user signup, login, MFA, social login (Google, GitHub), JWT tokens, and role-based access control." },
-    "securitySecret": { "name": "Secrets", "description": "API keys, DB passwords, tokens.", "tooltip": "Secrets manager for storing API keys, database passwords, OAuth tokens, and certificates. Encrypted at rest, accessed via API, with automatic rotation and audit logging." },
-    "securityWAF": { "name": "WAF", "description": "Web Application Firewall. DDoS & injection protection.", "tooltip": "Web Application Firewall that protects APIs and web apps from common exploits — SQL injection, XSS, DDoS attacks, bot traffic, and OWASP Top 10 vulnerabilities. Sits in front of your API gateway or load balancer." },
-    "securityCertificate": { "name": "SSL Certificate", "description": "HTTPS certificates for your domains.", "tooltip": "Managed SSL/TLS certificate for HTTPS. Auto-provisions and auto-renews certificates for your custom domains. Free with most cloud providers (ACM, Managed SSL, Key Vault)." },
-    "aiLLMGateway": { "name": "LLM Gateway", "description": "LLM API proxy. Rate limiting + fallback.", "tooltip": "Proxy/router for LLM API calls (OpenAI, Anthropic, Cohere). Centralizes API key management, adds rate limiting, request caching, cost tracking, and automatic fallback between models." },
-    "aiVectorDB": { "name": "Vector DB", "description": "Embeddings + similarity search.", "tooltip": "Vector database for storing and querying embeddings. Powers semantic search, RAG (retrieval-augmented generation), recommendation engines, and image similarity. Supports Pinecone, pgvector, Weaviate, and more." },
-    "aiModelServing": { "name": "ML Model", "description": "Deploy + serve ML models.", "tooltip": "Managed endpoint for serving ML models in production. Handles model versioning, A/B testing, auto-scaling, and GPU allocation. Supports PyTorch, TensorFlow, and custom containers." },
-    "analyticsDataWarehouse": { "name": "Data Warehouse", "description": "Columnar analytics. SQL at scale.", "tooltip": "Columnar data warehouse for analytical queries over terabytes of data. Run complex SQL aggregations, joins, and window functions in seconds. Supports BigQuery, Redshift, and Synapse." },
-    "analyticsSearch": { "name": "Search", "description": "Full-text search. Elasticsearch/OpenSearch.", "tooltip": "Full-text search and analytics engine. Index documents and query them with fuzzy matching, faceted search, autocomplete, and relevance scoring. Powers search bars, log analysis, and real-time dashboards." },
-    "monitoringLog": { "name": "Logs", "description": "Errors, performance, alerts.", "tooltip": "Centralized logging and monitoring. Collects logs from all services, enables search and filtering, triggers alerts on errors or anomalies, and provides performance dashboards." },
-    "monitoringTerminal": { "name": "Log Terminal", "description": "Live streaming log viewer.", "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services." },
-    "sourceRepository": { "name": "GitHub Repo", "description": "Source code. Connect to a service to deploy.", "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push." },
-    "configEnvironment": { "name": "Env Variables", "description": "Key-value environment variables.", "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them." }
+    "computeContainer": {
+      "name": "Scalable Backend",
+      "description": "Containerized service. Auto-scales.",
+      "tooltip": "Auto-scaling containerized service supporting any runtime — Node.js, Python, Go, Java, .NET, Rust. Runs behind a load balancer with health checks, rolling deploys, and configurable min/max instances."
+    },
+    "computeWorker": {
+      "name": "Worker",
+      "description": "Background jobs: image processing, emails.",
+      "tooltip": "Long-running background process that picks up jobs from a queue. Use for image/video processing, email sending, PDF generation, data imports, or any work that shouldn't block an API response."
+    },
+    "computeServerlessFunction": {
+      "name": "Serverless Function",
+      "description": "Event-driven. Scales to zero.",
+      "tooltip": "Serverless function (Lambda, Cloud Functions, Azure Functions) that runs your code in response to events. No servers to manage — scales automatically from zero to thousands of concurrent executions. Pay only for compute time used."
+    },
+    "computeFunctionCompute": {
+      "name": "Function Compute",
+      "description": "Alibaba Cloud serverless functions. Event-driven.",
+      "tooltip": "Alibaba Cloud Function Compute — serverless execution environment for event-driven code. Supports Node.js, Python, Java, and Go. Auto-scales from zero with pay-per-execution pricing."
+    },
+    "computeOCIFunctions": {
+      "name": "OCI Functions",
+      "description": "Oracle Cloud serverless. Fn-based.",
+      "tooltip": "Oracle Cloud Functions — serverless platform built on the open-source Fn Project. Supports multiple languages, runs in Docker containers, and integrates with OCI Events and API Gateway."
+    },
+    "computeDOAppPlatform": {
+      "name": "App Platform",
+      "description": "DigitalOcean PaaS. Git push to deploy.",
+      "tooltip": "DigitalOcean App Platform — fully managed PaaS. Connect your GitHub repo and deploy with git push. Supports static sites, web services, workers, and background jobs with automatic HTTPS."
+    },
+    "computeCronJob": {
+      "name": "Cron Job",
+      "description": "Runs on a schedule. Reports, cleanup, syncs.",
+      "tooltip": "Runs on a cron schedule. Use for nightly reports, database cleanup, cache warming, billing cycles, or periodic data syncs. Runs once and exits — not a long-lived process."
+    },
+    "computeStaticSite": {
+      "name": "Static Site",
+      "description": "React/Vue app. CDN included.",
+      "tooltip": "Pre-built HTML/CSS/JS served from a CDN. Ideal for React, Vue, or Angular SPAs. Blazing fast globally — files are cached at edge locations. No server needed."
+    },
+    "computeSSRSite": {
+      "name": "SSR Site",
+      "description": "Server-rendered (Next.js, Nuxt). CDN included.",
+      "tooltip": "Server-side rendered app (Next.js, Nuxt, Remix). Pages render on the server for fast first paint and SEO. Supports API routes, middleware, and dynamic content. CDN caches static assets."
+    },
+    "networkVPC": {
+      "name": "VPC",
+      "description": "Virtual Private Cloud. Isolated network.",
+      "tooltip": "Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC."
+    },
+    "networkSubnet": {
+      "name": "Subnet",
+      "description": "Network subdivision inside a VPC.",
+      "tooltip": "A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers."
+    },
+    "networkPublicEndpoint": {
+      "name": "Public Endpoint",
+      "description": "Public HTTPS entry point with managed SSL.",
+      "tooltip": "Single block that exposes your services to the internet. Set a domain (example.com) and toggle HTTPS to auto-provision a managed SSL certificate. Connect to one or more services and set a Subdomain on each edge to route api.example.com → API service, app.example.com → static site, etc. Replaces the old separate Internet + Custom Domain blocks."
+    },
+    "networkCustomDomain": {
+      "name": "Custom Domain",
+      "description": "Route a domain to publicly-facing services.",
+      "tooltip": "Wires a root domain to one or more publicly-facing services that already have their own public URL (Firebase Hosting, Cloud Run with --allow-unauthenticated, AWS Amplify). Set a domain (example.com) and connect to one or more targets with a Subdomain on each edge — blank = root, api = api.example.com, etc. Can also be dropped INSIDE a Private Network block to act as its public ingress gateway."
+    },
+    "networkPrivateNetwork": {
+      "name": "Private Network",
+      "description": "A walled VPC. Drop services inside to keep them private.",
+      "tooltip": "A container block that puts everything inside it on a private VPC. Drop compute blocks inside to isolate them from the public internet. Toggle Open to auto-spawn a Custom Domain child that acts as the public gateway (the Custom Domain's route ports wire to sibling services inside the network). Toggle Sealed for an internal-only network. Outbound internet access (Allow all / Allowlist / Block all) is configured in the properties panel."
+    },
+    "networkGateway": {
+      "name": "Gateway",
+      "description": "Routes traffic, auth + rate limiting.",
+      "tooltip": "API Gateway that sits between the internet and your backend services. Handles request routing, authentication, rate limiting, CORS, and request/response transformation. Includes WAF and TLS termination."
+    },
+    "databasePostgreSQL": {
+      "name": "PostgreSQL",
+      "description": "Relational. ACID-compliant.",
+      "tooltip": "Managed PostgreSQL database with automatic backups, replication, and failover. Best for structured data with complex queries, joins, and transactions. Supports JSON, full-text search, and extensions like PostGIS."
+    },
+    "databaseMySQL": {
+      "name": "MySQL",
+      "description": "Relational. Web-scale classic.",
+      "tooltip": "Managed MySQL database — the most widely deployed open-source relational database. Optimized for read-heavy workloads, web applications, and e-commerce. Simple, reliable, and well-understood."
+    },
+    "databaseMongoDB": {
+      "name": "MongoDB",
+      "description": "Document store. Schema-flexible.",
+      "tooltip": "Managed MongoDB document database. Stores data as flexible JSON-like documents — no fixed schema required. Great for content management, catalogs, user profiles, and rapidly evolving data models."
+    },
+    "databaseDynamoDB": {
+      "name": "DynamoDB",
+      "description": "AWS NoSQL key-value. Single-digit ms.",
+      "tooltip": "AWS DynamoDB — fully managed NoSQL key-value and document database. Single-digit millisecond performance at any scale. Supports on-demand and provisioned capacity, global tables, and DynamoDB Streams for change data capture."
+    },
+    "databaseFirestore": {
+      "name": "Firestore",
+      "description": "Google Cloud document DB. Real-time sync.",
+      "tooltip": "Google Cloud Firestore — serverless document database with real-time sync and offline support. Data is organized into collections and documents. Ideal for mobile and web apps that need live data updates across clients."
+    },
+    "databaseCosmosDB": {
+      "name": "Cosmos DB",
+      "description": "Azure multi-model DB. Global distribution.",
+      "tooltip": "Azure Cosmos DB — globally distributed multi-model database. Supports NoSQL, MongoDB, Cassandra, Gremlin, and Table APIs. Guaranteed single-digit millisecond reads and writes with five consistency levels and turnkey global replication."
+    },
+    "databaseTablestore": {
+      "name": "Tablestore",
+      "description": "Alibaba Cloud NoSQL wide-column. Serverless.",
+      "tooltip": "Alibaba Cloud Tablestore — serverless NoSQL wide-column store optimized for time-series, IoT, and metadata. Auto-scales with no capacity planning needed."
+    },
+    "databaseAutonomousDB": {
+      "name": "Autonomous DB",
+      "description": "Oracle Cloud self-managing database.",
+      "tooltip": "Oracle Cloud Autonomous Database — self-driving, self-securing, self-repairing. Automated tuning, patching, and scaling. Supports OLTP, data warehousing, JSON, and APEX workloads."
+    },
+    "databaseDOManagedDB": {
+      "name": "Managed Database",
+      "description": "DigitalOcean managed DB. Postgres/MySQL/Redis.",
+      "tooltip": "DigitalOcean Managed Database — simple, reliable managed databases. Supports PostgreSQL, MySQL, and Redis with automatic failover, backups, and end-to-end encryption."
+    },
+    "databaseRedis": {
+      "name": "Redis",
+      "description": "In-memory store. Sub-millisecond reads.",
+      "tooltip": "Managed Redis in-memory data store. Use for caching API responses, session storage, rate limiting counters, real-time leaderboards, and pub/sub messaging. Sub-millisecond latency."
+    },
+    "messagingSQS": {
+      "name": "SQS",
+      "description": "AWS managed queue. Guaranteed delivery.",
+      "tooltip": "AWS Simple Queue Service — fully managed message queue. Messages are stored durably and delivered at-least-once. Supports FIFO ordering and dead-letter queues for failed messages. Scales automatically."
+    },
+    "messagingSNS": {
+      "name": "SNS",
+      "description": "AWS pub/sub notifications.",
+      "tooltip": "AWS Simple Notification Service — fan-out pub/sub messaging. One message can trigger multiple subscribers (SQS queues, Lambda functions, HTTP endpoints, email, SMS). Great for event-driven architectures."
+    },
+    "messagingRabbitMQ": {
+      "name": "RabbitMQ",
+      "description": "Open-source message broker.",
+      "tooltip": "Open-source message broker supporting AMQP, MQTT, and STOMP protocols. Flexible routing with exchanges, queues, and bindings. Runs anywhere — cloud or self-hosted on Kubernetes."
+    },
+    "messagingTopic": {
+      "name": "Event Stream",
+      "description": "Real-time events (Kafka, Kinesis).",
+      "tooltip": "High-throughput event streaming platform (Kafka, Kinesis). Ordered, durable log of events that multiple consumers can read independently. Use for real-time analytics, event sourcing, and data pipelines."
+    },
+    "messagingCloudPubSub": {
+      "name": "Cloud Pub/Sub",
+      "description": "Google Cloud managed pub/sub. Global.",
+      "tooltip": "Google Cloud Pub/Sub — fully managed real-time messaging service. Publish messages to topics and deliver to multiple subscribers globally. Supports push and pull delivery, dead-letter topics, and exactly-once processing."
+    },
+    "messagingServiceBus": {
+      "name": "Service Bus",
+      "description": "Azure enterprise messaging. Queues + topics.",
+      "tooltip": "Azure Service Bus — enterprise-grade message broker with queues and publish-subscribe topics. Supports sessions, transactions, dead-lettering, and scheduled delivery. Ideal for decoupling applications and building reliable distributed systems."
+    },
+    "storageBucket": {
+      "name": "Storage",
+      "description": "Files, images, uploads. S3/GCS/Blob.",
+      "tooltip": "Object storage (S3, GCS, Azure Blob, Alibaba OSS, OCI Object Storage, DO Spaces) for files, images, videos, backups, and static assets. Virtually unlimited capacity with high durability. Supports versioning, lifecycle policies, and pre-signed URLs."
+    },
+    "storageOSS": {
+      "name": "OSS",
+      "description": "Alibaba Cloud object storage. China-optimized CDN.",
+      "tooltip": "Alibaba Cloud Object Storage Service — massively scalable object storage with China-optimized CDN integration. Supports Standard, IA, Archive, and Cold Archive storage classes."
+    },
+    "storageOCIObjectStorage": {
+      "name": "OCI Object Storage",
+      "description": "Oracle Cloud enterprise object storage. Tiered.",
+      "tooltip": "Oracle Cloud Object Storage — enterprise-grade with automatic tiering between Standard and Archive tiers. High durability with built-in redundancy across fault domains."
+    },
+    "storageDOSpaces": {
+      "name": "Spaces",
+      "description": "DigitalOcean S3-compatible object storage.",
+      "tooltip": "DigitalOcean Spaces — simple S3-compatible object storage with built-in CDN. Flat pricing, no egress surprises. Great for static assets, backups, and user uploads."
+    },
+    "securityIdentity": {
+      "name": "Auth",
+      "description": "Login, signup, permissions.",
+      "tooltip": "Managed identity and authentication service (Cognito, Firebase Auth, Entra ID). Handles user signup, login, MFA, social login (Google, GitHub), JWT tokens, and role-based access control."
+    },
+    "securitySecret": {
+      "name": "Secrets",
+      "description": "API keys, DB passwords, tokens.",
+      "tooltip": "Secrets manager for storing API keys, database passwords, OAuth tokens, and certificates. Encrypted at rest, accessed via API, with automatic rotation and audit logging."
+    },
+    "securityWAF": {
+      "name": "WAF",
+      "description": "Web Application Firewall. DDoS & injection protection.",
+      "tooltip": "Web Application Firewall that protects APIs and web apps from common exploits — SQL injection, XSS, DDoS attacks, bot traffic, and OWASP Top 10 vulnerabilities. Sits in front of your API gateway or load balancer."
+    },
+    "securityCertificate": {
+      "name": "SSL Certificate",
+      "description": "HTTPS certificates for your domains.",
+      "tooltip": "Managed SSL/TLS certificate for HTTPS. Auto-provisions and auto-renews certificates for your custom domains. Free with most cloud providers (ACM, Managed SSL, Key Vault)."
+    },
+    "aiLLMGateway": {
+      "name": "LLM Gateway",
+      "description": "LLM API proxy. Rate limiting + fallback.",
+      "tooltip": "Proxy/router for LLM API calls (OpenAI, Anthropic, Cohere). Centralizes API key management, adds rate limiting, request caching, cost tracking, and automatic fallback between models."
+    },
+    "aiVectorDB": {
+      "name": "Vector DB",
+      "description": "Embeddings + similarity search.",
+      "tooltip": "Vector database for storing and querying embeddings. Powers semantic search, RAG (retrieval-augmented generation), recommendation engines, and image similarity. Supports Pinecone, pgvector, Weaviate, and more."
+    },
+    "aiModelServing": {
+      "name": "ML Model",
+      "description": "Deploy + serve ML models.",
+      "tooltip": "Managed endpoint for serving ML models in production. Handles model versioning, A/B testing, auto-scaling, and GPU allocation. Supports PyTorch, TensorFlow, and custom containers."
+    },
+    "analyticsDataWarehouse": {
+      "name": "Data Warehouse",
+      "description": "Columnar analytics. SQL at scale.",
+      "tooltip": "Columnar data warehouse for analytical queries over terabytes of data. Run complex SQL aggregations, joins, and window functions in seconds. Supports BigQuery, Redshift, and Synapse."
+    },
+    "analyticsSearch": {
+      "name": "Search",
+      "description": "Full-text search. Elasticsearch/OpenSearch.",
+      "tooltip": "Full-text search and analytics engine. Index documents and query them with fuzzy matching, faceted search, autocomplete, and relevance scoring. Powers search bars, log analysis, and real-time dashboards."
+    },
+    "monitoringLog": {
+      "name": "Logs",
+      "description": "Errors, performance, alerts.",
+      "tooltip": "Centralized logging and monitoring. Collects logs from all services, enables search and filtering, triggers alerts on errors or anomalies, and provides performance dashboards."
+    },
+    "monitoringTerminal": {
+      "name": "Log Terminal",
+      "description": "Live streaming log viewer.",
+      "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services."
+    },
+    "sourceRepository": {
+      "name": "GitHub Repo",
+      "description": "Source code. Connect to a service to deploy.",
+      "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push."
+    },
+    "configEnvironment": {
+      "name": "Env Variables",
+      "description": "Key-value environment variables.",
+      "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them."
+    }
   },
   "tour": {
     "actions": {

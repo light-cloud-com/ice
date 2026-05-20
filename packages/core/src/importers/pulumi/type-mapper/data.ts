@@ -12,7 +12,7 @@
  * Size exception: the file exceeds the 200-LOC ceiling because
  * the data is dominated by the TYPE_MAP entries (one per Pulumi
  * resource type). The pure data-only nature justifies the size
- * (cf. /docs/refactoring-patterns.md "Data-heavy shim split").
+ * (Data-heavy shim split pattern).
  *
  * The two tables are separated for two reasons:
  *  - PROVIDER_MAP (~26 entries) and TYPE_MAP (~280 entries) live

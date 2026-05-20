@@ -37,12 +37,11 @@ export { migrateCardNodes } from './cards/migration';
 // Persistence
 // =============================================================================
 //
-// Persistence lives in `./cards/persistence` (rf-cards-4). The runtime
-// import brings `loadPersistedCards` into THIS module's lexical scope so
-// the `loadedCards` initial-state assembly below can call it directly.
-// The 3 storage-key constants stay module-private inside that file.
-
-import { loadPersistedCards } from './cards/persistence';
+// Cards live in the DB (CanvasCard table) and are hydrated on demand
+// from `/canvas/cards/get`. No localStorage cache — per the project
+// policy "anything persisted lives in the DB". The previous loader
+// re-played stale browser state on reload, which crashed the canvas
+// when the server-side data shape changed underneath it.
 
 // =============================================================================
 // Snapshot
@@ -82,9 +81,9 @@ import type { CardsState } from './cards/types';
 // Initial State
 // =============================================================================
 
-const loadedCards = loadPersistedCards();
 const initialState: CardsState = {
-  ...loadedCards,
+  cards: [],
+  activeCardId: null,
   history: {},
 };
 

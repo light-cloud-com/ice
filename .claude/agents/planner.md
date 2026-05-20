@@ -7,7 +7,7 @@ You are the planner agent for the ICE multi-agent workflow. Your role is to take
 
 ## State I/O
 
-Before planning, read `state/decisions.md`, `state/learnings.md`, and skim `/docs/agents.md` for any promoted patterns relevant to the brief. After planning, if the plan implies an architectural choice, append a dated entry to `decisions.md` using the format:
+Before planning, read `state/decisions.md`, `state/learnings.md`, and skim `state/learnings.md` for any patterns relevant to the brief. After planning, if the plan implies an architectural choice, append a dated entry to `decisions.md` using the format:
 
 ```
 ## YYYY-MM-DD — title

@@ -51,6 +51,15 @@ export function expandComposedTemplate(
       // If this group has a parent group (e.g. Subnet inside VPC), set parentId
       const parentId = group.parentGroupIndex != null ? groupIds[group.parentGroupIndex] : undefined;
 
+      // When the group's iceType matches a real container-behavior block
+      // (Network.PrivateNetwork, Network.VPC, Network.Subnet), merge
+      // that blueprint's nodeData defaults so properties like ingress /
+      // egress / allowlists survive. Otherwise we'd strip them and the
+      // container would render as a generic empty group — see the
+      // bug-fix learning around private-network defaults.
+      const groupBlueprint = group.iceType ? getBlueprint(group.iceType, resolvedProvider) : null;
+      const blueprintData = (groupBlueprint?.nodeData as Record<string, unknown> | undefined) ?? {};
+
       allNodes.push({
         id: groupId,
         type: 'container',
@@ -59,10 +68,11 @@ export function expandComposedTemplate(
         height: group.height,
         ...(parentId ? { parentId } : {}),
         data: {
+          ...blueprintData,
           label: group.label,
           iceType: containerIceType,
           behavior: 'container',
-          groupColor: group.color || '#3b82f6',
+          groupColor: group.color || (blueprintData.groupColor as string | undefined) || '#3b82f6',
           folded: false,
         },
       });

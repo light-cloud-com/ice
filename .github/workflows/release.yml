@@ -5,7 +5,7 @@ name: Release desktop
 # a `v*` tag (e.g. `git tag v0.1.50 && git push origin v0.1.50`) or
 # manually from the Actions tab.
 #
-# Binaries are **not code-signed** (see docs/desktop.md). First-run on
+# Binaries are **not code-signed** (see docs/architecture/desktop.md). First-run on
 # macOS/Windows will show an "unidentified developer" / SmartScreen
 # warning until signing certs are wired up — tracked on ROADMAP.md.
 

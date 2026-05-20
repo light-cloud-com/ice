@@ -63,7 +63,7 @@
     "lucide-react": "^0.577.0",
     "react-hook-form": "^7.72.0",
     "react-redux": "^9.2.0",
-    "react-resizable-panels": "^1.0.10",
+    "react-resizable-panels": "^4.11.1",
     "react-router-dom": "^6.30.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",

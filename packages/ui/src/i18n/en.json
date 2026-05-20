@@ -1,0 +1,2490 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deploy": "Deploy",
+      "confirm": "Confirm",
+      "reset": "Reset",
+      "retry": "Retry",
+      "copy": "Copy",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "close": "Close",
+      "back": "Back",
+      "next": "Next",
+      "skip": "Skip",
+      "continue": "Continue",
+      "add": "Add",
+      "remove": "Remove",
+      "create": "Create",
+      "import": "Import",
+      "change": "Change",
+      "search": "Search"
+    },
+    "labels": {
+      "untitled": "Untitled",
+      "loading": "Loading...",
+      "valid": "Valid",
+      "modified": "(modified)",
+      "version": "ICE v0.1.0",
+      "none": "none",
+      "yes": "Yes",
+      "no": "No",
+      "or": "or",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "description": "Description",
+      "type": "Type",
+      "status": "Status",
+      "role": "Role"
+    },
+    "errors": {
+      "required": "This field is required",
+      "network": "Something went wrong. Please try again.",
+      "unexpected": "An unexpected error occurred",
+      "tryAgain": "Try again"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "viewer": "Viewer",
+      "editor": "Editor"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago",
+      "never": "Never"
+    },
+    "providers": {
+      "gcp": "Google Cloud",
+      "aws": "AWS",
+      "azure": "Azure",
+      "kubernetes": "Kubernetes"
+    }
+  },
+  "auth": {
+    "brand": {
+      "title": "ICE",
+      "subtitle": "Integrated Cloud Environment"
+    },
+    "login": {
+      "heading": "Sign in to your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submitButton": "Sign in",
+      "noAccount": "Don't have an account?",
+      "createLink": "Create one",
+      "divider": "or",
+      "invalidCredentials": "Invalid credentials"
+    },
+    "signup": {
+      "heading": "Create your account",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "submitButton": "Create account",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "divider": "or",
+      "registrationFailed": "Registration failed"
+    },
+    "callback": {
+      "noToken": "No token received",
+      "backToLogin": "Back to login"
+    },
+    "oauth": {
+      "googleNotLoaded": "Google Sign-In not loaded. Please refresh.",
+      "googleNotConfigured": "Google login not configured.",
+      "googleFailed": "Google sign-in failed",
+      "loginFailed": "Login failed",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithGithub": "Continue with GitHub"
+    }
+  },
+  "canvas": {
+    "title": "Infrastructure Canvas",
+    "emptyState": {
+      "title": "What are you building?",
+      "subtitle": "Pick a starting point — you can always change it later",
+      "blankCanvas": "Blank Canvas",
+      "pickTemplate": "Pick a template...",
+      "quickStart": "Quick start",
+      "more": "More..."
+    },
+    "tooltip": {
+      "connections": "connections",
+      "protocol": "Protocol",
+      "port": "Port",
+      "latency": "Latency",
+      "throughput": "Throughput",
+      "bandwidth": "Bandwidth",
+      "security": "Security"
+    },
+    "nodes": {
+      "resource": "Resource",
+      "dropHere": "Drop resources or blocks here",
+      "active": "active",
+      "instances": "instances"
+    },
+    "controls": {
+      "title": "Controls",
+      "escButton": "ESC",
+      "shortcutsTitle": "Keyboard shortcuts",
+      "newGraph": "New Graph (Ctrl+N)",
+      "open": "Open (Ctrl+O)",
+      "save": "Save (Ctrl+S)",
+      "loadDemo": "Load Demo Infrastructure",
+      "newProject": "New Project",
+      "undo": "Undo (Ctrl+Z)",
+      "redo": "Redo (Ctrl+Y)",
+      "autoOrganize": "Auto-Organize Layout (Ctrl+Shift+O)",
+      "togglePalette": "Toggle Palette (Ctrl+P)",
+      "toggleProperties": "Toggle Properties (Ctrl+I)",
+      "toggleMinimap": "Toggle Minimap (Ctrl+M)",
+      "splitRight": "Split Right (side-by-side)",
+      "splitDown": "Split Down (top-bottom)",
+      "closeSplit": "Close Split",
+      "switchLight": "Switch to Light Mode",
+      "switchDark": "Switch to Dark Mode",
+      "cloudProviders": "Cloud Providers - Import from AWS/GCP/Azure",
+      "deployInfra": "Deploy Infrastructure (Ctrl+Shift+D)",
+      "sectionNavigation": "Navigation",
+      "panCanvas": "Pan canvas",
+      "zoomInOut": "Zoom in / out",
+      "sectionSelection": "Selection",
+      "selectNode": "Select node",
+      "multiSelect": "Multi-select",
+      "boxSelect": "Box select",
+      "deselectAll": "Deselect all",
+      "sectionEditing": "Editing",
+      "deleteSelected": "Delete selected",
+      "copyPaste": "Copy / Cut / Paste",
+      "renameGroup": "Rename group",
+      "sectionContainment": "Containment",
+      "moveIntoGroup": "Move into group / block",
+      "detachFromContainer": "Detach from container",
+      "sectionView": "View",
+      "architectureView": "Architecture view",
+      "infrastructureView": "Infrastructure view",
+      "toggleDebug": "Toggle debug panel"
+    },
+    "contextMenu": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "paste": "Paste",
+      "selectAll": "Select All",
+      "autoOrganize": "Auto-organize",
+      "properties": "Properties",
+      "copy": "Copy",
+      "copyAsText": "Copy as Text",
+      "cut": "Cut",
+      "duplicate": "Duplicate",
+      "changeProvider": "Change Provider",
+      "unfold": "Unfold",
+      "fold": "Fold",
+      "groupSelection": "Group Selection",
+      "delete": "Delete",
+      "deleteItems": "Delete {{count}} items",
+      "deleteConnection": "Delete Connection",
+      "addBlock": "Add Block",
+      "addTemplate": "Add Template",
+      "canvasLocked": "Canvas is locked",
+      "connectionStyle": "Connection Style",
+      "layoutVertical": "Vertical ↕",
+      "layoutHorizontal": "Horizontal ↔",
+      "layoutCircular": "Circular ◎",
+      "edgeBezier": "Bezier",
+      "edgeStraight": "Straight",
+      "edgeRectangular": "Rectangular",
+      "unlockCanvas": "Unlock Canvas",
+      "lockCanvas": "Lock Canvas"
+    },
+    "logNode": {
+      "preDeploy": "Deploy this environment to start streaming logs.",
+      "noSource": "Connect a compute or database block to start streaming logs.",
+      "ambiguous": "Multiple inbound connections — choose a source in the properties panel.",
+      "unsupported": "This source type doesn't emit Cloud Logging output.",
+      "permissionDenied": "Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.",
+      "error": "Connection error. Retrying.",
+      "connecting": "Connecting…",
+      "idle": "Waiting for environment."
+    },
+    "status": {
+      "live": "LIVE",
+      "connecting": "CONNECTING",
+      "error": "ERROR",
+      "idle": "IDLE",
+      "pipelineLive": "Live",
+      "pipelineFailed": "Failed",
+      "pipelineBuilding": "Building",
+      "pipelineDeploying": "Deploying",
+      "pipelineQueued": "Queued"
+    },
+    "deploy": {
+      "planning": "Planning deployment…",
+      "destroying": "Destroying…",
+      "deploying": "Deploying…",
+      "progress": "{{terminal}} of {{total}}"
+    },
+    "time": {
+      "secondsAgo": "{{n}}s ago",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "rejection": {
+      "noRule": "{{src}} can't connect directly to {{tgt}}",
+      "specialConflict": "Only one {{label}} can be connected to a service",
+      "logHasSource": "Log terminal already has a source — drop another Log block to watch a second service",
+      "githubRepoLabel": "GitHub Repo",
+      "envVarsLabel": "Env Variables",
+      "fallbackSrc": "This block",
+      "fallbackTgt": "that block"
+    },
+    "deployBadge": {
+      "live": "LIVE",
+      "deploy": "DEPLOY",
+      "err": "ERR",
+      "queued": "QUEUED",
+      "cancel": "CANCEL",
+      "skipped": "SKIPPED"
+    },
+    "infoModal": {
+      "tabOverview": "Overview",
+      "tabCompiles": "Compiles To",
+      "tabCode": "Code",
+      "tabLinks": "Links",
+      "close": "Close",
+      "providerLabel": "Provider:",
+      "optional": "optional",
+      "noInfrastructure": "No infrastructure — this is a canvas-only block.",
+      "noSnippets": "No code snippets available yet.",
+      "triggerTitle": "About this block"
+    },
+    "blocks": {
+      "titles": {
+        "mongodb": "MongoDB",
+        "mysql": "MySQL",
+        "postgres": "PostgreSQL",
+        "postgresShort": "Postgres",
+        "redis": "Redis",
+        "messageQueue": "Message Queue",
+        "eventStream": "Event Stream",
+        "objectStorage": "Object Storage",
+        "secretStore": "Secret Store",
+        "envConfig": "Env Config",
+        "worker": "Worker",
+        "serverlessFunction": "Serverless Function",
+        "apiGateway": "API Gateway",
+        "scheduledTask": "Scheduled Task",
+        "githubRepo": "GitHub Repository",
+        "customDomain": "Custom Domain",
+        "privateNetwork": "Private Network",
+        "staticSite": "Static Site",
+        "ssrSite": "SSR Site",
+        "llmGateway": "LLM Gateway",
+        "emailService": "Email Service",
+        "vectorDb": "Vector DB",
+        "scalableBackend": "Scalable Backend",
+        "block": "Block",
+        "group": "Group"
+      },
+      "common": {
+        "unconfigured": "unconfigured",
+        "editInProperties": "edit in properties →",
+        "ha": "HA",
+        "unnamed": "(unnamed)",
+        "deleted": "(deleted)",
+        "moreCount": "+{{n}} more"
+      },
+      "database": {
+        "shardOne": "1 shard",
+        "shardMany": "{{n}} shards",
+        "backupsDays": "{{n}}d backups"
+      },
+      "redis": {
+        "memoryMb": "{{n}} MB",
+        "memoryGb": "{{n}} GB",
+        "persistent": "persistent"
+      },
+      "queue": {
+        "queueOne": "1 queue",
+        "queueMany": "{{n}} queues",
+        "fifo": "FIFO",
+        "std": "STD"
+      },
+      "stream": {
+        "retention24h": "24 hours",
+        "retention7d": "7 days",
+        "retention30d": "30 days",
+        "retention90d": "90 days",
+        "retention365d": "365 days",
+        "partitions": "{{n}} partitions",
+        "retentionSuffix": "retention",
+        "broadcastsTo": "broadcasts to",
+        "manyConsumers": "many consumers",
+        "subtitle": "one event · many readers"
+      },
+      "storage": {
+        "classStandard": "Standard",
+        "classNearline": "Nearline",
+        "classColdline": "Coldline",
+        "classArchive": "Archive",
+        "classInfrequent": "Infrequent Access",
+        "classGlacier": "Glacier",
+        "classGlacierDeep": "Glacier Deep Archive",
+        "classHot": "Hot",
+        "classCool": "Cool",
+        "public": "public",
+        "private": "private",
+        "versioned": "versioned",
+        "publicBucket": "Public bucket",
+        "privateBucket": "Private bucket"
+      },
+      "secret": {
+        "none": "No secrets yet",
+        "one": "1 secret",
+        "many": "{{n}} secrets",
+        "autoRotate": "auto-rotate"
+      },
+      "envConfig": {
+        "none": "No variables yet",
+        "one": "1 variable",
+        "many": "{{n}} variables"
+      },
+      "worker": {
+        "scalingSuffix": "scaling",
+        "replicas": "{{n}} replicas",
+        "autoScaled": "auto-scaled"
+      },
+      "function": {
+        "triggerHttp": "HTTP",
+        "triggerSchedule": "Schedule",
+        "triggerPubsub": "Pub/Sub",
+        "triggerStorage": "Storage",
+        "triggerQueue": "Queue",
+        "memoryMb": "{{n}} MB",
+        "timeoutSeconds": "{{n}}s",
+        "trigger": "trigger",
+        "scalesToZero": "scales to zero"
+      },
+      "gateway": {
+        "protoHttpApi": "HTTP API",
+        "protoRest": "REST",
+        "protoWebsocket": "WebSocket",
+        "protoCloudApi": "Cloud API Gateway",
+        "protoAzureConsumption": "API Management (Consumption)",
+        "protoAzureStandard": "API Management (Standard v2)",
+        "routeOne": "1 route",
+        "routeMany": "{{n}} routes",
+        "noRoutes": "no routes",
+        "authRequired": "auth required",
+        "publicAccess": "public",
+        "noRoutesYet": "no routes yet — add them in properties"
+      },
+      "scheduled": {
+        "freqEveryMinute": "Every minute",
+        "freqEvery5": "Every 5 minutes",
+        "freqEvery15": "Every 15 minutes",
+        "freqEvery30": "Every 30 minutes",
+        "freqEveryHour": "Every hour",
+        "freqEvery6h": "Every 6 hours",
+        "freqEvery12h": "Every 12 hours",
+        "freqDailyMidnight": "Daily at midnight",
+        "freqDaily9": "Daily at 9 AM",
+        "freqWeekdays9": "Weekdays at 9 AM",
+        "freqWeeklyMon": "Weekly on Monday",
+        "freqMonthly1st": "Monthly on the 1st",
+        "freqCustom": "Custom",
+        "freqCustomSchedule": "Custom schedule",
+        "describeNoSchedule": "no schedule",
+        "describeEveryMinute": "every minute",
+        "describeMinAbbr": "min",
+        "describeEveryHour": "every hour",
+        "describeHours": "hours",
+        "describeCustom": "custom schedule",
+        "daySun": "Sun",
+        "dayMon": "Mon",
+        "dayTue": "Tue",
+        "dayWed": "Wed",
+        "dayThu": "Thu",
+        "dayFri": "Fri",
+        "daySat": "Sat",
+        "taskOne": "1 task",
+        "taskMany": "{{n}} tasks",
+        "noTasks": "no tasks",
+        "noTasksYet": "no tasks yet — add them in properties",
+        "unnamedTask": "Unnamed task",
+        "setActionInProperties": "· set action in properties"
+      },
+      "github": {
+        "manualDeploys": "manual deploys",
+        "autoDeploy": "auto-deploy",
+        "buildPrefix": "build: ",
+        "noRepoConnected": "no repository connected — pick one in the properties panel"
+      },
+      "customDomain": {
+        "fallbackSubtitle": "Network · CustomDomain",
+        "rootDomainPlaceholder": "(set root domain above)",
+        "rootSubdomain": "root",
+        "addSubdomain": "Add subdomain route"
+      },
+      "privateNetwork": {
+        "sealed": "Sealed · internal only",
+        "restricted": "Restricted · allowlist",
+        "open": "Open · public reachable",
+        "dropHere": "drop services here"
+      },
+      "site": {
+        "noCdn": "no CDN",
+        "globalCdn": "global CDN",
+        "framework": "framework",
+        "servedFromEdge": "served from edge"
+      },
+      "llm": {
+        "primary": "primary",
+        "fallback": "fallback",
+        "rpm": "{{n}} rpm",
+        "fallbackOn": "fallback on",
+        "noRateLimits": "no rate limits",
+        "noModelSelected": "no model selected"
+      },
+      "email": {
+        "transactional": "Transactional",
+        "from": "FROM",
+        "sender": "SENDER"
+      },
+      "vector": {
+        "metricCosine": "cosine",
+        "metricEuclidean": "euclidean",
+        "metricL2": "L2",
+        "metricDot": "dot product",
+        "metricInner": "inner product",
+        "dimSuffix": "-d"
+      },
+      "scalableBackend": {
+        "instancesRange": "instances"
+      }
+    },
+    "properties": {
+      "fields": {
+        "queueNamePlaceholder": "queue-name",
+        "queueFifoTooltip": "FIFO — ordered, exactly-once",
+        "queueStandardTooltip": "Standard — unordered, at-least-once",
+        "queueFifoBadge": "FIFO",
+        "queueStandardBadge": "Std",
+        "queueRemoveTitle": "Remove queue",
+        "queueAdd": "Add a queue",
+        "taskNamePlaceholder": "task name",
+        "taskRemoveTitle": "Remove task",
+        "taskRowWhen": "when",
+        "taskRowCron": "cron",
+        "taskRowAction": "action",
+        "taskRowBlock": "block",
+        "taskRowUrl": "url",
+        "taskRowMethod": "method",
+        "taskCronPlaceholder": "0 9 * * MON-FRI",
+        "taskUrlPlaceholder": "https://api.example.com/cron-tick",
+        "taskNoBlocks": "no blocks on canvas",
+        "taskPickBlock": "pick a block",
+        "taskBlockNotSet": "— not set —",
+        "taskAdd": "Add a task",
+        "freqEvery5": "Every 5 minutes",
+        "freqEvery15": "Every 15 minutes",
+        "freqEvery30": "Every 30 minutes",
+        "freqEveryHour": "Every hour",
+        "freqEvery6h": "Every 6 hours",
+        "freqEvery12h": "Every 12 hours",
+        "freqDailyMidnight": "Daily at midnight",
+        "freqDaily9": "Daily at 9 AM",
+        "freqWeekdays9": "Weekdays at 9 AM",
+        "freqWeeklyMon": "Weekly on Monday",
+        "freqMonthly1st": "Monthly on the 1st",
+        "freqCustom": "Custom",
+        "actionTypeBlockLabel": "Run a block",
+        "actionTypeBlockDescription": "invoke a block on the canvas",
+        "actionTypeHttpLabel": "Send HTTP request",
+        "actionTypeHttpDescription": "hit an external URL",
+        "customValuePrefix": "Custom: {{value}} {{unit}}"
+      },
+      "log": {
+        "sectionTitle": "Logs",
+        "modePolling": "Polling",
+        "modePollingHint": "Refreshes every 2 seconds (recommended).",
+        "modeTail": "Tail",
+        "modeTailHint": "Sub-second streaming via gRPC.",
+        "sourceOverride": "Source override",
+        "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
+        "clearOverride": "Clear override",
+        "selectSource": "— Select a source —",
+        "pillLive": "Live",
+        "pillConnecting": "Connecting",
+        "pillPreDeploy": "Pre-deploy",
+        "pillNoSource": "No source",
+        "pillAmbiguous": "Ambiguous source",
+        "pillUnsupported": "Unsupported source",
+        "pillAccessDenied": "Access denied",
+        "pillError": "Error",
+        "pillIdle": "Idle"
+      },
+      "privateNetwork": {
+        "inboundTitle": "Inbound internet",
+        "outboundTitle": "Outbound internet",
+        "inboundHint": "Controls who on the public internet can reach services inside this network. Independent from the outbound policy below.",
+        "outboundHint": "Controls whether services inside this network can reach the public internet. Independent from the inbound policy above.",
+        "inboundAllLabel": "Allow all inbound (Open)",
+        "inboundAllHint": "Public reachable. Default.",
+        "inboundAllowlistLabel": "Allowlist specific sources (Restricted)",
+        "inboundAllowlistHint": "Only listed source ranges or IPs can reach in.",
+        "inboundNoneLabel": "Block all inbound (Sealed)",
+        "inboundNoneHint": "Internal only. Services inside talk east-west.",
+        "outboundAllLabel": "Allow all outbound",
+        "outboundAllHint": "Services can call any public URL. Default.",
+        "outboundAllowlistLabel": "Allowlist specific destinations",
+        "outboundAllowlistHint": "Only listed hostnames or IP ranges are reachable.",
+        "outboundNoneLabel": "Block all outbound",
+        "outboundNoneHint": "Air-gapped. No public internet access.",
+        "allowedSources": "Allowed sources",
+        "allowedDestinations": "Allowed destinations",
+        "noEntries": "No entries yet. Click + below to add one.",
+        "removeSource": "Remove source",
+        "removeDestination": "Remove destination",
+        "addSource": "+ Add source",
+        "addDestination": "+ Add destination",
+        "inboundEntryPlaceholder": "203.0.113.0/24 or 1.2.3.4",
+        "outboundEntryPlaceholder": "api.stripe.com or 10.0.0.0/8"
+      },
+      "customDomain": {
+        "rootDomainTitle": "Root domain",
+        "rootDomainPlaceholder": "example.com",
+        "rootDomainHint": "The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want to expose, then drag the matching dot on the canvas block to a publicly-facing service.",
+        "routesTitle": "Routes ({{count}})",
+        "routesEmpty": "No routes yet. Click + below to add a subdomain slot.",
+        "routeUnconnected": "unconnected — drag the dot to wire up",
+        "noDomain": "(no domain)",
+        "subdomainLabel": "subdomain",
+        "subdomainPlaceholder": "api (blank = root)",
+        "deleteRouteTitle": "Delete route",
+        "addRoute": "+ Add subdomain route",
+        "dnsRecordsTitle": "DNS records",
+        "dnsRecordsTitleCount": "DNS records ({{count}})",
+        "dnsRecordsEmpty": "After deploy, the DNS records you need to add at your registrar will appear here. Verify the domain at your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically provision a managed SSL certificate.",
+        "dnsHeaderType": "Type",
+        "dnsHeaderDomain": "Domain name",
+        "dnsHeaderValue": "Value",
+        "dnsAddBanner": "Add the records below at your DNS provider to verify the domain.",
+        "dnsRemoveBanner": "Remove the records below from your DNS provider — they conflict with the new configuration and block verification.",
+        "dnsCopyButton": "Copy",
+        "dnsCopyTitle": "Copy value to clipboard",
+        "dnsPropagationHint": "After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL certificate automatically."
+      },
+      "customDomainBanner": {
+        "fallbackLabel": "Custom Domain",
+        "managedBy": "Domain managed by",
+        "disconnectHint": "Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain manually."
+      },
+      "requirements": {
+        "header": "Requirements",
+        "blocking": "{{count}} blocking",
+        "warning": "{{count}} warning",
+        "warnings": "{{count}} warnings",
+        "note": "{{count}} note",
+        "notes": "{{count}} notes",
+        "pgNoServiceTitle": "No service connected",
+        "pgNoServiceHint": "Drag an edge from a Compute block (Container, BackendAPI, SSRSite, ServerlessFunction) to this database. Without one, the database deploys but nothing reads or writes to it.",
+        "pgEditionTitle": "Will deploy as {{edition}}, tier {{tier}}",
+        "pgEditionEnterpriseHint": "Edition is auto-picked because shared-core tiers (db-f1-micro, db-g1-small) only work on ENTERPRISE. Set the `edition` field in Config to override.",
+        "pgEditionEnterprisePlusHint": "Edition is auto-picked because the chosen tier is performance-optimized (ENTERPRISE_PLUS only). Set the `edition` field in Config to override.",
+        "pnEmptyTitle": "Private network is empty",
+        "pnEmptyHint": "Drag compute or database blocks inside this network to put them on a private VPC. An empty private network deploys a VPC but no resources use it.",
+        "pnOpenIngressTitle": "Inbound traffic is unrestricted",
+        "pnOpenIngressHint": "ingress = \"all\" — anything on the public internet can reach services inside (subject to per-block ingress rules). Set ingress to \"allowlist\" to limit source IPs, or \"none\" to seal the network entirely."
+      },
+      "deployment": {
+        "sectionLabel": "Deployment",
+        "regionLabel": "Region",
+        "regionAuto": "auto"
+      }
+    }
+  },
+  "deploy": {
+    "title": "Infrastructure Deploy",
+    "buttons": {
+      "plan": "Plan",
+      "deploy": "Deploy",
+      "reset": "Reset",
+      "retryDeploy": "Retry Deploy",
+      "enableApi": "Enable API in GCP Console",
+      "updateInfrastructure": "Update Infrastructure",
+      "destroy": "Destroy"
+    },
+    "status": {
+      "authenticating": "Authenticating",
+      "planning": "Planning",
+      "planned": "Plan Ready",
+      "deploying": "Deploying",
+      "success": "Deployed",
+      "error": "Error",
+      "cancelled": "Cancelled",
+      "connected": "{{provider}} connected",
+      "connectedViaOAuth": "via Google OAuth",
+      "connectedViaServiceAccount": "via Service Account",
+      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings"
+    },
+    "config": {
+      "gcpProjectLabel": "GCP Project",
+      "gcpProjectPlaceholder": "my-gcp-project",
+      "regionLabel": "Region",
+      "environmentLabel": "Environment",
+      "envDevelopment": "Development",
+      "envStaging": "Staging",
+      "envProduction": "Production",
+      "providerLabel": "Provider",
+      "selectProject": "Select project...",
+      "awsLabel": "AWS Account / Region",
+      "awsPlaceholder": "123456789012",
+      "azureLabel": "Azure Subscription",
+      "azurePlaceholder": "my-subscription-id",
+      "kubernetesLabel": "Cluster Name",
+      "kubernetesPlaceholder": "my-k8s-cluster"
+    },
+    "card": {
+      "label": "Card:",
+      "untitled": "Untitled",
+      "deployableResource": "deployable resource",
+      "deployableResources": "{{count}} deployable resource(s) ({{provider}})",
+      "skippedNonGcp": "skipped — non-GCP",
+      "skippedResources": "({{count}} skipped — non-{{provider}})",
+      "deployedResource": "deployed resource",
+      "deployedResources": "{{count}} deployed resource(s) (from prior deploy)"
+    },
+    "auth": {
+      "connecting": "Connecting to GCP...",
+      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
+    },
+    "plan": {
+      "noChanges": "No changes detected. Infrastructure is up to date.",
+      "changes": "Plan: {{total}} change(s)",
+      "skip": "skip",
+      "actionCreate": "create",
+      "actionUpdate": "update",
+      "actionDelete": "delete"
+    },
+    "progress": {
+      "deploying": "Deploying...",
+      "percent": "{{pct}}%",
+      "succeeded": "{{count}} succeeded",
+      "failed": "{{count}} failed",
+      "completedIn": "Deploy completed in {{seconds}}s"
+    },
+    "errors": {
+      "apiNotEnabledTitle": "Required GCP APIs are not enabled",
+      "apiNotEnabledHint": "Some Google Cloud APIs need to be enabled before deployment. Click the button below to open the GCP Console, enable the API, then click Retry.",
+      "opensConsole": "Opens GCP Console",
+      "enableApi": "Enable {{api}}",
+      "destroyConfirm": "Destroy all deployed resources? This cannot be undone.",
+      "destroyFailed": "Destroy failed",
+      "deploymentFailed": "Deployment failed",
+      "planningFailed": "Planning failed",
+      "authenticationFailed": "Authentication failed",
+      "billingTitle": "Billing not enabled",
+      "billingDescription": "Your GCP project requires a billing account to enable Cloud APIs (Cloud Run, Storage, etc.). ICE cannot deploy without billing enabled.",
+      "billingButton": "Link billing account in GCP Console",
+      "raptTitle": "Google Workspace re-authentication policy (RAPT)",
+      "raptDescription": "Your organisation enforces re-authentication for cloud operations. OAuth sign-in cannot be used for deployments.",
+      "raptFixTitle": "To fix, choose one:",
+      "raptOption1": "Use a Service Account Key",
+      "raptOption2": "Disable RAPT",
+      "autoEnableHint": "To auto-enable APIs during deployment, ensure your service account has the Service Usage Admin role."
+    },
+    "copy": {
+      "copy": "copy",
+      "copyProviderId": "Copy provider ID"
+    },
+    "slice": {
+      "connecting": "Connecting to GCP...",
+      "authSuccess": "GCP authentication successful.",
+      "authFailed": "Authentication failed: {{error}}",
+      "planning": "Planning deployment...",
+      "planReady": "Plan ready: {{creates}} create, {{updates}} update, {{deletes}} delete",
+      "deploying": "Deploying...",
+      "completed": "Deploy completed in {{seconds}}s",
+      "error": "Error: {{error}}"
+    }
+  },
+  "integrations": {
+    "dropdownTitle": "Integrations",
+    "connected": "Connected",
+    "disconnected": "Not connected",
+    "connecting": "Connecting...",
+    "error": "Error",
+    "github": {
+      "title": "GitHub",
+      "connectTitle": "Connect to GitHub",
+      "connectDescription": "Connect your GitHub account to browse repositories and branches.",
+      "connectedAs": "Connected as {{username}}",
+      "disconnectButton": "Disconnect",
+      "patTab": "Personal Access Token",
+      "patLabel": "GitHub Token",
+      "patPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "patHelp": "Generate a token at github.com/settings/tokens with repo scope.",
+      "patConnect": "Connect with Token",
+      "deviceFlowTab": "Sign in with Browser",
+      "deviceFlowButton": "Sign in with GitHub",
+      "deviceFlowInstructions": "A browser window will open. Enter this code to authorize:",
+      "deviceFlowWaiting": "Waiting for authorization...",
+      "deviceFlowCopy": "Copy Code",
+      "deviceFlowCopied": "Copied!",
+      "reposTitle": "Repositories",
+      "noRepos": "No repositories found",
+      "loadingRepos": "Loading repositories...",
+      "branches": "branches",
+      "private": "private"
+    },
+    "repoSelector": {
+      "placeholder": "Search repositories...",
+      "noRepos": "No repositories found",
+      "loading": "Loading repos...",
+      "notConnected": "Connect GitHub to link repos",
+      "linkRepo": "Link repo",
+      "clear": "Unlink",
+      "connectGitHub": "Connect GitHub"
+    },
+    "anthropic": {
+      "title": "Claude (Anthropic)",
+      "description": "Connect your Anthropic API key to enable the in-app AI assistant. The key is encrypted at rest and never leaves this machine.",
+      "connected": "Connected",
+      "connectedSubtitle": "AI panel and deploy diagnosis are enabled",
+      "disconnect": "Disconnect",
+      "apiKeyLabel": "API key",
+      "apiKeyPlaceholder": "sk-ant-...",
+      "apiKeyHelp": "Don't have one?",
+      "createKey": "Create a key on console.anthropic.com",
+      "connectButton": "Connect Claude",
+      "appBarTip": "Claude (Anthropic)",
+      "settingsLabel": "Claude (Anthropic)",
+      "settingsDescription": "Bring your own Anthropic API key to enable the in-app AI assistant"
+    },
+    "settings": {
+      "sectionTitle": "Integrations",
+      "sectionDescription": "Bring-your-own-key connections — GitHub for repo deploys, Claude for the AI assistant, plus your cloud provider credentials. All stored encrypted in the workspace database.",
+      "github": {
+        "label": "GitHub",
+        "description": "PAT or device flow — required for git-push pipelines"
+      },
+      "gcp": {
+        "label": "Google Cloud Platform",
+        "description": "Service account key or OAuth — primary deploy target"
+      },
+      "aws": {
+        "label": "Amazon Web Services",
+        "description": "Access keys — experimental"
+      },
+      "azure": {
+        "label": "Microsoft Azure",
+        "description": "Service principal — experimental"
+      }
+    }
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "panelTitle": "Pipeline: {{name}}",
+    "source": "Source",
+    "triggers": "Triggers",
+    "build": "Build",
+    "deployments": "Deployments",
+    "changeRepo": "Change",
+    "detected": "Detected: {{framework}}",
+    "detecting": "Detecting framework...",
+    "noRepo": "No repository linked",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "pushTo": "Push to",
+    "mergeTo": "Merge to",
+    "addTrigger": "+ Add trigger",
+    "noTriggers": "No triggers configured",
+    "installCommand": "Install",
+    "buildCommand": "Build",
+    "outputDir": "Output",
+    "autoDetected": "(auto-detected)",
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "building": "Building",
+      "deploying": "Deploying",
+      "success": "Live",
+      "failed": "Failed"
+    },
+    "noDeployments": "No deployments yet",
+    "viewLogs": "Logs",
+    "deployNow": "Deploy Now",
+    "enablePipeline": "Enable Pipeline",
+    "steps": {
+      "prepare": "Preparing",
+      "clone": "Cloning repository",
+      "install": "Installing dependencies",
+      "build": "Building application",
+      "deploy": "Deploying",
+      "configure": "Configuring"
+    },
+    "activeDeployment": "Active Deployment",
+    "settingUp": "Setting up pipeline...",
+    "push": "push",
+    "envProduction": "production",
+    "envStaging": "staging",
+    "envDevelopment": "development",
+    "noRepoHint": "Select a repository on the GitHub Repo block first, then connect it to this service.",
+    "noRepoShort": "No repository linked. Select a repo on the GitHub Repo block first.",
+    "missingContext": "Missing card or node context.",
+    "branchProtected": "(protected)",
+    "anyBranch": "* (any branch)",
+    "duration": "Duration:",
+    "createFailed": "Failed to create pipeline rule",
+    "manual": "manual",
+    "auto": "auto",
+    "noTriggersForEnv": "No triggers for this environment",
+    "liveBuild": "Live Build",
+    "timeoutSoon": "(timeout soon)",
+    "removeConnection": "Remove connection",
+    "removeTrigger": "Remove trigger",
+    "serviceDeploys": "Service Deploys",
+    "noLogs": "No logs recorded",
+    "recent": "Recent"
+  },
+  "onboarding": {
+    "nav": {
+      "stepTeam": "Team",
+      "stepCloud": "Cloud",
+      "stepGitHub": "GitHub",
+      "stepProject": "Project",
+      "skipSetup": "Skip setup",
+      "back": "Back",
+      "skip": "Skip",
+      "continue": "Continue",
+      "createAndStart": "Create & Start"
+    },
+    "team": {
+      "title": "Set up your team",
+      "subtitle": "Every project belongs to a team",
+      "createTeam": "Create a team",
+      "createTeamDesc": "Set up a new team workspace",
+      "joinTeam": "Join a team",
+      "joinTeamDesc": "You were invited by a team admin",
+      "teamNameLabel": "Team name",
+      "teamNamePlaceholder": "My Team",
+      "inviteCodeLabel": "Invite code",
+      "inviteCodePlaceholder": "Paste your invite code or link",
+      "inviteCodeHint": "Ask your team admin for an invite code or link."
+    },
+    "cloud": {
+      "title": "Connect your cloud",
+      "subtitle": "ICE deploys to your cloud account — we never store your data",
+      "providerLabel": "Default cloud provider",
+      "regionLabel": "Default region",
+      "regionAutoHint": "Auto-selected based on your location. You can change this per project.",
+      "credentialsHint": "Credentials (optional — connect now or later)",
+      "signInWithGoogle": "Sign in with Google",
+      "orServiceAccountKey": "or use a service account key",
+      "orSignInGoogle": "or sign in with Google",
+      "serviceAccountKeyLabel": "Service Account Key (JSON)",
+      "createServiceAccount": "Create service account",
+      "accessKeyIdLabel": "Access Key ID",
+      "secretAccessKeyLabel": "Secret Access Key",
+      "subscriptionIdLabel": "Subscription ID",
+      "tenantIdLabel": "Tenant ID",
+      "clientIdLabel": "Client ID",
+      "clientSecretLabel": "Client Secret",
+      "testAndConnect": "Test & Connect",
+      "connected": "Connected",
+      "connectionFailed": "Connection failed",
+      "securityNote": "Credentials are encrypted at rest and used only to manage your infrastructure."
+    },
+    "github": {
+      "title": "Connect GitHub",
+      "subtitle": "Link repositories to services on the canvas for CI/CD",
+      "connected": "Connected",
+      "tabDevice": "Sign in with Browser",
+      "tabPat": "Personal Access Token",
+      "signInButton": "Sign in with GitHub",
+      "deviceCodePrompt": "Enter this code in your browser to authorize:",
+      "copyCode": "Copy code",
+      "waitingAuth": "Waiting for authorization...",
+      "tokenLabel": "GitHub Token",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHint": "Generate a token at github.com/settings/tokens with repo scope.",
+      "connectWithToken": "Connect with Token",
+      "laterHint": "You can link repositories to services on the canvas later."
+    },
+    "project": {
+      "title": "What are you building?",
+      "subtitle": "Pick a starting point — you can always change it later",
+      "nameLabel": "Project name",
+      "namePlaceholder": "My Project",
+      "blankCanvas": "Blank Canvas",
+      "blankCanvasDesc": "Start from scratch with an empty project"
+    },
+    "checklist": {
+      "setup": "Setup:",
+      "title": "Setup checklist",
+      "dismissTitle": "Dismiss",
+      "createAccount": "Create account",
+      "chooseProvider": "Choose cloud provider",
+      "connectCloud": "Connect cloud credentials",
+      "connectGithub": "Connect GitHub",
+      "takeCanvasTour": "Take the canvas tour",
+      "openProjectForTour": "Open a project to start the tour."
+    }
+  },
+  "wizard": {
+    "title": "New Project",
+    "description": "Create a project with environments and optional template",
+    "stepProject": "Project",
+    "stepEnvironments": "Environments",
+    "stepTemplate": "Template",
+    "stepReview": "Review",
+    "backButton": "Back",
+    "nextButton": "Next",
+    "createButton": "Create Project",
+    "projectInfo": {
+      "nameTitle": "Project Name",
+      "nameHint": "Give your project a recognizable name",
+      "namePlaceholder": "My SaaS App",
+      "descriptionTitle": "Description",
+      "descriptionHint": "Optional — describe what this project is for",
+      "descriptionPlaceholder": "Production infrastructure for our customer-facing SaaS platform...",
+      "providerTitle": "Cloud Provider",
+      "providerHint": "Select your target cloud platform"
+    },
+    "environments": {
+      "title": "Environments",
+      "hint": "Select which environments to create. Each gets its own canvas tab.",
+      "production": "Production",
+      "staging": "Staging",
+      "development": "Development",
+      "prPreview": "PR Preview",
+      "securityBasic": "Basic",
+      "securityStandard": "Standard",
+      "securityStrict": "Strict",
+      "securityCompliance": "Compliance",
+      "setAllTo": "Set all to:"
+    },
+    "template": {
+      "title": "Choose a Template",
+      "hint": "Start from a pre-built template or a blank canvas",
+      "categoryAll": "All",
+      "searchPlaceholder": "Search templates...",
+      "blankCanvas": "Blank Canvas",
+      "blankCanvasDesc": "Start with an empty canvas and build your infrastructure from scratch.",
+      "blocks": "blocks"
+    },
+    "review": {
+      "title": "Review & Create",
+      "hint": "Confirm your project settings before creating",
+      "projectLabel": "Project",
+      "environmentsLabel": "Environments",
+      "templateLabel": "Template",
+      "blankCanvas": "Blank Canvas",
+      "blocks": "blocks",
+      "summaryWithTemplate": "with {{count}} blocks each",
+      "summaryBlank": "with blank canvases",
+      "summaryPrefix": "This will create",
+      "environment": "environment",
+      "environments": "environments"
+    }
+  },
+  "environments": {
+    "tabBar": {
+      "loading": "Loading environments...",
+      "addEnvironment": "Add environment",
+      "settings": "Settings",
+      "deployments": "Deployments",
+      "activity": "Activity",
+      "promoteToProduction": "Promote to Production",
+      "deployInfra": "Deploy Infra",
+      "contextDeploy": "Deploy",
+      "contextPromote": "Promote to production",
+      "contextRename": "Rename",
+      "contextDelete": "Delete environment",
+      "envNamePlaceholder": "Environment name"
+    },
+    "renameModal": {
+      "title": "Rename Environment",
+      "nameLabel": "Name",
+      "cancelButton": "Cancel",
+      "savingButton": "Saving...",
+      "saveButton": "Save",
+      "errorNameRequired": "Name is required",
+      "errorFallback": "Failed to rename environment"
+    },
+    "createModal": {
+      "title": "New Environment",
+      "description": "Clones the current production canvas as a starting point.",
+      "nameLabel": "Name",
+      "namePlaceholder": "staging",
+      "typeLabel": "Type",
+      "typeStaging": "Staging",
+      "typeDevelopment": "Development",
+      "typePrPreview": "PR Preview",
+      "regionLabel": "Region (optional)",
+      "regionPlaceholder": "Same as production",
+      "cancelButton": "Cancel",
+      "creatingButton": "Creating...",
+      "createButton": "Create Environment",
+      "errorNameRequired": "Name is required",
+      "errorFallback": "Failed to create environment"
+    },
+    "promote": {
+      "promote": "Promote",
+      "to": "to",
+      "identicalMessage": "Both environments are identical. Nothing to promote.",
+      "changesWillBeApplied": "will be applied to",
+      "change": "change",
+      "changes": "changes",
+      "inSync": "Environments are in sync",
+      "unchanged": "unchanged",
+      "node": "node",
+      "nodes": "nodes",
+      "cancelButton": "Cancel",
+      "promoteButton": "Promote to",
+      "tagAdded": "added",
+      "tagRemoved": "removed",
+      "tagChanged": "changed"
+    }
+  },
+  "account": {
+    "avatar": {
+      "ariaLabel": "User menu",
+      "defaultName": "User",
+      "settings": "Settings",
+      "team": "Team",
+      "logout": "Logout"
+    },
+    "invite": {
+      "title": "Invite a team member",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "colleague@company.com",
+      "roleLabel": "Role",
+      "roleAdminDesc": "Full access. Can manage users, billing, and all projects.",
+      "roleMemberDesc": "Can create and edit projects. Cannot manage users or billing.",
+      "roleViewerDesc": "Read-only access. Can view projects but not edit or deploy.",
+      "successMessage": "Invitation sent successfully!",
+      "errorFallback": "Failed to send invitation. Please try again.",
+      "cancelButton": "Cancel",
+      "sendingButton": "Sending...",
+      "sendButton": "Send invitation"
+    },
+    "team": {
+      "title": "Team",
+      "subtitle": "Manage members of",
+      "subtitleFallback": "your organisation",
+      "inviteButton": "Invite",
+      "columnMember": "Member",
+      "columnRole": "Role",
+      "columnJoined": "Joined",
+      "emptyState": "No team members yet.",
+      "youBadge": "(you)",
+      "removeTitle": "Remove",
+      "removeConfirm": "Remove this member from the team?",
+      "pendingInvitations": "Pending invitations",
+      "invitedAs": "Invited as",
+      "expires": "expires"
+    },
+    "settings": {
+      "title": "Settings",
+      "profileTitle": "Profile",
+      "profileSubtitle": "Update your personal information.",
+      "firstNameLabel": "First name",
+      "lastNameLabel": "Last name",
+      "emailLabel": "Email",
+      "emailDisabledHint": "Email cannot be changed.",
+      "profileSaved": "Profile updated successfully.",
+      "profileSaveFailed": "Failed to update profile. Please try again.",
+      "saveProfileButton": "Save profile",
+      "passwordTitle": "Password",
+      "passwordSubtitle": "Change your account password.",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm new password",
+      "passwordMinLength": "New password must be at least 8 characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordChanged": "Password changed successfully.",
+      "passwordChangeFailed": "Failed to change password. Check your current password.",
+      "changePasswordButton": "Change password"
+    },
+    "collaborators": {
+      "title": "Project members",
+      "memberCount": "member",
+      "addMember": "Add member",
+      "teamMemberLabel": "Team member",
+      "selectMember": "Select a member...",
+      "roleLabel": "Role",
+      "roleOwnerDesc": "Full control — settings, members, delete",
+      "roleEditorDesc": "Edit canvas, deploy, manage environments",
+      "roleViewerDesc": "View canvas and deployments — read only",
+      "cancelButton": "Cancel",
+      "addButton": "Add",
+      "youBadge": "(you)",
+      "removeTitle": "Remove from project"
+    },
+    "createTeam": {
+      "title": "Create a new organisation",
+      "nameLabel": "Organisation name",
+      "namePlaceholder": "e.g. Acme Corp",
+      "nameHint": "Between 2 and 50 characters. You can change this later.",
+      "errorFallback": "Failed to create organisation. Please try again.",
+      "cancelButton": "Cancel",
+      "creatingButton": "Creating...",
+      "createButton": "Create organisation"
+    }
+  },
+  "ai": {
+    "chat": {
+      "title": "AI Assistant",
+      "newChat": "New chat",
+      "historyTitle": "Chat history",
+      "closeTitle": "Close",
+      "deleteTitle": "Delete",
+      "noConversations": "No previous conversations",
+      "untitledConversation": "Untitled conversation",
+      "msgs": "msgs",
+      "emptyCanvasPrompt": "Describe what you want to build and I'll add it to your canvas.",
+      "existingCanvasPrompt": "What would you like to improve or add next?",
+      "notConfiguredTitle": "AI Assistant Not Configured",
+      "notConfiguredDesc": "The AI assistant requires an Anthropic API key to work.",
+      "notConfiguredStep1": "Get an API key at",
+      "notConfiguredStep2": "Add",
+      "notConfiguredStep2Suffix": "to your",
+      "notConfiguredStep3": "Restart the server",
+      "appliedChanges": "Applied",
+      "changes": "changes",
+      "more": "more",
+      "thinking": "Thinking...",
+      "undoLastAi": "Undo last AI change",
+      "inputPlaceholder": "Describe what you want to build...",
+      "disconnectedPlaceholder": "Connect Claude to chat",
+      "doneMessage": "Done.",
+      "noChangesMessage": "No changes to apply.",
+      "collapsedTitle": "AI Assistant",
+      "sendMessage": "Send message",
+      "inputHint": "Enter to send · Shift+Enter for new line",
+      "disconnectedBadge": "Not connected",
+      "disconnectedBadgeTooltip": "No AI provider configured — click to add your Anthropic API key",
+      "disconnectedTitle": "AI assistant not connected",
+      "disconnectedDesc": "Add your Anthropic API key to enable Claude. The key is encrypted and stored locally.",
+      "connectClaude": "Connect Claude"
+    },
+    "diagnosis": {
+      "diagnoseWithAi": "Diagnose with AI",
+      "connectToDiagnose": "Connect Claude to diagnose",
+      "connectToDiagnoseTooltip": "Add an Anthropic API key to enable AI deploy diagnosis"
+    }
+  },
+  "properties": {
+    "closeTitle": "Close properties",
+    "title": "Properties",
+    "noCard": "No Card",
+    "overview": {
+      "title": "Overview",
+      "nodes": "Nodes",
+      "connections": "Connections",
+      "estMonthlyCost": "Est. monthly cost",
+      "suggestions": "Suggestions",
+      "emptyHint": "Drop blocks from the palette to start building",
+      "selectHint": "Select a node or edge to view and edit its properties"
+    },
+    "groupColor": "Group Color",
+    "groupOpacity": "Transparency",
+    "tabs": {
+      "config": "Config",
+      "scaling": "Scaling",
+      "domain": "Domain",
+      "source": "Source & CI",
+      "connections": "Connections",
+      "deploy": "Deploy"
+    },
+    "config": {
+      "title": "Configuration",
+      "iacMapping": "IaC Mapping",
+      "iacResource": "IaC Resource",
+      "cost": "Cost",
+      "estimatedMonthly": "Estimated monthly"
+    },
+    "deploy": {
+      "current": "Current",
+      "live": "Live",
+      "urlLabel": "URL",
+      "imageLabel": "Image",
+      "resourceIdLabel": "Resource ID",
+      "regionLabel": "Region",
+      "instancesLabel": "Instances",
+      "history": "History"
+    },
+    "scaling": {
+      "active": "Active",
+      "running": "running",
+      "minInstances": "Min instances",
+      "maxInstances": "Max instances",
+      "scaleOn": "Scale on",
+      "threshold": "Threshold (%)"
+    },
+    "domain": {
+      "hostname": "Hostname",
+      "hostnamePlaceholder": "app.example.com",
+      "subdomain": "Subdomain",
+      "subdomainPlaceholder": "www",
+      "sslMode": "SSL Mode",
+      "dnsProvider": "DNS Provider",
+      "dnsProviderPlaceholder": "cloudflare, route53..."
+    },
+    "source": {
+      "title": "Source",
+      "noSourceConnected": "No source connected",
+      "noSourceHint": "Add a GitHub Repo block from the palette and connect it to this service to enable CI/CD.",
+      "managedBy": "Managed by",
+      "block": "block",
+      "repository": "Repository",
+      "branch": "Branch",
+      "branchProtected": "(protected)",
+      "build": "Build",
+      "buildCommand": "Build command",
+      "buildCommandPlaceholder": "npm run build",
+      "outputDirectory": "Output directory",
+      "outputDirPlaceholder": "dist"
+    },
+    "edge": {
+      "connectionHeader": "Connection",
+      "propertiesSection": "Properties",
+      "portLabel": "Port",
+      "customOption": "custom",
+      "deleteButton": "Delete Connection",
+      "warningDbFromFrontend": "Direct database access from frontend is a security risk",
+      "warningDbSuggestion": "Add a Backend service between them",
+      "warningQueueFromClient": "Clients should not publish to queues directly",
+      "warningQueueSuggestion": "Route through a Backend API"
+    },
+    "drift": {
+      "checking": "Checking drift...",
+      "inSync": "In sync",
+      "notInDeployment": "Not in latest deployment",
+      "drifted": "Drifted",
+      "change": "change",
+      "changes": "changes",
+      "checkButton": "Check for Drift",
+      "checkingButton": "Checking..."
+    },
+    "network": {
+      "title": "Network",
+      "port": "Port",
+      "domain": "Domain",
+      "inbound": "Inbound",
+      "outbound": "Outbound",
+      "connection": "connection",
+      "connections": "connections"
+    },
+    "about": "About",
+    "envVars": {
+      "title": "Variables",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "value",
+      "secretTitle": "Secret (hidden)",
+      "makeSecretTitle": "Make secret",
+      "addVariable": "+ Add variable"
+    },
+    "noServiceHint": "Connect this block to a service to configure deploy triggers.",
+    "addItem": "Add item",
+    "removeConnection": "Remove connection",
+    "noLogsRecorded": "No logs recorded"
+  },
+  "project": {
+    "settings": {
+      "title": "Project Settings",
+      "generalHeading": "General",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "providerHeading": "Cloud Provider",
+      "providerLockedDesc": "Provider and region are locked for this project. All environments use these settings.",
+      "providerUnlockedDesc": "All resources in this project will deploy to this provider & region.",
+      "providerLabel": "Provider",
+      "regionLabel": "Region / Zone",
+      "regionLocked": "locked",
+      "selectRegion": "Select a region...",
+      "selectPrompt": "Select a provider to see available regions.",
+      "saveSuccess": "Settings saved.",
+      "saveError": "Failed to save.",
+      "tabGeneral": "General",
+      "tabEnvironments": "Environments",
+      "tabDangerZone": "Danger Zone",
+      "saveButton": "Save Settings",
+      "collaboratorsHeading": "Collaborators",
+      "collaboratorsDesc": "Control who can view and edit this project",
+      "dangerHeading": "Danger Zone",
+      "deleteTitle": "Delete this project",
+      "deleteDescription": "This will permanently delete the project, all its environments, canvas cards, and deployment history. This action cannot be undone.",
+      "deleteConfirmLabel": "Type {{name}} to confirm",
+      "deleteButton": "Delete Project",
+      "deleteError": "Failed to delete project."
+    },
+    "activity": {
+      "title": "Activity",
+      "filterAll": "All",
+      "filterAi": "AI",
+      "filterInfra": "Infra",
+      "filterService": "Service",
+      "emptyTitle": "No activity yet",
+      "emptyDescription": "Actions like AI changes, deployments, and pipeline runs will appear here",
+      "aiCanvasChange": "AI Canvas Change",
+      "infrastructure": "Infrastructure {{status}}",
+      "serviceDeploy": "Service Deploy: {{name}}"
+    },
+    "deployments": {
+      "title": "Deployments",
+      "envLabel": "Environment:",
+      "tabInfrastructure": "Infrastructure",
+      "tabService": "Service (CI/CD)",
+      "infraEmptyTitle": "No infrastructure deployments yet",
+      "infraEmptyDesc": "Use the \"Deploy Infra\" button to plan and apply changes",
+      "rollback": "Rollback",
+      "rollbackTooltip": "Roll back to this deployment",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "rollingBack": "Rolling back...",
+      "priorDeploy": "{{count}} deployed resource(s) (from prior deploy)",
+      "serviceEmptyTitle": "No service deployments yet",
+      "serviceEmptyDesc": "Connect a GitHub repo to a service and push to trigger a deploy",
+      "byAuthor": "by {{author}}",
+      "noLogs": "No log steps recorded"
+    }
+  },
+  "projectBrowser": {
+    "title": "Projects",
+    "newProject": "New Project",
+    "emptyState": "No projects yet",
+    "createProject": "Create project",
+    "deleteConfirm": "Delete this item?",
+    "newFolderName": "New Folder",
+    "newProjectName": "New Project",
+    "contextNewProjectHere": "New project here",
+    "contextRename": "Rename",
+    "contextMoveTo": "Move to",
+    "contextMoveRoot": "Root",
+    "contextDelete": "Delete",
+    "subCanvas": "Architecture",
+    "subTable": "Table",
+    "subSettings": "Settings",
+    "subDeploy": "Deploy",
+    "subDeployments": "Deployments",
+    "subActivity": "Activity",
+    "subEnvironments": "Environments",
+    "moreOptions": "More options"
+  },
+  "templates": {
+    "triggerTitle": "Start from Template",
+    "menuLabel": "Templates",
+    "searchPlaceholder": "Search templates...",
+    "noResults": "No templates match",
+    "blocks": "blocks",
+    "categories": {
+      "quick-start": {
+        "label": "Quick Starts",
+        "description": "Minimal starters to get going fast"
+      },
+      "full-stack": {
+        "label": "Full Stack",
+        "description": "Complete application stacks"
+      },
+      "backend": {
+        "label": "Backend & API",
+        "description": "API services and microservices"
+      },
+      "serverless": {
+        "label": "Serverless",
+        "description": "Functions-first architectures"
+      },
+      "data-pipeline": {
+        "label": "Data Pipelines",
+        "description": "Event-driven and batch processing"
+      },
+      "ai-ml": {
+        "label": "AI & ML",
+        "description": "Machine learning and AI workloads"
+      },
+      "e-commerce": {
+        "label": "E-Commerce",
+        "description": "Online store and marketplace patterns"
+      },
+      "mobile": {
+        "label": "Mobile Backend",
+        "description": "Mobile app backend patterns"
+      },
+      "compliance": {
+        "label": "Compliance",
+        "description": "Security and regulatory focused"
+      },
+      "devops": {
+        "label": "DevOps",
+        "description": "CI/CD, monitoring, and platform tooling"
+      },
+      "healthcare": {
+        "label": "Healthcare",
+        "description": "HIPAA-compliant patient data and clinical systems"
+      },
+      "fintech": {
+        "label": "Fintech & Banking",
+        "description": "Payment processing, transactions, and compliance"
+      },
+      "media": {
+        "label": "Media & Streaming",
+        "description": "Video, audio, and content delivery platforms"
+      },
+      "saas": {
+        "label": "SaaS",
+        "description": "Multi-tenant software-as-a-service platforms"
+      },
+      "iot": {
+        "label": "IoT",
+        "description": "Device management and telemetry ingestion"
+      },
+      "gaming": {
+        "label": "Gaming",
+        "description": "Game servers, leaderboards, and real-time systems"
+      },
+      "logistics": {
+        "label": "Logistics & Supply Chain",
+        "description": "Fleet tracking, inventory, and warehouse management"
+      },
+      "education": {
+        "label": "Education",
+        "description": "Learning platforms, course management, and assessments"
+      }
+    },
+    "gallery": {
+      "title": "Templates",
+      "subtitle": "Pre-built architectures ready to deploy",
+      "allCategories": "All",
+      "featured": "Featured",
+      "blocks": "blocks",
+      "useTemplate": "Use Template",
+      "viewDetails": "View Details",
+      "backToList": "Back",
+      "costEstimate": "Estimated Cost",
+      "provider": "Provider",
+      "security": "Security",
+      "difficulty": "Difficulty",
+      "whatYouGet": "What You Get",
+      "connections": "connections",
+      "groups": "groups",
+      "tags": "Tags",
+      "description": "Description",
+      "emptyCategory": "No templates in this category yet",
+      "comingSoon": "Coming soon",
+      "official": "Official",
+      "verified": "Verified",
+      "community": "Community",
+      "difficultyStarter": "Starter",
+      "difficultyIntermediate": "Intermediate",
+      "difficultyAdvanced": "Advanced",
+      "difficultyExpert": "Expert",
+      "resourceBreakdown": "Resources",
+      "environmentPresets": "Environments",
+      "addToCanvas": "Add to Canvas",
+      "addedToCanvas": "Added to Canvas",
+      "addToCanvasHint": "Adds to your current design — won't replace existing blocks",
+      "viewRepository": "View Repository",
+      "providers": "Providers",
+      "compliance": "Compliance",
+      "techStack": "Tech Stack",
+      "clearFilters": "Clear filters",
+      "clearAllFilters": "Clear all filters",
+      "noMatchSearch": "No templates match \"{{search}}\"",
+      "noMatchFilters": "No templates match the current filters",
+      "monthEst": "/month est.",
+      "templateCount": "{{count}} templates",
+      "providerFilter": "Provider",
+      "difficultyFilter": "Difficulty"
+    },
+    "items": {
+      "qs-website-db": {
+        "name": "Website + Database",
+        "description": "Server-rendered app with a managed database"
+      },
+      "qs-webapp-api": {
+        "name": "Web App + API",
+        "description": "Static frontend with a backend API and database"
+      },
+      "qs-api-only": {
+        "name": "API Only",
+        "description": "Backend API with database — no frontend"
+      },
+      "qs-data-pipeline": {
+        "name": "Data Pipeline",
+        "description": "Queue-driven processing with storage"
+      },
+      "qs-static-site": {
+        "name": "Static Site",
+        "description": "CDN-backed static site — the simplest deploy"
+      },
+      "qs-function": {
+        "name": "Serverless Function",
+        "description": "Single serverless function behind an API gateway"
+      },
+      "aiml-workbench": {
+        "name": "AI/ML Workbench",
+        "description": "ML workbench with inference API, training worker, model & training data storage, Redis feature cache, pipeline queue, and monitoring."
+      },
+      "backend-rest-api": {
+        "name": "REST API",
+        "description": "Production backend API with gateway, service, PostgreSQL, Redis cache, and logging. API-first — no frontend."
+      },
+      "backend-microservices": {
+        "name": "Microservices",
+        "description": "Three independent services behind a gateway, each with own database, shared message queue, and monitoring."
+      },
+      "budget-webapp": {
+        "name": "Budget Web App",
+        "description": "Cost-optimized full-stack with CDN frontend, serverless functions (scale to zero), lightweight database, and storage. Pay only for what you use."
+      },
+      "data-etl-pipeline": {
+        "name": "ETL Pipeline",
+        "description": "Batch ETL pipeline with staging, transformation workers, data warehouse, and VPC network isolation."
+      },
+      "data-event-streaming": {
+        "name": "Event Streaming",
+        "description": "Real-time event streaming with stream processing, analytics dashboard, and VPC network isolation."
+      },
+      "devops-monitoring": {
+        "name": "Monitoring Stack",
+        "description": "Metrics collection with alerting pipeline, observability dashboard, and VPC network isolation."
+      },
+      "devops-cicd": {
+        "name": "CI/CD Platform",
+        "description": "Build pipelines with artifact storage, dashboards, deployment logs, and VPC network isolation."
+      },
+      "ecommerce-store": {
+        "name": "Online Store",
+        "description": "Full e-commerce stack with product catalog, cart, checkout, search, WAF protection, and VPC network isolation."
+      },
+      "ecommerce-marketplace": {
+        "name": "Marketplace",
+        "description": "Multi-vendor marketplace with buyer and seller APIs, search, WAF, and VPC isolation."
+      },
+      "education-lms": {
+        "name": "Learning Management System",
+        "description": "Course delivery platform with student portal, content search, notifications, and VPC network isolation."
+      },
+      "education-exam-platform": {
+        "name": "Exam Platform",
+        "description": "Online assessment platform with question banks, automated grading, proctoring, and VPC network isolation."
+      },
+      "eu-compliance": {
+        "name": "EU Compliance Stack",
+        "description": "GDPR-compliant infrastructure with gateway, encrypted database & storage, Redis sessions, secrets, auth, and audit logging. EU-region pinned."
+      },
+      "fintech-payment-gateway": {
+        "name": "Payment Processing",
+        "description": "PCI-DSS compliant payment gateway with fraud detection, WAF, VPC network isolation, encrypted database, and audit trails."
+      },
+      "fintech-trading-platform": {
+        "name": "Trading Platform",
+        "description": "Real-time market data feed, order execution, analytics dashboard with WAF, VPC isolation, and audit logging."
+      },
+      "fullstack-webapp": {
+        "name": "Full-Stack Web App",
+        "description": "Production-ready full-stack with CDN frontend, WAF, API gateway in public subnet, backend service + PostgreSQL + Redis in private subnet."
+      },
+      "gaming-multiplayer": {
+        "name": "Multiplayer Game Server",
+        "description": "Real-time game server with matchmaking, leaderboards, session management, WAF, and VPC network isolation."
+      },
+      "gaming-mobile-backend": {
+        "name": "Mobile Game Backend",
+        "description": "Mobile game backend with player profiles, leaderboards, push notifications, and VPC network isolation."
+      },
+      "healthcare-patient-portal": {
+        "name": "Patient Portal",
+        "description": "HIPAA-compliant patient records, scheduling, and document management with network isolation, WAF, and audit logging."
+      },
+      "healthcare-telemedicine": {
+        "name": "Telemedicine Platform",
+        "description": "Real-time video consultations with session recording, patient management, WAF protection, and HIPAA-compliant network isolation."
+      },
+      "iot-device-management": {
+        "name": "IoT Device Management",
+        "description": "Fleet-scale device registry with telemetry ingestion, dashboards, WAF, and VPC network isolation."
+      },
+      "iot-smart-home": {
+        "name": "Smart Home Platform",
+        "description": "Home automation with device control, state caching, scheduled routines, and VPC network isolation."
+      },
+      "logistics-fleet-tracking": {
+        "name": "Fleet Tracking",
+        "description": "GPS-based fleet management with real-time dashboards, route optimization, and VPC network isolation."
+      },
+      "logistics-warehouse": {
+        "name": "Warehouse Management",
+        "description": "Inventory tracking with barcode scanning, order queues, fulfillment, and VPC network isolation."
+      },
+      "media-streaming": {
+        "name": "Video Streaming Platform",
+        "description": "CDN-backed video delivery with transcoding pipeline, search, WAF protection, and VPC network isolation."
+      },
+      "media-podcast": {
+        "name": "Podcast Platform",
+        "description": "Audio hosting platform with RSS feeds, episode search, and VPC network isolation."
+      },
+      "mobile-app-backend": {
+        "name": "Mobile App Backend",
+        "description": "Mobile API with push notifications, media storage, authentication, WAF, and VPC network isolation."
+      },
+      "mobile-social-app": {
+        "name": "Social App Backend",
+        "description": "Social app with activity feeds, media sharing, search, notifications, WAF, and VPC network isolation."
+      },
+      "rag-chatbot": {
+        "name": "RAG Chatbot",
+        "description": "Full-stack RAG chatbot with chat UI, retrieval API, LLM gateway, vector database, document ingestion pipeline, and conversation history."
+      },
+      "saas-multi-tenant": {
+        "name": "Multi-Tenant SaaS",
+        "description": "Full SaaS platform with tenant isolation, background jobs, auth, WAF protection, and VPC network isolation."
+      },
+      "saas-analytics-dashboard": {
+        "name": "Analytics Dashboard",
+        "description": "Metrics collection, data warehousing, real-time dashboard with WAF and VPC isolation."
+      },
+      "saas-platform": {
+        "name": "SaaS Platform",
+        "description": "Multi-service SaaS with SSR frontend, gateway, microservices, PostgreSQL, Redis cache, worker queue, and observability."
+      },
+      "secure-api": {
+        "name": "Secure API",
+        "description": "Security-first API with WAF, VPC network isolation, encrypted database, secrets management, TLS encryption, identity provider, and audit logging."
+      },
+      "serverless-api": {
+        "name": "Serverless API",
+        "description": "Functions-first API with gateway, serverless functions, managed database, and storage. Pay only for what you use."
+      },
+      "serverless-event-driven": {
+        "name": "Event-Driven Functions",
+        "description": "Pub/sub fan-out pattern: events trigger multiple subscriber functions for parallel processing with dead-letter queue."
+      }
+    }
+  },
+  "palette": {
+    "title": "Blocks",
+    "searchPlaceholder": "Search blocks...",
+    "providerAll": "All",
+    "group": "Group",
+    "noBlocksFound": "No blocks found",
+    "noBlocksHint": "Try a different search or provider"
+  },
+  "projectList": {
+    "header": "Projects",
+    "openAll": "Open all {{count}} projects",
+    "addFolder": "Add Folder",
+    "refresh": "Refresh",
+    "selectDirectory": "Select Directory",
+    "searchPlaceholder": "Search projects...",
+    "emptySelectDirectory": "Select a directory to browse your projects",
+    "loadExamples": "Load Examples",
+    "emptyNoFiles": "No .ice or .json files found in this directory",
+    "projectCount": "{{count}} project(s)",
+    "folderCount": "{{count}} folder(s)",
+    "defaultFolderName": "New Folder"
+  },
+  "projectTree": {
+    "newProject": "New Project",
+    "newFolder": "New Folder",
+    "emptyNoProjects": "No projects yet",
+    "emptyHint": "Click \"New Project\" to get started",
+    "defaultFolderName": "New Folder",
+    "contextRename": "Rename",
+    "contextMoveToTopLevel": "Move to Top Level",
+    "contextNewSubfolder": "New Subfolder",
+    "contextDelete": "Delete"
+  },
+  "statusBar": {
+    "valid": "Valid",
+    "version": "ICE v0.1.0",
+    "connecting": "Connecting to GCP...",
+    "planning": "Planning...",
+    "deployed": "Deployed",
+    "deployFailed": "Deploy failed",
+    "planReady": "Plan ready",
+    "deploying": "Deploying {{pct}}%",
+    "nodeCount": "{{count}} node(s)",
+    "edgeCount": "{{count}} edge(s)",
+    "costEstimate": "~${{amount}}/mo est.",
+    "selected": "{{count}} selected",
+    "selectedEdges": "{{count}} edge(s)",
+    "errorCount": "{{count}} error(s)",
+    "node": "node",
+    "nodes": "nodes",
+    "edge": "edge",
+    "edges": "edges",
+    "moEst": "/mo est.",
+    "selectedCount": "{{count}} selected",
+    "error": "error",
+    "errors": "errors",
+    "warning": "warning",
+    "warnings": "warnings",
+    "ram": "RAM",
+    "cpu": "CPU"
+  },
+  "appBar": {
+    "autoOrganize": "Auto-organize",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Shift+Z)",
+    "deploy": "Deploy",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "decreaseFont": "Decrease font size",
+    "increaseFont": "Increase font size",
+    "fontDecrease": "A-",
+    "fontIncrease": "A+",
+    "provider": {
+      "gcp": {
+        "name": "Google Cloud Platform",
+        "description": "Connect your GCP project using a service account key. ICE deploys to your cloud — not ours.",
+        "fieldLabel": "Service Account Key (JSON)",
+        "helpLink": "Create service account"
+      },
+      "aws": {
+        "name": "Amazon Web Services",
+        "description": "Connect your AWS account using access keys.",
+        "accessKeyLabel": "Access Key ID",
+        "secretKeyLabel": "Secret Access Key",
+        "regionLabel": "Default Region"
+      },
+      "azure": {
+        "name": "Microsoft Azure",
+        "description": "Connect your Azure subscription using a service principal.",
+        "subscriptionLabel": "Subscription ID",
+        "tenantLabel": "Tenant ID",
+        "clientIdLabel": "Client ID",
+        "clientSecretLabel": "Client Secret"
+      }
+    },
+    "help": {
+      "tooltip": "Help",
+      "showMeAround": "Show me around"
+    }
+  },
+  "providerSettings": {
+    "title": "Cloud Providers",
+    "description": "Connect to your cloud providers to import existing infrastructure directly.",
+    "status": {
+      "connected": "Connected",
+      "notConnected": "Not connected"
+    },
+    "connect": {
+      "signInGoogle": "Sign in with Google",
+      "orServiceAccount": "or use a service account key",
+      "connecting": "Connecting...",
+      "button": "Connect",
+      "buttonGcp": "Connect with Service Account",
+      "select": "Select...",
+      "connectedTo": "Connected to {{name}}",
+      "disconnectedSuccess": "Disconnected successfully",
+      "connectedToCloud": "Connected to Google Cloud",
+      "connectionFailed": "Connection failed",
+      "failedToAdd": "Failed to add project",
+      "serviceAccountRequired": "Service account key is required"
+    },
+    "projects": {
+      "label": "Projects ({{count}})",
+      "addProject": "Add Project",
+      "disconnectAll": "Disconnect All",
+      "addAnother": "Add another GCP project",
+      "addButton": "Add",
+      "cancelButton": "Cancel",
+      "noProjects": "No projects found",
+      "addedSuccess": "Project added successfully",
+      "removed": "Project removed"
+    },
+    "import": {
+      "button": "Import",
+      "importing": "Importing...",
+      "success": "Imported {{count}} resources from {{projectId}}",
+      "removeTooltip": "Remove project"
+    },
+    "info": {
+      "credentialsSafe": "Your credentials stay in your account",
+      "credentialsSafeDesc": "ICE deploys to your own cloud projects, not ours.",
+      "gcpTip": "GCP: Use Sign in with Google for quick setup, or paste a service account key for CI/production use."
+    },
+    "footer": {
+      "close": "Close"
+    }
+  },
+  "providerConnect": {
+    "status": {
+      "project": "Project: {{projectId}}",
+      "connected": "Connected"
+    },
+    "connectButton": "Connect {{providerName}}",
+    "disconnectButton": "Disconnect",
+    "success": {
+      "connected": "Connected to {{providerName}}",
+      "connectedViaGoogle": "Connected to {{providerName}} via Google"
+    },
+    "error": {
+      "connectionFailed": "Connection failed",
+      "disconnectFailed": "Disconnect failed",
+      "fieldRequired": "{{label}} is required"
+    },
+    "gcp": {
+      "guide": {
+        "title": "How to create a service account key",
+        "step1Title": "Step 1 — Create a service account",
+        "step1_1": "Open GCP Console -> IAM -> Service Accounts -> Create",
+        "step1_2": "Name it (e.g. ice-deployer), click Create and Continue",
+        "step1_3": "Grant two roles (click \"+ Add Another Role\" for the second):",
+        "step1_3_role1": "Owner — for creating and managing resources",
+        "step1_3_role2": "Service Usage Admin — required for ICE to auto-enable GCP APIs (Cloud Run, Storage, etc.) during deployment.",
+        "step1_4": "Skip \"Grant users access\" (step 3) — click Done",
+        "step2Title": "Step 2 — Download the JSON key",
+        "step2_1": "Click the newly created service account",
+        "step2_2": "Go to the Keys tab",
+        "step2_3": "Click Add Key -> Create new key -> JSON",
+        "step2_4": "Download the file and paste its contents into the field above"
+      },
+      "troubleshooting": {
+        "title": "Troubleshooting",
+        "cantCreateKeys": "Can't create keys?",
+        "oauthNotWorking": "OAuth not working for deployments?"
+      },
+      "quickConnect": {
+        "divider": "or quick connect (personal accounts)",
+        "button": "Sign in with Google"
+      }
+    }
+  },
+  "invite": {
+    "loading": "Accepting invitation...",
+    "success": {
+      "title": "You're in!",
+      "description": "You've been added to {{orgName}}.",
+      "button": "Go to dashboard"
+    },
+    "error": {
+      "title": "Invitation failed",
+      "fallbackOrg": "the team",
+      "defaultMessage": "Failed to accept invitation",
+      "button": "Go to dashboard"
+    }
+  },
+  "folder": {
+    "defaultProjectName": "New Project",
+    "defaultFolderName": "New Folder",
+    "newProject": "New Project",
+    "newFolder": "New Folder",
+    "emptyFolder": "This folder is empty",
+    "noProjects": "No projects yet",
+    "getStarted": "Create a project or folder to get started",
+    "typeFolder": "Folder",
+    "cards": "{{count}} cards"
+  },
+  "app": {
+    "notFound": {
+      "code": "404",
+      "message": "This page doesn't exist",
+      "button": "Go home"
+    },
+    "folderView": {
+      "rootName": "Projects"
+    }
+  },
+  "layout": {
+    "sidebar": {
+      "project": "Project",
+      "blocks": "Blocks",
+      "properties": "Properties",
+      "cost": "Cost",
+      "aiChat": "AI Chat",
+      "templates": "Templates"
+    }
+  },
+  "cost": {
+    "title": "Cost Estimation",
+    "empty": "Add resources to your canvas to see cost estimates. Drag blocks from the left sidebar to get started.",
+    "categoryBreakdown": "Cost Breakdown",
+    "timeProjections": "Time Projections",
+    "annualRange": "Annual range (with scaling)",
+    "scalingRange": "Scaling Cost Range",
+    "envComparison": "Environment Comparison",
+    "dataTransfer": "Data Transfer",
+    "trafficTier": "Traffic tier",
+    "providerComparison": "Provider Comparison",
+    "costPerRequest": "Cost Per Request",
+    "budget": "Budget Target",
+    "suggestions": "Optimization Tips",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "annual": "Annual",
+    "minAtBase": "Min (all at base)",
+    "maxScaledUp": "Max (all scaled up)",
+    "dev": "Dev",
+    "veryHigh": "Very High",
+    "minInstances": "Min instances",
+    "maxInstances": "Max instances",
+    "estEgress": "Est. egress"
+  },
+  "error": {
+    "crashed": "{{name}} crashed",
+    "somethingWrong": "Something went wrong",
+    "unexpected": "An unexpected error occurred",
+    "tryAgain": "Try again"
+  },
+  "debug": {
+    "title": "ICE Debug",
+    "nodes": "Nodes",
+    "edges": "Edges",
+    "activeCard": "Active Card",
+    "selectedNodes": "Selected Nodes",
+    "selectedEdges": "Selected Edges",
+    "lastAction": "Last Action",
+    "actionTime": "Action Time",
+    "render": "Render",
+    "nodesHeader": "NODES ({{count}})",
+    "none": "none",
+    "groups": "groups",
+    "blocks": "blocks",
+    "resources": "resources"
+  },
+  "combobox": {
+    "defaultPlaceholder": "Search...",
+    "defaultEmptyText": "No results",
+    "loading": "Loading..."
+  },
+  "validation": {
+    "title": "Validation",
+    "noIssues": "No issues found",
+    "errors": "Errors",
+    "warnings": "Warnings",
+    "info": "Info",
+    "issues": "Validation Issues"
+  },
+  "table": {
+    "name": "Name",
+    "type": "Type",
+    "category": "Category",
+    "provider": "Provider",
+    "behavior": "Behavior",
+    "noResources": "No resources yet",
+    "noResourcesHint": "Drag blocks from the sidebar to add resources",
+    "search": {
+      "placeholder": "Search name, id, type, region…"
+    },
+    "filter": {
+      "clear": "Clear"
+    },
+    "groupBy": {
+      "label": "Group by",
+      "none": "None",
+      "status": "Status",
+      "provider": "Provider",
+      "family": "Family",
+      "group": "Group"
+    },
+    "density": {
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "provider": "Provider",
+      "status": "Status",
+      "endpoints": "Endpoints",
+      "id": "ID",
+      "region": "Region",
+      "settings": "Settings",
+      "updated": "Updated"
+    },
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "building": "Building",
+      "deploying": "Deploying",
+      "live": "Live",
+      "failed": "Failed",
+      "drifted": "Drifted"
+    },
+    "endpoints": {
+      "live": "Live URL",
+      "domain": "Custom domain",
+      "repo": "Source repository",
+      "image": "Container image",
+      "console": "Provider console",
+      "copy": "Copy URL",
+      "copied": "Copied"
+    },
+    "actions": {
+      "menu": "More actions",
+      "openProperties": "Open properties",
+      "revealOnCanvas": "Reveal on canvas",
+      "copyId": "Copy ID",
+      "copyName": "Copy name",
+      "openInBrowser": "Open in browser",
+      "openInGithub": "Open in GitHub",
+      "openInConsole": "Open in provider console",
+      "delete": "Delete"
+    },
+    "expand": {
+      "show": "Show details",
+      "hide": "Hide details",
+      "noSettings": "No settings to show"
+    },
+    "group": {
+      "noProvider": "No provider",
+      "other": "Other",
+      "root": "Top level"
+    },
+    "empty": {
+      "noResults": "No matches",
+      "noResultsHint": "Try clearing filters or searching differently"
+    },
+    "footer": {
+      "total": "{{count}} resources",
+      "filtered": "{{shown}} of {{total}} resources",
+      "selected": "{{count}} selected"
+    }
+  },
+  "appSettings": {
+    "title": "Settings",
+    "tabs": {
+      "ai": "AI",
+      "appearance": "Appearance",
+      "language": "Language",
+      "reset": "Reset"
+    },
+    "ai": {
+      "providerTitle": "AI Provider",
+      "providerDescription": "Configure your AI provider for architecture assistance.",
+      "connected": "AI provider connected",
+      "notConfigured": "No AI provider configured",
+      "anthropicKeyLabel": "Anthropic API Key",
+      "anthropicKeyHint": "Get your key from",
+      "customEndpointLabel": "Custom AI Endpoint (optional)",
+      "customEndpointHint": "Any OpenAI-compatible endpoint. Leave empty to use Anthropic directly.",
+      "saved": "AI configuration saved.",
+      "saveFailed": "Failed to save AI configuration."
+    },
+    "appearance": {
+      "themeTitle": "Theme Mode",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "colorTitle": "Color Theme",
+      "colorDescription": "Choose a color palette for the interface.",
+      "openThemePicker": "Open Theme Picker",
+      "fontSizeTitle": "Font Size",
+      "small": "Small",
+      "default": "Default",
+      "large": "Large"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select your preferred language."
+    },
+    "reset": {
+      "title": "Reset workspace",
+      "description": "Permanently wipes ALL of your local workspace data. This cannot be undone.",
+      "wipesProjects": "All projects, canvases, and environments",
+      "wipesCredentials": "Encrypted cloud-provider credentials (GCP, AWS, Azure, …)",
+      "wipesGithub": "GitHub access tokens and webhook deliveries",
+      "wipesAi": "AI conversation history and audit log",
+      "wipesTour": "Completed-tour history (the canvas tour will replay)",
+      "confirmLabel": "Type RESET to confirm",
+      "resetButton": "Reset workspace",
+      "resetting": "Resetting…"
+    }
+  },
+  "blocks": {
+    "categories": {
+      "compute": {
+        "label": "Compute",
+        "tooltip": "Application servers, background workers, serverless functions, and PaaS platforms that run your code."
+      },
+      "scheduler": {
+        "label": "Scheduler",
+        "tooltip": "Time-based triggers — cron jobs, periodic tasks, and scheduled workflows."
+      },
+      "frontend": {
+        "label": "Frontend",
+        "tooltip": "Web frontends — static sites and server-rendered apps served to browsers."
+      },
+      "network": {
+        "label": "Network",
+        "tooltip": "Traffic entry points and API gateways that route requests to your services."
+      },
+      "database": {
+        "label": "Database",
+        "tooltip": "Managed databases — relational, document, key-value, and wide-column stores across all providers."
+      },
+      "cache": {
+        "label": "Cache",
+        "tooltip": "In-memory data stores for fast reads, sessions, and real-time leaderboards."
+      },
+      "messaging": {
+        "label": "Messaging",
+        "tooltip": "Queues, pub/sub topics, and event streams for async communication between services."
+      },
+      "storage": {
+        "label": "Storage",
+        "tooltip": "Object storage for files, images, uploads, backups, and static assets. S3, GCS, Blob, OSS, OCI, Spaces."
+      },
+      "security": {
+        "label": "Security",
+        "tooltip": "Authentication, authorization, and secrets management for your infrastructure."
+      },
+      "ai": {
+        "label": "AI",
+        "tooltip": "AI/ML infrastructure — LLM gateways, vector databases, and model serving."
+      },
+      "analytics": {
+        "label": "Analytics",
+        "tooltip": "Data warehouses and search engines for analytics, reporting, and full-text search."
+      },
+      "monitoring": {
+        "label": "Monitoring",
+        "tooltip": "Logging, alerting, and performance monitoring across all your services."
+      },
+      "source": {
+        "label": "Source",
+        "tooltip": "Source code repositories and CI/CD pipelines. Connect to services to deploy from."
+      },
+      "config": {
+        "label": "Config",
+        "tooltip": "Environment variables and configuration. Connect to services that consume them."
+      }
+    },
+    "computeContainer": {
+      "name": "Scalable Backend",
+      "description": "Containerized service. Auto-scales.",
+      "tooltip": "Auto-scaling containerized service supporting any runtime — Node.js, Python, Go, Java, .NET, Rust. Runs behind a load balancer with health checks, rolling deploys, and configurable min/max instances."
+    },
+    "computeWorker": {
+      "name": "Worker",
+      "description": "Background jobs: image processing, emails.",
+      "tooltip": "Long-running background process that picks up jobs from a queue. Use for image/video processing, email sending, PDF generation, data imports, or any work that shouldn't block an API response."
+    },
+    "computeServerlessFunction": {
+      "name": "Serverless Function",
+      "description": "Event-driven. Scales to zero.",
+      "tooltip": "Serverless function (Lambda, Cloud Functions, Azure Functions) that runs your code in response to events. No servers to manage — scales automatically from zero to thousands of concurrent executions. Pay only for compute time used."
+    },
+    "computeFunctionCompute": {
+      "name": "Function Compute",
+      "description": "Alibaba Cloud serverless functions. Event-driven.",
+      "tooltip": "Alibaba Cloud Function Compute — serverless execution environment for event-driven code. Supports Node.js, Python, Java, and Go. Auto-scales from zero with pay-per-execution pricing."
+    },
+    "computeOCIFunctions": {
+      "name": "OCI Functions",
+      "description": "Oracle Cloud serverless. Fn-based.",
+      "tooltip": "Oracle Cloud Functions — serverless platform built on the open-source Fn Project. Supports multiple languages, runs in Docker containers, and integrates with OCI Events and API Gateway."
+    },
+    "computeDOAppPlatform": {
+      "name": "App Platform",
+      "description": "DigitalOcean PaaS. Git push to deploy.",
+      "tooltip": "DigitalOcean App Platform — fully managed PaaS. Connect your GitHub repo and deploy with git push. Supports static sites, web services, workers, and background jobs with automatic HTTPS."
+    },
+    "computeCronJob": {
+      "name": "Cron Job",
+      "description": "Runs on a schedule. Reports, cleanup, syncs.",
+      "tooltip": "Runs on a cron schedule. Use for nightly reports, database cleanup, cache warming, billing cycles, or periodic data syncs. Runs once and exits — not a long-lived process."
+    },
+    "computeStaticSite": {
+      "name": "Static Site",
+      "description": "React/Vue app. CDN included.",
+      "tooltip": "Pre-built HTML/CSS/JS served from a CDN. Ideal for React, Vue, or Angular SPAs. Blazing fast globally — files are cached at edge locations. No server needed."
+    },
+    "computeSSRSite": {
+      "name": "SSR Site",
+      "description": "Server-rendered (Next.js, Nuxt). CDN included.",
+      "tooltip": "Server-side rendered app (Next.js, Nuxt, Remix). Pages render on the server for fast first paint and SEO. Supports API routes, middleware, and dynamic content. CDN caches static assets."
+    },
+    "networkVPC": {
+      "name": "VPC",
+      "description": "Virtual Private Cloud. Isolated network.",
+      "tooltip": "Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC."
+    },
+    "networkSubnet": {
+      "name": "Subnet",
+      "description": "Network subdivision inside a VPC.",
+      "tooltip": "A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers."
+    },
+    "networkPublicEndpoint": {
+      "name": "Public Endpoint",
+      "description": "Public HTTPS entry point with managed SSL.",
+      "tooltip": "Single block that exposes your services to the internet. Set a domain (example.com) and toggle HTTPS to auto-provision a managed SSL certificate. Connect to one or more services and set a Subdomain on each edge to route api.example.com → API service, app.example.com → static site, etc. Replaces the old separate Internet + Custom Domain blocks."
+    },
+    "networkCustomDomain": {
+      "name": "Custom Domain",
+      "description": "Route a domain to publicly-facing services.",
+      "tooltip": "Wires a root domain to one or more publicly-facing services that already have their own public URL (Firebase Hosting, Cloud Run with --allow-unauthenticated, AWS Amplify). Set a domain (example.com) and connect to one or more targets with a Subdomain on each edge — blank = root, api = api.example.com, etc. Can also be dropped INSIDE a Private Network block to act as its public ingress gateway."
+    },
+    "networkPrivateNetwork": {
+      "name": "Private Network",
+      "description": "A walled VPC. Drop services inside to keep them private.",
+      "tooltip": "A container block that puts everything inside it on a private VPC. Drop compute blocks inside to isolate them from the public internet. Toggle Open to auto-spawn a Custom Domain child that acts as the public gateway (the Custom Domain's route ports wire to sibling services inside the network). Toggle Sealed for an internal-only network. Outbound internet access (Allow all / Allowlist / Block all) is configured in the properties panel."
+    },
+    "networkGateway": {
+      "name": "Gateway",
+      "description": "Routes traffic, auth + rate limiting.",
+      "tooltip": "API Gateway that sits between the internet and your backend services. Handles request routing, authentication, rate limiting, CORS, and request/response transformation. Includes WAF and TLS termination."
+    },
+    "databasePostgreSQL": {
+      "name": "PostgreSQL",
+      "description": "Relational. ACID-compliant.",
+      "tooltip": "Managed PostgreSQL database with automatic backups, replication, and failover. Best for structured data with complex queries, joins, and transactions. Supports JSON, full-text search, and extensions like PostGIS."
+    },
+    "databaseMySQL": {
+      "name": "MySQL",
+      "description": "Relational. Web-scale classic.",
+      "tooltip": "Managed MySQL database — the most widely deployed open-source relational database. Optimized for read-heavy workloads, web applications, and e-commerce. Simple, reliable, and well-understood."
+    },
+    "databaseMongoDB": {
+      "name": "MongoDB",
+      "description": "Document store. Schema-flexible.",
+      "tooltip": "Managed MongoDB document database. Stores data as flexible JSON-like documents — no fixed schema required. Great for content management, catalogs, user profiles, and rapidly evolving data models."
+    },
+    "databaseDynamoDB": {
+      "name": "DynamoDB",
+      "description": "AWS NoSQL key-value. Single-digit ms.",
+      "tooltip": "AWS DynamoDB — fully managed NoSQL key-value and document database. Single-digit millisecond performance at any scale. Supports on-demand and provisioned capacity, global tables, and DynamoDB Streams for change data capture."
+    },
+    "databaseFirestore": {
+      "name": "Firestore",
+      "description": "Google Cloud document DB. Real-time sync.",
+      "tooltip": "Google Cloud Firestore — serverless document database with real-time sync and offline support. Data is organized into collections and documents. Ideal for mobile and web apps that need live data updates across clients."
+    },
+    "databaseCosmosDB": {
+      "name": "Cosmos DB",
+      "description": "Azure multi-model DB. Global distribution.",
+      "tooltip": "Azure Cosmos DB — globally distributed multi-model database. Supports NoSQL, MongoDB, Cassandra, Gremlin, and Table APIs. Guaranteed single-digit millisecond reads and writes with five consistency levels and turnkey global replication."
+    },
+    "databaseTablestore": {
+      "name": "Tablestore",
+      "description": "Alibaba Cloud NoSQL wide-column. Serverless.",
+      "tooltip": "Alibaba Cloud Tablestore — serverless NoSQL wide-column store optimized for time-series, IoT, and metadata. Auto-scales with no capacity planning needed."
+    },
+    "databaseAutonomousDB": {
+      "name": "Autonomous DB",
+      "description": "Oracle Cloud self-managing database.",
+      "tooltip": "Oracle Cloud Autonomous Database — self-driving, self-securing, self-repairing. Automated tuning, patching, and scaling. Supports OLTP, data warehousing, JSON, and APEX workloads."
+    },
+    "databaseDOManagedDB": {
+      "name": "Managed Database",
+      "description": "DigitalOcean managed DB. Postgres/MySQL/Redis.",
+      "tooltip": "DigitalOcean Managed Database — simple, reliable managed databases. Supports PostgreSQL, MySQL, and Redis with automatic failover, backups, and end-to-end encryption."
+    },
+    "databaseRedis": {
+      "name": "Redis",
+      "description": "In-memory store. Sub-millisecond reads.",
+      "tooltip": "Managed Redis in-memory data store. Use for caching API responses, session storage, rate limiting counters, real-time leaderboards, and pub/sub messaging. Sub-millisecond latency."
+    },
+    "messagingSQS": {
+      "name": "SQS",
+      "description": "AWS managed queue. Guaranteed delivery.",
+      "tooltip": "AWS Simple Queue Service — fully managed message queue. Messages are stored durably and delivered at-least-once. Supports FIFO ordering and dead-letter queues for failed messages. Scales automatically."
+    },
+    "messagingSNS": {
+      "name": "SNS",
+      "description": "AWS pub/sub notifications.",
+      "tooltip": "AWS Simple Notification Service — fan-out pub/sub messaging. One message can trigger multiple subscribers (SQS queues, Lambda functions, HTTP endpoints, email, SMS). Great for event-driven architectures."
+    },
+    "messagingRabbitMQ": {
+      "name": "RabbitMQ",
+      "description": "Open-source message broker.",
+      "tooltip": "Open-source message broker supporting AMQP, MQTT, and STOMP protocols. Flexible routing with exchanges, queues, and bindings. Runs anywhere — cloud or self-hosted on Kubernetes."
+    },
+    "messagingTopic": {
+      "name": "Event Stream",
+      "description": "Real-time events (Kafka, Kinesis).",
+      "tooltip": "High-throughput event streaming platform (Kafka, Kinesis). Ordered, durable log of events that multiple consumers can read independently. Use for real-time analytics, event sourcing, and data pipelines."
+    },
+    "messagingCloudPubSub": {
+      "name": "Cloud Pub/Sub",
+      "description": "Google Cloud managed pub/sub. Global.",
+      "tooltip": "Google Cloud Pub/Sub — fully managed real-time messaging service. Publish messages to topics and deliver to multiple subscribers globally. Supports push and pull delivery, dead-letter topics, and exactly-once processing."
+    },
+    "messagingServiceBus": {
+      "name": "Service Bus",
+      "description": "Azure enterprise messaging. Queues + topics.",
+      "tooltip": "Azure Service Bus — enterprise-grade message broker with queues and publish-subscribe topics. Supports sessions, transactions, dead-lettering, and scheduled delivery. Ideal for decoupling applications and building reliable distributed systems."
+    },
+    "storageBucket": {
+      "name": "Storage",
+      "description": "Files, images, uploads. S3/GCS/Blob.",
+      "tooltip": "Object storage (S3, GCS, Azure Blob, Alibaba OSS, OCI Object Storage, DO Spaces) for files, images, videos, backups, and static assets. Virtually unlimited capacity with high durability. Supports versioning, lifecycle policies, and pre-signed URLs."
+    },
+    "storageOSS": {
+      "name": "OSS",
+      "description": "Alibaba Cloud object storage. China-optimized CDN.",
+      "tooltip": "Alibaba Cloud Object Storage Service — massively scalable object storage with China-optimized CDN integration. Supports Standard, IA, Archive, and Cold Archive storage classes."
+    },
+    "storageOCIObjectStorage": {
+      "name": "OCI Object Storage",
+      "description": "Oracle Cloud enterprise object storage. Tiered.",
+      "tooltip": "Oracle Cloud Object Storage — enterprise-grade with automatic tiering between Standard and Archive tiers. High durability with built-in redundancy across fault domains."
+    },
+    "storageDOSpaces": {
+      "name": "Spaces",
+      "description": "DigitalOcean S3-compatible object storage.",
+      "tooltip": "DigitalOcean Spaces — simple S3-compatible object storage with built-in CDN. Flat pricing, no egress surprises. Great for static assets, backups, and user uploads."
+    },
+    "securityIdentity": {
+      "name": "Auth",
+      "description": "Login, signup, permissions.",
+      "tooltip": "Managed identity and authentication service (Cognito, Firebase Auth, Entra ID). Handles user signup, login, MFA, social login (Google, GitHub), JWT tokens, and role-based access control."
+    },
+    "securitySecret": {
+      "name": "Secrets",
+      "description": "API keys, DB passwords, tokens.",
+      "tooltip": "Secrets manager for storing API keys, database passwords, OAuth tokens, and certificates. Encrypted at rest, accessed via API, with automatic rotation and audit logging."
+    },
+    "securityWAF": {
+      "name": "WAF",
+      "description": "Web Application Firewall. DDoS & injection protection.",
+      "tooltip": "Web Application Firewall that protects APIs and web apps from common exploits — SQL injection, XSS, DDoS attacks, bot traffic, and OWASP Top 10 vulnerabilities. Sits in front of your API gateway or load balancer."
+    },
+    "securityCertificate": {
+      "name": "SSL Certificate",
+      "description": "HTTPS certificates for your domains.",
+      "tooltip": "Managed SSL/TLS certificate for HTTPS. Auto-provisions and auto-renews certificates for your custom domains. Free with most cloud providers (ACM, Managed SSL, Key Vault)."
+    },
+    "aiLLMGateway": {
+      "name": "LLM Gateway",
+      "description": "LLM API proxy. Rate limiting + fallback.",
+      "tooltip": "Proxy/router for LLM API calls (OpenAI, Anthropic, Cohere). Centralizes API key management, adds rate limiting, request caching, cost tracking, and automatic fallback between models."
+    },
+    "aiVectorDB": {
+      "name": "Vector DB",
+      "description": "Embeddings + similarity search.",
+      "tooltip": "Vector database for storing and querying embeddings. Powers semantic search, RAG (retrieval-augmented generation), recommendation engines, and image similarity. Supports Pinecone, pgvector, Weaviate, and more."
+    },
+    "aiModelServing": {
+      "name": "ML Model",
+      "description": "Deploy + serve ML models.",
+      "tooltip": "Managed endpoint for serving ML models in production. Handles model versioning, A/B testing, auto-scaling, and GPU allocation. Supports PyTorch, TensorFlow, and custom containers."
+    },
+    "analyticsDataWarehouse": {
+      "name": "Data Warehouse",
+      "description": "Columnar analytics. SQL at scale.",
+      "tooltip": "Columnar data warehouse for analytical queries over terabytes of data. Run complex SQL aggregations, joins, and window functions in seconds. Supports BigQuery, Redshift, and Synapse."
+    },
+    "analyticsSearch": {
+      "name": "Search",
+      "description": "Full-text search. Elasticsearch/OpenSearch.",
+      "tooltip": "Full-text search and analytics engine. Index documents and query them with fuzzy matching, faceted search, autocomplete, and relevance scoring. Powers search bars, log analysis, and real-time dashboards."
+    },
+    "monitoringLog": {
+      "name": "Logs",
+      "description": "Errors, performance, alerts.",
+      "tooltip": "Centralized logging and monitoring. Collects logs from all services, enables search and filtering, triggers alerts on errors or anomalies, and provides performance dashboards."
+    },
+    "monitoringTerminal": {
+      "name": "Log Terminal",
+      "description": "Live streaming log viewer.",
+      "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services."
+    },
+    "sourceRepository": {
+      "name": "GitHub Repo",
+      "description": "Source code. Connect to a service to deploy.",
+      "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push."
+    },
+    "configEnvironment": {
+      "name": "Env Variables",
+      "description": "Key-value environment variables.",
+      "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them."
+    }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close",
+      "showMeHow": "Show me how"
+    },
+    "dashboard": {
+      "title": "Welcome to ICE",
+      "overview": {
+        "title": "Your dashboard",
+        "body": "Every project you build lives here. Folders let you group related projects."
+      },
+      "createProject": {
+        "title": "Create your first project",
+        "body": "Click here to start a project. You'll land on the canvas where you compose blocks into a deployable architecture."
+      }
+    },
+    "canvas": {
+      "title": "Tour your project",
+      "overview": {
+        "title": "Your canvas",
+        "body": "This is where you compose blocks into a deployable architecture."
+      },
+      "projects": {
+        "title": "Projects",
+        "body": "All your projects live here. Switch between them or create a new one."
+      },
+      "blocks": {
+        "title": "Blocks",
+        "body": "Drag any block onto the canvas — services, databases, networking, anything."
+      },
+      "templates": {
+        "title": "Templates",
+        "body": "Start from a pre-built architecture instead of an empty canvas."
+      },
+      "properties": {
+        "title": "Properties",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "AI assistant",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      },
+      "cost": {
+        "title": "Cost estimate",
+        "body": "Live monthly cost for the architecture you're building, broken out per service."
+      },
+      "cloud": {
+        "title": "Connect a cloud",
+        "body": "Hook up GCP, AWS, or Azure here so ICE can deploy on your behalf."
+      },
+      "github": {
+        "title": "Connect GitHub",
+        "body": "Link a repository to deploy on push and review changes from PRs."
+      },
+      "deploy": {
+        "title": "Deploy",
+        "body": "When the canvas is ready, hit Deploy to provision the infrastructure."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
+  }
+}

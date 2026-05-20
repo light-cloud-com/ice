@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Prisma client must be generated before any package that imports it
+      # can compile or test.
+      - name: Generate Prisma client
+        run: pnpm --filter @ice/db exec prisma generate
+
+      - name: Format check (Prettier)
+        run: pnpm format:check
+
+      - name: Unit tests
+        run: pnpm test:unit
+        env:
+          NODE_ENV: test
+
+      - name: Build
+        run: pnpm test:build

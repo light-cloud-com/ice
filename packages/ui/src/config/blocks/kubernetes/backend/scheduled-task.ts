@@ -1,0 +1,14 @@
+import { createBlueprintFromResource } from '@ice/core/resources';
+import type { BlockBlueprint } from '../../types';
+
+export const kubernetesScheduledTaskBlueprint: BlockBlueprint = createBlueprintFromResource('scheduled-task', {
+  iceType: 'Compute.CronJob',
+  category: 'backend',
+  name: 'Kubernetes Scheduled Task',
+  description: 'Kubernetes CronJob. Cron jobs: reports, cleanup.',
+  icon: 'Clock',
+  providers: ['kubernetes'],
+  nodeDataDefaults: {
+    schedule: 'daily',
+  },
+});

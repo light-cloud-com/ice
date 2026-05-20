@@ -1,0 +1,391 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── ICE SaaS Design System ─────────────────────────────────────────────────
+ *
+ * Dual theme: light (Notion-inspired) + dark (Midnight Navy).
+ * Three surface levels. One accent per theme.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ── Light mode — "Warm Slate" ──
+     * Clear 4-level surface hierarchy. Sidebar visibly distinct from canvas.
+     * Inspired by Linear, Notion, VS Code light themes.
+     */
+
+    /* Backgrounds — 4-level hierarchy mirroring dark mode.
+     * Canvas is now slightly tinted so pure-white cards visually pop
+     * against it instead of relying on the 1px border alone. Surface
+     * (sidebar) and toolbar stay tinted further; raised (cards) and
+     * overlay (popovers) stay pure white to read as "elevated."
+     */
+    --ice-bg-base: #f7f8fa;           /* Canvas — subtle warm gray */
+    --ice-bg-surface: #eef0f4;        /* Sidebar — clearly darker than canvas */
+    --ice-bg-raised: #ffffff;         /* Cards, modals — brightest, pops over canvas */
+    --ice-bg-overlay: #ffffff;        /* Dropdowns, popovers */
+    --ice-bg-hover: rgba(0, 0, 0, 0.04);
+    --ice-bg-active: rgba(0, 0, 0, 0.08);
+    --ice-bg-toolbar: #e6e8ed;        /* Toolbar — most tinted */
+
+    /* Borders — clearly visible */
+    --ice-border: #dcdee3;
+    --ice-border-subtle: rgba(220, 222, 227, 0.25);
+    --ice-border-strong: #c4c7cd;
+
+    /* Text — balanced contrast */
+    --ice-text-primary: #1a2332;
+    --ice-text-secondary: #475569;
+    --ice-text-tertiary: #64748b;
+
+    /* Accent — vivid blue */
+    --ice-accent: #2563eb;
+    --ice-accent-hover: #1d4ed8;
+    --ice-accent-muted: rgba(37, 99, 235, 0.12);
+
+    /* Status */
+    --ice-green: #16a34a;
+    --ice-green-muted: rgba(22, 163, 74, 0.10);
+    --ice-red: #dc2626;
+    --ice-red-muted: rgba(220, 38, 38, 0.08);
+    --ice-yellow: #b45309;
+
+    /* shadcn light */
+    --background: 0 0% 100%;
+    --foreground: 210 24% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 18% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 18% 12%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 94%;        /* warm light gray */
+    --secondary-foreground: 225 18% 15%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 215 14% 34%;
+    --accent: 220 14% 94%;
+    --accent-foreground: 225 18% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 7% 88%;
+    --input: 220 7% 88%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ── Dark mode — Midnight Navy ──
+     * Deep navy palette with clear 4-level surface hierarchy.
+     * Sidebar visibly lighter than the deep canvas.
+     */
+    --ice-bg-base: #0c1118;           /* Canvas — deepest navy */
+    --ice-bg-surface: #141c28;        /* Sidebar — noticeably lighter than canvas */
+    --ice-bg-raised: #1c2535;         /* Cards, tabs, elevated */
+    --ice-bg-overlay: #1e2838;        /* Dropdowns, popovers */
+    --ice-bg-hover: rgba(255, 255, 255, 0.06);
+    --ice-bg-active: rgba(255, 255, 255, 0.08);
+    --ice-bg-toolbar: #111923;        /* Toolbar — between base and surface */
+    --ice-border: #1e2a3a;            /* Subtle dividers */
+    --ice-border-subtle: rgba(255, 255, 255, 0.08);  /* Context menu separators */
+    --ice-border-strong: #2d3b4e;     /* Strong borders */
+    --ice-text-primary: #d1d9e6;      /* Soft white — gentler on dark backgrounds */
+    --ice-text-secondary: #94a3b8;    /* Mid blue-gray */
+    --ice-text-tertiary: #64748b;     /* Readable muted */
+    --ice-accent: #4c9aff;            /* Sky blue */
+    --ice-accent-hover: #6bb0ff;
+    --ice-accent-muted: rgba(76, 154, 255, 0.15);
+    --ice-green: #34d399;             /* Emerald */
+    --ice-green-muted: rgba(52, 211, 153, 0.12);
+    --ice-red: #f87171;               /* Soft red */
+    --ice-red-muted: rgba(248, 113, 113, 0.12);
+    --ice-yellow: #fbbf24;            /* Amber */
+
+    /* shadcn dark — Midnight Navy */
+    --background: 216 40% 7%;
+    --foreground: 214 31% 91%;
+    --card: 216 28% 16%;
+    --card-foreground: 214 31% 91%;
+    --popover: 216 26% 17%;
+    --popover-foreground: 214 31% 91%;
+    --primary: 214 100% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 28% 16%;
+    --secondary-foreground: 219 22% 63%;
+    --muted: 216 28% 16%;
+    --muted-foreground: 216 17% 42%;
+    --accent: 216 28% 16%;
+    --accent-foreground: 219 22% 63%;
+    --destructive: 0 82% 68%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 30% 17%;
+    --input: 215 30% 17%;
+    --ring: 214 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* ── Responsive font-size scale ──
+   * All font sizes flow through CSS custom properties so the A-/A+
+   * accessibility buttons scale every piece of text in the UI.
+   */
+  html {
+    color-scheme: light dark;
+
+    --ice-fs-2xs: 10px;
+    --ice-fs-xs:  11px;
+    --ice-fs-sm:  12px;
+    --ice-fs-md:  13px;
+    --ice-fs-lg:  14px;
+    --ice-fs-xl:  16px;
+    --ice-fs-2xl: 18px;
+    --ice-fs-3xl: 20px;
+    --ice-fs-4xl: 24px;
+
+    --ice-space-scale: 1;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.font-small {
+    --ice-fs-2xs: 9px;
+    --ice-fs-xs:  9px;
+    --ice-fs-sm:  10px;
+    --ice-fs-md:  11px;
+    --ice-fs-lg:  12px;
+    --ice-fs-xl:  14px;
+    --ice-fs-2xl: 15px;
+    --ice-fs-3xl: 17px;
+    --ice-fs-4xl: 20px;
+
+    --ice-space-scale: 0.875;
+  }
+
+  html.font-large {
+    --ice-fs-2xs: 12px;
+    --ice-fs-xs:  13px;
+    --ice-fs-sm:  14px;
+    --ice-fs-md:  15px;
+    --ice-fs-lg:  16px;
+    --ice-fs-xl:  18px;
+    --ice-fs-2xl: 21px;
+    --ice-fs-3xl: 23px;
+    --ice-fs-4xl: 28px;
+
+    --ice-space-scale: 1.125;
+  }
+
+  body {
+    min-width: 1024px;
+    min-height: 768px;
+    background: var(--ice-bg-base);
+    color: var(--ice-text-primary);
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+    font-weight: 400;
+    font-size: var(--ice-fs-md);
+    line-height: 1.5;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scrollbars — subtle, theme-aware */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+  .dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+  ::selection { background: var(--ice-accent-muted); }
+
+  /* Focus ring — consistent */
+  :focus-visible {
+    outline: 1px solid var(--ice-accent);
+    outline-offset: -1px;
+  }
+}
+
+@layer components {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  .ice-surface { background: var(--ice-bg-surface); }
+  .ice-raised { background: var(--ice-bg-raised); }
+  .ice-overlay { background: var(--ice-bg-overlay); }
+
+  /* ── ICE Input ────────────────────────────────────────────────────────── */
+  .ice-input {
+    @apply w-full rounded-md px-3 py-2 text-sm transition-[border-color,box-shadow];
+    background: var(--ice-bg-raised);
+    border: 1px solid var(--ice-border);
+    color: var(--ice-text-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .dark .ice-input {
+    background: var(--ice-bg-surface);
+    box-shadow: none;
+  }
+  .ice-input::placeholder { color: var(--ice-text-tertiary); }
+  .ice-input:focus {
+    border-color: var(--ice-accent);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ice-accent-muted), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .ice-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ── ICE Button ───────────────────────────────────────────────────────── */
+  .ice-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[color,background-color,box-shadow,opacity];
+    cursor: pointer;
+  }
+  .ice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .ice-btn-primary {
+    background: var(--ice-accent);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+  .ice-btn-primary:hover:not(:disabled) {
+    background: var(--ice-accent-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  .dark .ice-btn-primary {
+    box-shadow: none;
+  }
+  .dark .ice-btn-primary:hover:not(:disabled) {
+    box-shadow: none;
+  }
+
+  .ice-btn-ghost {
+    color: var(--ice-text-secondary);
+    background: transparent;
+  }
+  .ice-btn-ghost:hover:not(:disabled) {
+    background: var(--ice-bg-hover);
+    color: var(--ice-text-primary);
+  }
+
+  .ice-btn-danger {
+    color: var(--ice-red);
+    background: transparent;
+  }
+  .ice-btn-danger:hover:not(:disabled) {
+    background: var(--ice-red-muted);
+  }
+
+  /* ── ICE Card / Section ───────────────────────────────────────────────── */
+  .ice-card {
+    border-radius: 10px;
+    border: 1px solid var(--ice-border);
+    background: var(--ice-bg-raised);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .dark .ice-card {
+    box-shadow: none;
+  }
+  .ice-card-header {
+    @apply px-6 pt-5 pb-4;
+    border-bottom: 1px solid var(--ice-border);
+  }
+  .ice-card-body {
+    @apply px-6 py-5;
+  }
+
+  /* ── React Flow / Canvas ──────────────────────────────────────────────── */
+  .react-flow { background: var(--ice-bg-base) !important; }
+  .react-flow__background { background: var(--ice-bg-base) !important; }
+  .react-flow__minimap { @apply border border-border rounded-lg shadow-md; background: var(--ice-bg-raised); }
+  .react-flow__controls { @apply border border-border rounded-lg shadow-md; background: var(--ice-bg-raised); }
+  .react-flow__controls-button { background: var(--ice-bg-raised); @apply border-border hover:bg-muted; }
+  .react-flow__controls-button svg { @apply fill-foreground; }
+
+  .ice-node { @apply bg-card border-2 border-border rounded-lg shadow-sm transition-[border-color,box-shadow] duration-150; }
+  .ice-node:hover { @apply shadow-md; border-color: var(--ice-border-strong); }
+  .ice-node.selected { border-color: var(--ice-accent); @apply shadow-lg; box-shadow: 0 0 0 2px var(--ice-accent-muted); }
+  .ice-node.invalid { border-color: var(--ice-red); }
+
+  .react-flow__resize-control.handle { @apply opacity-0 transition-opacity; }
+  .react-flow__node:hover .react-flow__resize-control.handle,
+  .react-flow__node.selected .react-flow__resize-control.handle { @apply opacity-100; }
+
+  /* Edge styles — theme-aware */
+  .ice-edge-depends { stroke: var(--ice-accent); stroke-width: 2; }
+  .ice-edge-contains { stroke: var(--ice-border-strong); stroke-dasharray: 5, 5; }
+  .ice-edge-connects { stroke: var(--ice-green); stroke-width: 2; }
+  .ice-edge-references { stroke: #a855f7; stroke-dasharray: 3, 3; }
+
+  /* Drag preview */
+  .drag-preview { @apply bg-primary/10 border-2 border-dashed border-primary rounded-lg p-4; pointer-events: none; }
+  .palette-item { @apply flex items-center gap-2 p-2 rounded-md cursor-grab transition-colors hover:bg-muted active:cursor-grabbing; }
+
+  /* Status dots */
+  .status-dot { @apply w-2 h-2 rounded-full; }
+  .status-dot.creating { @apply bg-yellow-500 animate-pulse; }
+  .status-dot.available { @apply bg-green-500; }
+  .status-dot.updating { @apply bg-blue-500 animate-pulse; }
+  .status-dot.deleting { @apply bg-red-500 animate-pulse; }
+  .status-dot.failed { @apply bg-red-500; }
+
+  /* Resource category icons */
+  .resource-icon { @apply w-8 h-8 rounded-md flex items-center justify-center text-white font-bold text-sm; }
+  .resource-icon.network { @apply bg-network; }
+  .resource-icon.compute { @apply bg-compute; }
+  .resource-icon.data { @apply bg-data; }
+  .resource-icon.storage { @apply bg-storage; }
+  .resource-icon.iam { @apply bg-iam; }
+  .resource-icon.monitoring { @apply bg-monitoring; }
+}
+
+/* ── AI Canvas Entrance Animations ────────────────────────────────────────── */
+@keyframes ice-node-entrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ice-edge-entrance {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 200;
+  }
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@layer utilities {
+  .app-drag-region { -webkit-app-region: drag; app-region: drag; }
+  .app-no-drag { -webkit-app-region: no-drag; app-region: no-drag; }
+  .drag-none { -webkit-user-drag: none; user-drag: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Sidebar right-edge shadow for light mode separation */
+  .ice-sidebar-shadow {
+    box-shadow: 1px 0 0 var(--ice-border), 2px 0 8px rgba(0, 0, 0, 0.03);
+  }
+  .dark .ice-sidebar-shadow {
+    box-shadow: 1px 0 0 var(--ice-border);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ice-border); border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ice-border-strong); }
+}
+

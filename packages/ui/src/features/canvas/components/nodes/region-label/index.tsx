@@ -1,0 +1,38 @@
+import React, { memo } from 'react';
+import { REGION_STYLES } from '../../../../../config/color-palette';
+import type { CanvasNode } from '../../svg-canvas';
+
+interface SvgRegionLabelProps {
+  node: CanvasNode;
+}
+
+export const SvgRegionLabel: React.FC<SvgRegionLabelProps> = memo(({ node }) => {
+  const { x, y, width, height, label } = node;
+  const iceType = (node.data?.iceType as string) || '';
+  const style = REGION_STYLES[iceType] || REGION_STYLES.default;
+
+  const regionWidth = Math.max(width || 400, 300);
+  const regionHeight = Math.max(height || 300, 200);
+
+  return (
+    <g className="svg-region-label" style={{ pointerEvents: 'none' }} aria-hidden="true">
+      {/* Faint tinted background */}
+      <rect x={x} y={y} width={regionWidth} height={regionHeight} rx={12} fill={style.fill} />
+
+      {/* Small label in top-left */}
+      <text
+        x={x + 10}
+        y={y + 16}
+        fill={style.labelColor}
+        fontSize="10"
+        fontWeight="500"
+        fontFamily="ui-monospace, 'SFMono-Regular', monospace"
+        opacity={0.5}
+      >
+        {label || iceType.split('.').pop()}
+      </text>
+    </g>
+  );
+});
+
+SvgRegionLabel.displayName = 'SvgRegionLabel';

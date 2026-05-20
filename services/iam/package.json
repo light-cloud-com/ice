@@ -1,0 +1,38 @@
+{
+  "name": "@ice/service-iam",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "description": "IAM service - auth, oauth, profile, orgs, users, onboarding",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ice/blocks": "workspace:*",
+    "@ice/db": "workspace:*",
+    "@ice/shared": "workspace:*",
+    "@ice/templates": "workspace:*",
+    "@ice/types": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "express": "^4.22.1",
+    "jsonwebtoken": "^9.0.3",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,85 @@
+name: Release desktop
+
+# Builds the Electron desktop app for macOS, Windows, and Linux and
+# publishes the artifacts to a GitHub draft release. Trigger by pushing
+# a `v*` tag (e.g. `git tag v0.1.50 && git push origin v0.1.50`) or
+# manually from the Actions tab.
+#
+# Binaries are **not code-signed** (see docs/architecture/desktop.md). First-run on
+# macOS/Windows will show an "unidentified developer" / SmartScreen
+# warning until signing certs are wired up — tracked on ROADMAP.md.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build only, don't publish to GitHub Releases"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # needed to create/update the GitHub release
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS (arm64)
+            dist_script: dist:desktop:mac
+          - os: windows-latest
+            name: Windows (x64)
+            dist_script: dist:desktop:win
+          - os: ubuntu-latest
+            name: Linux (x64 + arm64)
+            dist_script: dist:desktop:linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @ice/db exec prisma generate
+
+      - name: Build and package desktop app
+        run: pnpm ${{ matrix.dist_script }}
+        env:
+          # electron-builder publishes to GitHub Releases when GH_TOKEN is set.
+          # We only set it on tag pushes so manual workflow_dispatch runs with
+          # dry_run=true leave no trace.
+          GH_TOKEN: ${{ (github.event_name == 'push' && !inputs.dry_run) && secrets.GITHUB_TOKEN || '' }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ runner.os }}
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+            apps/desktop/release/latest*.yml
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,51 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 5
+    groups:
+      types:
+        patterns:
+          - '@types/*'
+      eslint:
+        patterns:
+          - 'eslint*'
+          - '@eslint/*'
+          - 'eslint-plugin-*'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+      prisma:
+        patterns:
+          - 'prisma'
+          - '@prisma/*'
+      react:
+        patterns:
+          - 'react'
+          - 'react-*'
+          - '@types/react'
+          - '@types/react-dom'
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: chore(deps)
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Warsaw
+    commit-message:
+      prefix: chore(ci)
+      include: scope

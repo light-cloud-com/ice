@@ -1,0 +1,28 @@
+{
+  "name": "@ice/service-canvas",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "description": "Canvas service - canvas CRUD, environments, project-members",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ice/db": "workspace:*",
+    "@ice/service-deploy": "workspace:*",
+    "@ice/service-iam": "workspace:*",
+    "@ice/shared": "workspace:*",
+    "@ice/types": "workspace:*",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "typescript": "^5.9.3"
+  }
+}

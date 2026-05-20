@@ -1,0 +1,2458 @@
+{
+  "common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "取消",
+      "delete": "删除",
+      "deploy": "部署",
+      "confirm": "确认",
+      "reset": "重置",
+      "retry": "重试",
+      "copy": "复制",
+      "connect": "连接",
+      "disconnect": "断开连接",
+      "close": "关闭",
+      "back": "返回",
+      "next": "下一步",
+      "skip": "跳过",
+      "continue": "继续",
+      "add": "添加",
+      "remove": "移除",
+      "create": "创建",
+      "import": "导入",
+      "change": "更改",
+      "search": "搜索"
+    },
+    "labels": {
+      "untitled": "未命名",
+      "loading": "加载中...",
+      "valid": "有效",
+      "modified": "(已修改)",
+      "version": "ICE v0.1.0",
+      "none": "无",
+      "yes": "是",
+      "no": "否",
+      "or": "或",
+      "name": "名称",
+      "email": "邮箱",
+      "password": "密码",
+      "description": "描述",
+      "type": "类型",
+      "status": "状态",
+      "role": "角色"
+    },
+    "errors": {
+      "required": "此字段为必填项",
+      "network": "出现错误，请重试。",
+      "unexpected": "发生意外错误",
+      "tryAgain": "重试"
+    },
+    "roles": {
+      "owner": "所有者",
+      "admin": "管理员",
+      "member": "成员",
+      "viewer": "查看者",
+      "editor": "编辑者"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}}分钟前",
+      "hoursAgo": "{{count}}小时前",
+      "daysAgo": "{{count}}天前",
+      "never": "从未"
+    },
+    "providers": {
+      "gcp": "Google Cloud",
+      "aws": "AWS",
+      "azure": "Azure",
+      "kubernetes": "Kubernetes"
+    }
+  },
+  "auth": {
+    "brand": {
+      "title": "ICE",
+      "subtitle": "集成云环境"
+    },
+    "login": {
+      "heading": "登录您的账户",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "submitButton": "登录",
+      "noAccount": "还没有账户？",
+      "createLink": "创建账户",
+      "divider": "或",
+      "invalidCredentials": "凭据无效"
+    },
+    "signup": {
+      "heading": "创建您的账户",
+      "nameLabel": "姓名",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "passwordPlaceholder": "至少 8 个字符",
+      "submitButton": "创建账户",
+      "hasAccount": "已有账户？",
+      "signInLink": "登录",
+      "divider": "或",
+      "registrationFailed": "注册失败"
+    },
+    "callback": {
+      "noToken": "未收到令牌",
+      "backToLogin": "返回登录"
+    },
+    "oauth": {
+      "googleNotLoaded": "Google 登录未加载，请刷新页面。",
+      "googleNotConfigured": "Google 登录未配置。",
+      "googleFailed": "Google 登录失败",
+      "loginFailed": "登录失败",
+      "continueWithGoogle": "使用 Google 继续",
+      "continueWithGithub": "使用 GitHub 继续"
+    }
+  },
+  "canvas": {
+    "title": "基础设施画布",
+    "emptyState": {
+      "title": "您想构建什么？",
+      "subtitle": "选择一个起点——您随时可以更改",
+      "blankCanvas": "空白画布",
+      "pickTemplate": "选择模板...",
+      "quickStart": "快速开始",
+      "more": "更多..."
+    },
+    "tooltip": {
+      "connections": "个连接",
+      "protocol": "协议",
+      "port": "端口",
+      "latency": "延迟",
+      "throughput": "吞吐量",
+      "bandwidth": "带宽",
+      "security": "安全"
+    },
+    "nodes": {
+      "resource": "资源",
+      "dropHere": "将资源或组件拖放到此处",
+      "active": "活跃",
+      "instances": "实例"
+    },
+    "controls": {
+      "title": "控制",
+      "escButton": "ESC",
+      "shortcutsTitle": "键盘快捷键",
+      "newGraph": "新建图表 (Ctrl+N)",
+      "open": "打开 (Ctrl+O)",
+      "save": "保存 (Ctrl+S)",
+      "loadDemo": "加载示例基础设施",
+      "newProject": "新建项目",
+      "undo": "撤销 (Ctrl+Z)",
+      "redo": "重做 (Ctrl+Y)",
+      "autoOrganize": "自动整理布局 (Ctrl+Shift+O)",
+      "togglePalette": "切换组件面板 (Ctrl+P)",
+      "toggleProperties": "切换属性面板 (Ctrl+I)",
+      "toggleMinimap": "切换小地图 (Ctrl+M)",
+      "splitRight": "右侧分屏（并排）",
+      "splitDown": "下方分屏（上下）",
+      "closeSplit": "关闭分屏",
+      "switchLight": "切换到浅色模式",
+      "switchDark": "切换到深色模式",
+      "cloudProviders": "云服务提供商 - 从 AWS/GCP/Azure 导入",
+      "deployInfra": "部署基础设施 (Ctrl+Shift+D)",
+      "sectionNavigation": "导航",
+      "panCanvas": "平移画布",
+      "zoomInOut": "放大 / 缩小",
+      "sectionSelection": "选择",
+      "selectNode": "选择节点",
+      "multiSelect": "多选",
+      "boxSelect": "框选",
+      "deselectAll": "取消全选",
+      "sectionEditing": "编辑",
+      "deleteSelected": "删除所选",
+      "copyPaste": "复制 / 剪切 / 粘贴",
+      "renameGroup": "重命名分组",
+      "sectionContainment": "容器",
+      "moveIntoGroup": "移入分组 / 区块",
+      "detachFromContainer": "从容器中分离",
+      "sectionView": "视图",
+      "architectureView": "架构视图",
+      "infrastructureView": "基础设施视图",
+      "toggleDebug": "切换调试面板"
+    },
+    "contextMenu": {
+      "undo": "撤销",
+      "redo": "重做",
+      "paste": "粘贴",
+      "selectAll": "全选",
+      "autoOrganize": "自动整理",
+      "properties": "属性",
+      "copy": "复制",
+      "copyAsText": "复制为文本",
+      "cut": "剪切",
+      "duplicate": "复制副本",
+      "changeProvider": "更改提供商",
+      "unfold": "展开",
+      "fold": "折叠",
+      "groupSelection": "将选中项分组",
+      "delete": "删除",
+      "deleteItems": "删除 {{count}} 个项目",
+      "deleteConnection": "删除连接",
+      "addBlock": "添加组件",
+      "addTemplate": "添加模板",
+      "canvasLocked": "画布已锁定",
+      "connectionStyle": "连接样式",
+      "layoutVertical": "垂直 ↕",
+      "layoutHorizontal": "水平 ↔",
+      "layoutCircular": "环形 ◎",
+      "edgeBezier": "贝塞尔",
+      "edgeStraight": "直线",
+      "edgeRectangular": "直角",
+      "unlockCanvas": "解锁画布",
+      "lockCanvas": "锁定画布"
+    },
+    "logNode": {
+      "preDeploy": "部署此环境以开始流式传输日志。",
+      "noSource": "连接一个计算或数据库块以开始流式传输日志。",
+      "ambiguous": "存在多个入站连接 — 请在属性面板中选择一个源。",
+      "unsupported": "此源类型不输出 Cloud Logging 日志。",
+      "permissionDenied": "Cloud Logging 访问被拒绝。请向部署服务账户授予 roles/logging.viewer 权限。",
+      "error": "连接错误。正在重试。",
+      "connecting": "连接中…",
+      "idle": "等待环境就绪。"
+    },
+    "status": {
+      "live": "实时",
+      "connecting": "连接中",
+      "error": "错误",
+      "idle": "空闲",
+      "pipelineLive": "运行中",
+      "pipelineFailed": "失败",
+      "pipelineBuilding": "构建中",
+      "pipelineDeploying": "部署中",
+      "pipelineQueued": "已排队"
+    },
+    "deploy": {
+      "planning": "正在规划部署…",
+      "destroying": "正在销毁…",
+      "deploying": "正在部署…",
+      "progress": "{{terminal}} / {{total}}"
+    },
+    "time": {
+      "secondsAgo": "{{n}} 秒前",
+      "minutesAgo": "{{n}} 分钟前",
+      "hoursAgo": "{{n}} 小时前",
+      "daysAgo": "{{n}} 天前"
+    },
+    "rejection": {
+      "noRule": "{{src}} 无法直接连接到 {{tgt}}",
+      "specialConflict": "每个服务只能连接一个 {{label}}",
+      "logHasSource": "日志终端已有一个源 — 请添加另一个日志块以观察第二个服务",
+      "githubRepoLabel": "GitHub 仓库",
+      "envVarsLabel": "环境变量",
+      "fallbackSrc": "此块",
+      "fallbackTgt": "目标块"
+    },
+    "deployBadge": {
+      "live": "运行中",
+      "deploy": "部署中",
+      "err": "错误",
+      "queued": "排队",
+      "cancel": "取消",
+      "skipped": "已跳过"
+    },
+    "infoModal": {
+      "tabOverview": "概览",
+      "tabCompiles": "编译为",
+      "tabCode": "代码",
+      "tabLinks": "链接",
+      "close": "关闭",
+      "providerLabel": "提供商:",
+      "optional": "可选",
+      "noInfrastructure": "无基础设施 — 此块仅用于画布展示。",
+      "noSnippets": "暂无代码片段。",
+      "triggerTitle": "关于此块"
+    },
+    "blocks": {
+      "titles": {
+        "mongodb": "MongoDB",
+        "mysql": "MySQL",
+        "postgres": "PostgreSQL",
+        "postgresShort": "Postgres",
+        "redis": "Redis",
+        "messageQueue": "消息队列",
+        "eventStream": "事件流",
+        "objectStorage": "对象存储",
+        "secretStore": "密钥库",
+        "envConfig": "环境配置",
+        "worker": "工作进程",
+        "serverlessFunction": "无服务器函数",
+        "apiGateway": "API 网关",
+        "scheduledTask": "定时任务",
+        "githubRepo": "GitHub 仓库",
+        "customDomain": "自定义域名",
+        "privateNetwork": "私有网络",
+        "staticSite": "静态站点",
+        "ssrSite": "SSR 站点",
+        "llmGateway": "LLM 网关",
+        "emailService": "邮件服务",
+        "vectorDb": "向量数据库",
+        "scalableBackend": "可扩展后端",
+        "block": "块",
+        "group": "组"
+      },
+      "common": {
+        "unconfigured": "未配置",
+        "editInProperties": "在属性面板中编辑 →",
+        "ha": "高可用",
+        "unnamed": "(未命名)",
+        "deleted": "(已删除)",
+        "moreCount": "另外 {{n}} 项"
+      },
+      "database": {
+        "shardOne": "1 个分片",
+        "shardMany": "{{n}} 个分片",
+        "backupsDays": "{{n}} 天备份"
+      },
+      "redis": {
+        "memoryMb": "{{n}} MB",
+        "memoryGb": "{{n}} GB",
+        "persistent": "持久化"
+      },
+      "queue": {
+        "queueOne": "1 个队列",
+        "queueMany": "{{n}} 个队列",
+        "fifo": "FIFO",
+        "std": "标准"
+      },
+      "stream": {
+        "retention24h": "24 小时",
+        "retention7d": "7 天",
+        "retention30d": "30 天",
+        "retention90d": "90 天",
+        "retention365d": "365 天",
+        "partitions": "{{n}} 个分区",
+        "retentionSuffix": "保留",
+        "broadcastsTo": "广播至",
+        "manyConsumers": "多个消费者",
+        "subtitle": "一个事件 · 多个接收方"
+      },
+      "storage": {
+        "classStandard": "标准",
+        "classNearline": "近线",
+        "classColdline": "冷线",
+        "classArchive": "归档",
+        "classInfrequent": "不常访问",
+        "classGlacier": "Glacier",
+        "classGlacierDeep": "Glacier 深度归档",
+        "classHot": "热存储",
+        "classCool": "冷存储",
+        "public": "公开",
+        "private": "私有",
+        "versioned": "版本化",
+        "publicBucket": "公开桶",
+        "privateBucket": "私有桶"
+      },
+      "secret": {
+        "none": "暂无密钥",
+        "one": "1 个密钥",
+        "many": "{{n}} 个密钥",
+        "autoRotate": "自动轮换"
+      },
+      "envConfig": {
+        "none": "暂无变量",
+        "one": "1 个变量",
+        "many": "{{n}} 个变量"
+      },
+      "worker": {
+        "scalingSuffix": "扩展",
+        "replicas": "{{n}} 个副本",
+        "autoScaled": "自动扩缩"
+      },
+      "function": {
+        "triggerHttp": "HTTP",
+        "triggerSchedule": "定时",
+        "triggerPubsub": "Pub/Sub",
+        "triggerStorage": "存储",
+        "triggerQueue": "队列",
+        "memoryMb": "{{n}} MB",
+        "timeoutSeconds": "{{n}} 秒",
+        "trigger": "触发器",
+        "scalesToZero": "可缩容至零"
+      },
+      "gateway": {
+        "protoHttpApi": "HTTP API",
+        "protoRest": "REST",
+        "protoWebsocket": "WebSocket",
+        "protoCloudApi": "Cloud API Gateway",
+        "protoAzureConsumption": "API 管理(消耗型)",
+        "protoAzureStandard": "API 管理(标准 v2)",
+        "routeOne": "1 条路由",
+        "routeMany": "{{n}} 条路由",
+        "noRoutes": "暂无路由",
+        "authRequired": "需要鉴权",
+        "publicAccess": "公开",
+        "noRoutesYet": "暂无路由 — 请在属性面板中添加"
+      },
+      "scheduled": {
+        "freqEveryMinute": "每分钟",
+        "freqEvery5": "每 5 分钟",
+        "freqEvery15": "每 15 分钟",
+        "freqEvery30": "每 30 分钟",
+        "freqEveryHour": "每小时",
+        "freqEvery6h": "每 6 小时",
+        "freqEvery12h": "每 12 小时",
+        "freqDailyMidnight": "每天午夜",
+        "freqDaily9": "每天上午 9 点",
+        "freqWeekdays9": "工作日上午 9 点",
+        "freqWeeklyMon": "每周一",
+        "freqMonthly1st": "每月 1 日",
+        "freqCustom": "自定义",
+        "freqCustomSchedule": "自定义调度",
+        "describeNoSchedule": "无调度",
+        "describeEveryMinute": "每分钟",
+        "describeMinAbbr": "分",
+        "describeEveryHour": "每小时",
+        "describeHours": "小时",
+        "describeCustom": "自定义调度",
+        "daySun": "周日",
+        "dayMon": "周一",
+        "dayTue": "周二",
+        "dayWed": "周三",
+        "dayThu": "周四",
+        "dayFri": "周五",
+        "daySat": "周六",
+        "taskOne": "1 个任务",
+        "taskMany": "{{n}} 个任务",
+        "noTasks": "暂无任务",
+        "noTasksYet": "暂无任务 — 请在属性面板中添加",
+        "unnamedTask": "未命名任务",
+        "setActionInProperties": "· 请在属性面板中设置操作"
+      },
+      "github": {
+        "manualDeploys": "手动部署",
+        "autoDeploy": "自动部署",
+        "buildPrefix": "构建:",
+        "noRepoConnected": "未连接仓库 — 请在属性面板中选择"
+      },
+      "customDomain": {
+        "fallbackSubtitle": "网络 · 自定义域名",
+        "rootDomainPlaceholder": "(请在上方设置根域名)",
+        "rootSubdomain": "根",
+        "addSubdomain": "添加子域名路由"
+      },
+      "privateNetwork": {
+        "sealed": "封闭 · 仅内部",
+        "restricted": "受限 · 白名单",
+        "open": "开放 · 公开可访问",
+        "dropHere": "在此处放置服务"
+      },
+      "site": {
+        "noCdn": "无 CDN",
+        "globalCdn": "全球 CDN",
+        "framework": "框架",
+        "servedFromEdge": "边缘节点分发"
+      },
+      "llm": {
+        "primary": "主模型",
+        "fallback": "备用",
+        "rpm": "{{n}} 次/分钟",
+        "fallbackOn": "已启用备用",
+        "noRateLimits": "无速率限制",
+        "noModelSelected": "未选择模型"
+      },
+      "email": {
+        "transactional": "事务性",
+        "from": "发件人",
+        "sender": "发送方"
+      },
+      "vector": {
+        "metricCosine": "余弦",
+        "metricEuclidean": "欧几里得",
+        "metricL2": "L2",
+        "metricDot": "点积",
+        "metricInner": "内积",
+        "dimSuffix": "-维"
+      },
+      "scalableBackend": {
+        "instancesRange": "个实例"
+      }
+    },
+    "properties": {
+      "fields": {
+        "queueNamePlaceholder": "队列名称",
+        "queueFifoTooltip": "FIFO — 有序,恰好一次",
+        "queueStandardTooltip": "标准 — 无序,至少一次",
+        "queueFifoBadge": "FIFO",
+        "queueStandardBadge": "标准",
+        "queueRemoveTitle": "删除队列",
+        "queueAdd": "添加队列",
+        "taskNamePlaceholder": "任务名称",
+        "taskRemoveTitle": "删除任务",
+        "taskRowWhen": "时间",
+        "taskRowCron": "cron",
+        "taskRowAction": "操作",
+        "taskRowBlock": "块",
+        "taskRowUrl": "URL",
+        "taskRowMethod": "方法",
+        "taskCronPlaceholder": "0 9 * * MON-FRI",
+        "taskUrlPlaceholder": "https://api.example.com/cron-tick",
+        "taskNoBlocks": "画布上没有块",
+        "taskPickBlock": "选择一个块",
+        "taskBlockNotSet": "— 未设置 —",
+        "taskAdd": "添加任务",
+        "freqEvery5": "每 5 分钟",
+        "freqEvery15": "每 15 分钟",
+        "freqEvery30": "每 30 分钟",
+        "freqEveryHour": "每小时",
+        "freqEvery6h": "每 6 小时",
+        "freqEvery12h": "每 12 小时",
+        "freqDailyMidnight": "每天午夜",
+        "freqDaily9": "每天上午 9 点",
+        "freqWeekdays9": "工作日上午 9 点",
+        "freqWeeklyMon": "每周一",
+        "freqMonthly1st": "每月 1 日",
+        "freqCustom": "自定义",
+        "actionTypeBlockLabel": "运行一个块",
+        "actionTypeBlockDescription": "调用画布上的一个块",
+        "actionTypeHttpLabel": "发送 HTTP 请求",
+        "actionTypeHttpDescription": "访问外部 URL",
+        "customValuePrefix": "自定义:{{value}} {{unit}}"
+      },
+      "log": {
+        "sectionTitle": "日志",
+        "modePolling": "轮询",
+        "modePollingHint": "每 2 秒刷新一次(推荐)。",
+        "modeTail": "追踪",
+        "modeTailHint": "通过 gRPC 进行亚秒级流式传输。",
+        "sourceOverride": "源覆盖",
+        "noSupportedSource": "未连接受支持的源。请将计算或数据库块连接到此日志终端。",
+        "clearOverride": "清除覆盖",
+        "selectSource": "— 选择源 —",
+        "pillLive": "实时",
+        "pillConnecting": "连接中",
+        "pillPreDeploy": "未部署",
+        "pillNoSource": "无源",
+        "pillAmbiguous": "源不明确",
+        "pillUnsupported": "不支持的源",
+        "pillAccessDenied": "访问被拒绝",
+        "pillError": "错误",
+        "pillIdle": "空闲"
+      },
+      "privateNetwork": {
+        "inboundTitle": "入站互联网",
+        "outboundTitle": "出站互联网",
+        "inboundHint": "控制谁可以从公共互联网访问此网络内的服务。与下方的出站策略相互独立。",
+        "outboundHint": "控制此网络内的服务是否可以访问公共互联网。与上方的入站策略相互独立。",
+        "inboundAllLabel": "允许所有入站(开放)",
+        "inboundAllHint": "公共可达。默认。",
+        "inboundAllowlistLabel": "允许特定源(受限)",
+        "inboundAllowlistHint": "仅允许列出的源 IP 范围访问。",
+        "inboundNoneLabel": "阻止所有入站(封闭)",
+        "inboundNoneHint": "仅限内部。内部服务之间可东西向通信。",
+        "outboundAllLabel": "允许所有出站",
+        "outboundAllHint": "服务可调用任何公共 URL。默认。",
+        "outboundAllowlistLabel": "允许特定目标",
+        "outboundAllowlistHint": "仅允许列出的主机名或 IP 范围。",
+        "outboundNoneLabel": "阻止所有出站",
+        "outboundNoneHint": "气隙隔离。无公共互联网访问。",
+        "allowedSources": "允许的源",
+        "allowedDestinations": "允许的目标",
+        "noEntries": "暂无条目。点击下方 + 添加。",
+        "removeSource": "移除源",
+        "removeDestination": "移除目标",
+        "addSource": "+ 添加源",
+        "addDestination": "+ 添加目标",
+        "inboundEntryPlaceholder": "203.0.113.0/24 或 1.2.3.4",
+        "outboundEntryPlaceholder": "api.stripe.com 或 10.0.0.0/8"
+      },
+      "customDomain": {
+        "rootDomainTitle": "根域名",
+        "rootDomainPlaceholder": "example.com",
+        "rootDomainHint": "此块的根域名。留空以禁用。在下方为每个要公开的子域名添加路由,然后将画布块上对应的圆点拖拽至面向公网的服务。",
+        "routesTitle": "路由 ({{count}})",
+        "routesEmpty": "暂无路由。点击下方 + 添加子域名槽位。",
+        "routeUnconnected": "未连接 — 拖拽圆点进行连接",
+        "noDomain": "(无域名)",
+        "subdomainLabel": "子域名",
+        "subdomainPlaceholder": "api(留空 = 根域名)",
+        "deleteRouteTitle": "删除路由",
+        "addRoute": "+ 添加子域名路由",
+        "dnsRecordsTitle": "DNS 记录",
+        "dnsRecordsTitleCount": "DNS 记录 ({{count}})",
+        "dnsRecordsEmpty": "部署后,您需要在域名注册商处添加的 DNS 记录将显示在此处。在 DNS 提供商处验证域名后,连接的服务(如 Firebase Hosting)将自动签发托管 SSL 证书。",
+        "dnsHeaderType": "类型",
+        "dnsHeaderDomain": "域名",
+        "dnsHeaderValue": "值",
+        "dnsAddBanner": "在您的 DNS 提供商处添加以下记录以验证域名。",
+        "dnsRemoveBanner": "请从您的 DNS 提供商处移除以下记录 — 它们与新配置冲突并会阻止验证。",
+        "dnsCopyButton": "复制",
+        "dnsCopyTitle": "复制值到剪贴板",
+        "dnsPropagationHint": "记录传播后(通常几分钟),Firebase Hosting 将自动签发托管 SSL 证书。"
+      },
+      "customDomainBanner": {
+        "fallbackLabel": "自定义域名",
+        "managedBy": "域名由以下管理",
+        "disconnectHint": "在自定义域名块上编辑路由以更改此设置。断开连接以手动设置域名。"
+      },
+      "requirements": {
+        "header": "要求",
+        "blocking": "{{count}} 项阻塞",
+        "warning": "{{count}} 项警告",
+        "warnings": "{{count}} 项警告",
+        "note": "{{count}} 项备注",
+        "notes": "{{count}} 项备注",
+        "pgNoServiceTitle": "未连接服务",
+        "pgNoServiceHint": "从计算块(Container、BackendAPI、SSRSite、ServerlessFunction)拖拽一条边到此数据库。否则数据库虽已部署但无服务读写。",
+        "pgEditionTitle": "将部署为 {{edition}},规格 {{tier}}",
+        "pgEditionEnterpriseHint": "自动选择版本,因为共享核心规格(db-f1-micro、db-g1-small)仅在 ENTERPRISE 上可用。在配置中设置 `edition` 字段以覆盖。",
+        "pgEditionEnterprisePlusHint": "自动选择版本,因为所选规格是性能优化型(仅限 ENTERPRISE_PLUS)。在配置中设置 `edition` 字段以覆盖。",
+        "pnEmptyTitle": "私有网络为空",
+        "pnEmptyHint": "将计算或数据库块拖拽到此网络内以将它们置于私有 VPC 上。空的私有网络会部署 VPC,但无资源使用。",
+        "pnOpenIngressTitle": "入站流量不受限制",
+        "pnOpenIngressHint": "ingress = \"all\" — 公共互联网上任何来源都可访问内部服务(受每个块的入站规则约束)。设置 ingress 为 \"allowlist\" 以限制源 IP,或设为 \"none\" 以完全封闭网络。"
+      },
+      "deployment": {
+        "sectionLabel": "部署",
+        "regionLabel": "区域",
+        "regionAuto": "自动"
+      }
+    }
+  },
+  "deploy": {
+    "title": "基础设施部署",
+    "buttons": {
+      "plan": "计划",
+      "deploy": "部署",
+      "reset": "重置",
+      "retryDeploy": "重试部署",
+      "enableApi": "在 GCP 控制台中启用 API",
+      "updateInfrastructure": "更新基础设施",
+      "destroy": "销毁"
+    },
+    "status": {
+      "authenticating": "认证中",
+      "planning": "规划中",
+      "planned": "计划就绪",
+      "deploying": "部署中",
+      "success": "已部署",
+      "error": "错误",
+      "cancelled": "已取消",
+      "connected": "已连接 {{provider}}",
+      "connectedViaOAuth": "通过 Google OAuth",
+      "connectedViaServiceAccount": "通过服务账号",
+      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置"
+    },
+    "config": {
+      "gcpProjectLabel": "GCP 项目",
+      "gcpProjectPlaceholder": "my-gcp-project",
+      "regionLabel": "区域",
+      "environmentLabel": "环境",
+      "envDevelopment": "开发",
+      "envStaging": "预发布",
+      "envProduction": "生产",
+      "providerLabel": "提供商",
+      "selectProject": "选择项目...",
+      "awsLabel": "AWS 账户 / 区域",
+      "awsPlaceholder": "123456789012",
+      "azureLabel": "Azure 订阅",
+      "azurePlaceholder": "my-subscription-id",
+      "kubernetesLabel": "集群名称",
+      "kubernetesPlaceholder": "my-k8s-cluster"
+    },
+    "card": {
+      "label": "卡片：",
+      "untitled": "未命名",
+      "deployableResource": "可部署资源",
+      "deployableResources": "{{count}} 个可部署资源 ({{provider}})",
+      "skippedNonGcp": "已跳过——非 GCP",
+      "skippedResources": "({{count}} 个已跳过——非 {{provider}})",
+      "deployedResource": "已部署资源",
+      "deployedResources": "{{count}} 个已部署资源（来自之前的部署）"
+    },
+    "auth": {
+      "connecting": "正在连接 GCP...",
+      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。"
+    },
+    "plan": {
+      "noChanges": "未检测到更改。基础设施已是最新状态。",
+      "changes": "计划：{{total}} 项更改",
+      "skip": "跳过",
+      "actionCreate": "创建",
+      "actionUpdate": "更新",
+      "actionDelete": "删除"
+    },
+    "progress": {
+      "deploying": "部署中...",
+      "percent": "{{pct}}%",
+      "succeeded": "{{count}} 个成功",
+      "failed": "{{count}} 个失败",
+      "completedIn": "部署完成，耗时 {{seconds}} 秒"
+    },
+    "errors": {
+      "apiNotEnabledTitle": "所需的 GCP API 未启用",
+      "apiNotEnabledHint": "部分 Google Cloud API 需要先启用才能部署。请点击下方按钮打开 GCP 控制台，启用 API，然后点击重试。",
+      "opensConsole": "打开 GCP 控制台",
+      "enableApi": "启用 {{api}}",
+      "destroyConfirm": "销毁所有已部署的资源？此操作不可撤销。",
+      "destroyFailed": "销毁失败",
+      "deploymentFailed": "部署失败",
+      "planningFailed": "规划失败",
+      "authenticationFailed": "认证失败",
+      "billingTitle": "未启用结算",
+      "billingDescription": "您的 GCP 项目需要关联结算账户才能启用 Cloud API（Cloud Run、Storage 等）。ICE 无法在未启用结算的情况下进行部署。",
+      "billingButton": "在 GCP 控制台中关联结算账户",
+      "raptTitle": "Google Workspace 重新认证策略 (RAPT)",
+      "raptDescription": "您的组织对云操作强制执行重新认证。OAuth 登录无法用于部署。",
+      "raptFixTitle": "要解决此问题，请选择以下方式之一：",
+      "raptOption1": "使用服务账号密钥",
+      "raptOption2": "禁用 RAPT",
+      "autoEnableHint": "要在部署期间自动启用 API，请确保您的服务账号拥有 Service Usage Admin 角色。"
+    },
+    "copy": {
+      "copy": "复制",
+      "copyProviderId": "复制提供商 ID"
+    },
+    "slice": {
+      "connecting": "正在连接 GCP...",
+      "authSuccess": "GCP 认证成功。",
+      "authFailed": "认证失败：{{error}}",
+      "planning": "正在规划部署...",
+      "planReady": "计划就绪：{{creates}} 个创建，{{updates}} 个更新，{{deletes}} 个删除",
+      "deploying": "部署中...",
+      "completed": "部署完成，耗时 {{seconds}} 秒",
+      "error": "错误：{{error}}"
+    }
+  },
+  "integrations": {
+    "dropdownTitle": "集成",
+    "connected": "已连接",
+    "disconnected": "未连接",
+    "connecting": "连接中...",
+    "error": "错误",
+    "github": {
+      "title": "GitHub",
+      "connectTitle": "连接 GitHub",
+      "connectDescription": "连接您的 GitHub 账户以浏览仓库和分支。",
+      "connectedAs": "已作为 {{username}} 连接",
+      "disconnectButton": "断开连接",
+      "patTab": "个人访问令牌",
+      "patLabel": "GitHub 令牌",
+      "patPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "patHelp": "在 github.com/settings/tokens 生成一个具有 repo 权限的令牌。",
+      "patConnect": "使用令牌连接",
+      "deviceFlowTab": "使用浏览器登录",
+      "deviceFlowButton": "使用 GitHub 登录",
+      "deviceFlowInstructions": "浏览器窗口将打开。请输入以下代码进行授权：",
+      "deviceFlowWaiting": "等待授权中...",
+      "deviceFlowCopy": "复制代码",
+      "deviceFlowCopied": "已复制！",
+      "reposTitle": "仓库",
+      "noRepos": "未找到仓库",
+      "loadingRepos": "正在加载仓库...",
+      "branches": "分支",
+      "private": "私有"
+    },
+    "repoSelector": {
+      "placeholder": "搜索仓库...",
+      "noRepos": "未找到仓库",
+      "loading": "正在加载仓库...",
+      "notConnected": "连接 GitHub 以关联仓库",
+      "linkRepo": "关联仓库",
+      "clear": "取消关联",
+      "connectGitHub": "连接 GitHub"
+    },
+    "anthropic": {
+      "title": "Claude (Anthropic)",
+      "description": "连接您的 Anthropic API 密钥以启用应用内 AI 助手。密钥经过加密存储,绝不离开此机器。",
+      "connected": "已连接",
+      "connectedSubtitle": "已启用 AI 面板和部署诊断",
+      "disconnect": "断开连接",
+      "apiKeyLabel": "API 密钥",
+      "apiKeyPlaceholder": "sk-ant-...",
+      "apiKeyHelp": "还没有密钥?",
+      "createKey": "在 console.anthropic.com 创建密钥",
+      "connectButton": "连接 Claude",
+      "appBarTip": "Claude (Anthropic)",
+      "settingsLabel": "Claude (Anthropic)",
+      "settingsDescription": "自带 Anthropic API 密钥以启用应用内 AI 助手"
+    },
+    "settings": {
+      "sectionTitle": "集成",
+      "sectionDescription": "自带密钥连接 — GitHub 用于仓库部署,Claude 用于 AI 助手,加上您的云提供商凭据。所有内容均在工作区数据库中加密存储。",
+      "github": {
+        "label": "GitHub",
+        "description": "PAT 或设备流程 — Git 推送流水线所必需"
+      },
+      "gcp": {
+        "label": "Google Cloud Platform",
+        "description": "服务账户密钥或 OAuth — 主要部署目标"
+      },
+      "aws": {
+        "label": "Amazon Web Services",
+        "description": "访问密钥 — 实验性"
+      },
+      "azure": {
+        "label": "Microsoft Azure",
+        "description": "服务主体 — 实验性"
+      }
+    }
+  },
+  "pipeline": {
+    "title": "流水线",
+    "panelTitle": "流水线：{{name}}",
+    "source": "源代码",
+    "triggers": "触发器",
+    "build": "构建",
+    "deployments": "部署",
+    "changeRepo": "更改",
+    "detected": "检测到：{{framework}}",
+    "detecting": "正在检测框架...",
+    "noRepo": "未关联仓库",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "pushTo": "推送到",
+    "mergeTo": "合并到",
+    "addTrigger": "+ 添加触发器",
+    "noTriggers": "未配置触发器",
+    "installCommand": "安装",
+    "buildCommand": "构建",
+    "outputDir": "输出",
+    "autoDetected": "（自动检测）",
+    "status": {
+      "idle": "空闲",
+      "queued": "排队中",
+      "building": "构建中",
+      "deploying": "部署中",
+      "success": "已上线",
+      "failed": "失败"
+    },
+    "noDeployments": "暂无部署",
+    "viewLogs": "日志",
+    "deployNow": "立即部署",
+    "enablePipeline": "启用流水线",
+    "steps": {
+      "prepare": "准备中",
+      "clone": "正在克隆仓库",
+      "install": "正在安装依赖",
+      "build": "正在构建应用",
+      "deploy": "部署中",
+      "configure": "配置中"
+    },
+    "activeDeployment": "当前部署",
+    "settingUp": "正在设置流水线...",
+    "push": "推送",
+    "envProduction": "生产",
+    "envStaging": "预发布",
+    "envDevelopment": "开发",
+    "noRepoHint": "请先在 GitHub Repo 区块上选择一个仓库，然后将其连接到此服务。",
+    "noRepoShort": "未关联仓库。请先在 GitHub Repo 区块上选择一个仓库。",
+    "missingContext": "缺少卡片或节点上下文。",
+    "branchProtected": "（受保护）",
+    "anyBranch": "* (任意分支)",
+    "duration": "耗时：",
+    "createFailed": "创建流水线规则失败",
+    "manual": "手动",
+    "auto": "自动",
+    "noTriggersForEnv": "此环境没有触发器",
+    "liveBuild": "实时构建",
+    "timeoutSoon": "（即将超时）",
+    "removeConnection": "移除连接",
+    "removeTrigger": "移除触发器",
+    "serviceDeploys": "服务部署",
+    "noLogs": "暂无日志记录",
+    "recent": "最近"
+  },
+  "onboarding": {
+    "nav": {
+      "stepTeam": "团队",
+      "stepCloud": "云服务",
+      "stepGitHub": "GitHub",
+      "stepProject": "项目",
+      "skipSetup": "跳过设置",
+      "back": "返回",
+      "skip": "跳过",
+      "continue": "继续",
+      "createAndStart": "创建并开始"
+    },
+    "team": {
+      "title": "设置您的团队",
+      "subtitle": "每个项目都属于一个团队",
+      "createTeam": "创建团队",
+      "createTeamDesc": "创建新的团队工作空间",
+      "joinTeam": "加入团队",
+      "joinTeamDesc": "您收到了团队管理员的邀请",
+      "teamNameLabel": "团队名称",
+      "teamNamePlaceholder": "我的团队",
+      "inviteCodeLabel": "邀请码",
+      "inviteCodePlaceholder": "粘贴您的邀请码或链接",
+      "inviteCodeHint": "请向团队管理员索取邀请码或链接。"
+    },
+    "cloud": {
+      "title": "连接您的云服务",
+      "subtitle": "ICE 部署到您的云账户——我们绝不存储您的数据",
+      "providerLabel": "默认云服务提供商",
+      "regionLabel": "默认区域",
+      "regionAutoHint": "已根据您的位置自动选择。您可以在每个项目中单独更改。",
+      "credentialsHint": "凭据（可选——现在或稍后连接）",
+      "signInWithGoogle": "使用 Google 登录",
+      "orServiceAccountKey": "或使用服务账号密钥",
+      "orSignInGoogle": "或使用 Google 登录",
+      "serviceAccountKeyLabel": "服务账号密钥 (JSON)",
+      "createServiceAccount": "创建服务账号",
+      "accessKeyIdLabel": "访问密钥 ID",
+      "secretAccessKeyLabel": "秘密访问密钥",
+      "subscriptionIdLabel": "订阅 ID",
+      "tenantIdLabel": "租户 ID",
+      "clientIdLabel": "客户端 ID",
+      "clientSecretLabel": "客户端密钥",
+      "testAndConnect": "测试并连接",
+      "connected": "已连接",
+      "connectionFailed": "连接失败",
+      "securityNote": "凭据已加密存储，仅用于管理您的基础设施。"
+    },
+    "github": {
+      "title": "连接 GitHub",
+      "subtitle": "将仓库关联到画布上的服务以启用 CI/CD",
+      "connected": "已连接",
+      "tabDevice": "使用浏览器登录",
+      "tabPat": "个人访问令牌",
+      "signInButton": "使用 GitHub 登录",
+      "deviceCodePrompt": "在浏览器中输入以下代码进行授权：",
+      "copyCode": "复制代码",
+      "waitingAuth": "等待授权中...",
+      "tokenLabel": "GitHub 令牌",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHint": "在 github.com/settings/tokens 生成一个具有 repo 权限的令牌。",
+      "connectWithToken": "使用令牌连接",
+      "laterHint": "您也可以稍后在画布上将仓库关联到服务。"
+    },
+    "project": {
+      "title": "您想构建什么？",
+      "subtitle": "选择一个起点——您随时可以更改",
+      "nameLabel": "项目名称",
+      "namePlaceholder": "我的项目",
+      "blankCanvas": "空白画布",
+      "blankCanvasDesc": "从空项目开始"
+    },
+    "checklist": {
+      "setup": "设置：",
+      "title": "设置清单",
+      "dismissTitle": "关闭",
+      "createAccount": "创建账户",
+      "chooseProvider": "选择云服务提供商",
+      "connectCloud": "连接云凭据",
+      "connectGithub": "连接 GitHub",
+      "takeCanvasTour": "Take the canvas tour"
+    }
+  },
+  "wizard": {
+    "title": "新建项目",
+    "description": "创建包含环境和可选模板的项目",
+    "stepProject": "项目",
+    "stepEnvironments": "环境",
+    "stepTemplate": "模板",
+    "stepReview": "审核",
+    "backButton": "返回",
+    "nextButton": "下一步",
+    "createButton": "创建项目",
+    "projectInfo": {
+      "nameTitle": "项目名称",
+      "nameHint": "为您的项目取一个易于识别的名称",
+      "namePlaceholder": "我的 SaaS 应用",
+      "descriptionTitle": "描述",
+      "descriptionHint": "可选——描述此项目的用途",
+      "descriptionPlaceholder": "面向客户的 SaaS 平台的生产基础设施...",
+      "providerTitle": "云服务提供商",
+      "providerHint": "选择目标云平台"
+    },
+    "environments": {
+      "title": "环境",
+      "hint": "选择要创建的环境。每个环境都有独立的画布标签页。",
+      "production": "生产",
+      "staging": "预发布",
+      "development": "开发",
+      "prPreview": "PR 预览",
+      "securityBasic": "基础",
+      "securityStandard": "标准",
+      "securityStrict": "严格",
+      "securityCompliance": "合规",
+      "setAllTo": "全部设为："
+    },
+    "template": {
+      "title": "选择模板",
+      "hint": "从预构建模板开始，或使用空白画布",
+      "categoryAll": "全部",
+      "searchPlaceholder": "搜索模板...",
+      "blankCanvas": "空白画布",
+      "blankCanvasDesc": "从空白画布开始，从零构建您的基础设施。",
+      "blocks": "个组件"
+    },
+    "review": {
+      "title": "审核并创建",
+      "hint": "在创建之前确认您的项目设置",
+      "projectLabel": "项目",
+      "environmentsLabel": "环境",
+      "templateLabel": "模板",
+      "blankCanvas": "空白画布",
+      "blocks": "个组件",
+      "summaryWithTemplate": "每个包含 {{count}} 个组件",
+      "summaryBlank": "使用空白画布",
+      "summaryPrefix": "将创建",
+      "environment": "个环境",
+      "environments": "个环境"
+    }
+  },
+  "environments": {
+    "tabBar": {
+      "loading": "正在加载环境...",
+      "addEnvironment": "添加环境",
+      "settings": "设置",
+      "deployments": "部署",
+      "activity": "活动",
+      "promoteToProduction": "提升到生产环境",
+      "deployInfra": "部署基础设施",
+      "contextDeploy": "部署",
+      "contextPromote": "提升到生产环境",
+      "contextRename": "重命名",
+      "contextDelete": "删除环境",
+      "envNamePlaceholder": "环境名称"
+    },
+    "renameModal": {
+      "title": "重命名环境",
+      "nameLabel": "名称",
+      "cancelButton": "取消",
+      "savingButton": "保存中...",
+      "saveButton": "保存",
+      "errorNameRequired": "名称是必填项",
+      "errorFallback": "重命名环境失败"
+    },
+    "createModal": {
+      "title": "新建环境",
+      "description": "以当前生产画布为起点进行克隆。",
+      "nameLabel": "名称",
+      "namePlaceholder": "staging",
+      "typeLabel": "类型",
+      "typeStaging": "预发布",
+      "typeDevelopment": "开发",
+      "typePrPreview": "PR 预览",
+      "regionLabel": "区域（可选）",
+      "regionPlaceholder": "与生产环境相同",
+      "cancelButton": "取消",
+      "creatingButton": "创建中...",
+      "createButton": "创建环境",
+      "errorNameRequired": "名称为必填项",
+      "errorFallback": "创建环境失败"
+    },
+    "promote": {
+      "promote": "提升",
+      "to": "到",
+      "identicalMessage": "两个环境完全一致，无需提升。",
+      "changesWillBeApplied": "将应用到",
+      "change": "项更改",
+      "changes": "项更改",
+      "inSync": "环境已同步",
+      "unchanged": "未更改",
+      "node": "个节点",
+      "nodes": "个节点",
+      "cancelButton": "取消",
+      "promoteButton": "提升到",
+      "tagAdded": "新增",
+      "tagRemoved": "已移除",
+      "tagChanged": "已更改"
+    }
+  },
+  "account": {
+    "avatar": {
+      "ariaLabel": "用户菜单",
+      "defaultName": "用户",
+      "settings": "设置",
+      "team": "团队",
+      "logout": "退出登录"
+    },
+    "invite": {
+      "title": "邀请团队成员",
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "colleague@company.com",
+      "roleLabel": "角色",
+      "roleAdminDesc": "完全访问权限。可管理用户、账单和所有项目。",
+      "roleMemberDesc": "可创建和编辑项目。无法管理用户或账单。",
+      "roleViewerDesc": "只读访问权限。可查看项目但不能编辑或部署。",
+      "successMessage": "邀请发送成功！",
+      "errorFallback": "邀请发送失败，请重试。",
+      "cancelButton": "取消",
+      "sendingButton": "发送中...",
+      "sendButton": "发送邀请"
+    },
+    "team": {
+      "title": "团队",
+      "subtitle": "管理成员",
+      "subtitleFallback": "您的组织",
+      "inviteButton": "邀请",
+      "columnMember": "成员",
+      "columnRole": "角色",
+      "columnJoined": "加入时间",
+      "emptyState": "暂无团队成员。",
+      "youBadge": "（我）",
+      "removeTitle": "移除",
+      "removeConfirm": "从团队中移除此成员？",
+      "pendingInvitations": "待处理的邀请",
+      "invitedAs": "邀请为",
+      "expires": "到期"
+    },
+    "settings": {
+      "title": "设置",
+      "profileTitle": "个人资料",
+      "profileSubtitle": "更新您的个人信息。",
+      "firstNameLabel": "名",
+      "lastNameLabel": "姓",
+      "emailLabel": "邮箱",
+      "emailDisabledHint": "邮箱无法更改。",
+      "profileSaved": "个人资料更新成功。",
+      "profileSaveFailed": "更新个人资料失败，请重试。",
+      "saveProfileButton": "保存资料",
+      "passwordTitle": "密码",
+      "passwordSubtitle": "更改您的账户密码。",
+      "currentPasswordLabel": "当前密码",
+      "newPasswordLabel": "新密码",
+      "newPasswordPlaceholder": "至少 8 个字符",
+      "confirmPasswordLabel": "确认新密码",
+      "passwordMinLength": "新密码至少需要 8 个字符。",
+      "passwordMismatch": "两次密码不一致。",
+      "passwordChanged": "密码修改成功。",
+      "passwordChangeFailed": "密码修改失败，请检查当前密码。",
+      "changePasswordButton": "修改密码"
+    },
+    "collaborators": {
+      "title": "项目成员",
+      "memberCount": "位成员",
+      "addMember": "添加成员",
+      "teamMemberLabel": "团队成员",
+      "selectMember": "选择成员...",
+      "roleLabel": "角色",
+      "roleOwnerDesc": "完全控制——设置、成员、删除",
+      "roleEditorDesc": "编辑画布、部署、管理环境",
+      "roleViewerDesc": "查看画布和部署——只读",
+      "cancelButton": "取消",
+      "addButton": "添加",
+      "youBadge": "（我）",
+      "removeTitle": "从项目中移除"
+    },
+    "createTeam": {
+      "title": "创建新组织",
+      "nameLabel": "组织名称",
+      "namePlaceholder": "例如：某某公司",
+      "nameHint": "2 到 50 个字符。您之后可以更改。",
+      "errorFallback": "创建组织失败，请重试。",
+      "cancelButton": "取消",
+      "creatingButton": "创建中...",
+      "createButton": "创建组织"
+    }
+  },
+  "ai": {
+    "chat": {
+      "title": "AI 助手",
+      "newChat": "新对话",
+      "historyTitle": "对话历史",
+      "closeTitle": "关闭",
+      "deleteTitle": "删除",
+      "noConversations": "暂无历史对话",
+      "untitledConversation": "未命名对话",
+      "msgs": "条消息",
+      "emptyCanvasPrompt": "描述您想构建的内容，我会将其添加到画布上。",
+      "existingCanvasPrompt": "您想改进或添加什么？",
+      "notConfiguredTitle": "AI 助手未配置",
+      "notConfiguredDesc": "AI 助手需要 Anthropic API 密钥才能使用。",
+      "notConfiguredStep1": "在以下地址获取 API 密钥",
+      "notConfiguredStep2": "添加",
+      "notConfiguredStep2Suffix": "到您的",
+      "notConfiguredStep3": "重启服务器",
+      "appliedChanges": "已应用",
+      "changes": "项更改",
+      "more": "更多",
+      "thinking": "思考中...",
+      "undoLastAi": "撤销上次 AI 更改",
+      "inputPlaceholder": "描述您想构建的内容...",
+      "disconnectedPlaceholder": "连接 Claude 以开始聊天",
+      "doneMessage": "完成。",
+      "noChangesMessage": "没有需要应用的更改。",
+      "collapsedTitle": "AI 助手",
+      "sendMessage": "发送消息",
+      "inputHint": "回车发送 · Shift+回车换行",
+      "disconnectedBadge": "未连接",
+      "disconnectedBadgeTooltip": "未配置 AI 提供商 — 点击添加 Anthropic API 密钥",
+      "disconnectedTitle": "AI 助手未连接",
+      "disconnectedDesc": "添加您的 Anthropic API 密钥以启用 Claude。密钥已加密并存储在本地。",
+      "connectClaude": "连接 Claude"
+    },
+    "diagnosis": {
+      "diagnoseWithAi": "使用 AI 诊断",
+      "connectToDiagnose": "连接 Claude 以进行诊断",
+      "connectToDiagnoseTooltip": "添加 Anthropic API 密钥以启用 AI 部署诊断"
+    }
+  },
+  "properties": {
+    "closeTitle": "关闭属性",
+    "title": "属性",
+    "noCard": "无卡片",
+    "overview": {
+      "title": "概览",
+      "nodes": "节点",
+      "connections": "连接",
+      "estMonthlyCost": "预估月费用",
+      "suggestions": "建议",
+      "emptyHint": "从组件面板拖放组件开始构建",
+      "selectHint": "选择一个节点或边以查看和编辑其属性"
+    },
+    "groupColor": "分组颜色",
+    "groupOpacity": "透明度",
+    "tabs": {
+      "config": "配置",
+      "scaling": "扩缩容",
+      "domain": "域名",
+      "source": "源代码与 CI",
+      "connections": "连接",
+      "deploy": "部署"
+    },
+    "config": {
+      "title": "配置",
+      "iacMapping": "IaC 映射",
+      "iacResource": "IaC 资源",
+      "cost": "费用",
+      "estimatedMonthly": "预估月费"
+    },
+    "deploy": {
+      "current": "当前",
+      "live": "运行中",
+      "urlLabel": "URL",
+      "imageLabel": "镜像",
+      "resourceIdLabel": "资源 ID",
+      "regionLabel": "区域",
+      "instancesLabel": "实例",
+      "history": "历史"
+    },
+    "scaling": {
+      "active": "活跃",
+      "running": "运行中",
+      "minInstances": "最小实例数",
+      "maxInstances": "最大实例数",
+      "scaleOn": "扩缩条件",
+      "threshold": "阈值 (%)"
+    },
+    "domain": {
+      "hostname": "主机名",
+      "hostnamePlaceholder": "app.example.com",
+      "subdomain": "子域名",
+      "subdomainPlaceholder": "www",
+      "sslMode": "SSL 模式",
+      "dnsProvider": "DNS 提供商",
+      "dnsProviderPlaceholder": "cloudflare, route53..."
+    },
+    "source": {
+      "title": "源代码",
+      "noSourceConnected": "未连接源代码",
+      "noSourceHint": "从组件面板添加 GitHub Repo 区块并将其连接到此服务以启用 CI/CD。",
+      "managedBy": "管理者",
+      "block": "区块",
+      "repository": "仓库",
+      "branch": "分支",
+      "branchProtected": "（受保护）",
+      "build": "构建",
+      "buildCommand": "构建命令",
+      "buildCommandPlaceholder": "npm run build",
+      "outputDirectory": "输出目录",
+      "outputDirPlaceholder": "dist"
+    },
+    "edge": {
+      "connectionHeader": "连接",
+      "propertiesSection": "属性",
+      "portLabel": "端口",
+      "customOption": "自定义",
+      "deleteButton": "删除连接",
+      "warningDbFromFrontend": "从前端直接访问数据库存在安全风险",
+      "warningDbSuggestion": "在它们之间添加后端服务",
+      "warningQueueFromClient": "客户端不应直接向队列发布消息",
+      "warningQueueSuggestion": "通过后端 API 进行路由"
+    },
+    "drift": {
+      "checking": "正在检查偏差...",
+      "inSync": "已同步",
+      "notInDeployment": "不在最新部署中",
+      "drifted": "已偏差",
+      "change": "项更改",
+      "changes": "项更改",
+      "checkButton": "检查偏差",
+      "checkingButton": "检查中..."
+    },
+    "network": {
+      "title": "网络",
+      "port": "端口",
+      "domain": "域名",
+      "inbound": "入站",
+      "outbound": "出站",
+      "connection": "个连接",
+      "connections": "个连接"
+    },
+    "about": "关于",
+    "envVars": {
+      "title": "变量",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "值",
+      "secretTitle": "密钥（已隐藏）",
+      "makeSecretTitle": "设为密钥",
+      "addVariable": "+ 添加变量"
+    },
+    "noServiceHint": "将此区块连接到服务以配置部署触发器。",
+    "addItem": "添加项目",
+    "removeConnection": "移除连接",
+    "noLogsRecorded": "暂无日志记录"
+  },
+  "project": {
+    "settings": {
+      "title": "项目设置",
+      "generalHeading": "常规",
+      "nameLabel": "名称",
+      "descriptionLabel": "描述",
+      "providerHeading": "云服务提供商",
+      "providerLockedDesc": "此项目的提供商和区域已锁定。所有环境均使用这些设置。",
+      "providerUnlockedDesc": "此项目中的所有资源将部署到此提供商和区域。",
+      "providerLabel": "提供商",
+      "regionLabel": "区域 / 可用区",
+      "regionLocked": "已锁定",
+      "selectRegion": "选择区域...",
+      "selectPrompt": "选择提供商以查看可用区域。",
+      "saveSuccess": "设置已保存。",
+      "saveError": "保存失败。",
+      "tabGeneral": "常规",
+      "tabEnvironments": "环境",
+      "tabDangerZone": "危险操作",
+      "saveButton": "保存设置",
+      "collaboratorsHeading": "协作者",
+      "collaboratorsDesc": "控制谁可以查看和编辑此项目",
+      "dangerHeading": "危险操作",
+      "deleteTitle": "删除此项目",
+      "deleteDescription": "此操作将永久删除项目及其所有环境、画布卡片和部署历史。此操作不可撤销。",
+      "deleteConfirmLabel": "输入 {{name}} 以确认",
+      "deleteButton": "删除项目",
+      "deleteError": "删除项目失败。"
+    },
+    "activity": {
+      "title": "活动",
+      "filterAll": "全部",
+      "filterAi": "AI",
+      "filterInfra": "基础设施",
+      "filterService": "服务",
+      "emptyTitle": "暂无活动",
+      "emptyDescription": "AI 更改、部署和流水线运行等操作将显示在此处",
+      "aiCanvasChange": "AI 画布更改",
+      "infrastructure": "基础设施 {{status}}",
+      "serviceDeploy": "服务部署：{{name}}"
+    },
+    "deployments": {
+      "title": "部署",
+      "envLabel": "环境：",
+      "tabInfrastructure": "基础设施",
+      "tabService": "服务 (CI/CD)",
+      "infraEmptyTitle": "暂无基础设施部署",
+      "infraEmptyDesc": "使用\"部署基础设施\"按钮来规划和应用更改",
+      "rollback": "回滚",
+      "rollbackTooltip": "回滚到此部署",
+      "confirm": "确认",
+      "cancel": "取消",
+      "rollingBack": "回滚中...",
+      "priorDeploy": "{{count}} 个已部署资源（来自之前的部署）",
+      "serviceEmptyTitle": "暂无服务部署",
+      "serviceEmptyDesc": "将 GitHub 仓库连接到服务并推送代码以触发部署",
+      "byAuthor": "由 {{author}}",
+      "noLogs": "暂无日志步骤记录"
+    }
+  },
+  "projectBrowser": {
+    "title": "项目",
+    "newProject": "新建项目",
+    "emptyState": "暂无项目",
+    "createProject": "创建项目",
+    "deleteConfirm": "删除此项目？",
+    "newFolderName": "新建文件夹",
+    "newProjectName": "新建项目",
+    "contextNewProjectHere": "在此处新建项目",
+    "contextRename": "重命名",
+    "contextMoveTo": "移动到",
+    "contextMoveRoot": "根目录",
+    "contextDelete": "删除",
+    "subCanvas": "架构",
+    "subTable": "表格",
+    "subSettings": "设置",
+    "subDeploy": "部署",
+    "subDeployments": "部署记录",
+    "subActivity": "活动",
+    "subEnvironments": "环境",
+    "moreOptions": "更多选项"
+  },
+  "templates": {
+    "triggerTitle": "从模板开始",
+    "menuLabel": "模板",
+    "searchPlaceholder": "搜索模板...",
+    "noResults": "没有匹配的模板",
+    "blocks": "个组件",
+    "categories": {
+      "quick-start": {
+        "label": "快速开始",
+        "description": "快速入门的最简启动模板"
+      },
+      "full-stack": {
+        "label": "全栈",
+        "description": "完整的应用技术栈"
+      },
+      "backend": {
+        "label": "后端与 API",
+        "description": "API 服务和微服务"
+      },
+      "serverless": {
+        "label": "无服务器",
+        "description": "函数优先的架构"
+      },
+      "data-pipeline": {
+        "label": "数据管道",
+        "description": "事件驱动和批量处理"
+      },
+      "ai-ml": {
+        "label": "AI 与 ML",
+        "description": "机器学习和 AI 工作负载"
+      },
+      "e-commerce": {
+        "label": "电子商务",
+        "description": "在线商店和市场模式"
+      },
+      "mobile": {
+        "label": "移动后端",
+        "description": "移动应用后端模式"
+      },
+      "compliance": {
+        "label": "合规",
+        "description": "安全和监管合规"
+      },
+      "devops": {
+        "label": "DevOps",
+        "description": "CI/CD、监控和平台工具"
+      },
+      "healthcare": {
+        "label": "医疗健康",
+        "description": "符合 HIPAA 的患者数据和临床系统"
+      },
+      "fintech": {
+        "label": "金融科技",
+        "description": "支付处理、交易和合规"
+      },
+      "media": {
+        "label": "媒体与流媒体",
+        "description": "视频、音频和内容分发平台"
+      },
+      "saas": {
+        "label": "SaaS",
+        "description": "多租户软件即服务平台"
+      },
+      "iot": {
+        "label": "IoT",
+        "description": "设备管理和遥测数据采集"
+      },
+      "gaming": {
+        "label": "游戏",
+        "description": "游戏服务器、排行榜和实时系统"
+      },
+      "logistics": {
+        "label": "物流与供应链",
+        "description": "车队追踪、库存和仓库管理"
+      },
+      "education": {
+        "label": "教育",
+        "description": "学习平台、课程管理和评估"
+      }
+    },
+    "gallery": {
+      "title": "模板",
+      "subtitle": "预构建架构，随时部署",
+      "allCategories": "全部",
+      "featured": "推荐",
+      "blocks": "个组件",
+      "useTemplate": "使用模板",
+      "viewDetails": "查看详情",
+      "backToList": "返回",
+      "costEstimate": "预估成本",
+      "provider": "云服务商",
+      "security": "安全级别",
+      "difficulty": "难度",
+      "whatYouGet": "包含内容",
+      "connections": "个连接",
+      "groups": "个分组",
+      "tags": "标签",
+      "description": "描述",
+      "emptyCategory": "此分类暂无模板",
+      "comingSoon": "即将推出",
+      "official": "官方",
+      "verified": "已验证",
+      "community": "社区",
+      "difficultyStarter": "入门",
+      "difficultyIntermediate": "中级",
+      "difficultyAdvanced": "高级",
+      "difficultyExpert": "专家",
+      "resourceBreakdown": "资源清单",
+      "environmentPresets": "环境配置",
+      "addToCanvas": "添加到画布",
+      "addedToCanvas": "已添加到画布",
+      "addToCanvasHint": "添加到您当前的设计 — 不会替换现有组件",
+      "viewRepository": "查看仓库",
+      "providers": "提供商",
+      "compliance": "合规",
+      "techStack": "技术栈",
+      "clearFilters": "清除筛选",
+      "clearAllFilters": "清除所有筛选",
+      "noMatchSearch": "没有匹配\"{{search}}\"的模板",
+      "noMatchFilters": "没有匹配当前筛选条件的模板",
+      "monthEst": "/月 预估",
+      "templateCount": "{{count}} 个模板",
+      "providerFilter": "提供商",
+      "difficultyFilter": "难度"
+    },
+    "items": {
+      "qs-website-db": {
+        "name": "网站 + 数据库",
+        "description": "带托管数据库的服务端渲染应用"
+      },
+      "qs-webapp-api": {
+        "name": "Web App + API",
+        "description": "静态前端搭配后端 API 和数据库"
+      },
+      "qs-api-only": {
+        "name": "纯 API",
+        "description": "仅后端 API 加数据库 — 无前端"
+      },
+      "qs-data-pipeline": {
+        "name": "数据管道",
+        "description": "基于队列的数据处理与存储"
+      },
+      "qs-static-site": {
+        "name": "静态站点",
+        "description": "CDN 加速的静态站点 — 最简部署"
+      },
+      "qs-function": {
+        "name": "Serverless 函数",
+        "description": "API 网关后的单个无服务器函数"
+      },
+      "aiml-workbench": {
+        "name": "AI/ML 工作台",
+        "description": "ML 工作台，含推理 API、训练 Worker、模型及训练数据存储、Redis 特征缓存、流水线队列和监控。"
+      },
+      "backend-rest-api": {
+        "name": "REST API",
+        "description": "生产级后端 API，含网关、服务、PostgreSQL、Redis 缓存和日志。API 优先 — 无前端。"
+      },
+      "backend-microservices": {
+        "name": "微服务",
+        "description": "网关后的三个独立服务，各自拥有数据库、共享消息队列和监控。"
+      },
+      "budget-webapp": {
+        "name": "低成本 Web 应用",
+        "description": "成本优化的全栈应用，含 CDN 前端、无服务器函数（缩容至零）、轻量数据库和存储。按用量付费。"
+      },
+      "data-etl-pipeline": {
+        "name": "ETL Pipeline",
+        "description": "批量 ETL 管道，含暂存区、转换 Worker、数据仓库和 VPC 网络隔离。"
+      },
+      "data-event-streaming": {
+        "name": "事件流处理",
+        "description": "实时事件流处理，含流处理器、分析仪表盘和 VPC 网络隔离。"
+      },
+      "devops-monitoring": {
+        "name": "监控栈",
+        "description": "指标采集与告警管道、可观测性仪表盘和 VPC 网络隔离。"
+      },
+      "devops-cicd": {
+        "name": "CI/CD Platform",
+        "description": "构建管道，含产物存储、仪表盘、部署日志和 VPC 网络隔离。"
+      },
+      "ecommerce-store": {
+        "name": "在线商店",
+        "description": "完整电商栈，含商品目录、购物车、结账、搜索、WAF 防护和 VPC 网络隔离。"
+      },
+      "ecommerce-marketplace": {
+        "name": "多商家市场",
+        "description": "多商家市场平台，含买家和卖家 API、搜索、WAF 和 VPC 隔离。"
+      },
+      "education-lms": {
+        "name": "学习管理系统",
+        "description": "课程交付平台，含学生门户、内容搜索、通知和 VPC 网络隔离。"
+      },
+      "education-exam-platform": {
+        "name": "考试平台",
+        "description": "在线考评平台，含题库、自动评分、监考和 VPC 网络隔离。"
+      },
+      "eu-compliance": {
+        "name": "欧盟合规栈",
+        "description": "GDPR 合规基础设施，含网关、加密数据库与存储、Redis 会话、密钥管理、认证和审计日志。锁定欧盟区域。"
+      },
+      "fintech-payment-gateway": {
+        "name": "支付处理",
+        "description": "PCI-DSS 合规支付网关，含欺诈检测、WAF、VPC 网络隔离、加密数据库和审计追踪。"
+      },
+      "fintech-trading-platform": {
+        "name": "Trading Platform",
+        "description": "实时行情数据推送、订单执行、分析仪表盘，含 WAF、VPC 隔离和审计日志。"
+      },
+      "fullstack-webapp": {
+        "name": "全栈 Web 应用",
+        "description": "生产就绪的全栈应用，含 CDN 前端、WAF、公有子网中的 API 网关、私有子网中的后端服务 + PostgreSQL + Redis。"
+      },
+      "gaming-multiplayer": {
+        "name": "多人游戏服务器",
+        "description": "实时游戏服务器，含匹配系统、排行榜、会话管理、WAF 和 VPC 网络隔离。"
+      },
+      "gaming-mobile-backend": {
+        "name": "手游后端",
+        "description": "手游后端，含玩家档案、排行榜、推送通知和 VPC 网络隔离。"
+      },
+      "healthcare-patient-portal": {
+        "name": "患者门户",
+        "description": "HIPAA 合规的患者记录、预约和文档管理，含网络隔离、WAF 和审计日志。"
+      },
+      "healthcare-telemedicine": {
+        "name": "远程医疗平台",
+        "description": "实时视频问诊，含会话录制、患者管理、WAF 防护和 HIPAA 合规的网络隔离。"
+      },
+      "iot-device-management": {
+        "name": "IoT 设备管理",
+        "description": "大规模设备注册表，含遥测数据采集、仪表盘、WAF 和 VPC 网络隔离。"
+      },
+      "iot-smart-home": {
+        "name": "智能家居平台",
+        "description": "家庭自动化，含设备控制、状态缓存、定时任务和 VPC 网络隔离。"
+      },
+      "logistics-fleet-tracking": {
+        "name": "车队追踪",
+        "description": "基于 GPS 的车队管理，含实时仪表盘、路线优化和 VPC 网络隔离。"
+      },
+      "logistics-warehouse": {
+        "name": "仓储管理",
+        "description": "库存追踪，含条码扫描、订单队列、履约和 VPC 网络隔离。"
+      },
+      "media-streaming": {
+        "name": "视频流媒体平台",
+        "description": "CDN 加速的视频分发，含转码管道、搜索、WAF 防护和 VPC 网络隔离。"
+      },
+      "media-podcast": {
+        "name": "播客平台",
+        "description": "音频托管平台，含 RSS 订阅、节目搜索和 VPC 网络隔离。"
+      },
+      "mobile-app-backend": {
+        "name": "移动应用后端",
+        "description": "移动端 API，含推送通知、媒体存储、身份认证、WAF 和 VPC 网络隔离。"
+      },
+      "mobile-social-app": {
+        "name": "社交应用后端",
+        "description": "社交应用，含动态流、媒体分享、搜索、通知、WAF 和 VPC 网络隔离。"
+      },
+      "rag-chatbot": {
+        "name": "RAG Chatbot",
+        "description": "全栈 RAG 聊天机器人，含聊天界面、检索 API、LLM 网关、向量数据库、文档摄取管道和对话历史。"
+      },
+      "saas-multi-tenant": {
+        "name": "多租户 SaaS",
+        "description": "完整 SaaS 平台，含租户隔离、后台任务、认证、WAF 防护和 VPC 网络隔离。"
+      },
+      "saas-analytics-dashboard": {
+        "name": "分析仪表盘",
+        "description": "指标采集、数据仓库、实时仪表盘，含 WAF 和 VPC 隔离。"
+      },
+      "saas-platform": {
+        "name": "SaaS Platform",
+        "description": "多服务 SaaS，含 SSR 前端、网关、微服务、PostgreSQL、Redis 缓存、Worker 队列和可观测性。"
+      },
+      "secure-api": {
+        "name": "安全 API",
+        "description": "安全优先的 API，含 WAF、VPC 网络隔离、加密数据库、密钥管理、TLS 加密、身份提供商和审计日志。"
+      },
+      "serverless-api": {
+        "name": "Serverless API",
+        "description": "函数优先的 API，含网关、无服务器函数、托管数据库和存储。按用量付费。"
+      },
+      "serverless-event-driven": {
+        "name": "事件驱动函数",
+        "description": "发布/订阅扇出模式：事件触发多个订阅函数进行并行处理，含死信队列。"
+      }
+    }
+  },
+  "palette": {
+    "title": "组件",
+    "searchPlaceholder": "搜索组件...",
+    "providerAll": "全部",
+    "group": "分组",
+    "noBlocksFound": "未找到组件",
+    "noBlocksHint": "尝试不同的搜索词或提供商"
+  },
+  "projectList": {
+    "header": "项目",
+    "openAll": "打开全部 {{count}} 个项目",
+    "addFolder": "添加文件夹",
+    "refresh": "刷新",
+    "selectDirectory": "选择目录",
+    "searchPlaceholder": "搜索项目...",
+    "emptySelectDirectory": "选择一个目录以浏览您的项目",
+    "loadExamples": "加载示例",
+    "emptyNoFiles": "此目录中未找到 .ice 或 .json 文件",
+    "projectCount": "{{count}} 个项目",
+    "folderCount": "{{count}} 个文件夹",
+    "defaultFolderName": "新建文件夹"
+  },
+  "projectTree": {
+    "newProject": "新建项目",
+    "newFolder": "新建文件夹",
+    "emptyNoProjects": "暂无项目",
+    "emptyHint": "点击\"新建项目\"开始",
+    "defaultFolderName": "新建文件夹",
+    "contextRename": "重命名",
+    "contextMoveToTopLevel": "移到顶层",
+    "contextNewSubfolder": "新建子文件夹",
+    "contextDelete": "删除"
+  },
+  "statusBar": {
+    "valid": "有效",
+    "version": "ICE v0.1.0",
+    "connecting": "正在连接 GCP...",
+    "planning": "规划中...",
+    "deployed": "已部署",
+    "deployFailed": "部署失败",
+    "planReady": "计划就绪",
+    "deploying": "部署中 {{pct}}%",
+    "nodeCount": "{{count}} 个节点",
+    "edgeCount": "{{count}} 条边",
+    "costEstimate": "~${{amount}}/月 预估",
+    "selected": "已选 {{count}} 个",
+    "selectedEdges": "{{count}} 条边",
+    "errorCount": "{{count}} 个错误",
+    "node": "个节点",
+    "nodes": "个节点",
+    "edge": "条边",
+    "edges": "条边",
+    "moEst": "/月 预估",
+    "selectedCount": "已选 {{count}} 个",
+    "error": "个错误",
+    "errors": "个错误",
+    "warning": "个警告",
+    "warnings": "个警告",
+    "ram": "内存",
+    "cpu": "CPU"
+  },
+  "appBar": {
+    "autoOrganize": "自动整理",
+    "undo": "撤销 (Ctrl+Z)",
+    "redo": "重做 (Ctrl+Shift+Z)",
+    "deploy": "部署",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
+    "decreaseFont": "缩小字体",
+    "increaseFont": "增大字体",
+    "fontDecrease": "A-",
+    "fontIncrease": "A+",
+    "provider": {
+      "gcp": {
+        "name": "Google Cloud Platform",
+        "description": "使用服务账号密钥连接您的 GCP 项目。ICE 部署到您的云端——而非我们的。",
+        "fieldLabel": "服务账号密钥 (JSON)",
+        "helpLink": "创建服务账号"
+      },
+      "aws": {
+        "name": "Amazon Web Services",
+        "description": "使用访问密钥连接您的 AWS 账户。",
+        "accessKeyLabel": "访问密钥 ID",
+        "secretKeyLabel": "秘密访问密钥",
+        "regionLabel": "默认区域"
+      },
+      "azure": {
+        "name": "Microsoft Azure",
+        "description": "使用服务主体连接您的 Azure 订阅。",
+        "subscriptionLabel": "订阅 ID",
+        "tenantLabel": "租户 ID",
+        "clientIdLabel": "客户端 ID",
+        "clientSecretLabel": "客户端密钥"
+      }
+    },
+    "help": {
+      "tooltip": "帮助",
+      "showMeAround": "带我浏览"
+    }
+  },
+  "providerSettings": {
+    "title": "云服务提供商",
+    "description": "连接云服务提供商以直接导入现有基础设施。",
+    "status": {
+      "connected": "已连接",
+      "notConnected": "未连接"
+    },
+    "connect": {
+      "signInGoogle": "使用 Google 登录",
+      "orServiceAccount": "或使用服务账号密钥",
+      "connecting": "连接中...",
+      "button": "连接",
+      "buttonGcp": "使用服务账号连接",
+      "select": "选择...",
+      "connectedTo": "已连接到 {{name}}",
+      "disconnectedSuccess": "断开连接成功",
+      "connectedToCloud": "已连接到 Google Cloud",
+      "connectionFailed": "连接失败",
+      "failedToAdd": "添加项目失败",
+      "serviceAccountRequired": "服务账号密钥为必填项"
+    },
+    "projects": {
+      "label": "项目 ({{count}})",
+      "addProject": "添加项目",
+      "disconnectAll": "全部断开",
+      "addAnother": "添加另一个 GCP 项目",
+      "addButton": "添加",
+      "cancelButton": "取消",
+      "noProjects": "未找到项目",
+      "addedSuccess": "项目添加成功",
+      "removed": "项目已移除"
+    },
+    "import": {
+      "button": "导入",
+      "importing": "导入中...",
+      "success": "从 {{projectId}} 导入了 {{count}} 个资源",
+      "removeTooltip": "移除项目"
+    },
+    "info": {
+      "credentialsSafe": "您的凭据安全保存在您的账户中",
+      "credentialsSafeDesc": "ICE 部署到您自己的云项目，而非我们的。",
+      "gcpTip": "GCP：使用 Google 登录可快速设置，或粘贴服务账号密钥用于 CI/生产环境。"
+    },
+    "footer": {
+      "close": "关闭"
+    }
+  },
+  "providerConnect": {
+    "status": {
+      "project": "项目：{{projectId}}",
+      "connected": "已连接"
+    },
+    "connectButton": "连接 {{providerName}}",
+    "disconnectButton": "断开连接",
+    "success": {
+      "connected": "已连接到 {{providerName}}",
+      "connectedViaGoogle": "已通过 Google 连接到 {{providerName}}"
+    },
+    "error": {
+      "connectionFailed": "连接失败",
+      "disconnectFailed": "断开连接失败",
+      "fieldRequired": "{{label}} 为必填项"
+    },
+    "gcp": {
+      "guide": {
+        "title": "如何创建服务账号密钥",
+        "step1Title": "步骤 1 — 创建服务账号",
+        "step1_1": "打开 GCP 控制台 -> IAM -> 服务账号 -> 创建",
+        "step1_2": "为其命名（例如 ice-deployer），点击创建并继续",
+        "step1_3": "授予两个角色（点击\"+ 添加其他角色\"添加第二个）：",
+        "step1_3_role1": "Owner — 用于创建和管理资源",
+        "step1_3_role2": "Service Usage Admin — ICE 在部署时自动启用 GCP API（Cloud Run、Storage 等）所需。",
+        "step1_4": "跳过\"授予用户访问权限\"（步骤 3）——点击完成",
+        "step2Title": "步骤 2 — 下载 JSON 密钥",
+        "step2_1": "点击刚创建的服务账号",
+        "step2_2": "转到密钥标签页",
+        "step2_3": "点击添加密钥 -> 创建新密钥 -> JSON",
+        "step2_4": "下载文件并将其内容粘贴到上方输入框中"
+      },
+      "troubleshooting": {
+        "title": "故障排除",
+        "cantCreateKeys": "无法创建密钥？",
+        "oauthNotWorking": "OAuth 无法用于部署？"
+      },
+      "quickConnect": {
+        "divider": "或快速连接（个人账户）",
+        "button": "使用 Google 登录"
+      }
+    }
+  },
+  "invite": {
+    "loading": "正在接受邀请...",
+    "success": {
+      "title": "加入成功！",
+      "description": "您已被添加到 {{orgName}}。",
+      "button": "前往控制台"
+    },
+    "error": {
+      "title": "邀请失败",
+      "fallbackOrg": "该团队",
+      "defaultMessage": "接受邀请失败",
+      "button": "前往控制台"
+    }
+  },
+  "folder": {
+    "defaultProjectName": "新建项目",
+    "defaultFolderName": "新建文件夹",
+    "newProject": "新建项目",
+    "newFolder": "新建文件夹",
+    "emptyFolder": "此文件夹为空",
+    "noProjects": "暂无项目",
+    "getStarted": "创建项目或文件夹以开始使用",
+    "typeFolder": "文件夹",
+    "cards": "{{count}} 个卡片"
+  },
+  "app": {
+    "notFound": {
+      "code": "404",
+      "message": "页面不存在",
+      "button": "返回首页"
+    },
+    "folderView": {
+      "rootName": "项目"
+    }
+  },
+  "layout": {
+    "sidebar": {
+      "project": "项目",
+      "blocks": "组件",
+      "properties": "属性",
+      "cost": "成本",
+      "aiChat": "AI 对话",
+      "templates": "模板"
+    }
+  },
+  "cost": {
+    "title": "成本估算",
+    "empty": "将资源添加到画布以查看成本估算。从左侧边栏拖动组件开始。",
+    "categoryBreakdown": "成本明细",
+    "timeProjections": "时间预测",
+    "annualRange": "年度范围（含扩展）",
+    "scalingRange": "扩展成本范围",
+    "envComparison": "环境对比",
+    "dataTransfer": "数据传输",
+    "trafficTier": "流量级别",
+    "providerComparison": "供应商对比",
+    "costPerRequest": "每请求成本",
+    "budget": "预算目标",
+    "suggestions": "优化建议",
+    "monthly": "月度",
+    "quarterly": "季度",
+    "annual": "年度",
+    "minAtBase": "最小（全部基础）",
+    "maxScaledUp": "最大（全部扩展）",
+    "dev": "开发",
+    "veryHigh": "极高",
+    "minInstances": "最小实例数",
+    "maxInstances": "最大实例数",
+    "estEgress": "预估出口流量"
+  },
+  "error": {
+    "crashed": "{{name}} 崩溃了",
+    "somethingWrong": "出现错误",
+    "unexpected": "发生意外错误",
+    "tryAgain": "重试"
+  },
+  "debug": {
+    "title": "ICE 调试",
+    "nodes": "节点",
+    "edges": "边",
+    "activeCard": "当前卡片",
+    "selectedNodes": "已选节点",
+    "selectedEdges": "已选边",
+    "lastAction": "上次操作",
+    "actionTime": "操作时间",
+    "render": "渲染",
+    "nodesHeader": "节点 ({{count}})",
+    "none": "无",
+    "groups": "分组",
+    "blocks": "组件",
+    "resources": "资源"
+  },
+  "combobox": {
+    "defaultPlaceholder": "搜索...",
+    "defaultEmptyText": "无结果",
+    "loading": "加载中..."
+  },
+  "validation": {
+    "title": "验证",
+    "noIssues": "未发现问题",
+    "errors": "错误",
+    "warnings": "警告",
+    "info": "信息",
+    "issues": "验证问题"
+  },
+  "table": {
+    "name": "名称",
+    "type": "类型",
+    "category": "分类",
+    "provider": "提供商",
+    "behavior": "行为",
+    "noResources": "暂无资源",
+    "noResourcesHint": "从侧边栏拖动组件以添加资源",
+    "search": {
+      "placeholder": "搜索名称、ID、类型、区域…"
+    },
+    "filter": {
+      "clear": "清除"
+    },
+    "groupBy": {
+      "label": "分组方式",
+      "none": "无",
+      "status": "状态",
+      "provider": "提供商",
+      "family": "类别",
+      "group": "分组"
+    },
+    "density": {
+      "comfortable": "宽松",
+      "compact": "紧凑"
+    },
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "provider": "提供商",
+      "status": "状态",
+      "endpoints": "端点",
+      "id": "ID",
+      "region": "区域",
+      "settings": "设置",
+      "updated": "更新时间"
+    },
+    "status": {
+      "idle": "空闲",
+      "queued": "排队中",
+      "building": "构建中",
+      "deploying": "部署中",
+      "live": "运行中",
+      "failed": "失败",
+      "drifted": "已漂移"
+    },
+    "endpoints": {
+      "live": "实时 URL",
+      "domain": "自定义域名",
+      "repo": "源代码仓库",
+      "image": "容器镜像",
+      "console": "提供商控制台",
+      "copy": "复制 URL",
+      "copied": "已复制"
+    },
+    "actions": {
+      "menu": "更多操作",
+      "openProperties": "打开属性",
+      "revealOnCanvas": "在画布中显示",
+      "copyId": "复制 ID",
+      "copyName": "复制名称",
+      "openInBrowser": "在浏览器中打开",
+      "openInGithub": "在 GitHub 中打开",
+      "openInConsole": "在提供商控制台中打开",
+      "delete": "删除"
+    },
+    "expand": {
+      "show": "显示详情",
+      "hide": "隐藏详情",
+      "noSettings": "无设置可显示"
+    },
+    "group": {
+      "noProvider": "无提供商",
+      "other": "其他",
+      "root": "顶层"
+    },
+    "empty": {
+      "noResults": "无匹配项",
+      "noResultsHint": "尝试清除筛选或更改搜索条件"
+    },
+    "footer": {
+      "total": "{{count}} 个资源",
+      "filtered": "{{shown}} / {{total}} 个资源",
+      "selected": "已选择 {{count}} 个"
+    }
+  },
+  "appSettings": {
+    "title": "设置",
+    "tabs": {
+      "ai": "AI",
+      "appearance": "外观",
+      "language": "语言",
+      "reset": "重置"
+    },
+    "ai": {
+      "providerTitle": "AI 提供商",
+      "providerDescription": "配置您的 AI 提供商以获取架构辅助。",
+      "connected": "AI 提供商已连接",
+      "notConfigured": "未配置 AI 提供商",
+      "anthropicKeyLabel": "Anthropic API 密钥",
+      "anthropicKeyHint": "从以下地址获取密钥",
+      "customEndpointLabel": "自定义 AI 端点（可选）",
+      "customEndpointHint": "任何兼容 OpenAI 的端点。留空则直接使用 Anthropic。",
+      "saved": "AI 配置已保存。",
+      "saveFailed": "保存 AI 配置失败。"
+    },
+    "appearance": {
+      "themeTitle": "主题模式",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "colorTitle": "配色主题",
+      "colorDescription": "选择界面的配色方案。",
+      "openThemePicker": "打开主题选择器",
+      "fontSizeTitle": "字号",
+      "small": "小",
+      "default": "默认",
+      "large": "大"
+    },
+    "language": {
+      "title": "语言",
+      "description": "选择您的首选语言。"
+    },
+    "reset": {
+      "title": "重置工作区",
+      "description": "永久清除所有本地工作区数据。此操作不可撤销。",
+      "wipesProjects": "所有项目、画布和环境",
+      "wipesCredentials": "加密的云提供商凭据(GCP、AWS、Azure 等)",
+      "wipesGithub": "GitHub 访问令牌和 Webhook 投递记录",
+      "wipesAi": "AI 对话历史和审计日志",
+      "wipesTour": "已完成的产品引导(画布引导将重新播放)",
+      "confirmLabel": "输入 RESET 以确认",
+      "resetButton": "重置工作区",
+      "resetting": "正在重置…"
+    }
+  },
+  "blocks": {
+    "categories": {
+      "compute": {
+        "label": "计算",
+        "tooltip": "运行代码的应用服务器、后台工作进程、无服务器函数和 PaaS 平台。"
+      },
+      "scheduler": {
+        "label": "调度",
+        "tooltip": "基于时间的触发器 — 定时任务、周期性任务和计划工作流。"
+      },
+      "frontend": {
+        "label": "前端",
+        "tooltip": "Web 前端 — 静态站点和服务端渲染应用。"
+      },
+      "network": {
+        "label": "网络",
+        "tooltip": "流量入口和 API 网关，将请求路由到您的服务。"
+      },
+      "database": {
+        "label": "数据库",
+        "tooltip": "托管数据库 — 跨所有云提供商的关系型、文档型、键值型和宽列存储。"
+      },
+      "cache": {
+        "label": "缓存",
+        "tooltip": "用于快速读取、会话管理和实时排行榜的内存数据存储。"
+      },
+      "messaging": {
+        "label": "消息",
+        "tooltip": "队列、发布/订阅主题和事件流，用于服务间的异步通信。"
+      },
+      "storage": {
+        "label": "存储",
+        "tooltip": "用于文件、图片、上传、备份和静态资源的对象存储。S3、GCS、Blob、OSS、OCI、Spaces。"
+      },
+      "security": {
+        "label": "安全",
+        "tooltip": "基础设施的身份认证、授权和密钥管理。"
+      },
+      "ai": {
+        "label": "AI",
+        "tooltip": "AI/ML 基础设施 — LLM 网关、向量数据库和模型服务。"
+      },
+      "analytics": {
+        "label": "分析",
+        "tooltip": "用于分析、报表和全文搜索的数据仓库和搜索引擎。"
+      },
+      "monitoring": {
+        "label": "监控",
+        "tooltip": "跨所有服务的日志记录、告警和性能监控。"
+      },
+      "source": {
+        "label": "源码",
+        "tooltip": "源代码仓库和 CI/CD 流水线。连接到服务以进行部署。"
+      },
+      "config": {
+        "label": "配置",
+        "tooltip": "环境变量和配置。连接到使用它们的服务。"
+      }
+    },
+    "computeContainer": {
+      "name": "弹性后端",
+      "description": "容器化服务，自动扩缩容。",
+      "tooltip": "自动扩缩容的容器化服务，支持任意运行时 — Node.js、Python、Go、Java、.NET、Rust。运行在负载均衡器之后，具备健康检查、滚动部署和可配置的最小/最大实例数。"
+    },
+    "computeWorker": {
+      "name": "Worker",
+      "description": "后台任务：图片处理、邮件发送。",
+      "tooltip": "从队列中获取任务的长时间运行后台进程。适用于图片/视频处理、邮件发送、PDF 生成、数据导入，或任何不应阻塞 API 响应的工作。"
+    },
+    "computeServerlessFunction": {
+      "name": "无服务器函数",
+      "description": "事件驱动，缩容到零。",
+      "tooltip": "无服务器函数（Lambda、Cloud Functions、Azure Functions），根据事件运行您的代码。无需管理服务器 — 从零自动扩展到数千个并发执行。按实际计算时间付费。"
+    },
+    "computeFunctionCompute": {
+      "name": "函数计算",
+      "description": "阿里云无服务器函数，事件驱动。",
+      "tooltip": "阿里云函数计算 — 事件驱动代码的无服务器执行环境。支持 Node.js、Python、Java 和 Go。从零自动扩缩容，按执行次数付费。"
+    },
+    "computeOCIFunctions": {
+      "name": "OCI Functions",
+      "description": "Oracle Cloud 无服务器，基于 Fn。",
+      "tooltip": "Oracle Cloud Functions — 基于开源 Fn Project 构建的无服务器平台。支持多种语言，在 Docker 容器中运行，并与 OCI Events 和 API Gateway 集成。"
+    },
+    "computeDOAppPlatform": {
+      "name": "App Platform",
+      "description": "DigitalOcean PaaS，Git 推送即部署。",
+      "tooltip": "DigitalOcean App Platform — 全托管 PaaS。连接您的 GitHub 仓库，通过 git push 部署。支持静态站点、Web 服务、Worker 和后台任务，自动配置 HTTPS。"
+    },
+    "computeCronJob": {
+      "name": "定时任务",
+      "description": "按计划运行。报表、清理、同步。",
+      "tooltip": "按 cron 计划运行。适用于夜间报表、数据库清理、缓存预热、计费周期或定期数据同步。运行一次即退出 — 不是长期运行的进程。"
+    },
+    "computeStaticSite": {
+      "name": "静态站点",
+      "description": "React/Vue 应用，含 CDN。",
+      "tooltip": "从 CDN 分发的预构建 HTML/CSS/JS。适合 React、Vue 或 Angular 单页应用。全球高速 — 文件缓存在边缘节点。无需服务器。"
+    },
+    "computeSSRSite": {
+      "name": "SSR 站点",
+      "description": "服务端渲染（Next.js、Nuxt），含 CDN。",
+      "tooltip": "服务端渲染应用（Next.js、Nuxt、Remix）。页面在服务器上渲染，首屏加载快且利于 SEO。支持 API 路由、中间件和动态内容。CDN 缓存静态资源。"
+    },
+    "networkVPC": {
+      "name": "VPC",
+      "description": "虚拟私有云，隔离网络。",
+      "tooltip": "虚拟私有云 — 包含子网和资源的隔离私有网络。提供网络级隔离、自定义 IP 范围、路由表和安全边界。所有生产工作负载都应在 VPC 中运行。"
+    },
+    "networkSubnet": {
+      "name": "子网",
+      "description": "VPC 内的网络分区。",
+      "tooltip": "VPC 的子分区，将资源隔离为公有或私有网段。公有子网可访问互联网；私有子网在 NAT 之后受到保护。使用子网分离前端、后端和数据层。"
+    },
+    "networkPublicEndpoint": {
+      "name": "公共端点",
+      "description": "带托管 SSL 的公共 HTTPS 入口。",
+      "tooltip": "将您的服务暴露到互联网的单一块。设置域名 (example.com) 并切换 HTTPS 以自动配置托管 SSL 证书。连接到一个或多个服务并在每条边上设置子域名以路由 api.example.com → API 服务、app.example.com → 静态站点等。取代了旧的独立 Internet + 自定义域名块。"
+    },
+    "networkCustomDomain": {
+      "name": "自定义域名",
+      "description": "将域名路由到面向公众的服务。",
+      "tooltip": "将根域名连接到一个或多个已有公共 URL 的面向公众的服务（Firebase Hosting、AWS Amplify、公开的 Cloud Run）。设置域名 (example.com)，并在每条边上设置子域名 — 空白表示根域名，api 表示 api.example.com 等等。也可以放入私有网络块内作为其公共入口网关。"
+    },
+    "networkPrivateNetwork": {
+      "name": "私有网络",
+      "description": "带围墙的 VPC。将服务放入以保持私有。",
+      "tooltip": "容器块，将其中所有内容置于私有 VPC。将计算块放入以将其与公共互联网隔离。切换到开放状态以自动生成作为公共网关的自定义域名子节点（自定义域名的路由端口连接到网络内的兄弟服务）。切换到密封状态则为仅内部网络。出站互联网访问（允许全部 / 白名单 / 全部阻止）在属性面板中配置。"
+    },
+    "networkGateway": {
+      "name": "网关",
+      "description": "路由流量，认证 + 限流。",
+      "tooltip": "位于互联网和后端服务之间的 API 网关。处理请求路由、身份认证、限流、CORS 和请求/响应转换。包含 WAF 和 TLS 终止。"
+    },
+    "databasePostgreSQL": {
+      "name": "PostgreSQL",
+      "description": "关系型数据库，ACID 兼容。",
+      "tooltip": "托管 PostgreSQL 数据库，自动备份、复制和故障转移。最适合具有复杂查询、连接和事务的结构化数据。支持 JSON、全文搜索和 PostGIS 等扩展。"
+    },
+    "databaseMySQL": {
+      "name": "MySQL",
+      "description": "关系型数据库，经典 Web 级方案。",
+      "tooltip": "托管 MySQL 数据库 — 部署最广泛的开源关系型数据库。针对读密集型工作负载、Web 应用和电子商务进行了优化。简单、可靠、广为人知。"
+    },
+    "databaseMongoDB": {
+      "name": "MongoDB",
+      "description": "文档存储，灵活的 Schema。",
+      "tooltip": "托管 MongoDB 文档数据库。以灵活的类 JSON 文档形式存储数据 — 无需固定 Schema。适合内容管理、商品目录、用户画像和快速迭代的数据模型。"
+    },
+    "databaseDynamoDB": {
+      "name": "DynamoDB",
+      "description": "AWS NoSQL 键值存储，个位数毫秒延迟。",
+      "tooltip": "AWS DynamoDB — 全托管 NoSQL 键值和文档数据库。任意规模下均可实现个位数毫秒性能。支持按需和预置容量、全球表和 DynamoDB Streams 变更数据捕获。"
+    },
+    "databaseFirestore": {
+      "name": "Firestore",
+      "description": "Google Cloud 文档数据库，实时同步。",
+      "tooltip": "Google Cloud Firestore — 无服务器文档数据库，支持实时同步和离线访问。数据按集合和文档组织。适合需要跨客户端实时数据更新的移动和 Web 应用。"
+    },
+    "databaseCosmosDB": {
+      "name": "Cosmos DB",
+      "description": "Azure 多模型数据库，全球分布。",
+      "tooltip": "Azure Cosmos DB — 全球分布式多模型数据库。支持 NoSQL、MongoDB、Cassandra、Gremlin 和 Table API。保证个位数毫秒读写，提供五种一致性级别和一键全球复制。"
+    },
+    "databaseTablestore": {
+      "name": "Tablestore",
+      "description": "阿里云 NoSQL 宽列存储，无服务器。",
+      "tooltip": "阿里云表格存储 — 无服务器 NoSQL 宽列存储，针对时序数据、IoT 和元数据进行了优化。自动扩缩容，无需容量规划。"
+    },
+    "databaseAutonomousDB": {
+      "name": "Autonomous DB",
+      "description": "Oracle Cloud 自治数据库。",
+      "tooltip": "Oracle Cloud 自治数据库 — 自动驾驶、自动安全、自动修复。自动调优、补丁和扩缩容。支持 OLTP、数据仓库、JSON 和 APEX 工作负载。"
+    },
+    "databaseDOManagedDB": {
+      "name": "托管数据库",
+      "description": "DigitalOcean 托管数据库。Postgres/MySQL/Redis。",
+      "tooltip": "DigitalOcean 托管数据库 — 简单可靠的托管数据库。支持 PostgreSQL、MySQL 和 Redis，提供自动故障转移、备份和端到端加密。"
+    },
+    "databaseRedis": {
+      "name": "Redis",
+      "description": "内存存储，亚毫秒级读取。",
+      "tooltip": "托管 Redis 内存数据存储。用于缓存 API 响应、会话存储、限流计数器、实时排行榜和发布/订阅消息。亚毫秒延迟。"
+    },
+    "messagingSQS": {
+      "name": "SQS",
+      "description": "AWS 托管队列，保证送达。",
+      "tooltip": "AWS Simple Queue Service — 全托管消息队列。消息持久存储，至少送达一次。支持 FIFO 排序和失败消息的死信队列。自动扩缩容。"
+    },
+    "messagingSNS": {
+      "name": "SNS",
+      "description": "AWS 发布/订阅通知。",
+      "tooltip": "AWS Simple Notification Service — 扇出发布/订阅消息。一条消息可触发多个订阅者（SQS 队列、Lambda 函数、HTTP 端点、邮件、短信）。非常适合事件驱动架构。"
+    },
+    "messagingRabbitMQ": {
+      "name": "RabbitMQ",
+      "description": "开源消息代理。",
+      "tooltip": "支持 AMQP、MQTT 和 STOMP 协议的开源消息代理。通过交换器、队列和绑定实现灵活路由。可在任意环境运行 — 云端或 Kubernetes 自托管。"
+    },
+    "messagingTopic": {
+      "name": "事件流",
+      "description": "实时事件（Kafka、Kinesis）。",
+      "tooltip": "高吞吐量事件流平台（Kafka、Kinesis）。有序、持久的事件日志，多个消费者可独立读取。用于实时分析、事件溯源和数据管道。"
+    },
+    "messagingCloudPubSub": {
+      "name": "Cloud Pub/Sub",
+      "description": "Google Cloud 托管发布/订阅，全球化。",
+      "tooltip": "Google Cloud Pub/Sub — 全托管实时消息服务。将消息发布到主题并全球分发给多个订阅者。支持推送和拉取投递、死信主题和精确一次处理。"
+    },
+    "messagingServiceBus": {
+      "name": "Service Bus",
+      "description": "Azure 企业级消息，队列 + 主题。",
+      "tooltip": "Azure Service Bus — 企业级消息代理，支持队列和发布-订阅主题。支持会话、事务、死信和计划投递。适合解耦应用和构建可靠的分布式系统。"
+    },
+    "storageBucket": {
+      "name": "存储",
+      "description": "文件、图片、上传。S3/GCS/Blob。",
+      "tooltip": "对象存储（S3、GCS、Azure Blob、阿里云 OSS、OCI Object Storage、DO Spaces），用于文件、图片、视频、备份和静态资源。容量几乎无限，高持久性。支持版本控制、生命周期策略和预签名 URL。"
+    },
+    "storageOSS": {
+      "name": "OSS",
+      "description": "阿里云对象存储，中国优化 CDN。",
+      "tooltip": "阿里云对象存储服务 — 大规模可扩展对象存储，集成中国优化 CDN。支持标准、低频访问、归档和冷归档存储类型。"
+    },
+    "storageOCIObjectStorage": {
+      "name": "OCI Object Storage",
+      "description": "Oracle Cloud 企业级对象存储，分层。",
+      "tooltip": "Oracle Cloud Object Storage — 企业级对象存储，在标准层和归档层之间自动分层。跨故障域内置冗余，高持久性。"
+    },
+    "storageDOSpaces": {
+      "name": "Spaces",
+      "description": "DigitalOcean S3 兼容对象存储。",
+      "tooltip": "DigitalOcean Spaces — 简单的 S3 兼容对象存储，内置 CDN。固定定价，无出站流量意外费用。适合静态资源、备份和用户上传。"
+    },
+    "securityIdentity": {
+      "name": "认证",
+      "description": "登录、注册、权限管理。",
+      "tooltip": "托管身份认证服务（Cognito、Firebase Auth、Entra ID）。处理用户注册、登录、多因素认证、社交登录（Google、GitHub）、JWT 令牌和基于角色的访问控制。"
+    },
+    "securitySecret": {
+      "name": "密钥",
+      "description": "API 密钥、数据库密码、令牌。",
+      "tooltip": "用于存储 API 密钥、数据库密码、OAuth 令牌和证书的密钥管理器。静态加密，通过 API 访问，支持自动轮换和审计日志。"
+    },
+    "securityWAF": {
+      "name": "WAF",
+      "description": "Web 应用防火墙，DDoS 和注入防护。",
+      "tooltip": "Web 应用防火墙，保护 API 和 Web 应用免受常见攻击 — SQL 注入、XSS、DDoS 攻击、机器人流量和 OWASP Top 10 漏洞。部署在 API 网关或负载均衡器前面。"
+    },
+    "securityCertificate": {
+      "name": "SSL 证书",
+      "description": "域名的 HTTPS 证书。",
+      "tooltip": "托管 SSL/TLS 证书，用于 HTTPS。自动申请和自动续期自定义域名的证书。大多数云提供商免费提供（ACM、Managed SSL、Key Vault）。"
+    },
+    "aiLLMGateway": {
+      "name": "LLM 网关",
+      "description": "LLM API 代理，限流 + 故障转移。",
+      "tooltip": "LLM API 调用的代理/路由器（OpenAI、Anthropic、Cohere）。集中管理 API 密钥，添加限流、请求缓存、成本追踪和模型间自动故障转移。"
+    },
+    "aiVectorDB": {
+      "name": "向量数据库",
+      "description": "嵌入向量 + 相似性搜索。",
+      "tooltip": "用于存储和查询嵌入向量的向量数据库。支持语义搜索、RAG（检索增强生成）、推荐引擎和图像相似性搜索。支持 Pinecone、pgvector、Weaviate 等。"
+    },
+    "aiModelServing": {
+      "name": "ML 模型",
+      "description": "部署和提供 ML 模型服务。",
+      "tooltip": "用于在生产环境中提供 ML 模型服务的托管端点。处理模型版本管理、A/B 测试、自动扩缩容和 GPU 分配。支持 PyTorch、TensorFlow 和自定义容器。"
+    },
+    "analyticsDataWarehouse": {
+      "name": "数据仓库",
+      "description": "列式分析，大规模 SQL。",
+      "tooltip": "列式数据仓库，用于对 TB 级数据进行分析查询。在数秒内运行复杂的 SQL 聚合、连接和窗口函数。支持 BigQuery、Redshift 和 Synapse。"
+    },
+    "analyticsSearch": {
+      "name": "搜索",
+      "description": "全文搜索。Elasticsearch/OpenSearch。",
+      "tooltip": "全文搜索和分析引擎。索引文档并通过模糊匹配、分面搜索、自动补全和相关性评分进行查询。驱动搜索栏、日志分析和实时仪表板。"
+    },
+    "monitoringLog": {
+      "name": "日志",
+      "description": "错误、性能、告警。",
+      "tooltip": "集中式日志记录和监控。收集所有服务的日志，支持搜索和过滤，在错误或异常时触发告警，并提供性能仪表板。"
+    },
+    "monitoringTerminal": {
+      "name": "日志终端",
+      "description": "实时流式日志查看器。",
+      "tooltip": "终端风格的日志查看器，支持颜色编码级别、自动滚动和点击复制。从连接的服务实时流式传输日志。"
+    },
+    "sourceRepository": {
+      "name": "GitHub 仓库",
+      "description": "源代码。连接到服务以部署。",
+      "tooltip": "GitHub 仓库作为部署源。指定仓库、分支、构建命令和输出目录。连接到任何服务以定义其代码来源。支持推送时自动部署。"
+    },
+    "configEnvironment": {
+      "name": "环境变量",
+      "description": "键值对环境变量。",
+      "tooltip": "环境变量和配置值。定义 DATABASE_URL、API 密钥和功能标志等键值对。连接到使用它们的服务。"
+    }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close",
+      "showMeHow": "Show me how"
+    },
+    "canvas": {
+      "title": "Welcome to your canvas",
+      "overview": {
+        "title": "Your project canvas",
+        "body": "This is where you compose blocks into a deployable architecture. Drag blocks here from the palette."
+      },
+      "palette": {
+        "title": "Block palette",
+        "body": "Drag any block from this panel onto the canvas to start."
+      },
+      "search": {
+        "title": "Find a block",
+        "body": "Type to filter — services, databases, frontends, networking, anything."
+      },
+      "properties": {
+        "title": "Properties panel",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "Ask the AI",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
+  }
+}

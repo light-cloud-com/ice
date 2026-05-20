@@ -1,0 +1,199 @@
+/**
+ * JWT Auth Middleware
+ */
+
+import crypto from 'crypto';
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV !== 'test') {
+    throw new Error('JWT_SECRET environment variable is required. Refusing to start with a default secret.');
+  }
+  return secret || 'test-secret';
+}
+
+export interface AuthRequest extends Request {
+  userId?: string;
+  organisationId?: string;
+}
+
+// Desktop mode IDs — set by auto-seeded local user
+let _desktopUserId: string | null = null;
+let _desktopOrgId: string | null = null;
+
+export function setDesktopUser(userId: string, orgId: string) {
+  _desktopUserId = userId;
+  _desktopOrgId = orgId;
+}
+
+/**
+ * Whether the gateway is running in community (desktop) edition with an
+ * auto-seeded local user. Both HTTP middleware and the socket.io handshake
+ * use this to bypass JWT validation — without the bypass, community-edition
+ * clients (which don't have a JWT) can't open socket connections and all
+ * live deploy progress events are lost.
+ */
+export function isDesktopMode(): { userId: string; orgId: string } | null {
+  if (_desktopUserId) {
+    return { userId: _desktopUserId, orgId: _desktopOrgId || '' };
+  }
+  return null;
+}
+
+export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  // Community edition: skip JWT validation, use auto-seeded local user
+  if (_desktopUserId) {
+    req.userId = _desktopUserId;
+    req.organisationId = _desktopOrgId || '';
+    return next();
+  }
+
+  // Fallback: JWT validation (for SaaS edition, if re-enabled)
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Missing authorization token' });
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    const payload = jwt.verify(token, getJwtSecret()) as {
+      userId: string;
+      organisationId: string;
+    };
+    req.userId = payload.userId;
+    req.organisationId = payload.organisationId;
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+}
+
+// Role rank used by `requireProjectAccess`. Hoisted to module scope so the
+// fail-fast check at handler-build time and the per-request comparison
+// share the same source of truth — see findings #2 in `state/findings.md`.
+const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
+const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
+
+/**
+ * Project-level access middleware.
+ * Reads projectId/cardId from req.body, req.params, or req.query (supports both POST and GET routes).
+ */
+export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
+  // Fail fast if a caller passed a `minRole` that's not in the ROLE_LEVEL
+  // table — without this, an unknown minRole collapsed to `0` via the
+  // `|| 0` fallback and the per-request comparison `(... < 0)` was always
+  // false, so the gate effectively became "auth-required-only". TS narrows
+  // the parameter to the three known values, but a callsite using `as
+  // string`, a JSON-loaded config, or a future loosened signature could
+  // still slip an unknown value through.
+  if (!(minRole in ROLE_LEVEL)) {
+    throw new Error(
+      `requireProjectAccess: unknown minRole '${minRole}'. Expected one of ${Object.keys(ROLE_LEVEL).join(', ')}.`,
+    );
+  }
+
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    // Lazy-import to avoid circular deps at startup
+    const prisma = (await import('@ice/db')).default;
+
+    // Read projectId/cardId from body, params, or query (supports POST and GET routes)
+    let projectId = req.body?.projectId || req.params?.projectId || (req.query?.projectId as string);
+
+    const cardId = req.body?.cardId || req.params?.cardId || (req.query?.cardId as string);
+
+    // Resolve from cardId if no projectId
+    if (!projectId && cardId) {
+      const card = await prisma.canvasCard.findUnique({
+        where: { id: cardId },
+        select: { project_id: true },
+      });
+      projectId = card?.project_id;
+    }
+
+    if (!projectId) {
+      return res.status(400).json({ message: 'projectId is required' });
+    }
+
+    // findings.md #46 — single query for real this time. The previous
+    // "BE-10: Single query" comment was aspirational: the org-member
+    // lookup ran as a separate `findUnique` round-trip. Nesting it
+    // under `organisation.members` collapses the auth check to one
+    // DB call per gated request.
+    const project = await prisma.canvasProject.findUnique({
+      where: { id: projectId },
+      select: {
+        organisation_id: true,
+        members: {
+          where: { user_id: req.userId! },
+          select: { role: true },
+          take: 1,
+        },
+        organisation: {
+          select: {
+            members: {
+              where: { user_id: req.userId! },
+              select: { role: true },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    // Check org-level role (admins/owners bypass project-level check)
+    const orgMember = project.organisation.members[0];
+    if (orgMember?.role && ORG_ADMIN_ROLES.has(orgMember.role)) {
+      return next();
+    }
+
+    // Check project-level membership (already fetched with the project query).
+    // ROLE_LEVEL[minRole] is guaranteed truthy by the handler-build-time check
+    // above; the OR-fallback on pm.role only kicks in for an unknown
+    // role string in the DB row (treated as "no access").
+    const pm = project.members[0];
+    if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < ROLE_LEVEL[minRole]!) {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  };
+}
+
+/**
+ * Org-level role middleware.
+ * Checks the authenticated user's org membership role against the allowed list.
+ * Use for org-scoped routes that don't have a projectId (billing, credentials, etc.).
+ */
+export function requireOrgRole(...allowedRoles: string[]) {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const orgId = req.organisationId;
+    if (!orgId) {
+      return res.status(401).json({ message: 'No organisation context' });
+    }
+
+    // Lazy-import to avoid circular deps at startup
+    const prisma = (await import('@ice/db')).default;
+
+    const member = await prisma.organisationMember.findUnique({
+      where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: orgId } },
+    });
+    if (!member || !allowedRoles.includes(member.role)) {
+      return res.status(403).json({ message: 'Insufficient organisation permissions' });
+    }
+    next();
+  };
+}
+
+export function generateToken(userId: string, organisationId: string): string {
+  return jwt.sign({ userId, organisationId }, getJwtSecret(), { expiresIn: '1h' });
+}
+
+export function generateRefreshToken(userId: string, organisationId: string): string {
+  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, getJwtSecret(), {
+    expiresIn: '30d',
+  });
+}

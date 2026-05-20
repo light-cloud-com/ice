@@ -1,0 +1,70 @@
+appId: com.ice.desktop
+productName: ICE
+copyright: Copyright (c) 2024-2026 Light Cloud
+
+directories:
+  buildResources: resources
+  output: release
+
+files:
+  - dist/**/*
+  - node_modules/.prisma/**/*
+  - '!**/backend/.env'
+  - '!**/.env'
+  - '!**/.env.*'
+asarUnpack:
+  - '**/*.node'
+  - 'node_modules/.prisma/**/*.node'
+npmRebuild: true
+buildDependenciesFromSource: false
+nodeGypRebuild: false
+
+extraResources:
+  - from: resources/icons
+    to: icons
+    filter:
+      - '**/*'
+  - from: ../../packages/web/dist
+    to: web-dist
+    filter:
+      - '**/*'
+  - from: resources/prisma-client
+    to: prisma-client
+    filter:
+      - '**/*'
+
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icons/512x512.png
+  x64ArchFiles: 'Contents/Resources/app.asar.unpacked/node_modules/**/*.node'
+  target:
+    - target: dmg
+      arch: [arm64]
+    - target: zip
+      arch: [arm64]
+  hardenedRuntime: false
+
+win:
+  icon: resources/icons/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ICE-Setup-${version}.${ext}
+
+linux:
+  icon: resources/icons
+  category: Development
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64]
+
+publish:
+  provider: github
+  owner: light-cloud-com
+  repo: ice

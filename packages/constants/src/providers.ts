@@ -4,15 +4,15 @@
  * Provider identifiers, types, and display metadata.
  */
 
-export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
+export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm';
 
-export const ALL_PROVIDERS: Provider[] = ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'];
+export const ALL_PROVIDERS: Provider[] = ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'];
 
 export const DEFAULT_TEMPLATE_PROVIDERS: Provider[] = ['gcp', 'aws', 'azure'];
 
 /**
  * Per-provider release readiness. Drives in-app badges and the public
- * `docs/provider-status.md` page.
+ * `PROVIDER_READINESS` constant in this file.
  *
  * - `stable`        — full plan/apply/destroy lifecycle, importer, real-world deploys
  * - `experimental`  — major primitives work end-to-end, not at parity with stable
@@ -28,6 +28,7 @@ export const PROVIDER_READINESS: Record<Provider, ProviderReadiness> = {
   alibaba: 'design-only',
   oci: 'design-only',
   digitalocean: 'design-only',
+  ibm: 'design-only',
 };
 
 export interface CloudProviderMeta {
@@ -103,5 +104,14 @@ export const CLOUD_PROVIDERS: CloudProviderMeta[] = [
     icon: 'digitalocean',
     color: '#0080ff',
     readiness: PROVIDER_READINESS.digitalocean,
+  },
+  {
+    id: 'ibm',
+    name: 'IBM Cloud',
+    shortName: 'IBM',
+    description: 'IBM Cloud — enterprise hybrid + Watson AI.',
+    icon: 'ibm',
+    color: '#0530ad',
+    readiness: PROVIDER_READINESS.ibm,
   },
 ];

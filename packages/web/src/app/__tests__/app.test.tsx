@@ -124,15 +124,6 @@ vi.mock('@ui/features/deploy/hooks/use-deploy-subscription', () => ({
   useDeploySubscription: (cardId?: string) => mocks.deploySubscriptionArg(cardId),
 }));
 
-vi.mock('@ui/features/onboarding', () => ({
-  OnboardingPage: () => <div data-stub="OnboardingPage" />,
-  OnboardingChecklist: () => <div data-stub="OnboardingChecklist" />,
-}));
-
-vi.mock('@ui/features/wizard', () => ({
-  ProjectWizard: () => <div data-stub="ProjectWizard" />,
-}));
-
 vi.mock('@ui/shared/components/app-bar', () => ({
   AppBar: () => <div data-stub="AppBar" />,
 }));
@@ -351,12 +342,12 @@ describe('App — top-level shell', () => {
         typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'Route',
     );
-    expect(routes).toHaveLength(4);
+    expect(routes).toHaveLength(3);
     const paths = routes.map((r) => (r.props as { ['data-path']: string })['data-path']);
-    expect(paths).toEqual(['/onboarding', '/settings', '/templates', '/*']);
+    expect(paths).toEqual(['/settings', '/templates', '/*']);
   });
 
-  it('wraps each non-onboarding route in an ErrorBoundary with a name', () => {
+  it('wraps each route in an ErrorBoundary with a name', () => {
     const tree = renderApp();
     // ErrorBoundary names: App (root), AppSettings, TemplateGallery, Canvas
     const boundaries = findByPredicate(
@@ -609,30 +600,6 @@ describe('DynamicContent — effects', () => {
     for (const e of mocks.effects) e.cb();
     expect(mocks.initializeGraphInvoked).toHaveBeenCalled();
     expect(mocks.fetchProfileInvoked).toHaveBeenCalled();
-  });
-
-  it('redirects to /onboarding when user.onboardingCompleted=false', () => {
-    mocks.user = { id: 'u1', onboardingCompleted: false };
-    const tree = renderApp();
-    drain(tree);
-    for (const e of mocks.effects) e.cb();
-    expect(mocks.navigate).toHaveBeenCalledWith('/onboarding', { replace: true });
-  });
-
-  it('does NOT redirect when user.onboardingCompleted is true', () => {
-    mocks.user = { id: 'u1', onboardingCompleted: true };
-    const tree = renderApp();
-    drain(tree);
-    for (const e of mocks.effects) e.cb();
-    expect(mocks.navigate).not.toHaveBeenCalled();
-  });
-
-  it('does NOT redirect when user is null', () => {
-    mocks.user = null;
-    const tree = renderApp();
-    drain(tree);
-    for (const e of mocks.effects) e.cb();
-    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it('dispatches setActiveProject when type=project with id', () => {

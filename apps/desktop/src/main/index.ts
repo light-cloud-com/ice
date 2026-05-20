@@ -6,9 +6,11 @@
  * No separate IPC handlers — same code path as the web app.
  */
 
-import { existsSync, mkdirSync, cpSync } from 'fs';
+import { randomBytes } from 'crypto';
+import { existsSync, mkdirSync, cpSync, chmodSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import Module from 'module';
-import { join } from 'path';
+import { homedir } from 'os';
+import { dirname, join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { app, BrowserWindow, shell, screen, dialog, ipcMain } from 'electron';
 import electronUpdater from 'electron-updater';
@@ -119,9 +121,23 @@ async function startEmbeddedBackend(): Promise<void> {
   // The generated Prisma client is in extraResources/prisma-client
   const prismaClientDir = join(process.resourcesPath || __dirname, 'prisma-client');
 
-  // Copy to a location @prisma/client expects: node_modules/.prisma/client/
+  // Copy to a location @prisma/client expects: node_modules/.prisma/client/.
+  // Refresh whenever the bundled client's identity hash changes — Prisma
+  // embeds a content hash in package.json#name (`prisma-client-<hash>`) that
+  // bumps on schema, provider, or @prisma/client version changes. Without
+  // this, an upgrade that switches provider (e.g. postgres → sqlite) silently
+  // keeps the old userData copy and the gateway crashes on first query with
+  // "URL must start with the protocol postgresql://".
   const targetDir = join(app.getPath('userData'), 'node_modules', '.prisma', 'client');
-  if (!existsSync(targetDir)) {
+  const clientIdentity = (dir: string): string | null => {
+    try {
+      return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).name ?? null;
+    } catch {
+      return null;
+    }
+  };
+  if (clientIdentity(targetDir) !== clientIdentity(prismaClientDir)) {
+    rmSync(targetDir, { recursive: true, force: true });
     mkdirSync(targetDir, { recursive: true });
     cpSync(prismaClientDir, targetDir, { recursive: true });
   }
@@ -143,11 +159,68 @@ async function startEmbeddedBackend(): Promise<void> {
     return origResolve.call(this, request, parent, ...args);
   };
 
+  // Bootstrap JWT_SECRET + CREDENTIAL_ENCRYPTION_KEY BEFORE importing the
+  // gateway. The gateway's own `ensureLocalSecrets()` call runs in its module
+  // body, but ESM hoists imports — `@ice/service-iam` loads first and reads
+  // `process.env.JWT_SECRET` at module level (throws if unset). Running the
+  // bootstrap here means the in-process gateway import sees populated env.
+  //
+  // Inlined (kept in sync with @ice/shared's ensureLocalSecrets) because
+  // workspace packages expose raw TS via `main: src/index.ts` and Electron's
+  // Node refuses to strip types under node_modules.
+  bootstrapLocalSecrets();
+
+  // Tell the gateway where to find bundled SQLite migrations. The migration
+  // runner lives inside the gateway (apps/gateway/src/index.ts) because the
+  // gateway is pre-bundled and can safely import @ice/db; desktop main can't.
+  process.env.ICE_MIGRATIONS_DIR = join(app.getAppPath(), 'node_modules/@ice/db/prisma/migrations');
+
   try {
     await import('@ice/gateway');
   } catch (err: any) {
     console.error('[desktop] Gateway start error:', err.message);
   }
+}
+
+function bootstrapLocalSecrets(): void {
+  if (process.env.JWT_SECRET && process.env.CREDENTIAL_ENCRYPTION_KEY) return;
+
+  const home = homedir();
+  const configPath =
+    process.platform === 'darwin'
+      ? join(home, 'Library', 'Application Support', 'ice', 'secrets.json')
+      : process.platform === 'win32'
+        ? join(process.env.APPDATA || join(home, 'AppData', 'Roaming'), 'ice', 'secrets.json')
+        : join(process.env.XDG_CONFIG_HOME || join(home, '.config'), 'ice', 'secrets.json');
+
+  let secrets: { jwtSecret: string; credentialEncryptionKey: string } | null = null;
+  if (existsSync(configPath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(configPath, 'utf8'));
+      if (typeof parsed?.jwtSecret === 'string' && typeof parsed?.credentialEncryptionKey === 'string') {
+        secrets = parsed;
+      }
+    } catch {
+      // fall through — regenerate
+    }
+  }
+
+  if (!secrets) {
+    secrets = {
+      jwtSecret: randomBytes(32).toString('hex'),
+      credentialEncryptionKey: randomBytes(32).toString('hex'),
+    };
+    mkdirSync(dirname(configPath), { recursive: true });
+    writeFileSync(configPath, JSON.stringify(secrets, null, 2), 'utf8');
+    try {
+      chmodSync(configPath, 0o600);
+    } catch {
+      // best effort — Windows has no chmod, others may have unusual umasks
+    }
+  }
+
+  if (!process.env.JWT_SECRET) process.env.JWT_SECRET = secrets.jwtSecret;
+  if (!process.env.CREDENTIAL_ENCRYPTION_KEY) process.env.CREDENTIAL_ENCRYPTION_KEY = secrets.credentialEncryptionKey;
 }
 
 // ─── Window Management ─────────────────────────────────────────────────────

@@ -436,10 +436,14 @@ describe('NodePropertiesSection', () => {
     expect(findByType(tree, mocks.MockGroupColorPicker)).toHaveLength(0);
   });
 
-  it('renders GroupColorPicker for container nodes, with onChange wiring updateCardNodeData', () => {
+  it('renders GroupColorPicker for synthetic Group.* container nodes, with onChange wiring updateCardNodeData', () => {
+    // GroupColorPicker is gated to iceType.startsWith('Group.') —
+    // real palette container blocks (Network.PrivateNetwork,
+    // Network.VPC, …) own their own properties UI and must not show
+    // the generic group color/opacity controls.
     const node = makeNode(
       'grp-1',
-      { iceType: 'Container', groupColor: '#ff00ff', groupOpacity: 0.5 },
+      { iceType: 'Group.Frontend', groupColor: '#ff00ff', groupOpacity: 0.5 },
       { type: 'container' },
     );
     const card = makeCard({ nodes: [node] });
@@ -464,6 +468,17 @@ describe('NodePropertiesSection', () => {
       nodeId: 'grp-1',
       data: { groupOpacity: 0.7 },
     });
+  });
+
+  it('does NOT render GroupColorPicker for real container blocks (e.g. Network.PrivateNetwork)', () => {
+    const node = makeNode(
+      'pn-1',
+      { iceType: 'Network.PrivateNetwork', ingress: 'all', egress: 'all' },
+      { type: 'container' },
+    );
+    const card = makeCard({ nodes: [node] });
+    const tree = renderSection({ selectedNode: node, activeCard: card });
+    expect(findByType(tree, mocks.MockGroupColorPicker)).toHaveLength(0);
   });
 
   // ── Custom Domain inheritance banner ─────────────────────────────────────

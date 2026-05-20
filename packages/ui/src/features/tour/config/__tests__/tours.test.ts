@@ -83,16 +83,16 @@ describe('tours config — step-shape invariants', () => {
 describe('canvas-tour — shape', () => {
   it('has the 10 expected step ids in top-to-bottom order', () => {
     expect(canvasTour.steps.map((s: TourStep) => s.id)).toEqual([
-      'canvas-overview',
       'projects',
       'blocks',
-      'templates',
       'properties',
-      'ai',
+      'templates',
       'cost',
       'integration-cloud',
       'integration-github',
       'deploy',
+      'ai',
+      'canvas-overview',
     ]);
   });
 
@@ -103,9 +103,9 @@ describe('canvas-tour — shape', () => {
     }
   });
 
-  it('terminal step (deploy) hides skip and uses finish label', () => {
+  it('terminal step (canvas-overview) hides skip and uses finish label', () => {
     const last = canvasTour.steps[canvasTour.steps.length - 1];
-    expect(last.id).toBe('deploy');
+    expect(last.id).toBe('canvas-overview');
     expect(last.actions?.hideSkip).toBe(true);
     expect(last.actions?.nextLabel).toBe('tour.actions.finish');
   });

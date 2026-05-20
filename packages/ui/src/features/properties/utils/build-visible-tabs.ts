@@ -42,7 +42,8 @@ export function buildVisibleTabs({
     dbPropertiesCount > 0 ||
     iceType === 'Config.Environment' ||
     iceType === 'Network.PublicEndpoint' ||
-    iceType === 'Network.CustomDomain'
+    iceType === 'Network.CustomDomain' ||
+    iceType === 'Network.PrivateNetwork'
   ) {
     tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
   }

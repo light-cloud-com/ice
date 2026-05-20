@@ -60,6 +60,10 @@ export const PROVIDER_FLAGS: Record<Provider, ProviderFlags> = {
     enabled: false,
     categories: allCategoriesOff(),
   },
+  ibm: {
+    enabled: false,
+    categories: allCategoriesOff(),
+  },
 };
 
 // ── Public API ──────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 /**
  * App Settings Page — Community Edition
  *
- * Tabs: AI · Appearance · Language
+ * Tabs: Appearance · Language
  */
 
 import { useTranslation, LOCALES, type Locale } from '@ui/i18n';
@@ -9,22 +9,11 @@ import axiosInstance from '@ui/shared/api/axios-instance';
 import { useThemePicker } from '@ui/shared/components/dev-accent-picker';
 import { useTheme } from '@ui/shared/hooks/use-theme';
 import { cn } from '@ui/shared/utils/cn';
-import {
-  Brain,
-  Palette,
-  Languages,
-  Sun,
-  Moon,
-  Monitor,
-  Save,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-  Key,
-} from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { Palette, Languages, Sun, Moon, Monitor, ChevronLeft, AlertTriangle, Loader2, Trash2 } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-type SettingsTab = 'ai' | 'appearance' | 'language';
+type SettingsTab = 'appearance' | 'language' | 'reset';
 
 // ─── Tab Button ─────────────────────────────────────────────────────────────
 
@@ -54,56 +43,55 @@ export const AppSettings: React.FC = () => {
   const { t, locale, setLocale } = useTranslation();
   const { theme, setTheme, fontSize, setFontSize } = useTheme();
   const { toggle: toggleThemePicker } = useThemePicker();
-  const [tab, setTab] = useState<SettingsTab>('ai');
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<SettingsTab>('appearance');
+  const [confirmReset, setConfirmReset] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
-  // AI config state
-  const [anthropicKey, setAnthropicKey] = useState('');
-  const [aiUrl, setAiUrl] = useState('');
-  const [aiStatus, setAiStatus] = useState<'idle' | 'checking' | 'connected' | 'error'>('idle');
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Load current AI config
-  useEffect(() => {
-    axiosInstance
-      .get('/ai/config')
-      .then((res) => {
-        setAnthropicKey(res.data?.anthropicKey ? '••••••••' : '');
-        setAiUrl(res.data?.aiUrl || '');
-        setAiStatus(res.data?.configured ? 'connected' : 'idle');
-      })
-      .catch(() => setAiStatus('idle'));
-  }, []);
-
-  const handleSaveAi = async () => {
-    setSaving(true);
-    setMessage(null);
-    try {
-      await axiosInstance.post('/ai/config', {
-        ...(anthropicKey && !anthropicKey.startsWith('••') ? { anthropicKey } : {}),
-        ...(aiUrl ? { aiUrl } : {}),
-      });
-      setMessage({ type: 'success', text: t('appSettings.ai.saved') });
-      setAiStatus('connected');
-    } catch {
-      setMessage({ type: 'error', text: t('appSettings.ai.saveFailed') });
+  // Browser history fallback: if the user landed here directly (no
+  // history entry to pop), send them to root rather than no-op.
+  const handleBack = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
     }
-    setSaving(false);
-  };
+  }, [navigate]);
+
+  const handleReset = useCallback(async () => {
+    setResetting(true);
+    setResetError(null);
+    try {
+      await axiosInstance.post('/profile/reset-workspace');
+      // Full reload: dumps Redux state, re-fetches profile + cards
+      // from the freshly-seeded DB, re-runs the canvas tour.
+      if (typeof window !== 'undefined') {
+        window.location.replace('/');
+      }
+    } catch (err) {
+      console.error('[settings] reset failed:', err);
+      setResetError('Reset failed. Check the gateway logs and try again.');
+      setResetting(false);
+    }
+  }, []);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-6">
+      <button
+        type="button"
+        onClick={handleBack}
+        aria-label={t('common.buttons.back')}
+        className="flex items-center gap-1 text-ice-sm text-ice-text-3 hover:text-ice-text-1 mb-4 transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        {t('common.buttons.back')}
+      </button>
+
       <h1 className="text-xl font-semibold text-ice-text-1 mb-6">{t('appSettings.title')}</h1>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-ice-border">
-        <TabButton
-          active={tab === 'ai'}
-          icon={Brain}
-          label={t('appSettings.tabs.ai')}
-          onClick={() => setTab('ai')}
-          data-tour-id="app-settings-tab-ai"
-        />
         <TabButton
           active={tab === 'appearance'}
           icon={Palette}
@@ -116,97 +104,13 @@ export const AppSettings: React.FC = () => {
           label={t('appSettings.tabs.language')}
           onClick={() => setTab('language')}
         />
+        <TabButton
+          active={tab === 'reset'}
+          icon={Trash2}
+          label={t('appSettings.tabs.reset')}
+          onClick={() => setTab('reset')}
+        />
       </div>
-
-      {/* ── AI Tab ───────────────────────────────────────────────────────── */}
-      {tab === 'ai' && (
-        <div className="space-y-6">
-          <div className="ice-card">
-            <div className="ice-card-header">
-              <h2 className="text-ice-md font-semibold text-ice-text-1">{t('appSettings.ai.providerTitle')}</h2>
-              <p className="text-ice-sm text-ice-text-3 mt-1">{t('appSettings.ai.providerDescription')}</p>
-            </div>
-            <div className="ice-card-body space-y-4">
-              {/* Status */}
-              <div className="flex items-center gap-2 text-ice-sm">
-                {aiStatus === 'connected' ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    <span className="text-emerald-400 font-medium">{t('appSettings.ai.connected')}</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
-                    <span className="text-amber-400">{t('appSettings.ai.notConfigured')}</span>
-                  </>
-                )}
-              </div>
-
-              {/* Anthropic API Key */}
-              <label className="block">
-                <span className="flex items-center gap-1.5 text-ice-sm font-medium text-ice-text-2 mb-1.5">
-                  <Key className="w-3.5 h-3.5" />
-                  {t('appSettings.ai.anthropicKeyLabel')}
-                </span>
-                <input
-                  type="password"
-                  value={anthropicKey}
-                  onChange={(e) => setAnthropicKey(e.target.value)}
-                  onFocus={() => {
-                    if (anthropicKey.startsWith('••')) setAnthropicKey('');
-                  }}
-                  placeholder="sk-ant-..."
-                  className="ice-input w-full"
-                />
-                <p className="text-ice-xs text-ice-text-3 mt-1">
-                  {t('appSettings.ai.anthropicKeyHint')}{' '}
-                  <a
-                    href="https://console.anthropic.com/settings/keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    console.anthropic.com
-                  </a>
-                </p>
-              </label>
-
-              {/* Custom AI URL */}
-              <label className="block">
-                <span className="text-ice-sm font-medium text-ice-text-2 mb-1.5 block">
-                  {t('appSettings.ai.customEndpointLabel')}
-                </span>
-                <input
-                  type="text"
-                  value={aiUrl}
-                  onChange={(e) => setAiUrl(e.target.value)}
-                  placeholder="http://localhost:11434/v1 (Ollama, LM Studio, etc.)"
-                  className="ice-input w-full"
-                />
-                <p className="text-ice-xs text-ice-text-3 mt-1">{t('appSettings.ai.customEndpointHint')}</p>
-              </label>
-            </div>
-          </div>
-
-          {message && (
-            <p className={`text-sm ${message.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
-              {message.text}
-            </p>
-          )}
-
-          <div className="flex justify-end">
-            <button
-              onClick={handleSaveAi}
-              disabled={saving}
-              className="ice-btn ice-btn-primary"
-              data-tour-id="app-settings-btn-save"
-            >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t('common.buttons.save')}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Appearance Tab ──────────────────────────────────────────────── */}
       {tab === 'appearance' && (
@@ -317,6 +221,65 @@ export const AppSettings: React.FC = () => {
                   <span className="text-ice-xs text-ice-text-3 uppercase">{loc.id}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset Tab ────────────────────────────────────────────────────── */}
+      {tab === 'reset' && (
+        <div className="ice-card border-red-500/40">
+          <div className="ice-card-header">
+            <h2 className="text-ice-md font-semibold text-ice-text-1 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" aria-hidden="true" />
+              {t('appSettings.reset.title')}
+            </h2>
+            <p className="text-ice-sm text-ice-text-3 mt-1">{t('appSettings.reset.description')}</p>
+          </div>
+          <div className="ice-card-body space-y-4">
+            <ul className="text-ice-sm text-ice-text-2 space-y-1.5 list-disc pl-5">
+              <li>{t('appSettings.reset.wipesProjects')}</li>
+              <li>{t('appSettings.reset.wipesCredentials')}</li>
+              <li>{t('appSettings.reset.wipesGithub')}</li>
+              <li>{t('appSettings.reset.wipesAi')}</li>
+              <li>{t('appSettings.reset.wipesTour')}</li>
+            </ul>
+
+            <label className="block">
+              <span className="text-ice-sm font-medium text-ice-text-2 mb-1.5 block">
+                {t('appSettings.reset.confirmLabel')}
+              </span>
+              <input
+                type="text"
+                value={confirmReset}
+                onChange={(e) => setConfirmReset(e.target.value)}
+                placeholder="RESET"
+                className="ice-input w-full"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+
+            {resetError && <p className="text-sm text-red-400">{resetError}</p>}
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={resetting || confirmReset.trim().toUpperCase() !== 'RESET'}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg text-ice-sm font-medium transition-colors',
+                  'bg-red-600 text-white hover:bg-red-500',
+                  'disabled:bg-red-600/30 disabled:text-white/50 disabled:cursor-not-allowed',
+                )}
+              >
+                {resetting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                )}
+                {resetting ? t('appSettings.reset.resetting') : t('appSettings.reset.resetButton')}
+              </button>
             </div>
           </div>
         </div>

@@ -43,7 +43,7 @@ export interface ComponentDef {
   description: string;
   tooltip: string;
   icon: React.ElementType;
-  providers: ('aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean')[];
+  providers: ('aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm')[];
   category: string;
   runtimes?: RuntimeOption[];
 }

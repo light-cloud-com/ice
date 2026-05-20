@@ -194,6 +194,87 @@ app.use('/api', createAiRouter());
 app.use('/api', createEngineRouter());
 app.use('/api', createCredentialsRouter());
 
+// ─── Programmatic migration applier (desktop SQLite) ───────────────────────
+
+async function applyMigrations(prisma: any, migrationsDir: string): Promise<void> {
+  const { existsSync, readFileSync, readdirSync } = await import('fs');
+  const { join } = await import('path');
+
+  if (!existsSync(migrationsDir)) {
+    console.warn('[gateway] No migrations directory at', migrationsDir);
+    return;
+  }
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "checksum" TEXT,
+      "finished_at" DATETIME,
+      "migration_name" TEXT NOT NULL,
+      "logs" TEXT,
+      "rolled_back_at" DATETIME,
+      "started_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "applied_steps_count" INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  const applied = (await prisma.$queryRawUnsafe(
+    `SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL`,
+  )) as Array<{ migration_name: string }>;
+  const appliedSet = new Set(applied.map((r) => r.migration_name));
+
+  const migrations = readdirSync(migrationsDir)
+    .filter((n: string) => existsSync(join(migrationsDir, n, 'migration.sql')))
+    .sort();
+
+  // Baseline: if the schema is already present (e.g. created by an earlier
+  // `prisma db push`) but `_prisma_migrations` is empty, record every known
+  // migration as applied without re-running them. Detecting via `user` table
+  // is fine because the init migration creates it and the app cannot function
+  // without it.
+  if (appliedSet.size === 0 && migrations.length > 0) {
+    const userTable = (await prisma.$queryRawUnsafe(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='user'`,
+    )) as Array<{ name: string }>;
+    if (userTable.length > 0) {
+      console.log('[gateway] Detected pre-existing schema — marking migrations as baseline');
+      for (const name of migrations) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO _prisma_migrations (id, migration_name, finished_at, applied_steps_count)
+           VALUES (?, ?, CURRENT_TIMESTAMP, 0)`,
+          `${name}-baseline`,
+          name,
+        );
+        appliedSet.add(name);
+      }
+    }
+  }
+
+  for (const name of migrations) {
+    if (appliedSet.has(name)) continue;
+    console.log('[gateway] Applying migration', name);
+    const sql = readFileSync(join(migrationsDir, name, 'migration.sql'), 'utf-8');
+    // Prisma-generated SQLite migrations terminate each DDL statement with
+    // `;\n` and don't embed semicolons inside literals, so a naive split is
+    // safe. Swap to a tokenising splitter if a future migration uses richer
+    // SQL (triggers, etc.).
+    const statements = sql
+      .split(/;\s*\n/)
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+    for (const stmt of statements) {
+      await prisma.$executeRawUnsafe(stmt);
+    }
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO _prisma_migrations (id, migration_name, finished_at, applied_steps_count)
+       VALUES (?, ?, CURRENT_TIMESTAMP, ?)`,
+      `${name}-${Date.now()}`,
+      name,
+      statements.length,
+    );
+  }
+}
+
 // ─── Auto-seed local user & serve web app ───────────────────────────────────
 
 {
@@ -205,6 +286,16 @@ app.use('/api', createCredentialsRouter());
   // Community edition: auto-create local user (no login required)
   try {
     const { default: prisma } = await import('@ice/db');
+
+    // Apply bundled migrations against the SQLite DB before the first query.
+    // Desktop boot path provides `ICE_MIGRATIONS_DIR`; without it (e.g. cloud
+    // gateway) we skip — those deployments run `prisma migrate deploy`
+    // separately. Lives here, not in desktop main, because @ice/db exports
+    // raw TS sources (main: src/index.ts) that Electron's Node can't strip
+    // when imported from outside a pre-bundled context.
+    if (process.env.ICE_MIGRATIONS_DIR) {
+      await applyMigrations(prisma, process.env.ICE_MIGRATIONS_DIR);
+    }
 
     let user = await prisma.user.findFirst();
     if (!user) {
@@ -225,6 +316,17 @@ app.use('/api', createCredentialsRouter());
       console.log('[gateway] Existing user:', user.id);
     }
     setDesktopUser(user.id, user.organisation_id || '');
+
+    // Seed the ACME demo project on the very first launch (no-op when
+    // any project already exists for the user's org). Keeps a clean
+    // boot from dropping the user onto a stark empty workspace.
+    try {
+      const { seedDemoIfEmpty } = await import('@ice/service-iam');
+      const seeded = await seedDemoIfEmpty(prisma, user.id, user.organisation_id || '');
+      if (seeded) console.log('[gateway] Seeded ACME demo project:', seeded.projectId);
+    } catch (demoSeedErr: any) {
+      console.error('[gateway] Demo seed error:', demoSeedErr.message);
+    }
   } catch (seedErr: any) {
     console.error('[gateway] User seed error:', seedErr.message);
   }

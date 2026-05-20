@@ -72,14 +72,13 @@ describe('project-list-slice', () => {
   });
 
   describe('setRootDirectory', () => {
-    it('sets the path, flips loading on, and persists to localStorage', () => {
+    it('sets the path and flips loading on', () => {
       const s = projectListReducer(init(), setRootDirectory('/Users/me/projects'));
       expect(s.rootDirectory).toBe('/Users/me/projects');
       expect(s.isLoading).toBe(true);
-      expect(memStorage['ice-project-list-root']).toBe('/Users/me/projects');
     });
 
-    it('clears state and removes the persisted root when payload is null', () => {
+    it('clears state when payload is null', () => {
       // Pre-seed state with files/folders so we can prove they're cleared.
       let s = projectListReducer(init(), setRootDirectory('/old'));
       s = projectListReducer(
@@ -95,7 +94,6 @@ describe('project-list-slice', () => {
       expect(s.isLoading).toBe(false);
       expect(s.files).toEqual([]);
       expect(s.folders).toEqual([]);
-      expect(memStorage['ice-project-list-root']).toBeUndefined();
     });
   });
 
@@ -153,19 +151,17 @@ describe('project-list-slice', () => {
       );
     }
 
-    it('expanding adds to expandedFolders + persists', () => {
+    it('expanding adds to expandedFolders', () => {
       const s = projectListReducer(seeded(), toggleFolder('/r/a'));
       expect(s.folders.find((f) => f.path === '/r/a')?.expanded).toBe(true);
       expect(s.expandedFolders).toContain('/r/a');
-      expect(memStorage['ice-project-list-expanded']).toBe('["/r/a"]');
     });
 
-    it('collapsing removes from expandedFolders + persists', () => {
+    it('collapsing removes from expandedFolders', () => {
       let s = projectListReducer(seeded(), toggleFolder('/r/a'));
       s = projectListReducer(s, toggleFolder('/r/a'));
       expect(s.folders.find((f) => f.path === '/r/a')?.expanded).toBe(false);
       expect(s.expandedFolders).not.toContain('/r/a');
-      expect(memStorage['ice-project-list-expanded']).toBe('[]');
     });
 
     it('does not push duplicate paths when expanding twice (defensive against stale state)', () => {

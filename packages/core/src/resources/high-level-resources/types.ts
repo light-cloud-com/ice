@@ -16,7 +16,7 @@ export type { NodeBehavior };
  * Provider-specific implementation of a high-level resource
  */
 export interface ProviderImplementation {
-  provider: 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
+  provider: 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm';
   resource_type: string; // e.g., 'aws:s3:Bucket', 'gcp:storage:Bucket'
   display_name: string; // e.g., 'S3 Bucket', 'Cloud Storage Bucket'
 }
@@ -30,7 +30,7 @@ export interface HighLevelResource {
   // Node behavior type
   behavior: NodeBehavior;
   // Which providers support this resource
-  providers: Array<'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean'>;
+  providers: Array<'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm'>;
   // Provider-specific implementations
   implementations: ProviderImplementation[];
   // Keywords to match against low-level resources

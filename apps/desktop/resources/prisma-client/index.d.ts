@@ -72,6 +72,21 @@ export type ProviderCredential = $Result.DefaultSelection<Prisma.$ProviderCreden
  */
 export type CanvasDeployment = $Result.DefaultSelection<Prisma.$CanvasDeploymentPayload>;
 /**
+ * Model DeployEvent
+ *
+ */
+export type DeployEvent = $Result.DefaultSelection<Prisma.$DeployEventPayload>;
+/**
+ * Model DeployedResourceMapping
+ *
+ */
+export type DeployedResourceMapping = $Result.DefaultSelection<Prisma.$DeployedResourceMappingPayload>;
+/**
+ * Model BlockRequirementStatus
+ *
+ */
+export type BlockRequirementStatus = $Result.DefaultSelection<Prisma.$BlockRequirementStatusPayload>;
+/**
  * Model DeployJob
  *
  */
@@ -363,6 +378,36 @@ export class PrismaClient<
    * ```
    */
   get canvasDeployment(): Prisma.CanvasDeploymentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.deployEvent`: Exposes CRUD operations for the **DeployEvent** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more DeployEvents
+   * const deployEvents = await prisma.deployEvent.findMany()
+   * ```
+   */
+  get deployEvent(): Prisma.DeployEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.deployedResourceMapping`: Exposes CRUD operations for the **DeployedResourceMapping** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more DeployedResourceMappings
+   * const deployedResourceMappings = await prisma.deployedResourceMapping.findMany()
+   * ```
+   */
+  get deployedResourceMapping(): Prisma.DeployedResourceMappingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.blockRequirementStatus`: Exposes CRUD operations for the **BlockRequirementStatus** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more BlockRequirementStatuses
+   * const blockRequirementStatuses = await prisma.blockRequirementStatus.findMany()
+   * ```
+   */
+  get blockRequirementStatus(): Prisma.BlockRequirementStatusDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.deployJob`: Exposes CRUD operations for the **DeployJob** model.
@@ -660,7 +705,7 @@ export namespace Prisma {
         ? False
         : T extends Uint8Array
           ? False
-          : T extends BigInt
+          : T extends bigint
             ? False
             : T extends object
               ? True
@@ -862,6 +907,9 @@ export namespace Prisma {
     Environment: 'Environment';
     ProviderCredential: 'ProviderCredential';
     CanvasDeployment: 'CanvasDeployment';
+    DeployEvent: 'DeployEvent';
+    DeployedResourceMapping: 'DeployedResourceMapping';
+    BlockRequirementStatus: 'BlockRequirementStatus';
     DeployJob: 'DeployJob';
     DeploymentRule: 'DeploymentRule';
     DeploymentEvent: 'DeploymentEvent';
@@ -905,6 +953,9 @@ export namespace Prisma {
         | 'environment'
         | 'providerCredential'
         | 'canvasDeployment'
+        | 'deployEvent'
+        | 'deployedResourceMapping'
+        | 'blockRequirementStatus'
         | 'deployJob'
         | 'deploymentRule'
         | 'deploymentEvent'
@@ -1803,6 +1854,228 @@ export namespace Prisma {
           };
         };
       };
+      DeployEvent: {
+        payload: Prisma.$DeployEventPayload<ExtArgs>;
+        fields: Prisma.DeployEventFieldRefs;
+        operations: {
+          findUnique: {
+            args: Prisma.DeployEventFindUniqueArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload> | null;
+          };
+          findUniqueOrThrow: {
+            args: Prisma.DeployEventFindUniqueOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          findFirst: {
+            args: Prisma.DeployEventFindFirstArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload> | null;
+          };
+          findFirstOrThrow: {
+            args: Prisma.DeployEventFindFirstOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          findMany: {
+            args: Prisma.DeployEventFindManyArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>[];
+          };
+          create: {
+            args: Prisma.DeployEventCreateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          createMany: {
+            args: Prisma.DeployEventCreateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          createManyAndReturn: {
+            args: Prisma.DeployEventCreateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>[];
+          };
+          delete: {
+            args: Prisma.DeployEventDeleteArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          update: {
+            args: Prisma.DeployEventUpdateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          deleteMany: {
+            args: Prisma.DeployEventDeleteManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateMany: {
+            args: Prisma.DeployEventUpdateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateManyAndReturn: {
+            args: Prisma.DeployEventUpdateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>[];
+          };
+          upsert: {
+            args: Prisma.DeployEventUpsertArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployEventPayload>;
+          };
+          aggregate: {
+            args: Prisma.DeployEventAggregateArgs<ExtArgs>;
+            result: $Utils.Optional<AggregateDeployEvent>;
+          };
+          groupBy: {
+            args: Prisma.DeployEventGroupByArgs<ExtArgs>;
+            result: $Utils.Optional<DeployEventGroupByOutputType>[];
+          };
+          count: {
+            args: Prisma.DeployEventCountArgs<ExtArgs>;
+            result: $Utils.Optional<DeployEventCountAggregateOutputType> | number;
+          };
+        };
+      };
+      DeployedResourceMapping: {
+        payload: Prisma.$DeployedResourceMappingPayload<ExtArgs>;
+        fields: Prisma.DeployedResourceMappingFieldRefs;
+        operations: {
+          findUnique: {
+            args: Prisma.DeployedResourceMappingFindUniqueArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload> | null;
+          };
+          findUniqueOrThrow: {
+            args: Prisma.DeployedResourceMappingFindUniqueOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          findFirst: {
+            args: Prisma.DeployedResourceMappingFindFirstArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload> | null;
+          };
+          findFirstOrThrow: {
+            args: Prisma.DeployedResourceMappingFindFirstOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          findMany: {
+            args: Prisma.DeployedResourceMappingFindManyArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>[];
+          };
+          create: {
+            args: Prisma.DeployedResourceMappingCreateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          createMany: {
+            args: Prisma.DeployedResourceMappingCreateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          createManyAndReturn: {
+            args: Prisma.DeployedResourceMappingCreateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>[];
+          };
+          delete: {
+            args: Prisma.DeployedResourceMappingDeleteArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          update: {
+            args: Prisma.DeployedResourceMappingUpdateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          deleteMany: {
+            args: Prisma.DeployedResourceMappingDeleteManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateMany: {
+            args: Prisma.DeployedResourceMappingUpdateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateManyAndReturn: {
+            args: Prisma.DeployedResourceMappingUpdateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>[];
+          };
+          upsert: {
+            args: Prisma.DeployedResourceMappingUpsertArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$DeployedResourceMappingPayload>;
+          };
+          aggregate: {
+            args: Prisma.DeployedResourceMappingAggregateArgs<ExtArgs>;
+            result: $Utils.Optional<AggregateDeployedResourceMapping>;
+          };
+          groupBy: {
+            args: Prisma.DeployedResourceMappingGroupByArgs<ExtArgs>;
+            result: $Utils.Optional<DeployedResourceMappingGroupByOutputType>[];
+          };
+          count: {
+            args: Prisma.DeployedResourceMappingCountArgs<ExtArgs>;
+            result: $Utils.Optional<DeployedResourceMappingCountAggregateOutputType> | number;
+          };
+        };
+      };
+      BlockRequirementStatus: {
+        payload: Prisma.$BlockRequirementStatusPayload<ExtArgs>;
+        fields: Prisma.BlockRequirementStatusFieldRefs;
+        operations: {
+          findUnique: {
+            args: Prisma.BlockRequirementStatusFindUniqueArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload> | null;
+          };
+          findUniqueOrThrow: {
+            args: Prisma.BlockRequirementStatusFindUniqueOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          findFirst: {
+            args: Prisma.BlockRequirementStatusFindFirstArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload> | null;
+          };
+          findFirstOrThrow: {
+            args: Prisma.BlockRequirementStatusFindFirstOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          findMany: {
+            args: Prisma.BlockRequirementStatusFindManyArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>[];
+          };
+          create: {
+            args: Prisma.BlockRequirementStatusCreateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          createMany: {
+            args: Prisma.BlockRequirementStatusCreateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          createManyAndReturn: {
+            args: Prisma.BlockRequirementStatusCreateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>[];
+          };
+          delete: {
+            args: Prisma.BlockRequirementStatusDeleteArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          update: {
+            args: Prisma.BlockRequirementStatusUpdateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          deleteMany: {
+            args: Prisma.BlockRequirementStatusDeleteManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateMany: {
+            args: Prisma.BlockRequirementStatusUpdateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateManyAndReturn: {
+            args: Prisma.BlockRequirementStatusUpdateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>[];
+          };
+          upsert: {
+            args: Prisma.BlockRequirementStatusUpsertArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$BlockRequirementStatusPayload>;
+          };
+          aggregate: {
+            args: Prisma.BlockRequirementStatusAggregateArgs<ExtArgs>;
+            result: $Utils.Optional<AggregateBlockRequirementStatus>;
+          };
+          groupBy: {
+            args: Prisma.BlockRequirementStatusGroupByArgs<ExtArgs>;
+            result: $Utils.Optional<BlockRequirementStatusGroupByOutputType>[];
+          };
+          count: {
+            args: Prisma.BlockRequirementStatusCountArgs<ExtArgs>;
+            result: $Utils.Optional<BlockRequirementStatusCountAggregateOutputType> | number;
+          };
+        };
+      };
       DeployJob: {
         payload: Prisma.$DeployJobPayload<ExtArgs>;
         fields: Prisma.DeployJobFieldRefs;
@@ -2429,6 +2702,9 @@ export namespace Prisma {
     environment?: EnvironmentOmit;
     providerCredential?: ProviderCredentialOmit;
     canvasDeployment?: CanvasDeploymentOmit;
+    deployEvent?: DeployEventOmit;
+    deployedResourceMapping?: DeployedResourceMappingOmit;
+    blockRequirementStatus?: BlockRequirementStatusOmit;
     deployJob?: DeployJobOmit;
     deploymentRule?: DeploymentRuleOmit;
     deploymentEvent?: DeploymentEventOmit;
@@ -2760,17 +3036,74 @@ export namespace Prisma {
   };
 
   /**
+   * Count Type CanvasCardCountOutputType
+   */
+
+  export type CanvasCardCountOutputType = {
+    deployments: number;
+    resourceMappings: number;
+    requirementStatuses: number;
+  };
+
+  export type CanvasCardCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    deployments?: boolean | CanvasCardCountOutputTypeCountDeploymentsArgs;
+    resourceMappings?: boolean | CanvasCardCountOutputTypeCountResourceMappingsArgs;
+    requirementStatuses?: boolean | CanvasCardCountOutputTypeCountRequirementStatusesArgs;
+  };
+
+  // Custom InputTypes
+  /**
+   * CanvasCardCountOutputType without action
+   */
+  export type CanvasCardCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Select specific fields to fetch from the CanvasCardCountOutputType
+       */
+      select?: CanvasCardCountOutputTypeSelect<ExtArgs> | null;
+    };
+
+  /**
+   * CanvasCardCountOutputType without action
+   */
+  export type CanvasCardCountOutputTypeCountDeploymentsArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: CanvasDeploymentWhereInput;
+  };
+
+  /**
+   * CanvasCardCountOutputType without action
+   */
+  export type CanvasCardCountOutputTypeCountResourceMappingsArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: DeployedResourceMappingWhereInput;
+  };
+
+  /**
+   * CanvasCardCountOutputType without action
+   */
+  export type CanvasCardCountOutputTypeCountRequirementStatusesArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: BlockRequirementStatusWhereInput;
+  };
+
+  /**
    * Count Type CanvasDeploymentCountOutputType
    */
 
   export type CanvasDeploymentCountOutputType = {
     deploy_jobs: number;
+    deploy_events: number;
   };
 
   export type CanvasDeploymentCountOutputTypeSelect<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     deploy_jobs?: boolean | CanvasDeploymentCountOutputTypeCountDeploy_jobsArgs;
+    deploy_events?: boolean | CanvasDeploymentCountOutputTypeCountDeploy_eventsArgs;
   };
 
   // Custom InputTypes
@@ -2793,6 +3126,15 @@ export namespace Prisma {
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     where?: DeployJobWhereInput;
+  };
+
+  /**
+   * CanvasDeploymentCountOutputType without action
+   */
+  export type CanvasDeploymentCountOutputTypeCountDeploy_eventsArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: DeployEventWhereInput;
   };
 
   /**
@@ -2900,6 +3242,8 @@ export namespace Prisma {
     onboarding_step: number | null;
     default_provider: string | null;
     default_region: string | null;
+    completed_tours: string | null;
+    preferences: string | null;
     created_at: Date | null;
     updated_at: Date | null;
   };
@@ -2915,6 +3259,8 @@ export namespace Prisma {
     onboarding_step: number | null;
     default_provider: string | null;
     default_region: string | null;
+    completed_tours: string | null;
+    preferences: string | null;
     created_at: Date | null;
     updated_at: Date | null;
   };
@@ -2930,6 +3276,8 @@ export namespace Prisma {
     onboarding_step: number;
     default_provider: number;
     default_region: number;
+    completed_tours: number;
+    preferences: number;
     created_at: number;
     updated_at: number;
     _all: number;
@@ -2954,6 +3302,8 @@ export namespace Prisma {
     onboarding_step?: true;
     default_provider?: true;
     default_region?: true;
+    completed_tours?: true;
+    preferences?: true;
     created_at?: true;
     updated_at?: true;
   };
@@ -2969,6 +3319,8 @@ export namespace Prisma {
     onboarding_step?: true;
     default_provider?: true;
     default_region?: true;
+    completed_tours?: true;
+    preferences?: true;
     created_at?: true;
     updated_at?: true;
   };
@@ -2984,6 +3336,8 @@ export namespace Prisma {
     onboarding_step?: true;
     default_provider?: true;
     default_region?: true;
+    completed_tours?: true;
+    preferences?: true;
     created_at?: true;
     updated_at?: true;
     _all?: true;
@@ -3083,6 +3437,8 @@ export namespace Prisma {
     onboarding_step: number;
     default_provider: string | null;
     default_region: string | null;
+    completed_tours: string | null;
+    preferences: string | null;
     created_at: Date;
     updated_at: Date;
     _count: UserCountAggregateOutputType | null;
@@ -3116,6 +3472,8 @@ export namespace Prisma {
       onboarding_step?: boolean;
       default_provider?: boolean;
       default_region?: boolean;
+      completed_tours?: boolean;
+      preferences?: boolean;
       created_at?: boolean;
       updated_at?: boolean;
       organisation?: boolean | User$organisationArgs<ExtArgs>;
@@ -3145,6 +3503,8 @@ export namespace Prisma {
         onboarding_step?: boolean;
         default_provider?: boolean;
         default_region?: boolean;
+        completed_tours?: boolean;
+        preferences?: boolean;
         created_at?: boolean;
         updated_at?: boolean;
         organisation?: boolean | User$organisationArgs<ExtArgs>;
@@ -3165,6 +3525,8 @@ export namespace Prisma {
         onboarding_step?: boolean;
         default_provider?: boolean;
         default_region?: boolean;
+        completed_tours?: boolean;
+        preferences?: boolean;
         created_at?: boolean;
         updated_at?: boolean;
         organisation?: boolean | User$organisationArgs<ExtArgs>;
@@ -3183,6 +3545,8 @@ export namespace Prisma {
     onboarding_step?: boolean;
     default_provider?: boolean;
     default_region?: boolean;
+    completed_tours?: boolean;
+    preferences?: boolean;
     created_at?: boolean;
     updated_at?: boolean;
   };
@@ -3198,6 +3562,8 @@ export namespace Prisma {
     | 'onboarding_step'
     | 'default_provider'
     | 'default_region'
+    | 'completed_tours'
+    | 'preferences'
     | 'created_at'
     | 'updated_at',
     ExtArgs['result']['user']
@@ -3246,6 +3612,8 @@ export namespace Prisma {
         onboarding_step: number;
         default_provider: string | null;
         default_region: string | null;
+        completed_tours: string | null;
+        preferences: string | null;
         created_at: Date;
         updated_at: Date;
       },
@@ -3816,6 +4184,8 @@ export namespace Prisma {
     readonly onboarding_step: FieldRef<'User', 'Int'>;
     readonly default_provider: FieldRef<'User', 'String'>;
     readonly default_region: FieldRef<'User', 'String'>;
+    readonly completed_tours: FieldRef<'User', 'String'>;
+    readonly preferences: FieldRef<'User', 'String'>;
     readonly created_at: FieldRef<'User', 'DateTime'>;
     readonly updated_at: FieldRef<'User', 'DateTime'>;
   }
@@ -4046,7 +4416,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -4065,7 +4434,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -5439,7 +5807,6 @@ export namespace Prisma {
      * The data used to create many Organisations.
      */
     data: OrganisationCreateManyInput | OrganisationCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -5459,7 +5826,6 @@ export namespace Prisma {
        * The data used to create many Organisations.
        */
       data: OrganisationCreateManyInput | OrganisationCreateManyInput[];
-      skipDuplicates?: boolean;
     };
 
   /**
@@ -6789,7 +7155,6 @@ export namespace Prisma {
      * The data used to create many OrganisationMembers.
      */
     data: OrganisationMemberCreateManyInput | OrganisationMemberCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -6810,7 +7175,6 @@ export namespace Prisma {
      * The data used to create many OrganisationMembers.
      */
     data: OrganisationMemberCreateManyInput | OrganisationMemberCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -8004,7 +8368,6 @@ export namespace Prisma {
      * The data used to create many Invitations.
      */
     data: InvitationCreateManyInput | InvitationCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -8023,7 +8386,6 @@ export namespace Prisma {
      * The data used to create many Invitations.
      */
     data: InvitationCreateManyInput | InvitationCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -9165,7 +9527,6 @@ export namespace Prisma {
      * The data used to create many RefreshTokens.
      */
     data: RefreshTokenCreateManyInput | RefreshTokenCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -9185,7 +9546,6 @@ export namespace Prisma {
        * The data used to create many RefreshTokens.
        */
       data: RefreshTokenCreateManyInput | RefreshTokenCreateManyInput[];
-      skipDuplicates?: boolean;
       /**
        * Choose, which related nodes to fetch as well
        */
@@ -10380,7 +10740,6 @@ export namespace Prisma {
      * The data used to create many GitHubTokens.
      */
     data: GitHubTokenCreateManyInput | GitHubTokenCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -10399,7 +10758,6 @@ export namespace Prisma {
      * The data used to create many GitHubTokens.
      */
     data: GitHubTokenCreateManyInput | GitHubTokenCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -11701,7 +12059,6 @@ export namespace Prisma {
      * The data used to create many CanvasProjects.
      */
     data: CanvasProjectCreateManyInput | CanvasProjectCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -11721,7 +12078,6 @@ export namespace Prisma {
        * The data used to create many CanvasProjects.
        */
       data: CanvasProjectCreateManyInput | CanvasProjectCreateManyInput[];
-      skipDuplicates?: boolean;
       /**
        * Choose, which related nodes to fetch as well
        */
@@ -12967,7 +13323,6 @@ export namespace Prisma {
      * The data used to create many ProjectMembers.
      */
     data: ProjectMemberCreateManyInput | ProjectMemberCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -12987,7 +13342,6 @@ export namespace Prisma {
        * The data used to create many ProjectMembers.
        */
       data: ProjectMemberCreateManyInput | ProjectMemberCreateManyInput[];
-      skipDuplicates?: boolean;
       /**
        * Choose, which related nodes to fetch as well
        */
@@ -13327,6 +13681,10 @@ export namespace Prisma {
         updated_at?: boolean;
         project?: boolean | CanvasProjectDefaultArgs<ExtArgs>;
         environment?: boolean | CanvasCard$environmentArgs<ExtArgs>;
+        deployments?: boolean | CanvasCard$deploymentsArgs<ExtArgs>;
+        resourceMappings?: boolean | CanvasCard$resourceMappingsArgs<ExtArgs>;
+        requirementStatuses?: boolean | CanvasCard$requirementStatusesArgs<ExtArgs>;
+        _count?: boolean | CanvasCardCountOutputTypeDefaultArgs<ExtArgs>;
       },
       ExtArgs['result']['canvasCard']
     >;
@@ -13381,6 +13739,10 @@ export namespace Prisma {
   export type CanvasCardInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | CanvasProjectDefaultArgs<ExtArgs>;
     environment?: boolean | CanvasCard$environmentArgs<ExtArgs>;
+    deployments?: boolean | CanvasCard$deploymentsArgs<ExtArgs>;
+    resourceMappings?: boolean | CanvasCard$resourceMappingsArgs<ExtArgs>;
+    requirementStatuses?: boolean | CanvasCard$requirementStatusesArgs<ExtArgs>;
+    _count?: boolean | CanvasCardCountOutputTypeDefaultArgs<ExtArgs>;
   };
   export type CanvasCardIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
     {
@@ -13396,6 +13758,9 @@ export namespace Prisma {
     objects: {
       project: Prisma.$CanvasProjectPayload<ExtArgs>;
       environment: Prisma.$EnvironmentPayload<ExtArgs> | null;
+      deployments: Prisma.$CanvasDeploymentPayload<ExtArgs>[];
+      resourceMappings: Prisma.$DeployedResourceMappingPayload<ExtArgs>[];
+      requirementStatuses: Prisma.$BlockRequirementStatusPayload<ExtArgs>[];
     };
     scalars: $Extensions.GetPayloadResult<
       {
@@ -13899,6 +14264,21 @@ export namespace Prisma {
       ExtArgs,
       GlobalOmitOptions
     >;
+    deployments<T extends CanvasCard$deploymentsArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCard$deploymentsArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$CanvasDeploymentPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions> | Null
+    >;
+    resourceMappings<T extends CanvasCard$resourceMappingsArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCard$resourceMappingsArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions> | Null
+    >;
+    requirementStatuses<T extends CanvasCard$requirementStatusesArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCard$requirementStatusesArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions> | Null
+    >;
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14166,7 +14546,6 @@ export namespace Prisma {
      * The data used to create many CanvasCards.
      */
     data: CanvasCardCreateManyInput | CanvasCardCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -14185,7 +14564,6 @@ export namespace Prisma {
      * The data used to create many CanvasCards.
      */
     data: CanvasCardCreateManyInput | CanvasCardCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -14349,6 +14727,78 @@ export namespace Prisma {
      */
     include?: EnvironmentInclude<ExtArgs> | null;
     where?: EnvironmentWhereInput;
+  };
+
+  /**
+   * CanvasCard.deployments
+   */
+  export type CanvasCard$deploymentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CanvasDeployment
+     */
+    select?: CanvasDeploymentSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the CanvasDeployment
+     */
+    omit?: CanvasDeploymentOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CanvasDeploymentInclude<ExtArgs> | null;
+    where?: CanvasDeploymentWhereInput;
+    orderBy?: CanvasDeploymentOrderByWithRelationInput | CanvasDeploymentOrderByWithRelationInput[];
+    cursor?: CanvasDeploymentWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: CanvasDeploymentScalarFieldEnum | CanvasDeploymentScalarFieldEnum[];
+  };
+
+  /**
+   * CanvasCard.resourceMappings
+   */
+  export type CanvasCard$resourceMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    where?: DeployedResourceMappingWhereInput;
+    orderBy?: DeployedResourceMappingOrderByWithRelationInput | DeployedResourceMappingOrderByWithRelationInput[];
+    cursor?: DeployedResourceMappingWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: DeployedResourceMappingScalarFieldEnum | DeployedResourceMappingScalarFieldEnum[];
+  };
+
+  /**
+   * CanvasCard.requirementStatuses
+   */
+  export type CanvasCard$requirementStatusesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    where?: BlockRequirementStatusWhereInput;
+    orderBy?: BlockRequirementStatusOrderByWithRelationInput | BlockRequirementStatusOrderByWithRelationInput[];
+    cursor?: BlockRequirementStatusWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: BlockRequirementStatusScalarFieldEnum | BlockRequirementStatusScalarFieldEnum[];
   };
 
   /**
@@ -15511,7 +15961,6 @@ export namespace Prisma {
      * The data used to create many Environments.
      */
     data: EnvironmentCreateManyInput | EnvironmentCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -15530,7 +15979,6 @@ export namespace Prisma {
      * The data used to create many Environments.
      */
     data: EnvironmentCreateManyInput | EnvironmentCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -16728,7 +17176,6 @@ export namespace Prisma {
      * The data used to create many ProviderCredentials.
      */
     data: ProviderCredentialCreateManyInput | ProviderCredentialCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -16749,7 +17196,6 @@ export namespace Prisma {
      * The data used to create many ProviderCredentials.
      */
     data: ProviderCredentialCreateManyInput | ProviderCredentialCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -16941,11 +17387,13 @@ export namespace Prisma {
     card_id: string | null;
     user_id: string | null;
     status: string | null;
+    action_type: string | null;
     provider: string | null;
     region: string | null;
     environment: string | null;
     duration_ms: number | null;
     error: string | null;
+    pinned: boolean | null;
     created_at: Date | null;
     updated_at: Date | null;
   };
@@ -16955,11 +17403,13 @@ export namespace Prisma {
     card_id: string | null;
     user_id: string | null;
     status: string | null;
+    action_type: string | null;
     provider: string | null;
     region: string | null;
     environment: string | null;
     duration_ms: number | null;
     error: string | null;
+    pinned: boolean | null;
     created_at: Date | null;
     updated_at: Date | null;
   };
@@ -16969,13 +17419,17 @@ export namespace Prisma {
     card_id: number;
     user_id: number;
     status: number;
+    action_type: number;
     provider: number;
     region: number;
     environment: number;
     plan: number;
     results: number;
+    summary: number;
+    snapshot: number;
     duration_ms: number;
     error: number;
+    pinned: number;
     created_at: number;
     updated_at: number;
     _all: number;
@@ -16994,11 +17448,13 @@ export namespace Prisma {
     card_id?: true;
     user_id?: true;
     status?: true;
+    action_type?: true;
     provider?: true;
     region?: true;
     environment?: true;
     duration_ms?: true;
     error?: true;
+    pinned?: true;
     created_at?: true;
     updated_at?: true;
   };
@@ -17008,11 +17464,13 @@ export namespace Prisma {
     card_id?: true;
     user_id?: true;
     status?: true;
+    action_type?: true;
     provider?: true;
     region?: true;
     environment?: true;
     duration_ms?: true;
     error?: true;
+    pinned?: true;
     created_at?: true;
     updated_at?: true;
   };
@@ -17022,13 +17480,17 @@ export namespace Prisma {
     card_id?: true;
     user_id?: true;
     status?: true;
+    action_type?: true;
     provider?: true;
     region?: true;
     environment?: true;
     plan?: true;
     results?: true;
+    summary?: true;
+    snapshot?: true;
     duration_ms?: true;
     error?: true;
+    pinned?: true;
     created_at?: true;
     updated_at?: true;
     _all?: true;
@@ -17122,13 +17584,17 @@ export namespace Prisma {
     card_id: string;
     user_id: string | null;
     status: string;
+    action_type: string;
     provider: string;
     region: string;
     environment: string;
     plan: JsonValue | null;
     results: JsonValue | null;
+    summary: JsonValue | null;
+    snapshot: JsonValue | null;
     duration_ms: number | null;
     error: string | null;
+    pinned: boolean;
     created_at: Date;
     updated_at: Date;
     _count: CanvasDeploymentCountAggregateOutputType | null;
@@ -17157,17 +17623,23 @@ export namespace Prisma {
         card_id?: boolean;
         user_id?: boolean;
         status?: boolean;
+        action_type?: boolean;
         provider?: boolean;
         region?: boolean;
         environment?: boolean;
         plan?: boolean;
         results?: boolean;
+        summary?: boolean;
+        snapshot?: boolean;
         duration_ms?: boolean;
         error?: boolean;
+        pinned?: boolean;
         created_at?: boolean;
         updated_at?: boolean;
         deploy_jobs?: boolean | CanvasDeployment$deploy_jobsArgs<ExtArgs>;
+        deploy_events?: boolean | CanvasDeployment$deploy_eventsArgs<ExtArgs>;
         user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+        card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
         _count?: boolean | CanvasDeploymentCountOutputTypeDefaultArgs<ExtArgs>;
       },
       ExtArgs['result']['canvasDeployment']
@@ -17181,16 +17653,21 @@ export namespace Prisma {
       card_id?: boolean;
       user_id?: boolean;
       status?: boolean;
+      action_type?: boolean;
       provider?: boolean;
       region?: boolean;
       environment?: boolean;
       plan?: boolean;
       results?: boolean;
+      summary?: boolean;
+      snapshot?: boolean;
       duration_ms?: boolean;
       error?: boolean;
+      pinned?: boolean;
       created_at?: boolean;
       updated_at?: boolean;
       user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
     },
     ExtArgs['result']['canvasDeployment']
   >;
@@ -17203,16 +17680,21 @@ export namespace Prisma {
       card_id?: boolean;
       user_id?: boolean;
       status?: boolean;
+      action_type?: boolean;
       provider?: boolean;
       region?: boolean;
       environment?: boolean;
       plan?: boolean;
       results?: boolean;
+      summary?: boolean;
+      snapshot?: boolean;
       duration_ms?: boolean;
       error?: boolean;
+      pinned?: boolean;
       created_at?: boolean;
       updated_at?: boolean;
       user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
     },
     ExtArgs['result']['canvasDeployment']
   >;
@@ -17222,13 +17704,17 @@ export namespace Prisma {
     card_id?: boolean;
     user_id?: boolean;
     status?: boolean;
+    action_type?: boolean;
     provider?: boolean;
     region?: boolean;
     environment?: boolean;
     plan?: boolean;
     results?: boolean;
+    summary?: boolean;
+    snapshot?: boolean;
     duration_ms?: boolean;
     error?: boolean;
+    pinned?: boolean;
     created_at?: boolean;
     updated_at?: boolean;
   };
@@ -17239,38 +17725,48 @@ export namespace Prisma {
       | 'card_id'
       | 'user_id'
       | 'status'
+      | 'action_type'
       | 'provider'
       | 'region'
       | 'environment'
       | 'plan'
       | 'results'
+      | 'summary'
+      | 'snapshot'
       | 'duration_ms'
       | 'error'
+      | 'pinned'
       | 'created_at'
       | 'updated_at',
       ExtArgs['result']['canvasDeployment']
     >;
   export type CanvasDeploymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     deploy_jobs?: boolean | CanvasDeployment$deploy_jobsArgs<ExtArgs>;
+    deploy_events?: boolean | CanvasDeployment$deploy_eventsArgs<ExtArgs>;
     user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
     _count?: boolean | CanvasDeploymentCountOutputTypeDefaultArgs<ExtArgs>;
   };
   export type CanvasDeploymentIncludeCreateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
   };
   export type CanvasDeploymentIncludeUpdateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     user?: boolean | CanvasDeployment$userArgs<ExtArgs>;
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
   };
 
   export type $CanvasDeploymentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: 'CanvasDeployment';
     objects: {
       deploy_jobs: Prisma.$DeployJobPayload<ExtArgs>[];
+      deploy_events: Prisma.$DeployEventPayload<ExtArgs>[];
       user: Prisma.$UserPayload<ExtArgs> | null;
+      card: Prisma.$CanvasCardPayload<ExtArgs>;
     };
     scalars: $Extensions.GetPayloadResult<
       {
@@ -17278,13 +17774,17 @@ export namespace Prisma {
         card_id: string;
         user_id: string | null;
         status: string;
+        action_type: string;
         provider: string;
         region: string;
         environment: string;
         plan: Prisma.JsonValue | null;
         results: Prisma.JsonValue | null;
+        summary: Prisma.JsonValue | null;
+        snapshot: Prisma.JsonValue | null;
         duration_ms: number | null;
         error: string | null;
+        pinned: boolean;
         created_at: Date;
         updated_at: Date;
       },
@@ -17768,11 +18268,24 @@ export namespace Prisma {
     ): Prisma.PrismaPromise<
       $Result.GetResult<Prisma.$DeployJobPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions> | Null
     >;
+    deploy_events<T extends CanvasDeployment$deploy_eventsArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasDeployment$deploy_eventsArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions> | Null
+    >;
     user<T extends CanvasDeployment$userArgs<ExtArgs> = {}>(
       args?: Subset<T, CanvasDeployment$userArgs<ExtArgs>>,
     ): Prisma__UserClient<
       $Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions> | null,
       null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+    card<T extends CanvasCardDefaultArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCardDefaultArgs<ExtArgs>>,
+    ): Prisma__CanvasCardClient<
+      $Result.GetResult<Prisma.$CanvasCardPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions> | Null,
+      Null,
       ExtArgs,
       GlobalOmitOptions
     >;
@@ -17811,13 +18324,17 @@ export namespace Prisma {
     readonly card_id: FieldRef<'CanvasDeployment', 'String'>;
     readonly user_id: FieldRef<'CanvasDeployment', 'String'>;
     readonly status: FieldRef<'CanvasDeployment', 'String'>;
+    readonly action_type: FieldRef<'CanvasDeployment', 'String'>;
     readonly provider: FieldRef<'CanvasDeployment', 'String'>;
     readonly region: FieldRef<'CanvasDeployment', 'String'>;
     readonly environment: FieldRef<'CanvasDeployment', 'String'>;
     readonly plan: FieldRef<'CanvasDeployment', 'Json'>;
     readonly results: FieldRef<'CanvasDeployment', 'Json'>;
+    readonly summary: FieldRef<'CanvasDeployment', 'Json'>;
+    readonly snapshot: FieldRef<'CanvasDeployment', 'Json'>;
     readonly duration_ms: FieldRef<'CanvasDeployment', 'Int'>;
     readonly error: FieldRef<'CanvasDeployment', 'String'>;
+    readonly pinned: FieldRef<'CanvasDeployment', 'Boolean'>;
     readonly created_at: FieldRef<'CanvasDeployment', 'DateTime'>;
     readonly updated_at: FieldRef<'CanvasDeployment', 'DateTime'>;
   }
@@ -18051,7 +18568,6 @@ export namespace Prisma {
      * The data used to create many CanvasDeployments.
      */
     data: CanvasDeploymentCreateManyInput | CanvasDeploymentCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -18072,7 +18588,6 @@ export namespace Prisma {
      * The data used to create many CanvasDeployments.
      */
     data: CanvasDeploymentCreateManyInput | CanvasDeploymentCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -18246,6 +18761,30 @@ export namespace Prisma {
   };
 
   /**
+   * CanvasDeployment.deploy_events
+   */
+  export type CanvasDeployment$deploy_eventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    where?: DeployEventWhereInput;
+    orderBy?: DeployEventOrderByWithRelationInput | DeployEventOrderByWithRelationInput[];
+    cursor?: DeployEventWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: DeployEventScalarFieldEnum | DeployEventScalarFieldEnum[];
+  };
+
+  /**
    * CanvasDeployment.user
    */
   export type CanvasDeployment$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18280,6 +18819,3714 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CanvasDeploymentInclude<ExtArgs> | null;
+  };
+
+  /**
+   * Model DeployEvent
+   */
+
+  export type AggregateDeployEvent = {
+    _count: DeployEventCountAggregateOutputType | null;
+    _avg: DeployEventAvgAggregateOutputType | null;
+    _sum: DeployEventSumAggregateOutputType | null;
+    _min: DeployEventMinAggregateOutputType | null;
+    _max: DeployEventMaxAggregateOutputType | null;
+  };
+
+  export type DeployEventAvgAggregateOutputType = {
+    seq: number | null;
+  };
+
+  export type DeployEventSumAggregateOutputType = {
+    seq: number | null;
+  };
+
+  export type DeployEventMinAggregateOutputType = {
+    id: string | null;
+    deployment_id: string | null;
+    card_id: string | null;
+    seq: number | null;
+    type: string | null;
+    created_at: Date | null;
+  };
+
+  export type DeployEventMaxAggregateOutputType = {
+    id: string | null;
+    deployment_id: string | null;
+    card_id: string | null;
+    seq: number | null;
+    type: string | null;
+    created_at: Date | null;
+  };
+
+  export type DeployEventCountAggregateOutputType = {
+    id: number;
+    deployment_id: number;
+    card_id: number;
+    seq: number;
+    type: number;
+    payload: number;
+    created_at: number;
+    _all: number;
+  };
+
+  export type DeployEventAvgAggregateInputType = {
+    seq?: true;
+  };
+
+  export type DeployEventSumAggregateInputType = {
+    seq?: true;
+  };
+
+  export type DeployEventMinAggregateInputType = {
+    id?: true;
+    deployment_id?: true;
+    card_id?: true;
+    seq?: true;
+    type?: true;
+    created_at?: true;
+  };
+
+  export type DeployEventMaxAggregateInputType = {
+    id?: true;
+    deployment_id?: true;
+    card_id?: true;
+    seq?: true;
+    type?: true;
+    created_at?: true;
+  };
+
+  export type DeployEventCountAggregateInputType = {
+    id?: true;
+    deployment_id?: true;
+    card_id?: true;
+    seq?: true;
+    type?: true;
+    payload?: true;
+    created_at?: true;
+    _all?: true;
+  };
+
+  export type DeployEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DeployEvent to aggregate.
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of DeployEvents to fetch.
+     */
+    orderBy?: DeployEventOrderByWithRelationInput | DeployEventOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the start position
+     */
+    cursor?: DeployEventWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` DeployEvents from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` DeployEvents.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Count returned DeployEvents
+     **/
+    _count?: true | DeployEventCountAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to average
+     **/
+    _avg?: DeployEventAvgAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to sum
+     **/
+    _sum?: DeployEventSumAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the minimum value
+     **/
+    _min?: DeployEventMinAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the maximum value
+     **/
+    _max?: DeployEventMaxAggregateInputType;
+  };
+
+  export type GetDeployEventAggregateType<T extends DeployEventAggregateArgs> = {
+    [P in keyof T & keyof AggregateDeployEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDeployEvent[P]>
+      : GetScalarType<T[P], AggregateDeployEvent[P]>;
+  };
+
+  export type DeployEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DeployEventWhereInput;
+    orderBy?: DeployEventOrderByWithAggregationInput | DeployEventOrderByWithAggregationInput[];
+    by: DeployEventScalarFieldEnum[] | DeployEventScalarFieldEnum;
+    having?: DeployEventScalarWhereWithAggregatesInput;
+    take?: number;
+    skip?: number;
+    _count?: DeployEventCountAggregateInputType | true;
+    _avg?: DeployEventAvgAggregateInputType;
+    _sum?: DeployEventSumAggregateInputType;
+    _min?: DeployEventMinAggregateInputType;
+    _max?: DeployEventMaxAggregateInputType;
+  };
+
+  export type DeployEventGroupByOutputType = {
+    id: string;
+    deployment_id: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonValue;
+    created_at: Date;
+    _count: DeployEventCountAggregateOutputType | null;
+    _avg: DeployEventAvgAggregateOutputType | null;
+    _sum: DeployEventSumAggregateOutputType | null;
+    _min: DeployEventMinAggregateOutputType | null;
+    _max: DeployEventMaxAggregateOutputType | null;
+  };
+
+  type GetDeployEventGroupByPayload<T extends DeployEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DeployEventGroupByOutputType, T['by']> & {
+        [P in keyof T & keyof DeployEventGroupByOutputType]: P extends '_count'
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], DeployEventGroupByOutputType[P]>
+          : GetScalarType<T[P], DeployEventGroupByOutputType[P]>;
+      }
+    >
+  >;
+
+  export type DeployEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        deployment_id?: boolean;
+        card_id?: boolean;
+        seq?: boolean;
+        type?: boolean;
+        payload?: boolean;
+        created_at?: boolean;
+        deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+      },
+      ExtArgs['result']['deployEvent']
+    >;
+
+  export type DeployEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        deployment_id?: boolean;
+        card_id?: boolean;
+        seq?: boolean;
+        type?: boolean;
+        payload?: boolean;
+        created_at?: boolean;
+        deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+      },
+      ExtArgs['result']['deployEvent']
+    >;
+
+  export type DeployEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        deployment_id?: boolean;
+        card_id?: boolean;
+        seq?: boolean;
+        type?: boolean;
+        payload?: boolean;
+        created_at?: boolean;
+        deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+      },
+      ExtArgs['result']['deployEvent']
+    >;
+
+  export type DeployEventSelectScalar = {
+    id?: boolean;
+    deployment_id?: boolean;
+    card_id?: boolean;
+    seq?: boolean;
+    type?: boolean;
+    payload?: boolean;
+    created_at?: boolean;
+  };
+
+  export type DeployEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<
+    'id' | 'deployment_id' | 'card_id' | 'seq' | 'type' | 'payload' | 'created_at',
+    ExtArgs['result']['deployEvent']
+  >;
+  export type DeployEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+  };
+  export type DeployEventIncludeCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+  };
+  export type DeployEventIncludeUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    deployment?: boolean | CanvasDeploymentDefaultArgs<ExtArgs>;
+  };
+
+  export type $DeployEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: 'DeployEvent';
+    objects: {
+      deployment: Prisma.$CanvasDeploymentPayload<ExtArgs>;
+    };
+    scalars: $Extensions.GetPayloadResult<
+      {
+        id: string;
+        deployment_id: string;
+        card_id: string;
+        seq: number;
+        type: string;
+        payload: Prisma.JsonValue;
+        created_at: Date;
+      },
+      ExtArgs['result']['deployEvent']
+    >;
+    composites: {};
+  };
+
+  type DeployEventGetPayload<S extends boolean | null | undefined | DeployEventDefaultArgs> = $Result.GetResult<
+    Prisma.$DeployEventPayload,
+    S
+  >;
+
+  type DeployEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Omit<
+    DeployEventFindManyArgs,
+    'select' | 'include' | 'distinct' | 'omit'
+  > & {
+    select?: DeployEventCountAggregateInputType | true;
+  };
+
+  export interface DeployEventDelegate<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DeployEvent']; meta: { name: 'DeployEvent' } };
+    /**
+     * Find zero or one DeployEvent that matches the filter.
+     * @param {DeployEventFindUniqueArgs} args - Arguments to find a DeployEvent
+     * @example
+     * // Get one DeployEvent
+     * const deployEvent = await prisma.deployEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DeployEventFindUniqueArgs>(
+      args: SelectSubset<T, DeployEventFindUniqueArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findUnique', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find one DeployEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DeployEventFindUniqueOrThrowArgs} args - Arguments to find a DeployEvent
+     * @example
+     * // Get one DeployEvent
+     * const deployEvent = await prisma.deployEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DeployEventFindUniqueOrThrowArgs>(
+      args: SelectSubset<T, DeployEventFindUniqueOrThrowArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first DeployEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventFindFirstArgs} args - Arguments to find a DeployEvent
+     * @example
+     * // Get one DeployEvent
+     * const deployEvent = await prisma.deployEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DeployEventFindFirstArgs>(
+      args?: SelectSubset<T, DeployEventFindFirstArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findFirst', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first DeployEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventFindFirstOrThrowArgs} args - Arguments to find a DeployEvent
+     * @example
+     * // Get one DeployEvent
+     * const deployEvent = await prisma.deployEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DeployEventFindFirstOrThrowArgs>(
+      args?: SelectSubset<T, DeployEventFindFirstOrThrowArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findFirstOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find zero or more DeployEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DeployEvents
+     * const deployEvents = await prisma.deployEvent.findMany()
+     *
+     * // Get first 10 DeployEvents
+     * const deployEvents = await prisma.deployEvent.findMany({ take: 10 })
+     *
+     * // Only select the `id`
+     * const deployEventWithIdOnly = await prisma.deployEvent.findMany({ select: { id: true } })
+     *
+     */
+    findMany<T extends DeployEventFindManyArgs>(
+      args?: SelectSubset<T, DeployEventFindManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions>>;
+
+    /**
+     * Create a DeployEvent.
+     * @param {DeployEventCreateArgs} args - Arguments to create a DeployEvent.
+     * @example
+     * // Create one DeployEvent
+     * const DeployEvent = await prisma.deployEvent.create({
+     *   data: {
+     *     // ... data to create a DeployEvent
+     *   }
+     * })
+     *
+     */
+    create<T extends DeployEventCreateArgs>(
+      args: SelectSubset<T, DeployEventCreateArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'create', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Create many DeployEvents.
+     * @param {DeployEventCreateManyArgs} args - Arguments to create many DeployEvents.
+     * @example
+     * // Create many DeployEvents
+     * const deployEvent = await prisma.deployEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     */
+    createMany<T extends DeployEventCreateManyArgs>(
+      args?: SelectSubset<T, DeployEventCreateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Create many DeployEvents and returns the data saved in the database.
+     * @param {DeployEventCreateManyAndReturnArgs} args - Arguments to create many DeployEvents.
+     * @example
+     * // Create many DeployEvents
+     * const deployEvent = await prisma.deployEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Create many DeployEvents and only return the `id`
+     * const deployEventWithIdOnly = await prisma.deployEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    createManyAndReturn<T extends DeployEventCreateManyAndReturnArgs>(
+      args?: SelectSubset<T, DeployEventCreateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'createManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Delete a DeployEvent.
+     * @param {DeployEventDeleteArgs} args - Arguments to delete one DeployEvent.
+     * @example
+     * // Delete one DeployEvent
+     * const DeployEvent = await prisma.deployEvent.delete({
+     *   where: {
+     *     // ... filter to delete one DeployEvent
+     *   }
+     * })
+     *
+     */
+    delete<T extends DeployEventDeleteArgs>(
+      args: SelectSubset<T, DeployEventDeleteArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'delete', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Update one DeployEvent.
+     * @param {DeployEventUpdateArgs} args - Arguments to update one DeployEvent.
+     * @example
+     * // Update one DeployEvent
+     * const deployEvent = await prisma.deployEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    update<T extends DeployEventUpdateArgs>(
+      args: SelectSubset<T, DeployEventUpdateArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'update', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Delete zero or more DeployEvents.
+     * @param {DeployEventDeleteManyArgs} args - Arguments to filter DeployEvents to delete.
+     * @example
+     * // Delete a few DeployEvents
+     * const { count } = await prisma.deployEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     *
+     */
+    deleteMany<T extends DeployEventDeleteManyArgs>(
+      args?: SelectSubset<T, DeployEventDeleteManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more DeployEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DeployEvents
+     * const deployEvent = await prisma.deployEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    updateMany<T extends DeployEventUpdateManyArgs>(
+      args: SelectSubset<T, DeployEventUpdateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more DeployEvents and returns the data updated in the database.
+     * @param {DeployEventUpdateManyAndReturnArgs} args - Arguments to update many DeployEvents.
+     * @example
+     * // Update many DeployEvents
+     * const deployEvent = await prisma.deployEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Update zero or more DeployEvents and only return the `id`
+     * const deployEventWithIdOnly = await prisma.deployEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    updateManyAndReturn<T extends DeployEventUpdateManyAndReturnArgs>(
+      args: SelectSubset<T, DeployEventUpdateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'updateManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Create or update one DeployEvent.
+     * @param {DeployEventUpsertArgs} args - Arguments to update or create a DeployEvent.
+     * @example
+     * // Update or create a DeployEvent
+     * const deployEvent = await prisma.deployEvent.upsert({
+     *   create: {
+     *     // ... data to create a DeployEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DeployEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DeployEventUpsertArgs>(
+      args: SelectSubset<T, DeployEventUpsertArgs<ExtArgs>>,
+    ): Prisma__DeployEventClient<
+      $Result.GetResult<Prisma.$DeployEventPayload<ExtArgs>, T, 'upsert', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Count the number of DeployEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventCountArgs} args - Arguments to filter DeployEvents to count.
+     * @example
+     * // Count the number of DeployEvents
+     * const count = await prisma.deployEvent.count({
+     *   where: {
+     *     // ... the filter for the DeployEvents we want to count
+     *   }
+     * })
+     **/
+    count<T extends DeployEventCountArgs>(
+      args?: Subset<T, DeployEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DeployEventCountAggregateOutputType>
+        : number
+    >;
+
+    /**
+     * Allows you to perform aggregations operations on a DeployEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+     **/
+    aggregate<T extends DeployEventAggregateArgs>(
+      args: Subset<T, DeployEventAggregateArgs>,
+    ): Prisma.PrismaPromise<GetDeployEventAggregateType<T>>;
+
+    /**
+     * Group by DeployEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     *
+     **/
+    groupBy<
+      T extends DeployEventGroupByArgs,
+      HasSelectOrTake extends Or<Extends<'skip', Keys<T>>, Extends<'take', Keys<T>>>,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DeployEventGroupByArgs['orderBy'] }
+        : { orderBy?: DeployEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends False
+          ? {
+              [P in HavingFields]: P extends ByFields
+                ? never
+                : P extends string
+                  ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                  : [Error, 'Field ', P, ` in "having" needs to be provided in "by"`];
+            }[HavingFields]
+          : 'take' extends Keys<T>
+            ? 'orderBy' extends Keys<T>
+              ? ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields]
+              : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Keys<T>
+              ? 'orderBy' extends Keys<T>
+                ? ByValid extends True
+                  ? {}
+                  : {
+                      [P in OrderFields]: P extends ByFields
+                        ? never
+                        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                    }[OrderFields]
+                : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields],
+    >(
+      args: SubsetIntersection<T, DeployEventGroupByArgs, OrderByArg> & InputErrors,
+    ): {} extends InputErrors ? GetDeployEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>;
+    /**
+     * Fields of the DeployEvent model
+     */
+    readonly fields: DeployEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DeployEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DeployEventClient<
+    T,
+    Null = never,
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    deployment<T extends CanvasDeploymentDefaultArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasDeploymentDefaultArgs<ExtArgs>>,
+    ): Prisma__CanvasDeploymentClient<
+      $Result.GetResult<Prisma.$CanvasDeploymentPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions> | Null,
+      Null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    ): $Utils.JsPromise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(
+      onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+    ): $Utils.JsPromise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>;
+  }
+
+  /**
+   * Fields of the DeployEvent model
+   */
+  interface DeployEventFieldRefs {
+    readonly id: FieldRef<'DeployEvent', 'String'>;
+    readonly deployment_id: FieldRef<'DeployEvent', 'String'>;
+    readonly card_id: FieldRef<'DeployEvent', 'String'>;
+    readonly seq: FieldRef<'DeployEvent', 'Int'>;
+    readonly type: FieldRef<'DeployEvent', 'String'>;
+    readonly payload: FieldRef<'DeployEvent', 'Json'>;
+    readonly created_at: FieldRef<'DeployEvent', 'DateTime'>;
+  }
+
+  // Custom InputTypes
+  /**
+   * DeployEvent findUnique
+   */
+  export type DeployEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployEvent to fetch.
+     */
+    where: DeployEventWhereUniqueInput;
+  };
+
+  /**
+   * DeployEvent findUniqueOrThrow
+   */
+  export type DeployEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployEvent to fetch.
+     */
+    where: DeployEventWhereUniqueInput;
+  };
+
+  /**
+   * DeployEvent findFirst
+   */
+  export type DeployEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployEvent to fetch.
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of DeployEvents to fetch.
+     */
+    orderBy?: DeployEventOrderByWithRelationInput | DeployEventOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for DeployEvents.
+     */
+    cursor?: DeployEventWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` DeployEvents from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` DeployEvents.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of DeployEvents.
+     */
+    distinct?: DeployEventScalarFieldEnum | DeployEventScalarFieldEnum[];
+  };
+
+  /**
+   * DeployEvent findFirstOrThrow
+   */
+  export type DeployEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployEvent to fetch.
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of DeployEvents to fetch.
+     */
+    orderBy?: DeployEventOrderByWithRelationInput | DeployEventOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for DeployEvents.
+     */
+    cursor?: DeployEventWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` DeployEvents from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` DeployEvents.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of DeployEvents.
+     */
+    distinct?: DeployEventScalarFieldEnum | DeployEventScalarFieldEnum[];
+  };
+
+  /**
+   * DeployEvent findMany
+   */
+  export type DeployEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployEvents to fetch.
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of DeployEvents to fetch.
+     */
+    orderBy?: DeployEventOrderByWithRelationInput | DeployEventOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for listing DeployEvents.
+     */
+    cursor?: DeployEventWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` DeployEvents from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` DeployEvents.
+     */
+    skip?: number;
+    distinct?: DeployEventScalarFieldEnum | DeployEventScalarFieldEnum[];
+  };
+
+  /**
+   * DeployEvent create
+   */
+  export type DeployEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * The data needed to create a DeployEvent.
+     */
+    data: XOR<DeployEventCreateInput, DeployEventUncheckedCreateInput>;
+  };
+
+  /**
+   * DeployEvent createMany
+   */
+  export type DeployEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DeployEvents.
+     */
+    data: DeployEventCreateManyInput | DeployEventCreateManyInput[];
+  };
+
+  /**
+   * DeployEvent createManyAndReturn
+   */
+  export type DeployEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelectCreateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * The data used to create many DeployEvents.
+     */
+    data: DeployEventCreateManyInput | DeployEventCreateManyInput[];
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventIncludeCreateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * DeployEvent update
+   */
+  export type DeployEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * The data needed to update a DeployEvent.
+     */
+    data: XOR<DeployEventUpdateInput, DeployEventUncheckedUpdateInput>;
+    /**
+     * Choose, which DeployEvent to update.
+     */
+    where: DeployEventWhereUniqueInput;
+  };
+
+  /**
+   * DeployEvent updateMany
+   */
+  export type DeployEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DeployEvents.
+     */
+    data: XOR<DeployEventUpdateManyMutationInput, DeployEventUncheckedUpdateManyInput>;
+    /**
+     * Filter which DeployEvents to update
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * Limit how many DeployEvents to update.
+     */
+    limit?: number;
+  };
+
+  /**
+   * DeployEvent updateManyAndReturn
+   */
+  export type DeployEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelectUpdateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * The data used to update DeployEvents.
+     */
+    data: XOR<DeployEventUpdateManyMutationInput, DeployEventUncheckedUpdateManyInput>;
+    /**
+     * Filter which DeployEvents to update
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * Limit how many DeployEvents to update.
+     */
+    limit?: number;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventIncludeUpdateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * DeployEvent upsert
+   */
+  export type DeployEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * The filter to search for the DeployEvent to update in case it exists.
+     */
+    where: DeployEventWhereUniqueInput;
+    /**
+     * In case the DeployEvent found by the `where` argument doesn't exist, create a new DeployEvent with this data.
+     */
+    create: XOR<DeployEventCreateInput, DeployEventUncheckedCreateInput>;
+    /**
+     * In case the DeployEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DeployEventUpdateInput, DeployEventUncheckedUpdateInput>;
+  };
+
+  /**
+   * DeployEvent delete
+   */
+  export type DeployEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+    /**
+     * Filter which DeployEvent to delete.
+     */
+    where: DeployEventWhereUniqueInput;
+  };
+
+  /**
+   * DeployEvent deleteMany
+   */
+  export type DeployEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DeployEvents to delete
+     */
+    where?: DeployEventWhereInput;
+    /**
+     * Limit how many DeployEvents to delete.
+     */
+    limit?: number;
+  };
+
+  /**
+   * DeployEvent without action
+   */
+  export type DeployEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployEvent
+     */
+    select?: DeployEventSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployEvent
+     */
+    omit?: DeployEventOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployEventInclude<ExtArgs> | null;
+  };
+
+  /**
+   * Model DeployedResourceMapping
+   */
+
+  export type AggregateDeployedResourceMapping = {
+    _count: DeployedResourceMappingCountAggregateOutputType | null;
+    _min: DeployedResourceMappingMinAggregateOutputType | null;
+    _max: DeployedResourceMappingMaxAggregateOutputType | null;
+  };
+
+  export type DeployedResourceMappingMinAggregateOutputType = {
+    id: string | null;
+    card_id: string | null;
+    node_id: string | null;
+    environment: string | null;
+    resource_type: string | null;
+    resource_name: string | null;
+    provider_id: string | null;
+    created_at: Date | null;
+    updated_at: Date | null;
+  };
+
+  export type DeployedResourceMappingMaxAggregateOutputType = {
+    id: string | null;
+    card_id: string | null;
+    node_id: string | null;
+    environment: string | null;
+    resource_type: string | null;
+    resource_name: string | null;
+    provider_id: string | null;
+    created_at: Date | null;
+    updated_at: Date | null;
+  };
+
+  export type DeployedResourceMappingCountAggregateOutputType = {
+    id: number;
+    card_id: number;
+    node_id: number;
+    environment: number;
+    resource_type: number;
+    resource_name: number;
+    provider_id: number;
+    created_at: number;
+    updated_at: number;
+    _all: number;
+  };
+
+  export type DeployedResourceMappingMinAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    resource_type?: true;
+    resource_name?: true;
+    provider_id?: true;
+    created_at?: true;
+    updated_at?: true;
+  };
+
+  export type DeployedResourceMappingMaxAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    resource_type?: true;
+    resource_name?: true;
+    provider_id?: true;
+    created_at?: true;
+    updated_at?: true;
+  };
+
+  export type DeployedResourceMappingCountAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    resource_type?: true;
+    resource_name?: true;
+    provider_id?: true;
+    created_at?: true;
+    updated_at?: true;
+    _all?: true;
+  };
+
+  export type DeployedResourceMappingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Filter which DeployedResourceMapping to aggregate.
+       */
+      where?: DeployedResourceMappingWhereInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+       *
+       * Determine the order of DeployedResourceMappings to fetch.
+       */
+      orderBy?: DeployedResourceMappingOrderByWithRelationInput | DeployedResourceMappingOrderByWithRelationInput[];
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+       *
+       * Sets the start position
+       */
+      cursor?: DeployedResourceMappingWhereUniqueInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Take `±n` DeployedResourceMappings from the position of the cursor.
+       */
+      take?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Skip the first `n` DeployedResourceMappings.
+       */
+      skip?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Count returned DeployedResourceMappings
+       **/
+      _count?: true | DeployedResourceMappingCountAggregateInputType;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Select which fields to find the minimum value
+       **/
+      _min?: DeployedResourceMappingMinAggregateInputType;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Select which fields to find the maximum value
+       **/
+      _max?: DeployedResourceMappingMaxAggregateInputType;
+    };
+
+  export type GetDeployedResourceMappingAggregateType<T extends DeployedResourceMappingAggregateArgs> = {
+    [P in keyof T & keyof AggregateDeployedResourceMapping]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDeployedResourceMapping[P]>
+      : GetScalarType<T[P], AggregateDeployedResourceMapping[P]>;
+  };
+
+  export type DeployedResourceMappingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DeployedResourceMappingWhereInput;
+    orderBy?: DeployedResourceMappingOrderByWithAggregationInput | DeployedResourceMappingOrderByWithAggregationInput[];
+    by: DeployedResourceMappingScalarFieldEnum[] | DeployedResourceMappingScalarFieldEnum;
+    having?: DeployedResourceMappingScalarWhereWithAggregatesInput;
+    take?: number;
+    skip?: number;
+    _count?: DeployedResourceMappingCountAggregateInputType | true;
+    _min?: DeployedResourceMappingMinAggregateInputType;
+    _max?: DeployedResourceMappingMaxAggregateInputType;
+  };
+
+  export type DeployedResourceMappingGroupByOutputType = {
+    id: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id: string | null;
+    created_at: Date;
+    updated_at: Date;
+    _count: DeployedResourceMappingCountAggregateOutputType | null;
+    _min: DeployedResourceMappingMinAggregateOutputType | null;
+    _max: DeployedResourceMappingMaxAggregateOutputType | null;
+  };
+
+  type GetDeployedResourceMappingGroupByPayload<T extends DeployedResourceMappingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DeployedResourceMappingGroupByOutputType, T['by']> & {
+        [P in keyof T & keyof DeployedResourceMappingGroupByOutputType]: P extends '_count'
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], DeployedResourceMappingGroupByOutputType[P]>
+          : GetScalarType<T[P], DeployedResourceMappingGroupByOutputType[P]>;
+      }
+    >
+  >;
+
+  export type DeployedResourceMappingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        card_id?: boolean;
+        node_id?: boolean;
+        environment?: boolean;
+        resource_type?: boolean;
+        resource_name?: boolean;
+        provider_id?: boolean;
+        created_at?: boolean;
+        updated_at?: boolean;
+        card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+      },
+      ExtArgs['result']['deployedResourceMapping']
+    >;
+
+  export type DeployedResourceMappingSelectCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      card_id?: boolean;
+      node_id?: boolean;
+      environment?: boolean;
+      resource_type?: boolean;
+      resource_name?: boolean;
+      provider_id?: boolean;
+      created_at?: boolean;
+      updated_at?: boolean;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+    },
+    ExtArgs['result']['deployedResourceMapping']
+  >;
+
+  export type DeployedResourceMappingSelectUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      card_id?: boolean;
+      node_id?: boolean;
+      environment?: boolean;
+      resource_type?: boolean;
+      resource_name?: boolean;
+      provider_id?: boolean;
+      created_at?: boolean;
+      updated_at?: boolean;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+    },
+    ExtArgs['result']['deployedResourceMapping']
+  >;
+
+  export type DeployedResourceMappingSelectScalar = {
+    id?: boolean;
+    card_id?: boolean;
+    node_id?: boolean;
+    environment?: boolean;
+    resource_type?: boolean;
+    resource_name?: boolean;
+    provider_id?: boolean;
+    created_at?: boolean;
+    updated_at?: boolean;
+  };
+
+  export type DeployedResourceMappingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetOmit<
+      | 'id'
+      | 'card_id'
+      | 'node_id'
+      | 'environment'
+      | 'resource_type'
+      | 'resource_name'
+      | 'provider_id'
+      | 'created_at'
+      | 'updated_at',
+      ExtArgs['result']['deployedResourceMapping']
+    >;
+  export type DeployedResourceMappingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+  export type DeployedResourceMappingIncludeCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+  export type DeployedResourceMappingIncludeUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+
+  export type $DeployedResourceMappingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: 'DeployedResourceMapping';
+    objects: {
+      card: Prisma.$CanvasCardPayload<ExtArgs>;
+    };
+    scalars: $Extensions.GetPayloadResult<
+      {
+        id: string;
+        card_id: string;
+        node_id: string;
+        environment: string;
+        resource_type: string;
+        resource_name: string;
+        provider_id: string | null;
+        created_at: Date;
+        updated_at: Date;
+      },
+      ExtArgs['result']['deployedResourceMapping']
+    >;
+    composites: {};
+  };
+
+  type DeployedResourceMappingGetPayload<S extends boolean | null | undefined | DeployedResourceMappingDefaultArgs> =
+    $Result.GetResult<Prisma.$DeployedResourceMappingPayload, S>;
+
+  type DeployedResourceMappingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Omit<
+    DeployedResourceMappingFindManyArgs,
+    'select' | 'include' | 'distinct' | 'omit'
+  > & {
+    select?: DeployedResourceMappingCountAggregateInputType | true;
+  };
+
+  export interface DeployedResourceMappingDelegate<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > {
+    [K: symbol]: {
+      types: Prisma.TypeMap<ExtArgs>['model']['DeployedResourceMapping'];
+      meta: { name: 'DeployedResourceMapping' };
+    };
+    /**
+     * Find zero or one DeployedResourceMapping that matches the filter.
+     * @param {DeployedResourceMappingFindUniqueArgs} args - Arguments to find a DeployedResourceMapping
+     * @example
+     * // Get one DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DeployedResourceMappingFindUniqueArgs>(
+      args: SelectSubset<T, DeployedResourceMappingFindUniqueArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findUnique', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find one DeployedResourceMapping that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DeployedResourceMappingFindUniqueOrThrowArgs} args - Arguments to find a DeployedResourceMapping
+     * @example
+     * // Get one DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DeployedResourceMappingFindUniqueOrThrowArgs>(
+      args: SelectSubset<T, DeployedResourceMappingFindUniqueOrThrowArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first DeployedResourceMapping that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingFindFirstArgs} args - Arguments to find a DeployedResourceMapping
+     * @example
+     * // Get one DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DeployedResourceMappingFindFirstArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingFindFirstArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findFirst', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first DeployedResourceMapping that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingFindFirstOrThrowArgs} args - Arguments to find a DeployedResourceMapping
+     * @example
+     * // Get one DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DeployedResourceMappingFindFirstOrThrowArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingFindFirstOrThrowArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findFirstOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find zero or more DeployedResourceMappings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DeployedResourceMappings
+     * const deployedResourceMappings = await prisma.deployedResourceMapping.findMany()
+     *
+     * // Get first 10 DeployedResourceMappings
+     * const deployedResourceMappings = await prisma.deployedResourceMapping.findMany({ take: 10 })
+     *
+     * // Only select the `id`
+     * const deployedResourceMappingWithIdOnly = await prisma.deployedResourceMapping.findMany({ select: { id: true } })
+     *
+     */
+    findMany<T extends DeployedResourceMappingFindManyArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingFindManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions>
+    >;
+
+    /**
+     * Create a DeployedResourceMapping.
+     * @param {DeployedResourceMappingCreateArgs} args - Arguments to create a DeployedResourceMapping.
+     * @example
+     * // Create one DeployedResourceMapping
+     * const DeployedResourceMapping = await prisma.deployedResourceMapping.create({
+     *   data: {
+     *     // ... data to create a DeployedResourceMapping
+     *   }
+     * })
+     *
+     */
+    create<T extends DeployedResourceMappingCreateArgs>(
+      args: SelectSubset<T, DeployedResourceMappingCreateArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'create', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Create many DeployedResourceMappings.
+     * @param {DeployedResourceMappingCreateManyArgs} args - Arguments to create many DeployedResourceMappings.
+     * @example
+     * // Create many DeployedResourceMappings
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     */
+    createMany<T extends DeployedResourceMappingCreateManyArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingCreateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Create many DeployedResourceMappings and returns the data saved in the database.
+     * @param {DeployedResourceMappingCreateManyAndReturnArgs} args - Arguments to create many DeployedResourceMappings.
+     * @example
+     * // Create many DeployedResourceMappings
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Create many DeployedResourceMappings and only return the `id`
+     * const deployedResourceMappingWithIdOnly = await prisma.deployedResourceMapping.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    createManyAndReturn<T extends DeployedResourceMappingCreateManyAndReturnArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingCreateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'createManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Delete a DeployedResourceMapping.
+     * @param {DeployedResourceMappingDeleteArgs} args - Arguments to delete one DeployedResourceMapping.
+     * @example
+     * // Delete one DeployedResourceMapping
+     * const DeployedResourceMapping = await prisma.deployedResourceMapping.delete({
+     *   where: {
+     *     // ... filter to delete one DeployedResourceMapping
+     *   }
+     * })
+     *
+     */
+    delete<T extends DeployedResourceMappingDeleteArgs>(
+      args: SelectSubset<T, DeployedResourceMappingDeleteArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'delete', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Update one DeployedResourceMapping.
+     * @param {DeployedResourceMappingUpdateArgs} args - Arguments to update one DeployedResourceMapping.
+     * @example
+     * // Update one DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    update<T extends DeployedResourceMappingUpdateArgs>(
+      args: SelectSubset<T, DeployedResourceMappingUpdateArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'update', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Delete zero or more DeployedResourceMappings.
+     * @param {DeployedResourceMappingDeleteManyArgs} args - Arguments to filter DeployedResourceMappings to delete.
+     * @example
+     * // Delete a few DeployedResourceMappings
+     * const { count } = await prisma.deployedResourceMapping.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     *
+     */
+    deleteMany<T extends DeployedResourceMappingDeleteManyArgs>(
+      args?: SelectSubset<T, DeployedResourceMappingDeleteManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more DeployedResourceMappings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DeployedResourceMappings
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    updateMany<T extends DeployedResourceMappingUpdateManyArgs>(
+      args: SelectSubset<T, DeployedResourceMappingUpdateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more DeployedResourceMappings and returns the data updated in the database.
+     * @param {DeployedResourceMappingUpdateManyAndReturnArgs} args - Arguments to update many DeployedResourceMappings.
+     * @example
+     * // Update many DeployedResourceMappings
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Update zero or more DeployedResourceMappings and only return the `id`
+     * const deployedResourceMappingWithIdOnly = await prisma.deployedResourceMapping.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    updateManyAndReturn<T extends DeployedResourceMappingUpdateManyAndReturnArgs>(
+      args: SelectSubset<T, DeployedResourceMappingUpdateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'updateManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Create or update one DeployedResourceMapping.
+     * @param {DeployedResourceMappingUpsertArgs} args - Arguments to update or create a DeployedResourceMapping.
+     * @example
+     * // Update or create a DeployedResourceMapping
+     * const deployedResourceMapping = await prisma.deployedResourceMapping.upsert({
+     *   create: {
+     *     // ... data to create a DeployedResourceMapping
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DeployedResourceMapping we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DeployedResourceMappingUpsertArgs>(
+      args: SelectSubset<T, DeployedResourceMappingUpsertArgs<ExtArgs>>,
+    ): Prisma__DeployedResourceMappingClient<
+      $Result.GetResult<Prisma.$DeployedResourceMappingPayload<ExtArgs>, T, 'upsert', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Count the number of DeployedResourceMappings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingCountArgs} args - Arguments to filter DeployedResourceMappings to count.
+     * @example
+     * // Count the number of DeployedResourceMappings
+     * const count = await prisma.deployedResourceMapping.count({
+     *   where: {
+     *     // ... the filter for the DeployedResourceMappings we want to count
+     *   }
+     * })
+     **/
+    count<T extends DeployedResourceMappingCountArgs>(
+      args?: Subset<T, DeployedResourceMappingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DeployedResourceMappingCountAggregateOutputType>
+        : number
+    >;
+
+    /**
+     * Allows you to perform aggregations operations on a DeployedResourceMapping.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+     **/
+    aggregate<T extends DeployedResourceMappingAggregateArgs>(
+      args: Subset<T, DeployedResourceMappingAggregateArgs>,
+    ): Prisma.PrismaPromise<GetDeployedResourceMappingAggregateType<T>>;
+
+    /**
+     * Group by DeployedResourceMapping.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeployedResourceMappingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     *
+     **/
+    groupBy<
+      T extends DeployedResourceMappingGroupByArgs,
+      HasSelectOrTake extends Or<Extends<'skip', Keys<T>>, Extends<'take', Keys<T>>>,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DeployedResourceMappingGroupByArgs['orderBy'] }
+        : { orderBy?: DeployedResourceMappingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends False
+          ? {
+              [P in HavingFields]: P extends ByFields
+                ? never
+                : P extends string
+                  ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                  : [Error, 'Field ', P, ` in "having" needs to be provided in "by"`];
+            }[HavingFields]
+          : 'take' extends Keys<T>
+            ? 'orderBy' extends Keys<T>
+              ? ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields]
+              : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Keys<T>
+              ? 'orderBy' extends Keys<T>
+                ? ByValid extends True
+                  ? {}
+                  : {
+                      [P in OrderFields]: P extends ByFields
+                        ? never
+                        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                    }[OrderFields]
+                : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields],
+    >(
+      args: SubsetIntersection<T, DeployedResourceMappingGroupByArgs, OrderByArg> & InputErrors,
+    ): {} extends InputErrors ? GetDeployedResourceMappingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>;
+    /**
+     * Fields of the DeployedResourceMapping model
+     */
+    readonly fields: DeployedResourceMappingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DeployedResourceMapping.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DeployedResourceMappingClient<
+    T,
+    Null = never,
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    card<T extends CanvasCardDefaultArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCardDefaultArgs<ExtArgs>>,
+    ): Prisma__CanvasCardClient<
+      $Result.GetResult<Prisma.$CanvasCardPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions> | Null,
+      Null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    ): $Utils.JsPromise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(
+      onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+    ): $Utils.JsPromise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>;
+  }
+
+  /**
+   * Fields of the DeployedResourceMapping model
+   */
+  interface DeployedResourceMappingFieldRefs {
+    readonly id: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly card_id: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly node_id: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly environment: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly resource_type: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly resource_name: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly provider_id: FieldRef<'DeployedResourceMapping', 'String'>;
+    readonly created_at: FieldRef<'DeployedResourceMapping', 'DateTime'>;
+    readonly updated_at: FieldRef<'DeployedResourceMapping', 'DateTime'>;
+  }
+
+  // Custom InputTypes
+  /**
+   * DeployedResourceMapping findUnique
+   */
+  export type DeployedResourceMappingFindUniqueArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployedResourceMapping to fetch.
+     */
+    where: DeployedResourceMappingWhereUniqueInput;
+  };
+
+  /**
+   * DeployedResourceMapping findUniqueOrThrow
+   */
+  export type DeployedResourceMappingFindUniqueOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployedResourceMapping to fetch.
+     */
+    where: DeployedResourceMappingWhereUniqueInput;
+  };
+
+  /**
+   * DeployedResourceMapping findFirst
+   */
+  export type DeployedResourceMappingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Select specific fields to fetch from the DeployedResourceMapping
+       */
+      select?: DeployedResourceMappingSelect<ExtArgs> | null;
+      /**
+       * Omit specific fields from the DeployedResourceMapping
+       */
+      omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+      /**
+       * Choose, which related nodes to fetch as well
+       */
+      include?: DeployedResourceMappingInclude<ExtArgs> | null;
+      /**
+       * Filter, which DeployedResourceMapping to fetch.
+       */
+      where?: DeployedResourceMappingWhereInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+       *
+       * Determine the order of DeployedResourceMappings to fetch.
+       */
+      orderBy?: DeployedResourceMappingOrderByWithRelationInput | DeployedResourceMappingOrderByWithRelationInput[];
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+       *
+       * Sets the position for searching for DeployedResourceMappings.
+       */
+      cursor?: DeployedResourceMappingWhereUniqueInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Take `±n` DeployedResourceMappings from the position of the cursor.
+       */
+      take?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Skip the first `n` DeployedResourceMappings.
+       */
+      skip?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+       *
+       * Filter by unique combinations of DeployedResourceMappings.
+       */
+      distinct?: DeployedResourceMappingScalarFieldEnum | DeployedResourceMappingScalarFieldEnum[];
+    };
+
+  /**
+   * DeployedResourceMapping findFirstOrThrow
+   */
+  export type DeployedResourceMappingFindFirstOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * Filter, which DeployedResourceMapping to fetch.
+     */
+    where?: DeployedResourceMappingWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of DeployedResourceMappings to fetch.
+     */
+    orderBy?: DeployedResourceMappingOrderByWithRelationInput | DeployedResourceMappingOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for DeployedResourceMappings.
+     */
+    cursor?: DeployedResourceMappingWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` DeployedResourceMappings from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` DeployedResourceMappings.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of DeployedResourceMappings.
+     */
+    distinct?: DeployedResourceMappingScalarFieldEnum | DeployedResourceMappingScalarFieldEnum[];
+  };
+
+  /**
+   * DeployedResourceMapping findMany
+   */
+  export type DeployedResourceMappingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Select specific fields to fetch from the DeployedResourceMapping
+       */
+      select?: DeployedResourceMappingSelect<ExtArgs> | null;
+      /**
+       * Omit specific fields from the DeployedResourceMapping
+       */
+      omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+      /**
+       * Choose, which related nodes to fetch as well
+       */
+      include?: DeployedResourceMappingInclude<ExtArgs> | null;
+      /**
+       * Filter, which DeployedResourceMappings to fetch.
+       */
+      where?: DeployedResourceMappingWhereInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+       *
+       * Determine the order of DeployedResourceMappings to fetch.
+       */
+      orderBy?: DeployedResourceMappingOrderByWithRelationInput | DeployedResourceMappingOrderByWithRelationInput[];
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+       *
+       * Sets the position for listing DeployedResourceMappings.
+       */
+      cursor?: DeployedResourceMappingWhereUniqueInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Take `±n` DeployedResourceMappings from the position of the cursor.
+       */
+      take?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Skip the first `n` DeployedResourceMappings.
+       */
+      skip?: number;
+      distinct?: DeployedResourceMappingScalarFieldEnum | DeployedResourceMappingScalarFieldEnum[];
+    };
+
+  /**
+   * DeployedResourceMapping create
+   */
+  export type DeployedResourceMappingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * The data needed to create a DeployedResourceMapping.
+     */
+    data: XOR<DeployedResourceMappingCreateInput, DeployedResourceMappingUncheckedCreateInput>;
+  };
+
+  /**
+   * DeployedResourceMapping createMany
+   */
+  export type DeployedResourceMappingCreateManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * The data used to create many DeployedResourceMappings.
+     */
+    data: DeployedResourceMappingCreateManyInput | DeployedResourceMappingCreateManyInput[];
+  };
+
+  /**
+   * DeployedResourceMapping createManyAndReturn
+   */
+  export type DeployedResourceMappingCreateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelectCreateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * The data used to create many DeployedResourceMappings.
+     */
+    data: DeployedResourceMappingCreateManyInput | DeployedResourceMappingCreateManyInput[];
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingIncludeCreateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * DeployedResourceMapping update
+   */
+  export type DeployedResourceMappingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * The data needed to update a DeployedResourceMapping.
+     */
+    data: XOR<DeployedResourceMappingUpdateInput, DeployedResourceMappingUncheckedUpdateInput>;
+    /**
+     * Choose, which DeployedResourceMapping to update.
+     */
+    where: DeployedResourceMappingWhereUniqueInput;
+  };
+
+  /**
+   * DeployedResourceMapping updateMany
+   */
+  export type DeployedResourceMappingUpdateManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * The data used to update DeployedResourceMappings.
+     */
+    data: XOR<DeployedResourceMappingUpdateManyMutationInput, DeployedResourceMappingUncheckedUpdateManyInput>;
+    /**
+     * Filter which DeployedResourceMappings to update
+     */
+    where?: DeployedResourceMappingWhereInput;
+    /**
+     * Limit how many DeployedResourceMappings to update.
+     */
+    limit?: number;
+  };
+
+  /**
+   * DeployedResourceMapping updateManyAndReturn
+   */
+  export type DeployedResourceMappingUpdateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelectUpdateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * The data used to update DeployedResourceMappings.
+     */
+    data: XOR<DeployedResourceMappingUpdateManyMutationInput, DeployedResourceMappingUncheckedUpdateManyInput>;
+    /**
+     * Filter which DeployedResourceMappings to update
+     */
+    where?: DeployedResourceMappingWhereInput;
+    /**
+     * Limit how many DeployedResourceMappings to update.
+     */
+    limit?: number;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingIncludeUpdateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * DeployedResourceMapping upsert
+   */
+  export type DeployedResourceMappingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * The filter to search for the DeployedResourceMapping to update in case it exists.
+     */
+    where: DeployedResourceMappingWhereUniqueInput;
+    /**
+     * In case the DeployedResourceMapping found by the `where` argument doesn't exist, create a new DeployedResourceMapping with this data.
+     */
+    create: XOR<DeployedResourceMappingCreateInput, DeployedResourceMappingUncheckedCreateInput>;
+    /**
+     * In case the DeployedResourceMapping was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DeployedResourceMappingUpdateInput, DeployedResourceMappingUncheckedUpdateInput>;
+  };
+
+  /**
+   * DeployedResourceMapping delete
+   */
+  export type DeployedResourceMappingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+    /**
+     * Filter which DeployedResourceMapping to delete.
+     */
+    where: DeployedResourceMappingWhereUniqueInput;
+  };
+
+  /**
+   * DeployedResourceMapping deleteMany
+   */
+  export type DeployedResourceMappingDeleteManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Filter which DeployedResourceMappings to delete
+     */
+    where?: DeployedResourceMappingWhereInput;
+    /**
+     * Limit how many DeployedResourceMappings to delete.
+     */
+    limit?: number;
+  };
+
+  /**
+   * DeployedResourceMapping without action
+   */
+  export type DeployedResourceMappingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeployedResourceMapping
+     */
+    select?: DeployedResourceMappingSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the DeployedResourceMapping
+     */
+    omit?: DeployedResourceMappingOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeployedResourceMappingInclude<ExtArgs> | null;
+  };
+
+  /**
+   * Model BlockRequirementStatus
+   */
+
+  export type AggregateBlockRequirementStatus = {
+    _count: BlockRequirementStatusCountAggregateOutputType | null;
+    _min: BlockRequirementStatusMinAggregateOutputType | null;
+    _max: BlockRequirementStatusMaxAggregateOutputType | null;
+  };
+
+  export type BlockRequirementStatusMinAggregateOutputType = {
+    id: string | null;
+    card_id: string | null;
+    node_id: string | null;
+    environment: string | null;
+    requirement_id: string | null;
+    status: string | null;
+    message: string | null;
+    last_checked_at: Date | null;
+    verified_at: Date | null;
+  };
+
+  export type BlockRequirementStatusMaxAggregateOutputType = {
+    id: string | null;
+    card_id: string | null;
+    node_id: string | null;
+    environment: string | null;
+    requirement_id: string | null;
+    status: string | null;
+    message: string | null;
+    last_checked_at: Date | null;
+    verified_at: Date | null;
+  };
+
+  export type BlockRequirementStatusCountAggregateOutputType = {
+    id: number;
+    card_id: number;
+    node_id: number;
+    environment: number;
+    requirement_id: number;
+    status: number;
+    message: number;
+    last_checked_at: number;
+    verified_at: number;
+    details: number;
+    _all: number;
+  };
+
+  export type BlockRequirementStatusMinAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    requirement_id?: true;
+    status?: true;
+    message?: true;
+    last_checked_at?: true;
+    verified_at?: true;
+  };
+
+  export type BlockRequirementStatusMaxAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    requirement_id?: true;
+    status?: true;
+    message?: true;
+    last_checked_at?: true;
+    verified_at?: true;
+  };
+
+  export type BlockRequirementStatusCountAggregateInputType = {
+    id?: true;
+    card_id?: true;
+    node_id?: true;
+    environment?: true;
+    requirement_id?: true;
+    status?: true;
+    message?: true;
+    last_checked_at?: true;
+    verified_at?: true;
+    details?: true;
+    _all?: true;
+  };
+
+  export type BlockRequirementStatusAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Filter which BlockRequirementStatus to aggregate.
+       */
+      where?: BlockRequirementStatusWhereInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+       *
+       * Determine the order of BlockRequirementStatuses to fetch.
+       */
+      orderBy?: BlockRequirementStatusOrderByWithRelationInput | BlockRequirementStatusOrderByWithRelationInput[];
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+       *
+       * Sets the start position
+       */
+      cursor?: BlockRequirementStatusWhereUniqueInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Take `±n` BlockRequirementStatuses from the position of the cursor.
+       */
+      take?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Skip the first `n` BlockRequirementStatuses.
+       */
+      skip?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Count returned BlockRequirementStatuses
+       **/
+      _count?: true | BlockRequirementStatusCountAggregateInputType;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Select which fields to find the minimum value
+       **/
+      _min?: BlockRequirementStatusMinAggregateInputType;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+       *
+       * Select which fields to find the maximum value
+       **/
+      _max?: BlockRequirementStatusMaxAggregateInputType;
+    };
+
+  export type GetBlockRequirementStatusAggregateType<T extends BlockRequirementStatusAggregateArgs> = {
+    [P in keyof T & keyof AggregateBlockRequirementStatus]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBlockRequirementStatus[P]>
+      : GetScalarType<T[P], AggregateBlockRequirementStatus[P]>;
+  };
+
+  export type BlockRequirementStatusGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BlockRequirementStatusWhereInput;
+    orderBy?: BlockRequirementStatusOrderByWithAggregationInput | BlockRequirementStatusOrderByWithAggregationInput[];
+    by: BlockRequirementStatusScalarFieldEnum[] | BlockRequirementStatusScalarFieldEnum;
+    having?: BlockRequirementStatusScalarWhereWithAggregatesInput;
+    take?: number;
+    skip?: number;
+    _count?: BlockRequirementStatusCountAggregateInputType | true;
+    _min?: BlockRequirementStatusMinAggregateInputType;
+    _max?: BlockRequirementStatusMaxAggregateInputType;
+  };
+
+  export type BlockRequirementStatusGroupByOutputType = {
+    id: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message: string | null;
+    last_checked_at: Date;
+    verified_at: Date | null;
+    details: JsonValue | null;
+    _count: BlockRequirementStatusCountAggregateOutputType | null;
+    _min: BlockRequirementStatusMinAggregateOutputType | null;
+    _max: BlockRequirementStatusMaxAggregateOutputType | null;
+  };
+
+  type GetBlockRequirementStatusGroupByPayload<T extends BlockRequirementStatusGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BlockRequirementStatusGroupByOutputType, T['by']> & {
+        [P in keyof T & keyof BlockRequirementStatusGroupByOutputType]: P extends '_count'
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], BlockRequirementStatusGroupByOutputType[P]>
+          : GetScalarType<T[P], BlockRequirementStatusGroupByOutputType[P]>;
+      }
+    >
+  >;
+
+  export type BlockRequirementStatusSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        card_id?: boolean;
+        node_id?: boolean;
+        environment?: boolean;
+        requirement_id?: boolean;
+        status?: boolean;
+        message?: boolean;
+        last_checked_at?: boolean;
+        verified_at?: boolean;
+        details?: boolean;
+        card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+      },
+      ExtArgs['result']['blockRequirementStatus']
+    >;
+
+  export type BlockRequirementStatusSelectCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      card_id?: boolean;
+      node_id?: boolean;
+      environment?: boolean;
+      requirement_id?: boolean;
+      status?: boolean;
+      message?: boolean;
+      last_checked_at?: boolean;
+      verified_at?: boolean;
+      details?: boolean;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+    },
+    ExtArgs['result']['blockRequirementStatus']
+  >;
+
+  export type BlockRequirementStatusSelectUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      card_id?: boolean;
+      node_id?: boolean;
+      environment?: boolean;
+      requirement_id?: boolean;
+      status?: boolean;
+      message?: boolean;
+      last_checked_at?: boolean;
+      verified_at?: boolean;
+      details?: boolean;
+      card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+    },
+    ExtArgs['result']['blockRequirementStatus']
+  >;
+
+  export type BlockRequirementStatusSelectScalar = {
+    id?: boolean;
+    card_id?: boolean;
+    node_id?: boolean;
+    environment?: boolean;
+    requirement_id?: boolean;
+    status?: boolean;
+    message?: boolean;
+    last_checked_at?: boolean;
+    verified_at?: boolean;
+    details?: boolean;
+  };
+
+  export type BlockRequirementStatusOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetOmit<
+      | 'id'
+      | 'card_id'
+      | 'node_id'
+      | 'environment'
+      | 'requirement_id'
+      | 'status'
+      | 'message'
+      | 'last_checked_at'
+      | 'verified_at'
+      | 'details',
+      ExtArgs['result']['blockRequirementStatus']
+    >;
+  export type BlockRequirementStatusInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+  export type BlockRequirementStatusIncludeCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+  export type BlockRequirementStatusIncludeUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    card?: boolean | CanvasCardDefaultArgs<ExtArgs>;
+  };
+
+  export type $BlockRequirementStatusPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: 'BlockRequirementStatus';
+    objects: {
+      card: Prisma.$CanvasCardPayload<ExtArgs>;
+    };
+    scalars: $Extensions.GetPayloadResult<
+      {
+        id: string;
+        card_id: string;
+        node_id: string;
+        environment: string;
+        requirement_id: string;
+        status: string;
+        message: string | null;
+        last_checked_at: Date;
+        verified_at: Date | null;
+        details: Prisma.JsonValue | null;
+      },
+      ExtArgs['result']['blockRequirementStatus']
+    >;
+    composites: {};
+  };
+
+  type BlockRequirementStatusGetPayload<S extends boolean | null | undefined | BlockRequirementStatusDefaultArgs> =
+    $Result.GetResult<Prisma.$BlockRequirementStatusPayload, S>;
+
+  type BlockRequirementStatusCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Omit<
+    BlockRequirementStatusFindManyArgs,
+    'select' | 'include' | 'distinct' | 'omit'
+  > & {
+    select?: BlockRequirementStatusCountAggregateInputType | true;
+  };
+
+  export interface BlockRequirementStatusDelegate<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > {
+    [K: symbol]: {
+      types: Prisma.TypeMap<ExtArgs>['model']['BlockRequirementStatus'];
+      meta: { name: 'BlockRequirementStatus' };
+    };
+    /**
+     * Find zero or one BlockRequirementStatus that matches the filter.
+     * @param {BlockRequirementStatusFindUniqueArgs} args - Arguments to find a BlockRequirementStatus
+     * @example
+     * // Get one BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BlockRequirementStatusFindUniqueArgs>(
+      args: SelectSubset<T, BlockRequirementStatusFindUniqueArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findUnique', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find one BlockRequirementStatus that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BlockRequirementStatusFindUniqueOrThrowArgs} args - Arguments to find a BlockRequirementStatus
+     * @example
+     * // Get one BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BlockRequirementStatusFindUniqueOrThrowArgs>(
+      args: SelectSubset<T, BlockRequirementStatusFindUniqueOrThrowArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first BlockRequirementStatus that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusFindFirstArgs} args - Arguments to find a BlockRequirementStatus
+     * @example
+     * // Get one BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BlockRequirementStatusFindFirstArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusFindFirstArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findFirst', GlobalOmitOptions> | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first BlockRequirementStatus that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusFindFirstOrThrowArgs} args - Arguments to find a BlockRequirementStatus
+     * @example
+     * // Get one BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BlockRequirementStatusFindFirstOrThrowArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusFindFirstOrThrowArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findFirstOrThrow', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find zero or more BlockRequirementStatuses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BlockRequirementStatuses
+     * const blockRequirementStatuses = await prisma.blockRequirementStatus.findMany()
+     *
+     * // Get first 10 BlockRequirementStatuses
+     * const blockRequirementStatuses = await prisma.blockRequirementStatus.findMany({ take: 10 })
+     *
+     * // Only select the `id`
+     * const blockRequirementStatusWithIdOnly = await prisma.blockRequirementStatus.findMany({ select: { id: true } })
+     *
+     */
+    findMany<T extends BlockRequirementStatusFindManyArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusFindManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'findMany', GlobalOmitOptions>
+    >;
+
+    /**
+     * Create a BlockRequirementStatus.
+     * @param {BlockRequirementStatusCreateArgs} args - Arguments to create a BlockRequirementStatus.
+     * @example
+     * // Create one BlockRequirementStatus
+     * const BlockRequirementStatus = await prisma.blockRequirementStatus.create({
+     *   data: {
+     *     // ... data to create a BlockRequirementStatus
+     *   }
+     * })
+     *
+     */
+    create<T extends BlockRequirementStatusCreateArgs>(
+      args: SelectSubset<T, BlockRequirementStatusCreateArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'create', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Create many BlockRequirementStatuses.
+     * @param {BlockRequirementStatusCreateManyArgs} args - Arguments to create many BlockRequirementStatuses.
+     * @example
+     * // Create many BlockRequirementStatuses
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     */
+    createMany<T extends BlockRequirementStatusCreateManyArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusCreateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Create many BlockRequirementStatuses and returns the data saved in the database.
+     * @param {BlockRequirementStatusCreateManyAndReturnArgs} args - Arguments to create many BlockRequirementStatuses.
+     * @example
+     * // Create many BlockRequirementStatuses
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Create many BlockRequirementStatuses and only return the `id`
+     * const blockRequirementStatusWithIdOnly = await prisma.blockRequirementStatus.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    createManyAndReturn<T extends BlockRequirementStatusCreateManyAndReturnArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusCreateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'createManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Delete a BlockRequirementStatus.
+     * @param {BlockRequirementStatusDeleteArgs} args - Arguments to delete one BlockRequirementStatus.
+     * @example
+     * // Delete one BlockRequirementStatus
+     * const BlockRequirementStatus = await prisma.blockRequirementStatus.delete({
+     *   where: {
+     *     // ... filter to delete one BlockRequirementStatus
+     *   }
+     * })
+     *
+     */
+    delete<T extends BlockRequirementStatusDeleteArgs>(
+      args: SelectSubset<T, BlockRequirementStatusDeleteArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'delete', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Update one BlockRequirementStatus.
+     * @param {BlockRequirementStatusUpdateArgs} args - Arguments to update one BlockRequirementStatus.
+     * @example
+     * // Update one BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    update<T extends BlockRequirementStatusUpdateArgs>(
+      args: SelectSubset<T, BlockRequirementStatusUpdateArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'update', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Delete zero or more BlockRequirementStatuses.
+     * @param {BlockRequirementStatusDeleteManyArgs} args - Arguments to filter BlockRequirementStatuses to delete.
+     * @example
+     * // Delete a few BlockRequirementStatuses
+     * const { count } = await prisma.blockRequirementStatus.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     *
+     */
+    deleteMany<T extends BlockRequirementStatusDeleteManyArgs>(
+      args?: SelectSubset<T, BlockRequirementStatusDeleteManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more BlockRequirementStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BlockRequirementStatuses
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    updateMany<T extends BlockRequirementStatusUpdateManyArgs>(
+      args: SelectSubset<T, BlockRequirementStatusUpdateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more BlockRequirementStatuses and returns the data updated in the database.
+     * @param {BlockRequirementStatusUpdateManyAndReturnArgs} args - Arguments to update many BlockRequirementStatuses.
+     * @example
+     * // Update many BlockRequirementStatuses
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Update zero or more BlockRequirementStatuses and only return the `id`
+     * const blockRequirementStatusWithIdOnly = await prisma.blockRequirementStatus.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    updateManyAndReturn<T extends BlockRequirementStatusUpdateManyAndReturnArgs>(
+      args: SelectSubset<T, BlockRequirementStatusUpdateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'updateManyAndReturn', GlobalOmitOptions>
+    >;
+
+    /**
+     * Create or update one BlockRequirementStatus.
+     * @param {BlockRequirementStatusUpsertArgs} args - Arguments to update or create a BlockRequirementStatus.
+     * @example
+     * // Update or create a BlockRequirementStatus
+     * const blockRequirementStatus = await prisma.blockRequirementStatus.upsert({
+     *   create: {
+     *     // ... data to create a BlockRequirementStatus
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BlockRequirementStatus we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BlockRequirementStatusUpsertArgs>(
+      args: SelectSubset<T, BlockRequirementStatusUpsertArgs<ExtArgs>>,
+    ): Prisma__BlockRequirementStatusClient<
+      $Result.GetResult<Prisma.$BlockRequirementStatusPayload<ExtArgs>, T, 'upsert', GlobalOmitOptions>,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Count the number of BlockRequirementStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusCountArgs} args - Arguments to filter BlockRequirementStatuses to count.
+     * @example
+     * // Count the number of BlockRequirementStatuses
+     * const count = await prisma.blockRequirementStatus.count({
+     *   where: {
+     *     // ... the filter for the BlockRequirementStatuses we want to count
+     *   }
+     * })
+     **/
+    count<T extends BlockRequirementStatusCountArgs>(
+      args?: Subset<T, BlockRequirementStatusCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BlockRequirementStatusCountAggregateOutputType>
+        : number
+    >;
+
+    /**
+     * Allows you to perform aggregations operations on a BlockRequirementStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+     **/
+    aggregate<T extends BlockRequirementStatusAggregateArgs>(
+      args: Subset<T, BlockRequirementStatusAggregateArgs>,
+    ): Prisma.PrismaPromise<GetBlockRequirementStatusAggregateType<T>>;
+
+    /**
+     * Group by BlockRequirementStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BlockRequirementStatusGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     *
+     **/
+    groupBy<
+      T extends BlockRequirementStatusGroupByArgs,
+      HasSelectOrTake extends Or<Extends<'skip', Keys<T>>, Extends<'take', Keys<T>>>,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BlockRequirementStatusGroupByArgs['orderBy'] }
+        : { orderBy?: BlockRequirementStatusGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends False
+          ? {
+              [P in HavingFields]: P extends ByFields
+                ? never
+                : P extends string
+                  ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                  : [Error, 'Field ', P, ` in "having" needs to be provided in "by"`];
+            }[HavingFields]
+          : 'take' extends Keys<T>
+            ? 'orderBy' extends Keys<T>
+              ? ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields]
+              : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Keys<T>
+              ? 'orderBy' extends Keys<T>
+                ? ByValid extends True
+                  ? {}
+                  : {
+                      [P in OrderFields]: P extends ByFields
+                        ? never
+                        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                    }[OrderFields]
+                : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields],
+    >(
+      args: SubsetIntersection<T, BlockRequirementStatusGroupByArgs, OrderByArg> & InputErrors,
+    ): {} extends InputErrors ? GetBlockRequirementStatusGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>;
+    /**
+     * Fields of the BlockRequirementStatus model
+     */
+    readonly fields: BlockRequirementStatusFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BlockRequirementStatus.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BlockRequirementStatusClient<
+    T,
+    Null = never,
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    card<T extends CanvasCardDefaultArgs<ExtArgs> = {}>(
+      args?: Subset<T, CanvasCardDefaultArgs<ExtArgs>>,
+    ): Prisma__CanvasCardClient<
+      $Result.GetResult<Prisma.$CanvasCardPayload<ExtArgs>, T, 'findUniqueOrThrow', GlobalOmitOptions> | Null,
+      Null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    ): $Utils.JsPromise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(
+      onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+    ): $Utils.JsPromise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>;
+  }
+
+  /**
+   * Fields of the BlockRequirementStatus model
+   */
+  interface BlockRequirementStatusFieldRefs {
+    readonly id: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly card_id: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly node_id: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly environment: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly requirement_id: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly status: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly message: FieldRef<'BlockRequirementStatus', 'String'>;
+    readonly last_checked_at: FieldRef<'BlockRequirementStatus', 'DateTime'>;
+    readonly verified_at: FieldRef<'BlockRequirementStatus', 'DateTime'>;
+    readonly details: FieldRef<'BlockRequirementStatus', 'Json'>;
+  }
+
+  // Custom InputTypes
+  /**
+   * BlockRequirementStatus findUnique
+   */
+  export type BlockRequirementStatusFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Select specific fields to fetch from the BlockRequirementStatus
+       */
+      select?: BlockRequirementStatusSelect<ExtArgs> | null;
+      /**
+       * Omit specific fields from the BlockRequirementStatus
+       */
+      omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+      /**
+       * Choose, which related nodes to fetch as well
+       */
+      include?: BlockRequirementStatusInclude<ExtArgs> | null;
+      /**
+       * Filter, which BlockRequirementStatus to fetch.
+       */
+      where: BlockRequirementStatusWhereUniqueInput;
+    };
+
+  /**
+   * BlockRequirementStatus findUniqueOrThrow
+   */
+  export type BlockRequirementStatusFindUniqueOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * Filter, which BlockRequirementStatus to fetch.
+     */
+    where: BlockRequirementStatusWhereUniqueInput;
+  };
+
+  /**
+   * BlockRequirementStatus findFirst
+   */
+  export type BlockRequirementStatusFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Select specific fields to fetch from the BlockRequirementStatus
+       */
+      select?: BlockRequirementStatusSelect<ExtArgs> | null;
+      /**
+       * Omit specific fields from the BlockRequirementStatus
+       */
+      omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+      /**
+       * Choose, which related nodes to fetch as well
+       */
+      include?: BlockRequirementStatusInclude<ExtArgs> | null;
+      /**
+       * Filter, which BlockRequirementStatus to fetch.
+       */
+      where?: BlockRequirementStatusWhereInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+       *
+       * Determine the order of BlockRequirementStatuses to fetch.
+       */
+      orderBy?: BlockRequirementStatusOrderByWithRelationInput | BlockRequirementStatusOrderByWithRelationInput[];
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+       *
+       * Sets the position for searching for BlockRequirementStatuses.
+       */
+      cursor?: BlockRequirementStatusWhereUniqueInput;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Take `±n` BlockRequirementStatuses from the position of the cursor.
+       */
+      take?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+       *
+       * Skip the first `n` BlockRequirementStatuses.
+       */
+      skip?: number;
+      /**
+       * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+       *
+       * Filter by unique combinations of BlockRequirementStatuses.
+       */
+      distinct?: BlockRequirementStatusScalarFieldEnum | BlockRequirementStatusScalarFieldEnum[];
+    };
+
+  /**
+   * BlockRequirementStatus findFirstOrThrow
+   */
+  export type BlockRequirementStatusFindFirstOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * Filter, which BlockRequirementStatus to fetch.
+     */
+    where?: BlockRequirementStatusWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of BlockRequirementStatuses to fetch.
+     */
+    orderBy?: BlockRequirementStatusOrderByWithRelationInput | BlockRequirementStatusOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for BlockRequirementStatuses.
+     */
+    cursor?: BlockRequirementStatusWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` BlockRequirementStatuses from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` BlockRequirementStatuses.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of BlockRequirementStatuses.
+     */
+    distinct?: BlockRequirementStatusScalarFieldEnum | BlockRequirementStatusScalarFieldEnum[];
+  };
+
+  /**
+   * BlockRequirementStatus findMany
+   */
+  export type BlockRequirementStatusFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * Filter, which BlockRequirementStatuses to fetch.
+     */
+    where?: BlockRequirementStatusWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of BlockRequirementStatuses to fetch.
+     */
+    orderBy?: BlockRequirementStatusOrderByWithRelationInput | BlockRequirementStatusOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for listing BlockRequirementStatuses.
+     */
+    cursor?: BlockRequirementStatusWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` BlockRequirementStatuses from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` BlockRequirementStatuses.
+     */
+    skip?: number;
+    distinct?: BlockRequirementStatusScalarFieldEnum | BlockRequirementStatusScalarFieldEnum[];
+  };
+
+  /**
+   * BlockRequirementStatus create
+   */
+  export type BlockRequirementStatusCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * The data needed to create a BlockRequirementStatus.
+     */
+    data: XOR<BlockRequirementStatusCreateInput, BlockRequirementStatusUncheckedCreateInput>;
+  };
+
+  /**
+   * BlockRequirementStatus createMany
+   */
+  export type BlockRequirementStatusCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * The data used to create many BlockRequirementStatuses.
+       */
+      data: BlockRequirementStatusCreateManyInput | BlockRequirementStatusCreateManyInput[];
+    };
+
+  /**
+   * BlockRequirementStatus createManyAndReturn
+   */
+  export type BlockRequirementStatusCreateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelectCreateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * The data used to create many BlockRequirementStatuses.
+     */
+    data: BlockRequirementStatusCreateManyInput | BlockRequirementStatusCreateManyInput[];
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusIncludeCreateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * BlockRequirementStatus update
+   */
+  export type BlockRequirementStatusUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * The data needed to update a BlockRequirementStatus.
+     */
+    data: XOR<BlockRequirementStatusUpdateInput, BlockRequirementStatusUncheckedUpdateInput>;
+    /**
+     * Choose, which BlockRequirementStatus to update.
+     */
+    where: BlockRequirementStatusWhereUniqueInput;
+  };
+
+  /**
+   * BlockRequirementStatus updateMany
+   */
+  export type BlockRequirementStatusUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * The data used to update BlockRequirementStatuses.
+       */
+      data: XOR<BlockRequirementStatusUpdateManyMutationInput, BlockRequirementStatusUncheckedUpdateManyInput>;
+      /**
+       * Filter which BlockRequirementStatuses to update
+       */
+      where?: BlockRequirementStatusWhereInput;
+      /**
+       * Limit how many BlockRequirementStatuses to update.
+       */
+      limit?: number;
+    };
+
+  /**
+   * BlockRequirementStatus updateManyAndReturn
+   */
+  export type BlockRequirementStatusUpdateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelectUpdateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * The data used to update BlockRequirementStatuses.
+     */
+    data: XOR<BlockRequirementStatusUpdateManyMutationInput, BlockRequirementStatusUncheckedUpdateManyInput>;
+    /**
+     * Filter which BlockRequirementStatuses to update
+     */
+    where?: BlockRequirementStatusWhereInput;
+    /**
+     * Limit how many BlockRequirementStatuses to update.
+     */
+    limit?: number;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusIncludeUpdateManyAndReturn<ExtArgs> | null;
+  };
+
+  /**
+   * BlockRequirementStatus upsert
+   */
+  export type BlockRequirementStatusUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * The filter to search for the BlockRequirementStatus to update in case it exists.
+     */
+    where: BlockRequirementStatusWhereUniqueInput;
+    /**
+     * In case the BlockRequirementStatus found by the `where` argument doesn't exist, create a new BlockRequirementStatus with this data.
+     */
+    create: XOR<BlockRequirementStatusCreateInput, BlockRequirementStatusUncheckedCreateInput>;
+    /**
+     * In case the BlockRequirementStatus was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BlockRequirementStatusUpdateInput, BlockRequirementStatusUncheckedUpdateInput>;
+  };
+
+  /**
+   * BlockRequirementStatus delete
+   */
+  export type BlockRequirementStatusDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
+    /**
+     * Filter which BlockRequirementStatus to delete.
+     */
+    where: BlockRequirementStatusWhereUniqueInput;
+  };
+
+  /**
+   * BlockRequirementStatus deleteMany
+   */
+  export type BlockRequirementStatusDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      /**
+       * Filter which BlockRequirementStatuses to delete
+       */
+      where?: BlockRequirementStatusWhereInput;
+      /**
+       * Limit how many BlockRequirementStatuses to delete.
+       */
+      limit?: number;
+    };
+
+  /**
+   * BlockRequirementStatus without action
+   */
+  export type BlockRequirementStatusDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BlockRequirementStatus
+     */
+    select?: BlockRequirementStatusSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the BlockRequirementStatus
+     */
+    omit?: BlockRequirementStatusOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BlockRequirementStatusInclude<ExtArgs> | null;
   };
 
   /**
@@ -19369,7 +23616,6 @@ export namespace Prisma {
      * The data used to create many DeployJobs.
      */
     data: DeployJobCreateManyInput | DeployJobCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -19388,7 +23634,6 @@ export namespace Prisma {
      * The data used to create many DeployJobs.
      */
     data: DeployJobCreateManyInput | DeployJobCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -19588,6 +23833,8 @@ export namespace Prisma {
     enabled: boolean | null;
     webhook_id: number | null;
     webhook_secret: string | null;
+    webhook_status: string | null;
+    webhook_error: string | null;
     organisation_id: string | null;
     created_by: string | null;
     created_at: Date | null;
@@ -19609,6 +23856,8 @@ export namespace Prisma {
     enabled: boolean | null;
     webhook_id: number | null;
     webhook_secret: string | null;
+    webhook_status: string | null;
+    webhook_error: string | null;
     organisation_id: string | null;
     created_by: string | null;
     created_at: Date | null;
@@ -19630,6 +23879,8 @@ export namespace Prisma {
     enabled: number;
     webhook_id: number;
     webhook_secret: number;
+    webhook_status: number;
+    webhook_error: number;
     organisation_id: number;
     created_by: number;
     created_at: number;
@@ -19660,6 +23911,8 @@ export namespace Prisma {
     enabled?: true;
     webhook_id?: true;
     webhook_secret?: true;
+    webhook_status?: true;
+    webhook_error?: true;
     organisation_id?: true;
     created_by?: true;
     created_at?: true;
@@ -19681,6 +23934,8 @@ export namespace Prisma {
     enabled?: true;
     webhook_id?: true;
     webhook_secret?: true;
+    webhook_status?: true;
+    webhook_error?: true;
     organisation_id?: true;
     created_by?: true;
     created_at?: true;
@@ -19702,6 +23957,8 @@ export namespace Prisma {
     enabled?: true;
     webhook_id?: true;
     webhook_secret?: true;
+    webhook_status?: true;
+    webhook_error?: true;
     organisation_id?: true;
     created_by?: true;
     created_at?: true;
@@ -19807,6 +24064,8 @@ export namespace Prisma {
     enabled: boolean;
     webhook_id: number | null;
     webhook_secret: string | null;
+    webhook_status: string;
+    webhook_error: string | null;
     organisation_id: string;
     created_by: string;
     created_at: Date;
@@ -19847,6 +24106,8 @@ export namespace Prisma {
         enabled?: boolean;
         webhook_id?: boolean;
         webhook_secret?: boolean;
+        webhook_status?: boolean;
+        webhook_error?: boolean;
         organisation_id?: boolean;
         created_by?: boolean;
         created_at?: boolean;
@@ -19876,6 +24137,8 @@ export namespace Prisma {
       enabled?: boolean;
       webhook_id?: boolean;
       webhook_secret?: boolean;
+      webhook_status?: boolean;
+      webhook_error?: boolean;
       organisation_id?: boolean;
       created_by?: boolean;
       created_at?: boolean;
@@ -19903,6 +24166,8 @@ export namespace Prisma {
       enabled?: boolean;
       webhook_id?: boolean;
       webhook_secret?: boolean;
+      webhook_status?: boolean;
+      webhook_error?: boolean;
       organisation_id?: boolean;
       created_by?: boolean;
       created_at?: boolean;
@@ -19927,6 +24192,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: boolean;
     webhook_secret?: boolean;
+    webhook_status?: boolean;
+    webhook_error?: boolean;
     organisation_id?: boolean;
     created_by?: boolean;
     created_at?: boolean;
@@ -19949,6 +24216,8 @@ export namespace Prisma {
       | 'enabled'
       | 'webhook_id'
       | 'webhook_secret'
+      | 'webhook_status'
+      | 'webhook_error'
       | 'organisation_id'
       | 'created_by'
       | 'created_at'
@@ -19993,6 +24262,8 @@ export namespace Prisma {
         enabled: boolean;
         webhook_id: number | null;
         webhook_secret: string | null;
+        webhook_status: string;
+        webhook_error: string | null;
         organisation_id: string;
         created_by: string;
         created_at: Date;
@@ -20533,6 +24804,8 @@ export namespace Prisma {
     readonly enabled: FieldRef<'DeploymentRule', 'Boolean'>;
     readonly webhook_id: FieldRef<'DeploymentRule', 'Int'>;
     readonly webhook_secret: FieldRef<'DeploymentRule', 'String'>;
+    readonly webhook_status: FieldRef<'DeploymentRule', 'String'>;
+    readonly webhook_error: FieldRef<'DeploymentRule', 'String'>;
     readonly organisation_id: FieldRef<'DeploymentRule', 'String'>;
     readonly created_by: FieldRef<'DeploymentRule', 'String'>;
     readonly created_at: FieldRef<'DeploymentRule', 'DateTime'>;
@@ -20766,7 +25039,6 @@ export namespace Prisma {
      * The data used to create many DeploymentRules.
      */
     data: DeploymentRuleCreateManyInput | DeploymentRuleCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -20787,7 +25059,6 @@ export namespace Prisma {
      * The data used to create many DeploymentRules.
      */
     data: DeploymentRuleCreateManyInput | DeploymentRuleCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -22150,7 +26421,6 @@ export namespace Prisma {
      * The data used to create many DeploymentEvents.
      */
     data: DeploymentEventCreateManyInput | DeploymentEventCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -22171,7 +26441,6 @@ export namespace Prisma {
      * The data used to create many DeploymentEvents.
      */
     data: DeploymentEventCreateManyInput | DeploymentEventCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -23285,7 +27554,6 @@ export namespace Prisma {
      * The data used to create many WebhookDeliveries.
      */
     data: WebhookDeliveryCreateManyInput | WebhookDeliveryCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -23306,7 +27574,6 @@ export namespace Prisma {
      * The data used to create many WebhookDeliveries.
      */
     data: WebhookDeliveryCreateManyInput | WebhookDeliveryCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -24481,7 +28748,6 @@ export namespace Prisma {
      * The data used to create many AiConversations.
      */
     data: AiConversationCreateManyInput | AiConversationCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -24502,7 +28768,6 @@ export namespace Prisma {
      * The data used to create many AiConversations.
      */
     data: AiConversationCreateManyInput | AiConversationCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -25733,7 +29998,6 @@ export namespace Prisma {
      * The data used to create many AiMessages.
      */
     data: AiMessageCreateManyInput | AiMessageCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -25752,7 +30016,6 @@ export namespace Prisma {
      * The data used to create many AiMessages.
      */
     data: AiMessageCreateManyInput | AiMessageCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -27055,7 +31318,6 @@ export namespace Prisma {
      * The data used to create many AiAuditLogs.
      */
     data: AiAuditLogCreateManyInput | AiAuditLogCreateManyInput[];
-    skipDuplicates?: boolean;
   };
 
   /**
@@ -27074,7 +31336,6 @@ export namespace Prisma {
      * The data used to create many AiAuditLogs.
      */
     data: AiAuditLogCreateManyInput | AiAuditLogCreateManyInput[];
-    skipDuplicates?: boolean;
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -27282,9 +31543,6 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
-    ReadUncommitted: 'ReadUncommitted';
-    ReadCommitted: 'ReadCommitted';
-    RepeatableRead: 'RepeatableRead';
     Serializable: 'Serializable';
   };
 
@@ -27301,6 +31559,8 @@ export namespace Prisma {
     onboarding_step: 'onboarding_step';
     default_provider: 'default_provider';
     default_region: 'default_region';
+    completed_tours: 'completed_tours';
+    preferences: 'preferences';
     created_at: 'created_at';
     updated_at: 'updated_at';
   };
@@ -27448,19 +31708,66 @@ export namespace Prisma {
     card_id: 'card_id';
     user_id: 'user_id';
     status: 'status';
+    action_type: 'action_type';
     provider: 'provider';
     region: 'region';
     environment: 'environment';
     plan: 'plan';
     results: 'results';
+    summary: 'summary';
+    snapshot: 'snapshot';
     duration_ms: 'duration_ms';
     error: 'error';
+    pinned: 'pinned';
     created_at: 'created_at';
     updated_at: 'updated_at';
   };
 
   export type CanvasDeploymentScalarFieldEnum =
     (typeof CanvasDeploymentScalarFieldEnum)[keyof typeof CanvasDeploymentScalarFieldEnum];
+
+  export const DeployEventScalarFieldEnum: {
+    id: 'id';
+    deployment_id: 'deployment_id';
+    card_id: 'card_id';
+    seq: 'seq';
+    type: 'type';
+    payload: 'payload';
+    created_at: 'created_at';
+  };
+
+  export type DeployEventScalarFieldEnum = (typeof DeployEventScalarFieldEnum)[keyof typeof DeployEventScalarFieldEnum];
+
+  export const DeployedResourceMappingScalarFieldEnum: {
+    id: 'id';
+    card_id: 'card_id';
+    node_id: 'node_id';
+    environment: 'environment';
+    resource_type: 'resource_type';
+    resource_name: 'resource_name';
+    provider_id: 'provider_id';
+    created_at: 'created_at';
+    updated_at: 'updated_at';
+  };
+
+  export type DeployedResourceMappingScalarFieldEnum =
+    (typeof DeployedResourceMappingScalarFieldEnum)[keyof typeof DeployedResourceMappingScalarFieldEnum];
+
+  export const BlockRequirementStatusScalarFieldEnum: {
+    id: 'id';
+    card_id: 'card_id';
+    node_id: 'node_id';
+    environment: 'environment';
+    requirement_id: 'requirement_id';
+    status: 'status';
+    message: 'message';
+    last_checked_at: 'last_checked_at';
+    verified_at: 'verified_at';
+    details: 'details';
+  };
+
+  export type BlockRequirementStatusScalarFieldEnum =
+    (typeof BlockRequirementStatusScalarFieldEnum)[keyof typeof BlockRequirementStatusScalarFieldEnum];
 
   export const DeployJobScalarFieldEnum: {
     id: 'id';
@@ -27492,6 +31799,8 @@ export namespace Prisma {
     enabled: 'enabled';
     webhook_id: 'webhook_id';
     webhook_secret: 'webhook_secret';
+    webhook_status: 'webhook_status';
+    webhook_error: 'webhook_error';
     organisation_id: 'organisation_id';
     created_by: 'created_by';
     created_at: 'created_at';
@@ -27601,13 +31910,6 @@ export namespace Prisma {
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput];
 
-  export const QueryMode: {
-    default: 'default';
-    insensitive: 'insensitive';
-  };
-
-  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode];
-
   export const NullsOrder: {
     first: 'first';
     last: 'last';
@@ -27623,6 +31925,13 @@ export namespace Prisma {
 
   export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter];
 
+  export const QueryMode: {
+    default: 'default';
+    insensitive: 'insensitive';
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode];
+
   /**
    * Field references
    */
@@ -27631,11 +31940,6 @@ export namespace Prisma {
    * Reference to a field of type 'String'
    */
   export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>;
-
-  /**
-   * Reference to a field of type 'String[]'
-   */
-  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>;
 
   /**
    * Reference to a field of type 'Boolean'
@@ -27648,19 +31952,9 @@ export namespace Prisma {
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>;
 
   /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>;
-
-  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>;
-
-  /**
-   * Reference to a field of type 'DateTime[]'
-   */
-  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>;
 
   /**
    * Reference to a field of type 'Json'
@@ -27676,11 +31970,6 @@ export namespace Prisma {
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>;
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>;
 
   /**
    * Deep Input Types
@@ -27700,6 +31989,8 @@ export namespace Prisma {
     onboarding_step?: IntFilter<'User'> | number;
     default_provider?: StringNullableFilter<'User'> | string | null;
     default_region?: StringNullableFilter<'User'> | string | null;
+    completed_tours?: StringNullableFilter<'User'> | string | null;
+    preferences?: StringNullableFilter<'User'> | string | null;
     created_at?: DateTimeFilter<'User'> | Date | string;
     updated_at?: DateTimeFilter<'User'> | Date | string;
     organisation?: XOR<OrganisationNullableScalarRelationFilter, OrganisationWhereInput> | null;
@@ -27724,6 +32015,8 @@ export namespace Prisma {
     onboarding_step?: SortOrder;
     default_provider?: SortOrderInput | SortOrder;
     default_region?: SortOrderInput | SortOrder;
+    completed_tours?: SortOrderInput | SortOrder;
+    preferences?: SortOrderInput | SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
     organisation?: OrganisationOrderByWithRelationInput;
@@ -27752,6 +32045,8 @@ export namespace Prisma {
       onboarding_step?: IntFilter<'User'> | number;
       default_provider?: StringNullableFilter<'User'> | string | null;
       default_region?: StringNullableFilter<'User'> | string | null;
+      completed_tours?: StringNullableFilter<'User'> | string | null;
+      preferences?: StringNullableFilter<'User'> | string | null;
       created_at?: DateTimeFilter<'User'> | Date | string;
       updated_at?: DateTimeFilter<'User'> | Date | string;
       organisation?: XOR<OrganisationNullableScalarRelationFilter, OrganisationWhereInput> | null;
@@ -27778,6 +32073,8 @@ export namespace Prisma {
     onboarding_step?: SortOrder;
     default_provider?: SortOrderInput | SortOrder;
     default_region?: SortOrderInput | SortOrder;
+    completed_tours?: SortOrderInput | SortOrder;
+    preferences?: SortOrderInput | SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
     _count?: UserCountOrderByAggregateInput;
@@ -27801,6 +32098,8 @@ export namespace Prisma {
     onboarding_step?: IntWithAggregatesFilter<'User'> | number;
     default_provider?: StringNullableWithAggregatesFilter<'User'> | string | null;
     default_region?: StringNullableWithAggregatesFilter<'User'> | string | null;
+    completed_tours?: StringNullableWithAggregatesFilter<'User'> | string | null;
+    preferences?: StringNullableWithAggregatesFilter<'User'> | string | null;
     created_at?: DateTimeWithAggregatesFilter<'User'> | Date | string;
     updated_at?: DateTimeWithAggregatesFilter<'User'> | Date | string;
   };
@@ -28343,6 +32642,9 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<'CanvasCard'> | Date | string;
     project?: XOR<CanvasProjectScalarRelationFilter, CanvasProjectWhereInput>;
     environment?: XOR<EnvironmentNullableScalarRelationFilter, EnvironmentWhereInput> | null;
+    deployments?: CanvasDeploymentListRelationFilter;
+    resourceMappings?: DeployedResourceMappingListRelationFilter;
+    requirementStatuses?: BlockRequirementStatusListRelationFilter;
   };
 
   export type CanvasCardOrderByWithRelationInput = {
@@ -28356,6 +32658,9 @@ export namespace Prisma {
     updated_at?: SortOrder;
     project?: CanvasProjectOrderByWithRelationInput;
     environment?: EnvironmentOrderByWithRelationInput;
+    deployments?: CanvasDeploymentOrderByRelationAggregateInput;
+    resourceMappings?: DeployedResourceMappingOrderByRelationAggregateInput;
+    requirementStatuses?: BlockRequirementStatusOrderByRelationAggregateInput;
   };
 
   export type CanvasCardWhereUniqueInput = Prisma.AtLeast<
@@ -28373,6 +32678,9 @@ export namespace Prisma {
       updated_at?: DateTimeFilter<'CanvasCard'> | Date | string;
       project?: XOR<CanvasProjectScalarRelationFilter, CanvasProjectWhereInput>;
       environment?: XOR<EnvironmentNullableScalarRelationFilter, EnvironmentWhereInput> | null;
+      deployments?: CanvasDeploymentListRelationFilter;
+      resourceMappings?: DeployedResourceMappingListRelationFilter;
+      requirementStatuses?: BlockRequirementStatusListRelationFilter;
     },
     'id'
   >;
@@ -28591,17 +32899,23 @@ export namespace Prisma {
     card_id?: StringFilter<'CanvasDeployment'> | string;
     user_id?: StringNullableFilter<'CanvasDeployment'> | string | null;
     status?: StringFilter<'CanvasDeployment'> | string;
+    action_type?: StringFilter<'CanvasDeployment'> | string;
     provider?: StringFilter<'CanvasDeployment'> | string;
     region?: StringFilter<'CanvasDeployment'> | string;
     environment?: StringFilter<'CanvasDeployment'> | string;
     plan?: JsonNullableFilter<'CanvasDeployment'>;
     results?: JsonNullableFilter<'CanvasDeployment'>;
+    summary?: JsonNullableFilter<'CanvasDeployment'>;
+    snapshot?: JsonNullableFilter<'CanvasDeployment'>;
     duration_ms?: IntNullableFilter<'CanvasDeployment'> | number | null;
     error?: StringNullableFilter<'CanvasDeployment'> | string | null;
+    pinned?: BoolFilter<'CanvasDeployment'> | boolean;
     created_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
     updated_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
     deploy_jobs?: DeployJobListRelationFilter;
+    deploy_events?: DeployEventListRelationFilter;
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null;
+    card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
   };
 
   export type CanvasDeploymentOrderByWithRelationInput = {
@@ -28609,17 +32923,23 @@ export namespace Prisma {
     card_id?: SortOrder;
     user_id?: SortOrderInput | SortOrder;
     status?: SortOrder;
+    action_type?: SortOrder;
     provider?: SortOrder;
     region?: SortOrder;
     environment?: SortOrder;
     plan?: SortOrderInput | SortOrder;
     results?: SortOrderInput | SortOrder;
+    summary?: SortOrderInput | SortOrder;
+    snapshot?: SortOrderInput | SortOrder;
     duration_ms?: SortOrderInput | SortOrder;
     error?: SortOrderInput | SortOrder;
+    pinned?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
     deploy_jobs?: DeployJobOrderByRelationAggregateInput;
+    deploy_events?: DeployEventOrderByRelationAggregateInput;
     user?: UserOrderByWithRelationInput;
+    card?: CanvasCardOrderByWithRelationInput;
   };
 
   export type CanvasDeploymentWhereUniqueInput = Prisma.AtLeast<
@@ -28631,17 +32951,23 @@ export namespace Prisma {
       card_id?: StringFilter<'CanvasDeployment'> | string;
       user_id?: StringNullableFilter<'CanvasDeployment'> | string | null;
       status?: StringFilter<'CanvasDeployment'> | string;
+      action_type?: StringFilter<'CanvasDeployment'> | string;
       provider?: StringFilter<'CanvasDeployment'> | string;
       region?: StringFilter<'CanvasDeployment'> | string;
       environment?: StringFilter<'CanvasDeployment'> | string;
       plan?: JsonNullableFilter<'CanvasDeployment'>;
       results?: JsonNullableFilter<'CanvasDeployment'>;
+      summary?: JsonNullableFilter<'CanvasDeployment'>;
+      snapshot?: JsonNullableFilter<'CanvasDeployment'>;
       duration_ms?: IntNullableFilter<'CanvasDeployment'> | number | null;
       error?: StringNullableFilter<'CanvasDeployment'> | string | null;
+      pinned?: BoolFilter<'CanvasDeployment'> | boolean;
       created_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
       updated_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
       deploy_jobs?: DeployJobListRelationFilter;
+      deploy_events?: DeployEventListRelationFilter;
       user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null;
+      card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
     },
     'id'
   >;
@@ -28651,13 +32977,17 @@ export namespace Prisma {
     card_id?: SortOrder;
     user_id?: SortOrderInput | SortOrder;
     status?: SortOrder;
+    action_type?: SortOrder;
     provider?: SortOrder;
     region?: SortOrder;
     environment?: SortOrder;
     plan?: SortOrderInput | SortOrder;
     results?: SortOrderInput | SortOrder;
+    summary?: SortOrderInput | SortOrder;
+    snapshot?: SortOrderInput | SortOrder;
     duration_ms?: SortOrderInput | SortOrder;
     error?: SortOrderInput | SortOrder;
+    pinned?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
     _count?: CanvasDeploymentCountOrderByAggregateInput;
@@ -28675,15 +33005,257 @@ export namespace Prisma {
     card_id?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
     user_id?: StringNullableWithAggregatesFilter<'CanvasDeployment'> | string | null;
     status?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
+    action_type?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
     provider?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
     region?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
     environment?: StringWithAggregatesFilter<'CanvasDeployment'> | string;
     plan?: JsonNullableWithAggregatesFilter<'CanvasDeployment'>;
     results?: JsonNullableWithAggregatesFilter<'CanvasDeployment'>;
+    summary?: JsonNullableWithAggregatesFilter<'CanvasDeployment'>;
+    snapshot?: JsonNullableWithAggregatesFilter<'CanvasDeployment'>;
     duration_ms?: IntNullableWithAggregatesFilter<'CanvasDeployment'> | number | null;
     error?: StringNullableWithAggregatesFilter<'CanvasDeployment'> | string | null;
+    pinned?: BoolWithAggregatesFilter<'CanvasDeployment'> | boolean;
     created_at?: DateTimeWithAggregatesFilter<'CanvasDeployment'> | Date | string;
     updated_at?: DateTimeWithAggregatesFilter<'CanvasDeployment'> | Date | string;
+  };
+
+  export type DeployEventWhereInput = {
+    AND?: DeployEventWhereInput | DeployEventWhereInput[];
+    OR?: DeployEventWhereInput[];
+    NOT?: DeployEventWhereInput | DeployEventWhereInput[];
+    id?: StringFilter<'DeployEvent'> | string;
+    deployment_id?: StringFilter<'DeployEvent'> | string;
+    card_id?: StringFilter<'DeployEvent'> | string;
+    seq?: IntFilter<'DeployEvent'> | number;
+    type?: StringFilter<'DeployEvent'> | string;
+    payload?: JsonFilter<'DeployEvent'>;
+    created_at?: DateTimeFilter<'DeployEvent'> | Date | string;
+    deployment?: XOR<CanvasDeploymentScalarRelationFilter, CanvasDeploymentWhereInput>;
+  };
+
+  export type DeployEventOrderByWithRelationInput = {
+    id?: SortOrder;
+    deployment_id?: SortOrder;
+    card_id?: SortOrder;
+    seq?: SortOrder;
+    type?: SortOrder;
+    payload?: SortOrder;
+    created_at?: SortOrder;
+    deployment?: CanvasDeploymentOrderByWithRelationInput;
+  };
+
+  export type DeployEventWhereUniqueInput = Prisma.AtLeast<
+    {
+      id?: string;
+      deployment_id_seq?: DeployEventDeployment_idSeqCompoundUniqueInput;
+      AND?: DeployEventWhereInput | DeployEventWhereInput[];
+      OR?: DeployEventWhereInput[];
+      NOT?: DeployEventWhereInput | DeployEventWhereInput[];
+      deployment_id?: StringFilter<'DeployEvent'> | string;
+      card_id?: StringFilter<'DeployEvent'> | string;
+      seq?: IntFilter<'DeployEvent'> | number;
+      type?: StringFilter<'DeployEvent'> | string;
+      payload?: JsonFilter<'DeployEvent'>;
+      created_at?: DateTimeFilter<'DeployEvent'> | Date | string;
+      deployment?: XOR<CanvasDeploymentScalarRelationFilter, CanvasDeploymentWhereInput>;
+    },
+    'id' | 'deployment_id_seq'
+  >;
+
+  export type DeployEventOrderByWithAggregationInput = {
+    id?: SortOrder;
+    deployment_id?: SortOrder;
+    card_id?: SortOrder;
+    seq?: SortOrder;
+    type?: SortOrder;
+    payload?: SortOrder;
+    created_at?: SortOrder;
+    _count?: DeployEventCountOrderByAggregateInput;
+    _avg?: DeployEventAvgOrderByAggregateInput;
+    _max?: DeployEventMaxOrderByAggregateInput;
+    _min?: DeployEventMinOrderByAggregateInput;
+    _sum?: DeployEventSumOrderByAggregateInput;
+  };
+
+  export type DeployEventScalarWhereWithAggregatesInput = {
+    AND?: DeployEventScalarWhereWithAggregatesInput | DeployEventScalarWhereWithAggregatesInput[];
+    OR?: DeployEventScalarWhereWithAggregatesInput[];
+    NOT?: DeployEventScalarWhereWithAggregatesInput | DeployEventScalarWhereWithAggregatesInput[];
+    id?: StringWithAggregatesFilter<'DeployEvent'> | string;
+    deployment_id?: StringWithAggregatesFilter<'DeployEvent'> | string;
+    card_id?: StringWithAggregatesFilter<'DeployEvent'> | string;
+    seq?: IntWithAggregatesFilter<'DeployEvent'> | number;
+    type?: StringWithAggregatesFilter<'DeployEvent'> | string;
+    payload?: JsonWithAggregatesFilter<'DeployEvent'>;
+    created_at?: DateTimeWithAggregatesFilter<'DeployEvent'> | Date | string;
+  };
+
+  export type DeployedResourceMappingWhereInput = {
+    AND?: DeployedResourceMappingWhereInput | DeployedResourceMappingWhereInput[];
+    OR?: DeployedResourceMappingWhereInput[];
+    NOT?: DeployedResourceMappingWhereInput | DeployedResourceMappingWhereInput[];
+    id?: StringFilter<'DeployedResourceMapping'> | string;
+    card_id?: StringFilter<'DeployedResourceMapping'> | string;
+    node_id?: StringFilter<'DeployedResourceMapping'> | string;
+    environment?: StringFilter<'DeployedResourceMapping'> | string;
+    resource_type?: StringFilter<'DeployedResourceMapping'> | string;
+    resource_name?: StringFilter<'DeployedResourceMapping'> | string;
+    provider_id?: StringNullableFilter<'DeployedResourceMapping'> | string | null;
+    created_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+    updated_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+    card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
+  };
+
+  export type DeployedResourceMappingOrderByWithRelationInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    resource_type?: SortOrder;
+    resource_name?: SortOrder;
+    provider_id?: SortOrderInput | SortOrder;
+    created_at?: SortOrder;
+    updated_at?: SortOrder;
+    card?: CanvasCardOrderByWithRelationInput;
+  };
+
+  export type DeployedResourceMappingWhereUniqueInput = Prisma.AtLeast<
+    {
+      id?: string;
+      card_id_node_id_environment?: DeployedResourceMappingCard_idNode_idEnvironmentCompoundUniqueInput;
+      AND?: DeployedResourceMappingWhereInput | DeployedResourceMappingWhereInput[];
+      OR?: DeployedResourceMappingWhereInput[];
+      NOT?: DeployedResourceMappingWhereInput | DeployedResourceMappingWhereInput[];
+      card_id?: StringFilter<'DeployedResourceMapping'> | string;
+      node_id?: StringFilter<'DeployedResourceMapping'> | string;
+      environment?: StringFilter<'DeployedResourceMapping'> | string;
+      resource_type?: StringFilter<'DeployedResourceMapping'> | string;
+      resource_name?: StringFilter<'DeployedResourceMapping'> | string;
+      provider_id?: StringNullableFilter<'DeployedResourceMapping'> | string | null;
+      created_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+      updated_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+      card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
+    },
+    'id' | 'card_id_node_id_environment'
+  >;
+
+  export type DeployedResourceMappingOrderByWithAggregationInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    resource_type?: SortOrder;
+    resource_name?: SortOrder;
+    provider_id?: SortOrderInput | SortOrder;
+    created_at?: SortOrder;
+    updated_at?: SortOrder;
+    _count?: DeployedResourceMappingCountOrderByAggregateInput;
+    _max?: DeployedResourceMappingMaxOrderByAggregateInput;
+    _min?: DeployedResourceMappingMinOrderByAggregateInput;
+  };
+
+  export type DeployedResourceMappingScalarWhereWithAggregatesInput = {
+    AND?:
+      | DeployedResourceMappingScalarWhereWithAggregatesInput
+      | DeployedResourceMappingScalarWhereWithAggregatesInput[];
+    OR?: DeployedResourceMappingScalarWhereWithAggregatesInput[];
+    NOT?:
+      | DeployedResourceMappingScalarWhereWithAggregatesInput
+      | DeployedResourceMappingScalarWhereWithAggregatesInput[];
+    id?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    card_id?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    node_id?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    environment?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    resource_type?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    resource_name?: StringWithAggregatesFilter<'DeployedResourceMapping'> | string;
+    provider_id?: StringNullableWithAggregatesFilter<'DeployedResourceMapping'> | string | null;
+    created_at?: DateTimeWithAggregatesFilter<'DeployedResourceMapping'> | Date | string;
+    updated_at?: DateTimeWithAggregatesFilter<'DeployedResourceMapping'> | Date | string;
+  };
+
+  export type BlockRequirementStatusWhereInput = {
+    AND?: BlockRequirementStatusWhereInput | BlockRequirementStatusWhereInput[];
+    OR?: BlockRequirementStatusWhereInput[];
+    NOT?: BlockRequirementStatusWhereInput | BlockRequirementStatusWhereInput[];
+    id?: StringFilter<'BlockRequirementStatus'> | string;
+    card_id?: StringFilter<'BlockRequirementStatus'> | string;
+    node_id?: StringFilter<'BlockRequirementStatus'> | string;
+    environment?: StringFilter<'BlockRequirementStatus'> | string;
+    requirement_id?: StringFilter<'BlockRequirementStatus'> | string;
+    status?: StringFilter<'BlockRequirementStatus'> | string;
+    message?: StringNullableFilter<'BlockRequirementStatus'> | string | null;
+    last_checked_at?: DateTimeFilter<'BlockRequirementStatus'> | Date | string;
+    verified_at?: DateTimeNullableFilter<'BlockRequirementStatus'> | Date | string | null;
+    details?: JsonNullableFilter<'BlockRequirementStatus'>;
+    card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
+  };
+
+  export type BlockRequirementStatusOrderByWithRelationInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    requirement_id?: SortOrder;
+    status?: SortOrder;
+    message?: SortOrderInput | SortOrder;
+    last_checked_at?: SortOrder;
+    verified_at?: SortOrderInput | SortOrder;
+    details?: SortOrderInput | SortOrder;
+    card?: CanvasCardOrderByWithRelationInput;
+  };
+
+  export type BlockRequirementStatusWhereUniqueInput = Prisma.AtLeast<
+    {
+      id?: string;
+      card_id_node_id_environment_requirement_id?: BlockRequirementStatusCard_idNode_idEnvironmentRequirement_idCompoundUniqueInput;
+      AND?: BlockRequirementStatusWhereInput | BlockRequirementStatusWhereInput[];
+      OR?: BlockRequirementStatusWhereInput[];
+      NOT?: BlockRequirementStatusWhereInput | BlockRequirementStatusWhereInput[];
+      card_id?: StringFilter<'BlockRequirementStatus'> | string;
+      node_id?: StringFilter<'BlockRequirementStatus'> | string;
+      environment?: StringFilter<'BlockRequirementStatus'> | string;
+      requirement_id?: StringFilter<'BlockRequirementStatus'> | string;
+      status?: StringFilter<'BlockRequirementStatus'> | string;
+      message?: StringNullableFilter<'BlockRequirementStatus'> | string | null;
+      last_checked_at?: DateTimeFilter<'BlockRequirementStatus'> | Date | string;
+      verified_at?: DateTimeNullableFilter<'BlockRequirementStatus'> | Date | string | null;
+      details?: JsonNullableFilter<'BlockRequirementStatus'>;
+      card?: XOR<CanvasCardScalarRelationFilter, CanvasCardWhereInput>;
+    },
+    'id' | 'card_id_node_id_environment_requirement_id'
+  >;
+
+  export type BlockRequirementStatusOrderByWithAggregationInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    requirement_id?: SortOrder;
+    status?: SortOrder;
+    message?: SortOrderInput | SortOrder;
+    last_checked_at?: SortOrder;
+    verified_at?: SortOrderInput | SortOrder;
+    details?: SortOrderInput | SortOrder;
+    _count?: BlockRequirementStatusCountOrderByAggregateInput;
+    _max?: BlockRequirementStatusMaxOrderByAggregateInput;
+    _min?: BlockRequirementStatusMinOrderByAggregateInput;
+  };
+
+  export type BlockRequirementStatusScalarWhereWithAggregatesInput = {
+    AND?: BlockRequirementStatusScalarWhereWithAggregatesInput | BlockRequirementStatusScalarWhereWithAggregatesInput[];
+    OR?: BlockRequirementStatusScalarWhereWithAggregatesInput[];
+    NOT?: BlockRequirementStatusScalarWhereWithAggregatesInput | BlockRequirementStatusScalarWhereWithAggregatesInput[];
+    id?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    card_id?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    node_id?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    environment?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    requirement_id?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    status?: StringWithAggregatesFilter<'BlockRequirementStatus'> | string;
+    message?: StringNullableWithAggregatesFilter<'BlockRequirementStatus'> | string | null;
+    last_checked_at?: DateTimeWithAggregatesFilter<'BlockRequirementStatus'> | Date | string;
+    verified_at?: DateTimeNullableWithAggregatesFilter<'BlockRequirementStatus'> | Date | string | null;
+    details?: JsonNullableWithAggregatesFilter<'BlockRequirementStatus'>;
   };
 
   export type DeployJobWhereInput = {
@@ -28789,6 +33361,8 @@ export namespace Prisma {
     enabled?: BoolFilter<'DeploymentRule'> | boolean;
     webhook_id?: IntNullableFilter<'DeploymentRule'> | number | null;
     webhook_secret?: StringNullableFilter<'DeploymentRule'> | string | null;
+    webhook_status?: StringFilter<'DeploymentRule'> | string;
+    webhook_error?: StringNullableFilter<'DeploymentRule'> | string | null;
     organisation_id?: StringFilter<'DeploymentRule'> | string;
     created_by?: StringFilter<'DeploymentRule'> | string;
     created_at?: DateTimeFilter<'DeploymentRule'> | Date | string;
@@ -28812,6 +33386,8 @@ export namespace Prisma {
     enabled?: SortOrder;
     webhook_id?: SortOrderInput | SortOrder;
     webhook_secret?: SortOrderInput | SortOrder;
+    webhook_status?: SortOrder;
+    webhook_error?: SortOrderInput | SortOrder;
     organisation_id?: SortOrder;
     created_by?: SortOrder;
     created_at?: SortOrder;
@@ -28840,6 +33416,8 @@ export namespace Prisma {
       enabled?: BoolFilter<'DeploymentRule'> | boolean;
       webhook_id?: IntNullableFilter<'DeploymentRule'> | number | null;
       webhook_secret?: StringNullableFilter<'DeploymentRule'> | string | null;
+      webhook_status?: StringFilter<'DeploymentRule'> | string;
+      webhook_error?: StringNullableFilter<'DeploymentRule'> | string | null;
       organisation_id?: StringFilter<'DeploymentRule'> | string;
       created_by?: StringFilter<'DeploymentRule'> | string;
       created_at?: DateTimeFilter<'DeploymentRule'> | Date | string;
@@ -28865,6 +33443,8 @@ export namespace Prisma {
     enabled?: SortOrder;
     webhook_id?: SortOrderInput | SortOrder;
     webhook_secret?: SortOrderInput | SortOrder;
+    webhook_status?: SortOrder;
+    webhook_error?: SortOrderInput | SortOrder;
     organisation_id?: SortOrder;
     created_by?: SortOrder;
     created_at?: SortOrder;
@@ -28894,6 +33474,8 @@ export namespace Prisma {
     enabled?: BoolWithAggregatesFilter<'DeploymentRule'> | boolean;
     webhook_id?: IntNullableWithAggregatesFilter<'DeploymentRule'> | number | null;
     webhook_secret?: StringNullableWithAggregatesFilter<'DeploymentRule'> | string | null;
+    webhook_status?: StringWithAggregatesFilter<'DeploymentRule'> | string;
+    webhook_error?: StringNullableWithAggregatesFilter<'DeploymentRule'> | string | null;
     organisation_id?: StringWithAggregatesFilter<'DeploymentRule'> | string;
     created_by?: StringWithAggregatesFilter<'DeploymentRule'> | string;
     created_at?: DateTimeWithAggregatesFilter<'DeploymentRule'> | Date | string;
@@ -29344,6 +33926,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -29368,6 +33952,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -29390,6 +33976,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -29414,6 +34002,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -29437,6 +34027,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
   };
@@ -29451,6 +34043,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
@@ -29466,6 +34060,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
@@ -30015,6 +34611,9 @@ export namespace Prisma {
     updated_at?: Date | string;
     project: CanvasProjectCreateNestedOneWithoutCardsInput;
     environment?: EnvironmentCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardUncheckedCreateInput = {
@@ -30027,6 +34626,9 @@ export namespace Prisma {
     created_at?: Date | string;
     updated_at?: Date | string;
     environment?: EnvironmentUncheckedCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardUpdateInput = {
@@ -30039,6 +34641,9 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     project?: CanvasProjectUpdateOneRequiredWithoutCardsNestedInput;
     environment?: EnvironmentUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUpdateManyWithoutCardNestedInput;
   };
 
   export type CanvasCardUncheckedUpdateInput = {
@@ -30051,6 +34656,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     environment?: EnvironmentUncheckedUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput;
   };
 
   export type CanvasCardCreateManyInput = {
@@ -30273,19 +34881,24 @@ export namespace Prisma {
 
   export type CanvasDeploymentCreateInput = {
     id?: string;
-    card_id: string;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
     deploy_jobs?: DeployJobCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventCreateNestedManyWithoutDeploymentInput;
     user?: UserCreateNestedOneWithoutDeploymentsInput;
+    card: CanvasCardCreateNestedOneWithoutDeploymentsInput;
   };
 
   export type CanvasDeploymentUncheckedCreateInput = {
@@ -30293,33 +34906,43 @@ export namespace Prisma {
     card_id: string;
     user_id?: string | null;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
     deploy_jobs?: DeployJobUncheckedCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventUncheckedCreateNestedManyWithoutDeploymentInput;
   };
 
   export type CanvasDeploymentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string;
-    card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     deploy_jobs?: DeployJobUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUpdateManyWithoutDeploymentNestedInput;
     user?: UserUpdateOneWithoutDeploymentsNestedInput;
+    card?: CanvasCardUpdateOneRequiredWithoutDeploymentsNestedInput;
   };
 
   export type CanvasDeploymentUncheckedUpdateInput = {
@@ -30327,16 +34950,21 @@ export namespace Prisma {
     card_id?: StringFieldUpdateOperationsInput | string;
     user_id?: NullableStringFieldUpdateOperationsInput | string | null;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     deploy_jobs?: DeployJobUncheckedUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUncheckedUpdateManyWithoutDeploymentNestedInput;
   };
 
   export type CanvasDeploymentCreateManyInput = {
@@ -30344,28 +34972,35 @@ export namespace Prisma {
     card_id: string;
     user_id?: string | null;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
   };
 
   export type CanvasDeploymentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string;
-    card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
@@ -30375,15 +35010,261 @@ export namespace Prisma {
     card_id?: StringFieldUpdateOperationsInput | string;
     user_id?: NullableStringFieldUpdateOperationsInput | string | null;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventCreateInput = {
+    id?: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    deployment: CanvasDeploymentCreateNestedOneWithoutDeploy_eventsInput;
+  };
+
+  export type DeployEventUncheckedCreateInput = {
+    id?: string;
+    deployment_id: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+  };
+
+  export type DeployEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deployment?: CanvasDeploymentUpdateOneRequiredWithoutDeploy_eventsNestedInput;
+  };
+
+  export type DeployEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    deployment_id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventCreateManyInput = {
+    id?: string;
+    deployment_id: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+  };
+
+  export type DeployEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    deployment_id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingCreateInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    card: CanvasCardCreateNestedOneWithoutResourceMappingsInput;
+  };
+
+  export type DeployedResourceMappingUncheckedCreateInput = {
+    id?: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type DeployedResourceMappingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    card?: CanvasCardUpdateOneRequiredWithoutResourceMappingsNestedInput;
+  };
+
+  export type DeployedResourceMappingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingCreateManyInput = {
+    id?: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type DeployedResourceMappingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type BlockRequirementStatusCreateInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+    card: CanvasCardCreateNestedOneWithoutRequirementStatusesInput;
+  };
+
+  export type BlockRequirementStatusUncheckedCreateInput = {
+    id?: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+    card?: CanvasCardUpdateOneRequiredWithoutRequirementStatusesNestedInput;
+  };
+
+  export type BlockRequirementStatusUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusCreateManyInput = {
+    id?: string;
+    card_id: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
   };
 
   export type DeployJobCreateInput = {
@@ -30491,6 +35372,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     created_by: string;
     created_at?: Date | string;
     updated_at?: Date | string;
@@ -30513,6 +35396,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     organisation_id: string;
     created_by: string;
     created_at?: Date | string;
@@ -30535,6 +35420,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -30557,6 +35444,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     organisation_id?: StringFieldUpdateOperationsInput | string;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -30579,6 +35468,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     organisation_id: string;
     created_by: string;
     created_at?: Date | string;
@@ -30600,6 +35491,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -30620,6 +35513,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     organisation_id?: StringFieldUpdateOperationsInput | string;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -31096,8 +35991,8 @@ export namespace Prisma {
 
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    in?: string[];
+    notIn?: string[];
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -31105,14 +36000,13 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>;
     startsWith?: string | StringFieldRefInput<$PrismaModel>;
     endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    mode?: QueryMode;
     not?: NestedStringFilter<$PrismaModel> | string;
   };
 
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | null;
+    notIn?: string[] | null;
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -31120,7 +36014,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>;
     startsWith?: string | StringFieldRefInput<$PrismaModel>;
     endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    mode?: QueryMode;
     not?: NestedStringNullableFilter<$PrismaModel> | string | null;
   };
 
@@ -31131,8 +36024,8 @@ export namespace Prisma {
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>;
+    in?: number[];
+    notIn?: number[];
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -31142,8 +36035,8 @@ export namespace Prisma {
 
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[];
+    notIn?: Date[] | string[];
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -31247,6 +36140,8 @@ export namespace Prisma {
     onboarding_step?: SortOrder;
     default_provider?: SortOrder;
     default_region?: SortOrder;
+    completed_tours?: SortOrder;
+    preferences?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -31266,6 +36161,8 @@ export namespace Prisma {
     onboarding_step?: SortOrder;
     default_provider?: SortOrder;
     default_region?: SortOrder;
+    completed_tours?: SortOrder;
+    preferences?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -31281,6 +36178,8 @@ export namespace Prisma {
     onboarding_step?: SortOrder;
     default_provider?: SortOrder;
     default_region?: SortOrder;
+    completed_tours?: SortOrder;
+    preferences?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -31291,8 +36190,8 @@ export namespace Prisma {
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    in?: string[];
+    notIn?: string[];
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -31300,7 +36199,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>;
     startsWith?: string | StringFieldRefInput<$PrismaModel>;
     endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    mode?: QueryMode;
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string;
     _count?: NestedIntFilter<$PrismaModel>;
     _min?: NestedStringFilter<$PrismaModel>;
@@ -31309,8 +36207,8 @@ export namespace Prisma {
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | null;
+    notIn?: string[] | null;
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -31318,7 +36216,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>;
     startsWith?: string | StringFieldRefInput<$PrismaModel>;
     endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    mode?: QueryMode;
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null;
     _count?: NestedIntNullableFilter<$PrismaModel>;
     _min?: NestedStringNullableFilter<$PrismaModel>;
@@ -31335,8 +36232,8 @@ export namespace Prisma {
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>;
+    in?: number[];
+    notIn?: number[];
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -31351,8 +36248,8 @@ export namespace Prisma {
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[];
+    notIn?: Date[] | string[];
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -31465,8 +36362,8 @@ export namespace Prisma {
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+    in?: Date[] | string[] | null;
+    notIn?: Date[] | string[] | null;
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -31512,8 +36409,8 @@ export namespace Prisma {
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+    in?: Date[] | string[] | null;
+    notIn?: Date[] | string[] | null;
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -31697,18 +36594,13 @@ export namespace Prisma {
 
   export type JsonFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
   };
   export type JsonNullableFilter<$PrismaModel = never> =
@@ -31723,24 +36615,39 @@ export namespace Prisma {
 
   export type JsonNullableFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
   };
 
   export type EnvironmentNullableScalarRelationFilter = {
     is?: EnvironmentWhereInput | null;
     isNot?: EnvironmentWhereInput | null;
+  };
+
+  export type DeployedResourceMappingListRelationFilter = {
+    every?: DeployedResourceMappingWhereInput;
+    some?: DeployedResourceMappingWhereInput;
+    none?: DeployedResourceMappingWhereInput;
+  };
+
+  export type BlockRequirementStatusListRelationFilter = {
+    every?: BlockRequirementStatusWhereInput;
+    some?: BlockRequirementStatusWhereInput;
+    none?: BlockRequirementStatusWhereInput;
+  };
+
+  export type DeployedResourceMappingOrderByRelationAggregateInput = {
+    _count?: SortOrder;
+  };
+
+  export type BlockRequirementStatusOrderByRelationAggregateInput = {
+    _count?: SortOrder;
   };
 
   export type CanvasCardCountOrderByAggregateInput = {
@@ -31781,18 +36688,13 @@ export namespace Prisma {
 
   export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
     _count?: NestedIntFilter<$PrismaModel>;
     _min?: NestedJsonFilter<$PrismaModel>;
@@ -31810,18 +36712,13 @@ export namespace Prisma {
 
   export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
     _count?: NestedIntNullableFilter<$PrismaModel>;
     _min?: NestedJsonNullableFilter<$PrismaModel>;
@@ -31830,8 +36727,8 @@ export namespace Prisma {
 
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
+    in?: number[] | null;
+    notIn?: number[] | null;
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -31907,8 +36804,8 @@ export namespace Prisma {
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
+    in?: number[] | null;
+    notIn?: number[] | null;
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -31965,6 +36862,12 @@ export namespace Prisma {
     none?: DeployJobWhereInput;
   };
 
+  export type DeployEventListRelationFilter = {
+    every?: DeployEventWhereInput;
+    some?: DeployEventWhereInput;
+    none?: DeployEventWhereInput;
+  };
+
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null;
     isNot?: UserWhereInput | null;
@@ -31974,18 +36877,26 @@ export namespace Prisma {
     _count?: SortOrder;
   };
 
+  export type DeployEventOrderByRelationAggregateInput = {
+    _count?: SortOrder;
+  };
+
   export type CanvasDeploymentCountOrderByAggregateInput = {
     id?: SortOrder;
     card_id?: SortOrder;
     user_id?: SortOrder;
     status?: SortOrder;
+    action_type?: SortOrder;
     provider?: SortOrder;
     region?: SortOrder;
     environment?: SortOrder;
     plan?: SortOrder;
     results?: SortOrder;
+    summary?: SortOrder;
+    snapshot?: SortOrder;
     duration_ms?: SortOrder;
     error?: SortOrder;
+    pinned?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -31999,11 +36910,13 @@ export namespace Prisma {
     card_id?: SortOrder;
     user_id?: SortOrder;
     status?: SortOrder;
+    action_type?: SortOrder;
     provider?: SortOrder;
     region?: SortOrder;
     environment?: SortOrder;
     duration_ms?: SortOrder;
     error?: SortOrder;
+    pinned?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -32013,11 +36926,13 @@ export namespace Prisma {
     card_id?: SortOrder;
     user_id?: SortOrder;
     status?: SortOrder;
+    action_type?: SortOrder;
     provider?: SortOrder;
     region?: SortOrder;
     environment?: SortOrder;
     duration_ms?: SortOrder;
     error?: SortOrder;
+    pinned?: SortOrder;
     created_at?: SortOrder;
     updated_at?: SortOrder;
   };
@@ -32029,6 +36944,133 @@ export namespace Prisma {
   export type CanvasDeploymentScalarRelationFilter = {
     is?: CanvasDeploymentWhereInput;
     isNot?: CanvasDeploymentWhereInput;
+  };
+
+  export type DeployEventDeployment_idSeqCompoundUniqueInput = {
+    deployment_id: string;
+    seq: number;
+  };
+
+  export type DeployEventCountOrderByAggregateInput = {
+    id?: SortOrder;
+    deployment_id?: SortOrder;
+    card_id?: SortOrder;
+    seq?: SortOrder;
+    type?: SortOrder;
+    payload?: SortOrder;
+    created_at?: SortOrder;
+  };
+
+  export type DeployEventAvgOrderByAggregateInput = {
+    seq?: SortOrder;
+  };
+
+  export type DeployEventMaxOrderByAggregateInput = {
+    id?: SortOrder;
+    deployment_id?: SortOrder;
+    card_id?: SortOrder;
+    seq?: SortOrder;
+    type?: SortOrder;
+    created_at?: SortOrder;
+  };
+
+  export type DeployEventMinOrderByAggregateInput = {
+    id?: SortOrder;
+    deployment_id?: SortOrder;
+    card_id?: SortOrder;
+    seq?: SortOrder;
+    type?: SortOrder;
+    created_at?: SortOrder;
+  };
+
+  export type DeployEventSumOrderByAggregateInput = {
+    seq?: SortOrder;
+  };
+
+  export type DeployedResourceMappingCard_idNode_idEnvironmentCompoundUniqueInput = {
+    card_id: string;
+    node_id: string;
+    environment: string;
+  };
+
+  export type DeployedResourceMappingCountOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    resource_type?: SortOrder;
+    resource_name?: SortOrder;
+    provider_id?: SortOrder;
+    created_at?: SortOrder;
+    updated_at?: SortOrder;
+  };
+
+  export type DeployedResourceMappingMaxOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    resource_type?: SortOrder;
+    resource_name?: SortOrder;
+    provider_id?: SortOrder;
+    created_at?: SortOrder;
+    updated_at?: SortOrder;
+  };
+
+  export type DeployedResourceMappingMinOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    resource_type?: SortOrder;
+    resource_name?: SortOrder;
+    provider_id?: SortOrder;
+    created_at?: SortOrder;
+    updated_at?: SortOrder;
+  };
+
+  export type BlockRequirementStatusCard_idNode_idEnvironmentRequirement_idCompoundUniqueInput = {
+    card_id: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+  };
+
+  export type BlockRequirementStatusCountOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    requirement_id?: SortOrder;
+    status?: SortOrder;
+    message?: SortOrder;
+    last_checked_at?: SortOrder;
+    verified_at?: SortOrder;
+    details?: SortOrder;
+  };
+
+  export type BlockRequirementStatusMaxOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    requirement_id?: SortOrder;
+    status?: SortOrder;
+    message?: SortOrder;
+    last_checked_at?: SortOrder;
+    verified_at?: SortOrder;
+  };
+
+  export type BlockRequirementStatusMinOrderByAggregateInput = {
+    id?: SortOrder;
+    card_id?: SortOrder;
+    node_id?: SortOrder;
+    environment?: SortOrder;
+    requirement_id?: SortOrder;
+    status?: SortOrder;
+    message?: SortOrder;
+    last_checked_at?: SortOrder;
+    verified_at?: SortOrder;
   };
 
   export type DeployJobCountOrderByAggregateInput = {
@@ -32111,6 +37153,8 @@ export namespace Prisma {
     enabled?: SortOrder;
     webhook_id?: SortOrder;
     webhook_secret?: SortOrder;
+    webhook_status?: SortOrder;
+    webhook_error?: SortOrder;
     organisation_id?: SortOrder;
     created_by?: SortOrder;
     created_at?: SortOrder;
@@ -32136,6 +37180,8 @@ export namespace Prisma {
     enabled?: SortOrder;
     webhook_id?: SortOrder;
     webhook_secret?: SortOrder;
+    webhook_status?: SortOrder;
+    webhook_error?: SortOrder;
     organisation_id?: SortOrder;
     created_by?: SortOrder;
     created_at?: SortOrder;
@@ -32157,6 +37203,8 @@ export namespace Prisma {
     enabled?: SortOrder;
     webhook_id?: SortOrder;
     webhook_secret?: SortOrder;
+    webhook_status?: SortOrder;
+    webhook_error?: SortOrder;
     organisation_id?: SortOrder;
     created_by?: SortOrder;
     created_at?: SortOrder;
@@ -33790,10 +38838,82 @@ export namespace Prisma {
     connect?: EnvironmentWhereUniqueInput;
   };
 
+  export type CanvasDeploymentCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>
+      | CanvasDeploymentCreateWithoutCardInput[]
+      | CanvasDeploymentUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | CanvasDeploymentCreateOrConnectWithoutCardInput
+      | CanvasDeploymentCreateOrConnectWithoutCardInput[];
+    createMany?: CanvasDeploymentCreateManyCardInputEnvelope;
+    connect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+  };
+
+  export type DeployedResourceMappingCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>
+      | DeployedResourceMappingCreateWithoutCardInput[]
+      | DeployedResourceMappingUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput[];
+    createMany?: DeployedResourceMappingCreateManyCardInputEnvelope;
+    connect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+  };
+
+  export type BlockRequirementStatusCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>
+      | BlockRequirementStatusCreateWithoutCardInput[]
+      | BlockRequirementStatusUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput[];
+    createMany?: BlockRequirementStatusCreateManyCardInputEnvelope;
+    connect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+  };
+
   export type EnvironmentUncheckedCreateNestedOneWithoutCardInput = {
     create?: XOR<EnvironmentCreateWithoutCardInput, EnvironmentUncheckedCreateWithoutCardInput>;
     connectOrCreate?: EnvironmentCreateOrConnectWithoutCardInput;
     connect?: EnvironmentWhereUniqueInput;
+  };
+
+  export type CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>
+      | CanvasDeploymentCreateWithoutCardInput[]
+      | CanvasDeploymentUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | CanvasDeploymentCreateOrConnectWithoutCardInput
+      | CanvasDeploymentCreateOrConnectWithoutCardInput[];
+    createMany?: CanvasDeploymentCreateManyCardInputEnvelope;
+    connect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+  };
+
+  export type DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>
+      | DeployedResourceMappingCreateWithoutCardInput[]
+      | DeployedResourceMappingUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput[];
+    createMany?: DeployedResourceMappingCreateManyCardInputEnvelope;
+    connect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+  };
+
+  export type BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput = {
+    create?:
+      | XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>
+      | BlockRequirementStatusCreateWithoutCardInput[]
+      | BlockRequirementStatusUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput[];
+    createMany?: BlockRequirementStatusCreateManyCardInputEnvelope;
+    connect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
   };
 
   export type CanvasProjectUpdateOneRequiredWithoutCardsNestedInput = {
@@ -33820,6 +38940,81 @@ export namespace Prisma {
     >;
   };
 
+  export type CanvasDeploymentUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>
+      | CanvasDeploymentCreateWithoutCardInput[]
+      | CanvasDeploymentUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | CanvasDeploymentCreateOrConnectWithoutCardInput
+      | CanvasDeploymentCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | CanvasDeploymentUpsertWithWhereUniqueWithoutCardInput
+      | CanvasDeploymentUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: CanvasDeploymentCreateManyCardInputEnvelope;
+    set?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    disconnect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    delete?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    connect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    update?:
+      | CanvasDeploymentUpdateWithWhereUniqueWithoutCardInput
+      | CanvasDeploymentUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | CanvasDeploymentUpdateManyWithWhereWithoutCardInput
+      | CanvasDeploymentUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: CanvasDeploymentScalarWhereInput | CanvasDeploymentScalarWhereInput[];
+  };
+
+  export type DeployedResourceMappingUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>
+      | DeployedResourceMappingCreateWithoutCardInput[]
+      | DeployedResourceMappingUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | DeployedResourceMappingUpsertWithWhereUniqueWithoutCardInput
+      | DeployedResourceMappingUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: DeployedResourceMappingCreateManyCardInputEnvelope;
+    set?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    disconnect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    delete?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    connect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    update?:
+      | DeployedResourceMappingUpdateWithWhereUniqueWithoutCardInput
+      | DeployedResourceMappingUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | DeployedResourceMappingUpdateManyWithWhereWithoutCardInput
+      | DeployedResourceMappingUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: DeployedResourceMappingScalarWhereInput | DeployedResourceMappingScalarWhereInput[];
+  };
+
+  export type BlockRequirementStatusUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>
+      | BlockRequirementStatusCreateWithoutCardInput[]
+      | BlockRequirementStatusUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | BlockRequirementStatusUpsertWithWhereUniqueWithoutCardInput
+      | BlockRequirementStatusUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: BlockRequirementStatusCreateManyCardInputEnvelope;
+    set?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    disconnect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    delete?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    connect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    update?:
+      | BlockRequirementStatusUpdateWithWhereUniqueWithoutCardInput
+      | BlockRequirementStatusUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | BlockRequirementStatusUpdateManyWithWhereWithoutCardInput
+      | BlockRequirementStatusUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: BlockRequirementStatusScalarWhereInput | BlockRequirementStatusScalarWhereInput[];
+  };
+
   export type EnvironmentUncheckedUpdateOneWithoutCardNestedInput = {
     create?: XOR<EnvironmentCreateWithoutCardInput, EnvironmentUncheckedCreateWithoutCardInput>;
     connectOrCreate?: EnvironmentCreateOrConnectWithoutCardInput;
@@ -33831,6 +39026,81 @@ export namespace Prisma {
       XOR<EnvironmentUpdateToOneWithWhereWithoutCardInput, EnvironmentUpdateWithoutCardInput>,
       EnvironmentUncheckedUpdateWithoutCardInput
     >;
+  };
+
+  export type CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>
+      | CanvasDeploymentCreateWithoutCardInput[]
+      | CanvasDeploymentUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | CanvasDeploymentCreateOrConnectWithoutCardInput
+      | CanvasDeploymentCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | CanvasDeploymentUpsertWithWhereUniqueWithoutCardInput
+      | CanvasDeploymentUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: CanvasDeploymentCreateManyCardInputEnvelope;
+    set?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    disconnect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    delete?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    connect?: CanvasDeploymentWhereUniqueInput | CanvasDeploymentWhereUniqueInput[];
+    update?:
+      | CanvasDeploymentUpdateWithWhereUniqueWithoutCardInput
+      | CanvasDeploymentUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | CanvasDeploymentUpdateManyWithWhereWithoutCardInput
+      | CanvasDeploymentUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: CanvasDeploymentScalarWhereInput | CanvasDeploymentScalarWhereInput[];
+  };
+
+  export type DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>
+      | DeployedResourceMappingCreateWithoutCardInput[]
+      | DeployedResourceMappingUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput
+      | DeployedResourceMappingCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | DeployedResourceMappingUpsertWithWhereUniqueWithoutCardInput
+      | DeployedResourceMappingUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: DeployedResourceMappingCreateManyCardInputEnvelope;
+    set?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    disconnect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    delete?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    connect?: DeployedResourceMappingWhereUniqueInput | DeployedResourceMappingWhereUniqueInput[];
+    update?:
+      | DeployedResourceMappingUpdateWithWhereUniqueWithoutCardInput
+      | DeployedResourceMappingUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | DeployedResourceMappingUpdateManyWithWhereWithoutCardInput
+      | DeployedResourceMappingUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: DeployedResourceMappingScalarWhereInput | DeployedResourceMappingScalarWhereInput[];
+  };
+
+  export type BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput = {
+    create?:
+      | XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>
+      | BlockRequirementStatusCreateWithoutCardInput[]
+      | BlockRequirementStatusUncheckedCreateWithoutCardInput[];
+    connectOrCreate?:
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput
+      | BlockRequirementStatusCreateOrConnectWithoutCardInput[];
+    upsert?:
+      | BlockRequirementStatusUpsertWithWhereUniqueWithoutCardInput
+      | BlockRequirementStatusUpsertWithWhereUniqueWithoutCardInput[];
+    createMany?: BlockRequirementStatusCreateManyCardInputEnvelope;
+    set?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    disconnect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    delete?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    connect?: BlockRequirementStatusWhereUniqueInput | BlockRequirementStatusWhereUniqueInput[];
+    update?:
+      | BlockRequirementStatusUpdateWithWhereUniqueWithoutCardInput
+      | BlockRequirementStatusUpdateWithWhereUniqueWithoutCardInput[];
+    updateMany?:
+      | BlockRequirementStatusUpdateManyWithWhereWithoutCardInput
+      | BlockRequirementStatusUpdateManyWithWhereWithoutCardInput[];
+    deleteMany?: BlockRequirementStatusScalarWhereInput | BlockRequirementStatusScalarWhereInput[];
   };
 
   export type CanvasProjectCreateNestedOneWithoutEnvironmentsInput = {
@@ -33911,10 +39181,28 @@ export namespace Prisma {
     connect?: DeployJobWhereUniqueInput | DeployJobWhereUniqueInput[];
   };
 
+  export type DeployEventCreateNestedManyWithoutDeploymentInput = {
+    create?:
+      | XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>
+      | DeployEventCreateWithoutDeploymentInput[]
+      | DeployEventUncheckedCreateWithoutDeploymentInput[];
+    connectOrCreate?:
+      | DeployEventCreateOrConnectWithoutDeploymentInput
+      | DeployEventCreateOrConnectWithoutDeploymentInput[];
+    createMany?: DeployEventCreateManyDeploymentInputEnvelope;
+    connect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+  };
+
   export type UserCreateNestedOneWithoutDeploymentsInput = {
     create?: XOR<UserCreateWithoutDeploymentsInput, UserUncheckedCreateWithoutDeploymentsInput>;
     connectOrCreate?: UserCreateOrConnectWithoutDeploymentsInput;
     connect?: UserWhereUniqueInput;
+  };
+
+  export type CanvasCardCreateNestedOneWithoutDeploymentsInput = {
+    create?: XOR<CanvasCardCreateWithoutDeploymentsInput, CanvasCardUncheckedCreateWithoutDeploymentsInput>;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutDeploymentsInput;
+    connect?: CanvasCardWhereUniqueInput;
   };
 
   export type DeployJobUncheckedCreateNestedManyWithoutDeploymentInput = {
@@ -33925,6 +39213,18 @@ export namespace Prisma {
     connectOrCreate?: DeployJobCreateOrConnectWithoutDeploymentInput | DeployJobCreateOrConnectWithoutDeploymentInput[];
     createMany?: DeployJobCreateManyDeploymentInputEnvelope;
     connect?: DeployJobWhereUniqueInput | DeployJobWhereUniqueInput[];
+  };
+
+  export type DeployEventUncheckedCreateNestedManyWithoutDeploymentInput = {
+    create?:
+      | XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>
+      | DeployEventCreateWithoutDeploymentInput[]
+      | DeployEventUncheckedCreateWithoutDeploymentInput[];
+    connectOrCreate?:
+      | DeployEventCreateOrConnectWithoutDeploymentInput
+      | DeployEventCreateOrConnectWithoutDeploymentInput[];
+    createMany?: DeployEventCreateManyDeploymentInputEnvelope;
+    connect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
   };
 
   export type DeployJobUpdateManyWithoutDeploymentNestedInput = {
@@ -33950,6 +39250,31 @@ export namespace Prisma {
     deleteMany?: DeployJobScalarWhereInput | DeployJobScalarWhereInput[];
   };
 
+  export type DeployEventUpdateManyWithoutDeploymentNestedInput = {
+    create?:
+      | XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>
+      | DeployEventCreateWithoutDeploymentInput[]
+      | DeployEventUncheckedCreateWithoutDeploymentInput[];
+    connectOrCreate?:
+      | DeployEventCreateOrConnectWithoutDeploymentInput
+      | DeployEventCreateOrConnectWithoutDeploymentInput[];
+    upsert?:
+      | DeployEventUpsertWithWhereUniqueWithoutDeploymentInput
+      | DeployEventUpsertWithWhereUniqueWithoutDeploymentInput[];
+    createMany?: DeployEventCreateManyDeploymentInputEnvelope;
+    set?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    disconnect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    delete?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    connect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    update?:
+      | DeployEventUpdateWithWhereUniqueWithoutDeploymentInput
+      | DeployEventUpdateWithWhereUniqueWithoutDeploymentInput[];
+    updateMany?:
+      | DeployEventUpdateManyWithWhereWithoutDeploymentInput
+      | DeployEventUpdateManyWithWhereWithoutDeploymentInput[];
+    deleteMany?: DeployEventScalarWhereInput | DeployEventScalarWhereInput[];
+  };
+
   export type UserUpdateOneWithoutDeploymentsNestedInput = {
     create?: XOR<UserCreateWithoutDeploymentsInput, UserUncheckedCreateWithoutDeploymentsInput>;
     connectOrCreate?: UserCreateOrConnectWithoutDeploymentsInput;
@@ -33960,6 +39285,17 @@ export namespace Prisma {
     update?: XOR<
       XOR<UserUpdateToOneWithWhereWithoutDeploymentsInput, UserUpdateWithoutDeploymentsInput>,
       UserUncheckedUpdateWithoutDeploymentsInput
+    >;
+  };
+
+  export type CanvasCardUpdateOneRequiredWithoutDeploymentsNestedInput = {
+    create?: XOR<CanvasCardCreateWithoutDeploymentsInput, CanvasCardUncheckedCreateWithoutDeploymentsInput>;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutDeploymentsInput;
+    upsert?: CanvasCardUpsertWithoutDeploymentsInput;
+    connect?: CanvasCardWhereUniqueInput;
+    update?: XOR<
+      XOR<CanvasCardUpdateToOneWithWhereWithoutDeploymentsInput, CanvasCardUpdateWithoutDeploymentsInput>,
+      CanvasCardUncheckedUpdateWithoutDeploymentsInput
     >;
   };
 
@@ -33984,6 +39320,100 @@ export namespace Prisma {
       | DeployJobUpdateManyWithWhereWithoutDeploymentInput
       | DeployJobUpdateManyWithWhereWithoutDeploymentInput[];
     deleteMany?: DeployJobScalarWhereInput | DeployJobScalarWhereInput[];
+  };
+
+  export type DeployEventUncheckedUpdateManyWithoutDeploymentNestedInput = {
+    create?:
+      | XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>
+      | DeployEventCreateWithoutDeploymentInput[]
+      | DeployEventUncheckedCreateWithoutDeploymentInput[];
+    connectOrCreate?:
+      | DeployEventCreateOrConnectWithoutDeploymentInput
+      | DeployEventCreateOrConnectWithoutDeploymentInput[];
+    upsert?:
+      | DeployEventUpsertWithWhereUniqueWithoutDeploymentInput
+      | DeployEventUpsertWithWhereUniqueWithoutDeploymentInput[];
+    createMany?: DeployEventCreateManyDeploymentInputEnvelope;
+    set?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    disconnect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    delete?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    connect?: DeployEventWhereUniqueInput | DeployEventWhereUniqueInput[];
+    update?:
+      | DeployEventUpdateWithWhereUniqueWithoutDeploymentInput
+      | DeployEventUpdateWithWhereUniqueWithoutDeploymentInput[];
+    updateMany?:
+      | DeployEventUpdateManyWithWhereWithoutDeploymentInput
+      | DeployEventUpdateManyWithWhereWithoutDeploymentInput[];
+    deleteMany?: DeployEventScalarWhereInput | DeployEventScalarWhereInput[];
+  };
+
+  export type CanvasDeploymentCreateNestedOneWithoutDeploy_eventsInput = {
+    create?: XOR<
+      CanvasDeploymentCreateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedCreateWithoutDeploy_eventsInput
+    >;
+    connectOrCreate?: CanvasDeploymentCreateOrConnectWithoutDeploy_eventsInput;
+    connect?: CanvasDeploymentWhereUniqueInput;
+  };
+
+  export type CanvasDeploymentUpdateOneRequiredWithoutDeploy_eventsNestedInput = {
+    create?: XOR<
+      CanvasDeploymentCreateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedCreateWithoutDeploy_eventsInput
+    >;
+    connectOrCreate?: CanvasDeploymentCreateOrConnectWithoutDeploy_eventsInput;
+    upsert?: CanvasDeploymentUpsertWithoutDeploy_eventsInput;
+    connect?: CanvasDeploymentWhereUniqueInput;
+    update?: XOR<
+      XOR<
+        CanvasDeploymentUpdateToOneWithWhereWithoutDeploy_eventsInput,
+        CanvasDeploymentUpdateWithoutDeploy_eventsInput
+      >,
+      CanvasDeploymentUncheckedUpdateWithoutDeploy_eventsInput
+    >;
+  };
+
+  export type CanvasCardCreateNestedOneWithoutResourceMappingsInput = {
+    create?: XOR<CanvasCardCreateWithoutResourceMappingsInput, CanvasCardUncheckedCreateWithoutResourceMappingsInput>;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutResourceMappingsInput;
+    connect?: CanvasCardWhereUniqueInput;
+  };
+
+  export type CanvasCardUpdateOneRequiredWithoutResourceMappingsNestedInput = {
+    create?: XOR<CanvasCardCreateWithoutResourceMappingsInput, CanvasCardUncheckedCreateWithoutResourceMappingsInput>;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutResourceMappingsInput;
+    upsert?: CanvasCardUpsertWithoutResourceMappingsInput;
+    connect?: CanvasCardWhereUniqueInput;
+    update?: XOR<
+      XOR<CanvasCardUpdateToOneWithWhereWithoutResourceMappingsInput, CanvasCardUpdateWithoutResourceMappingsInput>,
+      CanvasCardUncheckedUpdateWithoutResourceMappingsInput
+    >;
+  };
+
+  export type CanvasCardCreateNestedOneWithoutRequirementStatusesInput = {
+    create?: XOR<
+      CanvasCardCreateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedCreateWithoutRequirementStatusesInput
+    >;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutRequirementStatusesInput;
+    connect?: CanvasCardWhereUniqueInput;
+  };
+
+  export type CanvasCardUpdateOneRequiredWithoutRequirementStatusesNestedInput = {
+    create?: XOR<
+      CanvasCardCreateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedCreateWithoutRequirementStatusesInput
+    >;
+    connectOrCreate?: CanvasCardCreateOrConnectWithoutRequirementStatusesInput;
+    upsert?: CanvasCardUpsertWithoutRequirementStatusesInput;
+    connect?: CanvasCardWhereUniqueInput;
+    update?: XOR<
+      XOR<
+        CanvasCardUpdateToOneWithWhereWithoutRequirementStatusesInput,
+        CanvasCardUpdateWithoutRequirementStatusesInput
+      >,
+      CanvasCardUncheckedUpdateWithoutRequirementStatusesInput
+    >;
   };
 
   export type CanvasDeploymentCreateNestedOneWithoutDeploy_jobsInput = {
@@ -34257,8 +39687,8 @@ export namespace Prisma {
 
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    in?: string[];
+    notIn?: string[];
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -34271,8 +39701,8 @@ export namespace Prisma {
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | null;
+    notIn?: string[] | null;
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -34290,8 +39720,8 @@ export namespace Prisma {
 
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>;
+    in?: number[];
+    notIn?: number[];
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -34301,8 +39731,8 @@ export namespace Prisma {
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[];
+    notIn?: Date[] | string[];
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -34312,8 +39742,8 @@ export namespace Prisma {
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    in?: string[];
+    notIn?: string[];
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -34329,8 +39759,8 @@ export namespace Prisma {
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | null;
+    notIn?: string[] | null;
     lt?: string | StringFieldRefInput<$PrismaModel>;
     lte?: string | StringFieldRefInput<$PrismaModel>;
     gt?: string | StringFieldRefInput<$PrismaModel>;
@@ -34346,8 +39776,8 @@ export namespace Prisma {
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
+    in?: number[] | null;
+    notIn?: number[] | null;
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -34365,8 +39795,8 @@ export namespace Prisma {
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>;
+    in?: number[];
+    notIn?: number[];
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -34381,8 +39811,8 @@ export namespace Prisma {
 
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>;
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>;
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>;
+    in?: number[];
+    notIn?: number[];
     lt?: number | FloatFieldRefInput<$PrismaModel>;
     lte?: number | FloatFieldRefInput<$PrismaModel>;
     gt?: number | FloatFieldRefInput<$PrismaModel>;
@@ -34392,8 +39822,8 @@ export namespace Prisma {
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[];
+    notIn?: Date[] | string[];
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -34406,8 +39836,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+    in?: Date[] | string[] | null;
+    notIn?: Date[] | string[] | null;
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -34417,8 +39847,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+    in?: Date[] | string[] | null;
+    notIn?: Date[] | string[] | null;
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
@@ -34440,18 +39870,13 @@ export namespace Prisma {
 
   export type NestedJsonFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
   };
   export type NestedJsonNullableFilter<$PrismaModel = never> =
@@ -34466,25 +39891,20 @@ export namespace Prisma {
 
   export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
-    path?: string[];
+    path?: string;
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>;
     string_contains?: string | StringFieldRefInput<$PrismaModel>;
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter;
   };
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null;
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null;
+    in?: number[] | null;
+    notIn?: number[] | null;
     lt?: number | IntFieldRefInput<$PrismaModel>;
     lte?: number | IntFieldRefInput<$PrismaModel>;
     gt?: number | IntFieldRefInput<$PrismaModel>;
@@ -34499,8 +39919,8 @@ export namespace Prisma {
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null;
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null;
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null;
+    in?: number[] | null;
+    notIn?: number[] | null;
     lt?: number | FloatFieldRefInput<$PrismaModel>;
     lte?: number | FloatFieldRefInput<$PrismaModel>;
     gt?: number | FloatFieldRefInput<$PrismaModel>;
@@ -34560,7 +39980,6 @@ export namespace Prisma {
 
   export type RefreshTokenCreateManyUserInputEnvelope = {
     data: RefreshTokenCreateManyUserInput | RefreshTokenCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type CanvasProjectCreateWithoutCreatorInput = {
@@ -34606,7 +40025,6 @@ export namespace Prisma {
 
   export type CanvasProjectCreateManyCreatorInputEnvelope = {
     data: CanvasProjectCreateManyCreatorInput | CanvasProjectCreateManyCreatorInput[];
-    skipDuplicates?: boolean;
   };
 
   export type GitHubTokenCreateWithoutUserInput = {
@@ -34657,7 +40075,6 @@ export namespace Prisma {
 
   export type OrganisationMemberCreateManyUserInputEnvelope = {
     data: OrganisationMemberCreateManyUserInput | OrganisationMemberCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type ProjectMemberCreateWithoutUserInput = {
@@ -34683,7 +40100,6 @@ export namespace Prisma {
 
   export type ProjectMemberCreateManyUserInputEnvelope = {
     data: ProjectMemberCreateManyUserInput | ProjectMemberCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type AiAuditLogCreateWithoutUserInput = {
@@ -34725,39 +40141,48 @@ export namespace Prisma {
 
   export type AiAuditLogCreateManyUserInputEnvelope = {
     data: AiAuditLogCreateManyUserInput | AiAuditLogCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type CanvasDeploymentCreateWithoutUserInput = {
     id?: string;
-    card_id: string;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
     deploy_jobs?: DeployJobCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventCreateNestedManyWithoutDeploymentInput;
+    card: CanvasCardCreateNestedOneWithoutDeploymentsInput;
   };
 
   export type CanvasDeploymentUncheckedCreateWithoutUserInput = {
     id?: string;
     card_id: string;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
     deploy_jobs?: DeployJobUncheckedCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventUncheckedCreateNestedManyWithoutDeploymentInput;
   };
 
   export type CanvasDeploymentCreateOrConnectWithoutUserInput = {
@@ -34767,7 +40192,6 @@ export namespace Prisma {
 
   export type CanvasDeploymentCreateManyUserInputEnvelope = {
     data: CanvasDeploymentCreateManyUserInput | CanvasDeploymentCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type AiConversationCreateWithoutUserInput = {
@@ -34799,7 +40223,6 @@ export namespace Prisma {
 
   export type AiConversationCreateManyUserInputEnvelope = {
     data: AiConversationCreateManyUserInput | AiConversationCreateManyUserInput[];
-    skipDuplicates?: boolean;
   };
 
   export type OrganisationUpsertWithoutUsersInput = {
@@ -35049,13 +40472,17 @@ export namespace Prisma {
     card_id?: StringFilter<'CanvasDeployment'> | string;
     user_id?: StringNullableFilter<'CanvasDeployment'> | string | null;
     status?: StringFilter<'CanvasDeployment'> | string;
+    action_type?: StringFilter<'CanvasDeployment'> | string;
     provider?: StringFilter<'CanvasDeployment'> | string;
     region?: StringFilter<'CanvasDeployment'> | string;
     environment?: StringFilter<'CanvasDeployment'> | string;
     plan?: JsonNullableFilter<'CanvasDeployment'>;
     results?: JsonNullableFilter<'CanvasDeployment'>;
+    summary?: JsonNullableFilter<'CanvasDeployment'>;
+    snapshot?: JsonNullableFilter<'CanvasDeployment'>;
     duration_ms?: IntNullableFilter<'CanvasDeployment'> | number | null;
     error?: StringNullableFilter<'CanvasDeployment'> | string | null;
+    pinned?: BoolFilter<'CanvasDeployment'> | boolean;
     created_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
     updated_at?: DateTimeFilter<'CanvasDeployment'> | Date | string;
   };
@@ -35100,6 +40527,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenCreateNestedManyWithoutUserInput;
@@ -35122,6 +40551,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -35141,7 +40572,6 @@ export namespace Prisma {
 
   export type UserCreateManyOrganisationInputEnvelope = {
     data: UserCreateManyOrganisationInput | UserCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type CanvasProjectCreateWithoutOrganisationInput = {
@@ -35187,7 +40617,6 @@ export namespace Prisma {
 
   export type CanvasProjectCreateManyOrganisationInputEnvelope = {
     data: CanvasProjectCreateManyOrganisationInput | CanvasProjectCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type ProviderCredentialCreateWithoutOrganisationInput = {
@@ -35220,7 +40649,6 @@ export namespace Prisma {
 
   export type ProviderCredentialCreateManyOrganisationInputEnvelope = {
     data: ProviderCredentialCreateManyOrganisationInput | ProviderCredentialCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type DeploymentRuleCreateWithoutOrganisationInput = {
@@ -35238,6 +40666,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     created_by: string;
     created_at?: Date | string;
     updated_at?: Date | string;
@@ -35259,6 +40689,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     created_by: string;
     created_at?: Date | string;
     updated_at?: Date | string;
@@ -35272,7 +40704,6 @@ export namespace Prisma {
 
   export type DeploymentRuleCreateManyOrganisationInputEnvelope = {
     data: DeploymentRuleCreateManyOrganisationInput | DeploymentRuleCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type OrganisationMemberCreateWithoutOrganisationInput = {
@@ -35299,7 +40730,6 @@ export namespace Prisma {
 
   export type OrganisationMemberCreateManyOrganisationInputEnvelope = {
     data: OrganisationMemberCreateManyOrganisationInput | OrganisationMemberCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type InvitationCreateWithoutOrganisationInput = {
@@ -35331,7 +40761,6 @@ export namespace Prisma {
 
   export type InvitationCreateManyOrganisationInputEnvelope = {
     data: InvitationCreateManyOrganisationInput | InvitationCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type AiAuditLogCreateWithoutOrganisationInput = {
@@ -35373,7 +40802,6 @@ export namespace Prisma {
 
   export type AiAuditLogCreateManyOrganisationInputEnvelope = {
     data: AiAuditLogCreateManyOrganisationInput | AiAuditLogCreateManyOrganisationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type UserUpsertWithWhereUniqueWithoutOrganisationInput = {
@@ -35406,6 +40834,8 @@ export namespace Prisma {
     onboarding_step?: IntFilter<'User'> | number;
     default_provider?: StringNullableFilter<'User'> | string | null;
     default_region?: StringNullableFilter<'User'> | string | null;
+    completed_tours?: StringNullableFilter<'User'> | string | null;
+    preferences?: StringNullableFilter<'User'> | string | null;
     created_at?: DateTimeFilter<'User'> | Date | string;
     updated_at?: DateTimeFilter<'User'> | Date | string;
   };
@@ -35499,6 +40929,8 @@ export namespace Prisma {
     enabled?: BoolFilter<'DeploymentRule'> | boolean;
     webhook_id?: IntNullableFilter<'DeploymentRule'> | number | null;
     webhook_secret?: StringNullableFilter<'DeploymentRule'> | string | null;
+    webhook_status?: StringFilter<'DeploymentRule'> | string;
+    webhook_error?: StringNullableFilter<'DeploymentRule'> | string | null;
     organisation_id?: StringFilter<'DeploymentRule'> | string;
     created_by?: StringFilter<'DeploymentRule'> | string;
     created_at?: DateTimeFilter<'DeploymentRule'> | Date | string;
@@ -35587,6 +41019,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -35610,6 +41044,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -35678,6 +41114,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -35701,6 +41139,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -35827,6 +41267,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -35850,6 +41292,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     canvas_projects?: CanvasProjectUncheckedCreateNestedManyWithoutCreatorInput;
@@ -35887,6 +41331,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -35910,6 +41356,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     canvas_projects?: CanvasProjectUncheckedUpdateManyWithoutCreatorNestedInput;
@@ -35931,6 +41379,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -35954,6 +41404,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -35991,6 +41443,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -36014,6 +41468,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -36034,6 +41490,9 @@ export namespace Prisma {
     created_at?: Date | string;
     updated_at?: Date | string;
     environment?: EnvironmentCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardUncheckedCreateWithoutProjectInput = {
@@ -36045,6 +41504,9 @@ export namespace Prisma {
     created_at?: Date | string;
     updated_at?: Date | string;
     environment?: EnvironmentUncheckedCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardCreateOrConnectWithoutProjectInput = {
@@ -36054,7 +41516,6 @@ export namespace Prisma {
 
   export type CanvasCardCreateManyProjectInputEnvelope = {
     data: CanvasCardCreateManyProjectInput | CanvasCardCreateManyProjectInput[];
-    skipDuplicates?: boolean;
   };
 
   export type EnvironmentCreateWithoutProjectInput = {
@@ -36094,7 +41555,6 @@ export namespace Prisma {
 
   export type EnvironmentCreateManyProjectInputEnvelope = {
     data: EnvironmentCreateManyProjectInput | EnvironmentCreateManyProjectInput[];
-    skipDuplicates?: boolean;
   };
 
   export type ProjectMemberCreateWithoutProjectInput = {
@@ -36120,7 +41580,6 @@ export namespace Prisma {
 
   export type ProjectMemberCreateManyProjectInputEnvelope = {
     data: ProjectMemberCreateManyProjectInput | ProjectMemberCreateManyProjectInput[];
-    skipDuplicates?: boolean;
   };
 
   export type OrganisationCreateWithoutCanvas_projectsInput = {
@@ -36164,6 +41623,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -36187,6 +41648,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -36342,6 +41805,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -36365,6 +41830,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -36427,6 +41894,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -36450,6 +41919,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -36534,6 +42005,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -36557,6 +42030,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -36642,6 +42117,121 @@ export namespace Prisma {
   export type EnvironmentCreateOrConnectWithoutCardInput = {
     where: EnvironmentWhereUniqueInput;
     create: XOR<EnvironmentCreateWithoutCardInput, EnvironmentUncheckedCreateWithoutCardInput>;
+  };
+
+  export type CanvasDeploymentCreateWithoutCardInput = {
+    id?: string;
+    status: string;
+    action_type?: string;
+    provider: string;
+    region: string;
+    environment: string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: number | null;
+    error?: string | null;
+    pinned?: boolean;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    deploy_jobs?: DeployJobCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventCreateNestedManyWithoutDeploymentInput;
+    user?: UserCreateNestedOneWithoutDeploymentsInput;
+  };
+
+  export type CanvasDeploymentUncheckedCreateWithoutCardInput = {
+    id?: string;
+    user_id?: string | null;
+    status: string;
+    action_type?: string;
+    provider: string;
+    region: string;
+    environment: string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: number | null;
+    error?: string | null;
+    pinned?: boolean;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    deploy_jobs?: DeployJobUncheckedCreateNestedManyWithoutDeploymentInput;
+    deploy_events?: DeployEventUncheckedCreateNestedManyWithoutDeploymentInput;
+  };
+
+  export type CanvasDeploymentCreateOrConnectWithoutCardInput = {
+    where: CanvasDeploymentWhereUniqueInput;
+    create: XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>;
+  };
+
+  export type CanvasDeploymentCreateManyCardInputEnvelope = {
+    data: CanvasDeploymentCreateManyCardInput | CanvasDeploymentCreateManyCardInput[];
+  };
+
+  export type DeployedResourceMappingCreateWithoutCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type DeployedResourceMappingUncheckedCreateWithoutCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type DeployedResourceMappingCreateOrConnectWithoutCardInput = {
+    where: DeployedResourceMappingWhereUniqueInput;
+    create: XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>;
+  };
+
+  export type DeployedResourceMappingCreateManyCardInputEnvelope = {
+    data: DeployedResourceMappingCreateManyCardInput | DeployedResourceMappingCreateManyCardInput[];
+  };
+
+  export type BlockRequirementStatusCreateWithoutCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUncheckedCreateWithoutCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusCreateOrConnectWithoutCardInput = {
+    where: BlockRequirementStatusWhereUniqueInput;
+    create: XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>;
+  };
+
+  export type BlockRequirementStatusCreateManyCardInputEnvelope = {
+    data: BlockRequirementStatusCreateManyCardInput | BlockRequirementStatusCreateManyCardInput[];
   };
 
   export type CanvasProjectUpsertWithoutCardsInput = {
@@ -36732,6 +42322,88 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
 
+  export type CanvasDeploymentUpsertWithWhereUniqueWithoutCardInput = {
+    where: CanvasDeploymentWhereUniqueInput;
+    update: XOR<CanvasDeploymentUpdateWithoutCardInput, CanvasDeploymentUncheckedUpdateWithoutCardInput>;
+    create: XOR<CanvasDeploymentCreateWithoutCardInput, CanvasDeploymentUncheckedCreateWithoutCardInput>;
+  };
+
+  export type CanvasDeploymentUpdateWithWhereUniqueWithoutCardInput = {
+    where: CanvasDeploymentWhereUniqueInput;
+    data: XOR<CanvasDeploymentUpdateWithoutCardInput, CanvasDeploymentUncheckedUpdateWithoutCardInput>;
+  };
+
+  export type CanvasDeploymentUpdateManyWithWhereWithoutCardInput = {
+    where: CanvasDeploymentScalarWhereInput;
+    data: XOR<CanvasDeploymentUpdateManyMutationInput, CanvasDeploymentUncheckedUpdateManyWithoutCardInput>;
+  };
+
+  export type DeployedResourceMappingUpsertWithWhereUniqueWithoutCardInput = {
+    where: DeployedResourceMappingWhereUniqueInput;
+    update: XOR<DeployedResourceMappingUpdateWithoutCardInput, DeployedResourceMappingUncheckedUpdateWithoutCardInput>;
+    create: XOR<DeployedResourceMappingCreateWithoutCardInput, DeployedResourceMappingUncheckedCreateWithoutCardInput>;
+  };
+
+  export type DeployedResourceMappingUpdateWithWhereUniqueWithoutCardInput = {
+    where: DeployedResourceMappingWhereUniqueInput;
+    data: XOR<DeployedResourceMappingUpdateWithoutCardInput, DeployedResourceMappingUncheckedUpdateWithoutCardInput>;
+  };
+
+  export type DeployedResourceMappingUpdateManyWithWhereWithoutCardInput = {
+    where: DeployedResourceMappingScalarWhereInput;
+    data: XOR<
+      DeployedResourceMappingUpdateManyMutationInput,
+      DeployedResourceMappingUncheckedUpdateManyWithoutCardInput
+    >;
+  };
+
+  export type DeployedResourceMappingScalarWhereInput = {
+    AND?: DeployedResourceMappingScalarWhereInput | DeployedResourceMappingScalarWhereInput[];
+    OR?: DeployedResourceMappingScalarWhereInput[];
+    NOT?: DeployedResourceMappingScalarWhereInput | DeployedResourceMappingScalarWhereInput[];
+    id?: StringFilter<'DeployedResourceMapping'> | string;
+    card_id?: StringFilter<'DeployedResourceMapping'> | string;
+    node_id?: StringFilter<'DeployedResourceMapping'> | string;
+    environment?: StringFilter<'DeployedResourceMapping'> | string;
+    resource_type?: StringFilter<'DeployedResourceMapping'> | string;
+    resource_name?: StringFilter<'DeployedResourceMapping'> | string;
+    provider_id?: StringNullableFilter<'DeployedResourceMapping'> | string | null;
+    created_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+    updated_at?: DateTimeFilter<'DeployedResourceMapping'> | Date | string;
+  };
+
+  export type BlockRequirementStatusUpsertWithWhereUniqueWithoutCardInput = {
+    where: BlockRequirementStatusWhereUniqueInput;
+    update: XOR<BlockRequirementStatusUpdateWithoutCardInput, BlockRequirementStatusUncheckedUpdateWithoutCardInput>;
+    create: XOR<BlockRequirementStatusCreateWithoutCardInput, BlockRequirementStatusUncheckedCreateWithoutCardInput>;
+  };
+
+  export type BlockRequirementStatusUpdateWithWhereUniqueWithoutCardInput = {
+    where: BlockRequirementStatusWhereUniqueInput;
+    data: XOR<BlockRequirementStatusUpdateWithoutCardInput, BlockRequirementStatusUncheckedUpdateWithoutCardInput>;
+  };
+
+  export type BlockRequirementStatusUpdateManyWithWhereWithoutCardInput = {
+    where: BlockRequirementStatusScalarWhereInput;
+    data: XOR<BlockRequirementStatusUpdateManyMutationInput, BlockRequirementStatusUncheckedUpdateManyWithoutCardInput>;
+  };
+
+  export type BlockRequirementStatusScalarWhereInput = {
+    AND?: BlockRequirementStatusScalarWhereInput | BlockRequirementStatusScalarWhereInput[];
+    OR?: BlockRequirementStatusScalarWhereInput[];
+    NOT?: BlockRequirementStatusScalarWhereInput | BlockRequirementStatusScalarWhereInput[];
+    id?: StringFilter<'BlockRequirementStatus'> | string;
+    card_id?: StringFilter<'BlockRequirementStatus'> | string;
+    node_id?: StringFilter<'BlockRequirementStatus'> | string;
+    environment?: StringFilter<'BlockRequirementStatus'> | string;
+    requirement_id?: StringFilter<'BlockRequirementStatus'> | string;
+    status?: StringFilter<'BlockRequirementStatus'> | string;
+    message?: StringNullableFilter<'BlockRequirementStatus'> | string | null;
+    last_checked_at?: DateTimeFilter<'BlockRequirementStatus'> | Date | string;
+    verified_at?: DateTimeNullableFilter<'BlockRequirementStatus'> | Date | string | null;
+    details?: JsonNullableFilter<'BlockRequirementStatus'>;
+  };
+
   export type CanvasProjectCreateWithoutEnvironmentsInput = {
     id?: string;
     name: string;
@@ -36782,6 +42454,9 @@ export namespace Prisma {
     created_at?: Date | string;
     updated_at?: Date | string;
     project: CanvasProjectCreateNestedOneWithoutCardsInput;
+    deployments?: CanvasDeploymentCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardUncheckedCreateWithoutEnvironmentInput = {
@@ -36793,6 +42468,9 @@ export namespace Prisma {
     viewport?: NullableJsonNullValueInput | InputJsonValue;
     created_at?: Date | string;
     updated_at?: Date | string;
+    deployments?: CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput;
   };
 
   export type CanvasCardCreateOrConnectWithoutEnvironmentInput = {
@@ -36867,6 +42545,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     project?: CanvasProjectUpdateOneRequiredWithoutCardsNestedInput;
+    deployments?: CanvasDeploymentUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUpdateManyWithoutCardNestedInput;
   };
 
   export type CanvasCardUncheckedUpdateWithoutEnvironmentInput = {
@@ -36878,6 +42559,9 @@ export namespace Prisma {
     viewport?: NullableJsonNullValueInput | InputJsonValue;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deployments?: CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput;
   };
 
   export type OrganisationCreateWithoutProvider_credentialsInput = {
@@ -36991,7 +42675,33 @@ export namespace Prisma {
 
   export type DeployJobCreateManyDeploymentInputEnvelope = {
     data: DeployJobCreateManyDeploymentInput | DeployJobCreateManyDeploymentInput[];
-    skipDuplicates?: boolean;
+  };
+
+  export type DeployEventCreateWithoutDeploymentInput = {
+    id?: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+  };
+
+  export type DeployEventUncheckedCreateWithoutDeploymentInput = {
+    id?: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+  };
+
+  export type DeployEventCreateOrConnectWithoutDeploymentInput = {
+    where: DeployEventWhereUniqueInput;
+    create: XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>;
+  };
+
+  export type DeployEventCreateManyDeploymentInputEnvelope = {
+    data: DeployEventCreateManyDeploymentInput | DeployEventCreateManyDeploymentInput[];
   };
 
   export type UserCreateWithoutDeploymentsInput = {
@@ -37004,6 +42714,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -37027,6 +42739,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -37041,6 +42755,39 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutDeploymentsInput = {
     where: UserWhereUniqueInput;
     create: XOR<UserCreateWithoutDeploymentsInput, UserUncheckedCreateWithoutDeploymentsInput>;
+  };
+
+  export type CanvasCardCreateWithoutDeploymentsInput = {
+    id?: string;
+    name: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    project: CanvasProjectCreateNestedOneWithoutCardsInput;
+    environment?: EnvironmentCreateNestedOneWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardUncheckedCreateWithoutDeploymentsInput = {
+    id?: string;
+    name: string;
+    project_id: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    environment?: EnvironmentUncheckedCreateNestedOneWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardCreateOrConnectWithoutDeploymentsInput = {
+    where: CanvasCardWhereUniqueInput;
+    create: XOR<CanvasCardCreateWithoutDeploymentsInput, CanvasCardUncheckedCreateWithoutDeploymentsInput>;
   };
 
   export type DeployJobUpsertWithWhereUniqueWithoutDeploymentInput = {
@@ -37075,6 +42822,35 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<'DeployJob'> | Date | string;
   };
 
+  export type DeployEventUpsertWithWhereUniqueWithoutDeploymentInput = {
+    where: DeployEventWhereUniqueInput;
+    update: XOR<DeployEventUpdateWithoutDeploymentInput, DeployEventUncheckedUpdateWithoutDeploymentInput>;
+    create: XOR<DeployEventCreateWithoutDeploymentInput, DeployEventUncheckedCreateWithoutDeploymentInput>;
+  };
+
+  export type DeployEventUpdateWithWhereUniqueWithoutDeploymentInput = {
+    where: DeployEventWhereUniqueInput;
+    data: XOR<DeployEventUpdateWithoutDeploymentInput, DeployEventUncheckedUpdateWithoutDeploymentInput>;
+  };
+
+  export type DeployEventUpdateManyWithWhereWithoutDeploymentInput = {
+    where: DeployEventScalarWhereInput;
+    data: XOR<DeployEventUpdateManyMutationInput, DeployEventUncheckedUpdateManyWithoutDeploymentInput>;
+  };
+
+  export type DeployEventScalarWhereInput = {
+    AND?: DeployEventScalarWhereInput | DeployEventScalarWhereInput[];
+    OR?: DeployEventScalarWhereInput[];
+    NOT?: DeployEventScalarWhereInput | DeployEventScalarWhereInput[];
+    id?: StringFilter<'DeployEvent'> | string;
+    deployment_id?: StringFilter<'DeployEvent'> | string;
+    card_id?: StringFilter<'DeployEvent'> | string;
+    seq?: IntFilter<'DeployEvent'> | number;
+    type?: StringFilter<'DeployEvent'> | string;
+    payload?: JsonFilter<'DeployEvent'>;
+    created_at?: DateTimeFilter<'DeployEvent'> | Date | string;
+  };
+
   export type UserUpsertWithoutDeploymentsInput = {
     update: XOR<UserUpdateWithoutDeploymentsInput, UserUncheckedUpdateWithoutDeploymentsInput>;
     create: XOR<UserCreateWithoutDeploymentsInput, UserUncheckedCreateWithoutDeploymentsInput>;
@@ -37096,6 +42872,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -37119,6 +42897,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -37130,20 +42910,332 @@ export namespace Prisma {
     ai_conversations?: AiConversationUncheckedUpdateManyWithoutUserNestedInput;
   };
 
-  export type CanvasDeploymentCreateWithoutDeploy_jobsInput = {
+  export type CanvasCardUpsertWithoutDeploymentsInput = {
+    update: XOR<CanvasCardUpdateWithoutDeploymentsInput, CanvasCardUncheckedUpdateWithoutDeploymentsInput>;
+    create: XOR<CanvasCardCreateWithoutDeploymentsInput, CanvasCardUncheckedCreateWithoutDeploymentsInput>;
+    where?: CanvasCardWhereInput;
+  };
+
+  export type CanvasCardUpdateToOneWithWhereWithoutDeploymentsInput = {
+    where?: CanvasCardWhereInput;
+    data: XOR<CanvasCardUpdateWithoutDeploymentsInput, CanvasCardUncheckedUpdateWithoutDeploymentsInput>;
+  };
+
+  export type CanvasCardUpdateWithoutDeploymentsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    project?: CanvasProjectUpdateOneRequiredWithoutCardsNestedInput;
+    environment?: EnvironmentUpdateOneWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasCardUncheckedUpdateWithoutDeploymentsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    project_id?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    environment?: EnvironmentUncheckedUpdateOneWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasDeploymentCreateWithoutDeploy_eventsInput = {
     id?: string;
-    card_id: string;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
+    deploy_jobs?: DeployJobCreateNestedManyWithoutDeploymentInput;
     user?: UserCreateNestedOneWithoutDeploymentsInput;
+    card: CanvasCardCreateNestedOneWithoutDeploymentsInput;
+  };
+
+  export type CanvasDeploymentUncheckedCreateWithoutDeploy_eventsInput = {
+    id?: string;
+    card_id: string;
+    user_id?: string | null;
+    status: string;
+    action_type?: string;
+    provider: string;
+    region: string;
+    environment: string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: number | null;
+    error?: string | null;
+    pinned?: boolean;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    deploy_jobs?: DeployJobUncheckedCreateNestedManyWithoutDeploymentInput;
+  };
+
+  export type CanvasDeploymentCreateOrConnectWithoutDeploy_eventsInput = {
+    where: CanvasDeploymentWhereUniqueInput;
+    create: XOR<
+      CanvasDeploymentCreateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedCreateWithoutDeploy_eventsInput
+    >;
+  };
+
+  export type CanvasDeploymentUpsertWithoutDeploy_eventsInput = {
+    update: XOR<
+      CanvasDeploymentUpdateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedUpdateWithoutDeploy_eventsInput
+    >;
+    create: XOR<
+      CanvasDeploymentCreateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedCreateWithoutDeploy_eventsInput
+    >;
+    where?: CanvasDeploymentWhereInput;
+  };
+
+  export type CanvasDeploymentUpdateToOneWithWhereWithoutDeploy_eventsInput = {
+    where?: CanvasDeploymentWhereInput;
+    data: XOR<
+      CanvasDeploymentUpdateWithoutDeploy_eventsInput,
+      CanvasDeploymentUncheckedUpdateWithoutDeploy_eventsInput
+    >;
+  };
+
+  export type CanvasDeploymentUpdateWithoutDeploy_eventsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
+    provider?: StringFieldUpdateOperationsInput | string;
+    region?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
+    error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_jobs?: DeployJobUpdateManyWithoutDeploymentNestedInput;
+    user?: UserUpdateOneWithoutDeploymentsNestedInput;
+    card?: CanvasCardUpdateOneRequiredWithoutDeploymentsNestedInput;
+  };
+
+  export type CanvasDeploymentUncheckedUpdateWithoutDeploy_eventsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
+    provider?: StringFieldUpdateOperationsInput | string;
+    region?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
+    error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_jobs?: DeployJobUncheckedUpdateManyWithoutDeploymentNestedInput;
+  };
+
+  export type CanvasCardCreateWithoutResourceMappingsInput = {
+    id?: string;
+    name: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    project: CanvasProjectCreateNestedOneWithoutCardsInput;
+    environment?: EnvironmentCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardUncheckedCreateWithoutResourceMappingsInput = {
+    id?: string;
+    name: string;
+    project_id: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    environment?: EnvironmentUncheckedCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardCreateOrConnectWithoutResourceMappingsInput = {
+    where: CanvasCardWhereUniqueInput;
+    create: XOR<CanvasCardCreateWithoutResourceMappingsInput, CanvasCardUncheckedCreateWithoutResourceMappingsInput>;
+  };
+
+  export type CanvasCardUpsertWithoutResourceMappingsInput = {
+    update: XOR<CanvasCardUpdateWithoutResourceMappingsInput, CanvasCardUncheckedUpdateWithoutResourceMappingsInput>;
+    create: XOR<CanvasCardCreateWithoutResourceMappingsInput, CanvasCardUncheckedCreateWithoutResourceMappingsInput>;
+    where?: CanvasCardWhereInput;
+  };
+
+  export type CanvasCardUpdateToOneWithWhereWithoutResourceMappingsInput = {
+    where?: CanvasCardWhereInput;
+    data: XOR<CanvasCardUpdateWithoutResourceMappingsInput, CanvasCardUncheckedUpdateWithoutResourceMappingsInput>;
+  };
+
+  export type CanvasCardUpdateWithoutResourceMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    project?: CanvasProjectUpdateOneRequiredWithoutCardsNestedInput;
+    environment?: EnvironmentUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasCardUncheckedUpdateWithoutResourceMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    project_id?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    environment?: EnvironmentUncheckedUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasCardCreateWithoutRequirementStatusesInput = {
+    id?: string;
+    name: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    project: CanvasProjectCreateNestedOneWithoutCardsInput;
+    environment?: EnvironmentCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardUncheckedCreateWithoutRequirementStatusesInput = {
+    id?: string;
+    name: string;
+    project_id: string;
+    nodes: JsonNullValueInput | InputJsonValue;
+    edges: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    environment?: EnvironmentUncheckedCreateNestedOneWithoutCardInput;
+    deployments?: CanvasDeploymentUncheckedCreateNestedManyWithoutCardInput;
+    resourceMappings?: DeployedResourceMappingUncheckedCreateNestedManyWithoutCardInput;
+  };
+
+  export type CanvasCardCreateOrConnectWithoutRequirementStatusesInput = {
+    where: CanvasCardWhereUniqueInput;
+    create: XOR<
+      CanvasCardCreateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedCreateWithoutRequirementStatusesInput
+    >;
+  };
+
+  export type CanvasCardUpsertWithoutRequirementStatusesInput = {
+    update: XOR<
+      CanvasCardUpdateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedUpdateWithoutRequirementStatusesInput
+    >;
+    create: XOR<
+      CanvasCardCreateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedCreateWithoutRequirementStatusesInput
+    >;
+    where?: CanvasCardWhereInput;
+  };
+
+  export type CanvasCardUpdateToOneWithWhereWithoutRequirementStatusesInput = {
+    where?: CanvasCardWhereInput;
+    data: XOR<
+      CanvasCardUpdateWithoutRequirementStatusesInput,
+      CanvasCardUncheckedUpdateWithoutRequirementStatusesInput
+    >;
+  };
+
+  export type CanvasCardUpdateWithoutRequirementStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    project?: CanvasProjectUpdateOneRequiredWithoutCardsNestedInput;
+    environment?: EnvironmentUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasCardUncheckedUpdateWithoutRequirementStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    project_id?: StringFieldUpdateOperationsInput | string;
+    nodes?: JsonNullValueInput | InputJsonValue;
+    edges?: JsonNullValueInput | InputJsonValue;
+    viewport?: NullableJsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    environment?: EnvironmentUncheckedUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput;
+  };
+
+  export type CanvasDeploymentCreateWithoutDeploy_jobsInput = {
+    id?: string;
+    status: string;
+    action_type?: string;
+    provider: string;
+    region: string;
+    environment: string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: number | null;
+    error?: string | null;
+    pinned?: boolean;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+    deploy_events?: DeployEventCreateNestedManyWithoutDeploymentInput;
+    user?: UserCreateNestedOneWithoutDeploymentsInput;
+    card: CanvasCardCreateNestedOneWithoutDeploymentsInput;
   };
 
   export type CanvasDeploymentUncheckedCreateWithoutDeploy_jobsInput = {
@@ -37151,15 +43243,20 @@ export namespace Prisma {
     card_id: string;
     user_id?: string | null;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
+    deploy_events?: DeployEventUncheckedCreateNestedManyWithoutDeploymentInput;
   };
 
   export type CanvasDeploymentCreateOrConnectWithoutDeploy_jobsInput = {
@@ -37180,18 +43277,23 @@ export namespace Prisma {
 
   export type CanvasDeploymentUpdateWithoutDeploy_jobsInput = {
     id?: StringFieldUpdateOperationsInput | string;
-    card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_events?: DeployEventUpdateManyWithoutDeploymentNestedInput;
     user?: UserUpdateOneWithoutDeploymentsNestedInput;
+    card?: CanvasCardUpdateOneRequiredWithoutDeploymentsNestedInput;
   };
 
   export type CanvasDeploymentUncheckedUpdateWithoutDeploy_jobsInput = {
@@ -37199,15 +43301,20 @@ export namespace Prisma {
     card_id?: StringFieldUpdateOperationsInput | string;
     user_id?: NullableStringFieldUpdateOperationsInput | string | null;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_events?: DeployEventUncheckedUpdateManyWithoutDeploymentNestedInput;
   };
 
   export type DeploymentEventCreateWithoutRuleInput = {
@@ -37253,7 +43360,6 @@ export namespace Prisma {
 
   export type DeploymentEventCreateManyRuleInputEnvelope = {
     data: DeploymentEventCreateManyRuleInput | DeploymentEventCreateManyRuleInput[];
-    skipDuplicates?: boolean;
   };
 
   export type OrganisationCreateWithoutDeployment_rulesInput = {
@@ -37386,6 +43492,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     created_by: string;
     created_at?: Date | string;
     updated_at?: Date | string;
@@ -37407,6 +43515,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     organisation_id: string;
     created_by: string;
     created_at?: Date | string;
@@ -37444,6 +43554,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -37465,6 +43577,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     organisation_id?: StringFieldUpdateOperationsInput | string;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -37498,7 +43612,6 @@ export namespace Prisma {
 
   export type AiMessageCreateManyConversationInputEnvelope = {
     data: AiMessageCreateManyConversationInput | AiMessageCreateManyConversationInput[];
-    skipDuplicates?: boolean;
   };
 
   export type UserCreateWithoutAi_conversationsInput = {
@@ -37511,6 +43624,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -37534,6 +43649,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -37601,6 +43718,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -37624,6 +43743,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -37705,6 +43826,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     organisation?: OrganisationCreateNestedOneWithoutUsersInput;
@@ -37728,6 +43851,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
     refresh_tokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -37796,6 +43921,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     organisation?: OrganisationUpdateOneWithoutUsersNestedInput;
@@ -37819,6 +43946,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -37924,13 +44053,17 @@ export namespace Prisma {
     id?: string;
     card_id: string;
     status: string;
+    action_type?: string;
     provider: string;
     region: string;
     environment: string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: number | null;
     error?: string | null;
+    pinned?: boolean;
     created_at?: Date | string;
     updated_at?: Date | string;
   };
@@ -38112,47 +44245,61 @@ export namespace Prisma {
 
   export type CanvasDeploymentUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string;
-    card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     deploy_jobs?: DeployJobUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUpdateManyWithoutDeploymentNestedInput;
+    card?: CanvasCardUpdateOneRequiredWithoutDeploymentsNestedInput;
   };
 
   export type CanvasDeploymentUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string;
     card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     deploy_jobs?: DeployJobUncheckedUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUncheckedUpdateManyWithoutDeploymentNestedInput;
   };
 
   export type CanvasDeploymentUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string;
     card_id?: StringFieldUpdateOperationsInput | string;
     status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
     provider?: StringFieldUpdateOperationsInput | string;
     region?: StringFieldUpdateOperationsInput | string;
     environment?: StringFieldUpdateOperationsInput | string;
     plan?: NullableJsonNullValueInput | InputJsonValue;
     results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
     duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
     error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
@@ -38199,6 +44346,8 @@ export namespace Prisma {
     onboarding_step?: number;
     default_provider?: string | null;
     default_region?: string | null;
+    completed_tours?: string | null;
+    preferences?: string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
   };
@@ -38243,6 +44392,8 @@ export namespace Prisma {
     enabled?: boolean;
     webhook_id?: number | null;
     webhook_secret?: string | null;
+    webhook_status?: string;
+    webhook_error?: string | null;
     created_by: string;
     created_at?: Date | string;
     updated_at?: Date | string;
@@ -38292,6 +44443,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUpdateManyWithoutUserNestedInput;
@@ -38314,6 +44467,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     refresh_tokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -38336,6 +44491,8 @@ export namespace Prisma {
     onboarding_step?: IntFieldUpdateOperationsInput | number;
     default_provider?: NullableStringFieldUpdateOperationsInput | string | null;
     default_region?: NullableStringFieldUpdateOperationsInput | string | null;
+    completed_tours?: NullableStringFieldUpdateOperationsInput | string | null;
+    preferences?: NullableStringFieldUpdateOperationsInput | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
@@ -38436,6 +44593,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -38457,6 +44616,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -38478,6 +44639,8 @@ export namespace Prisma {
     enabled?: BoolFieldUpdateOperationsInput | boolean;
     webhook_id?: NullableIntFieldUpdateOperationsInput | number | null;
     webhook_secret?: NullableStringFieldUpdateOperationsInput | string | null;
+    webhook_status?: StringFieldUpdateOperationsInput | string;
+    webhook_error?: NullableStringFieldUpdateOperationsInput | string | null;
     created_by?: StringFieldUpdateOperationsInput | string;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -38627,6 +44790,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     environment?: EnvironmentUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUpdateManyWithoutCardNestedInput;
   };
 
   export type CanvasCardUncheckedUpdateWithoutProjectInput = {
@@ -38638,6 +44804,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     environment?: EnvironmentUncheckedUpdateOneWithoutCardNestedInput;
+    deployments?: CanvasDeploymentUncheckedUpdateManyWithoutCardNestedInput;
+    resourceMappings?: DeployedResourceMappingUncheckedUpdateManyWithoutCardNestedInput;
+    requirementStatuses?: BlockRequirementStatusUncheckedUpdateManyWithoutCardNestedInput;
   };
 
   export type CanvasCardUncheckedUpdateManyWithoutProjectInput = {
@@ -38719,6 +44888,178 @@ export namespace Prisma {
     granted_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
 
+  export type CanvasDeploymentCreateManyCardInput = {
+    id?: string;
+    user_id?: string | null;
+    status: string;
+    action_type?: string;
+    provider: string;
+    region: string;
+    environment: string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: number | null;
+    error?: string | null;
+    pinned?: boolean;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type DeployedResourceMappingCreateManyCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    resource_type: string;
+    resource_name: string;
+    provider_id?: string | null;
+    created_at?: Date | string;
+    updated_at?: Date | string;
+  };
+
+  export type BlockRequirementStatusCreateManyCardInput = {
+    id?: string;
+    node_id: string;
+    environment: string;
+    requirement_id: string;
+    status: string;
+    message?: string | null;
+    last_checked_at?: Date | string;
+    verified_at?: Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type CanvasDeploymentUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
+    provider?: StringFieldUpdateOperationsInput | string;
+    region?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
+    error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_jobs?: DeployJobUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUpdateManyWithoutDeploymentNestedInput;
+    user?: UserUpdateOneWithoutDeploymentsNestedInput;
+  };
+
+  export type CanvasDeploymentUncheckedUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
+    provider?: StringFieldUpdateOperationsInput | string;
+    region?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
+    error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    deploy_jobs?: DeployJobUncheckedUpdateManyWithoutDeploymentNestedInput;
+    deploy_events?: DeployEventUncheckedUpdateManyWithoutDeploymentNestedInput;
+  };
+
+  export type CanvasDeploymentUncheckedUpdateManyWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    status?: StringFieldUpdateOperationsInput | string;
+    action_type?: StringFieldUpdateOperationsInput | string;
+    provider?: StringFieldUpdateOperationsInput | string;
+    region?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    plan?: NullableJsonNullValueInput | InputJsonValue;
+    results?: NullableJsonNullValueInput | InputJsonValue;
+    summary?: NullableJsonNullValueInput | InputJsonValue;
+    snapshot?: NullableJsonNullValueInput | InputJsonValue;
+    duration_ms?: NullableIntFieldUpdateOperationsInput | number | null;
+    error?: NullableStringFieldUpdateOperationsInput | string | null;
+    pinned?: BoolFieldUpdateOperationsInput | boolean;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingUncheckedUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployedResourceMappingUncheckedUpdateManyWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    resource_type?: StringFieldUpdateOperationsInput | string;
+    resource_name?: StringFieldUpdateOperationsInput | string;
+    provider_id?: NullableStringFieldUpdateOperationsInput | string | null;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type BlockRequirementStatusUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUncheckedUpdateWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
+  export type BlockRequirementStatusUncheckedUpdateManyWithoutCardInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    node_id?: StringFieldUpdateOperationsInput | string;
+    environment?: StringFieldUpdateOperationsInput | string;
+    requirement_id?: StringFieldUpdateOperationsInput | string;
+    status?: StringFieldUpdateOperationsInput | string;
+    message?: NullableStringFieldUpdateOperationsInput | string | null;
+    last_checked_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    details?: NullableJsonNullValueInput | InputJsonValue;
+  };
+
   export type DeployJobCreateManyDeploymentInput = {
     id?: string;
     status?: string;
@@ -38729,6 +45070,15 @@ export namespace Prisma {
     completed_at?: Date | string | null;
     created_at?: Date | string;
     updated_at?: Date | string;
+  };
+
+  export type DeployEventCreateManyDeploymentInput = {
+    id?: string;
+    card_id: string;
+    seq: number;
+    type: string;
+    payload: JsonNullValueInput | InputJsonValue;
+    created_at?: Date | string;
   };
 
   export type DeployJobUpdateWithoutDeploymentInput = {
@@ -38765,6 +45115,33 @@ export namespace Prisma {
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventUpdateWithoutDeploymentInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventUncheckedUpdateWithoutDeploymentInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type DeployEventUncheckedUpdateManyWithoutDeploymentInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    card_id?: StringFieldUpdateOperationsInput | string;
+    seq?: IntFieldUpdateOperationsInput | number;
+    type?: StringFieldUpdateOperationsInput | string;
+    payload?: JsonNullValueInput | InputJsonValue;
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string;
   };
 
   export type DeploymentEventCreateManyRuleInput = {

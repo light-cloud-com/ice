@@ -52,46 +52,21 @@ export interface ProjectListState {
 }
 
 // =============================================================================
-// Local Storage Keys
-// =============================================================================
-
-const STORAGE_KEYS = {
-  root: 'ice-project-list-root',
-  expandedFolders: 'ice-project-list-expanded',
-};
-
-// =============================================================================
-// Load persisted state
-// =============================================================================
-
-function loadPersistedState(): { rootDirectory: string | null; expandedFolders: string[] } {
-  try {
-    const rootDirectory = localStorage.getItem(STORAGE_KEYS.root);
-    const expandedJson = localStorage.getItem(STORAGE_KEYS.expandedFolders);
-    const expandedFolders = expandedJson ? JSON.parse(expandedJson) : [];
-
-    return {
-      rootDirectory: rootDirectory || null,
-      expandedFolders,
-    };
-  } catch {
-    return { rootDirectory: null, expandedFolders: [] };
-  }
-}
+// Persistence — none. Project-list state is per-session (root
+// directory + expanded folders) and is restored from the DB via the
+// user-preferences endpoint, not localStorage (see task #13).
 
 // =============================================================================
 // Initial State
 // =============================================================================
 
-const persisted = loadPersistedState();
-
 const initialState: ProjectListState = {
   folders: [],
   files: [],
-  rootDirectory: persisted.rootDirectory,
+  rootDirectory: null,
   isLoading: false,
   searchQuery: '',
-  expandedFolders: persisted.expandedFolders,
+  expandedFolders: [],
 };
 
 // =============================================================================
@@ -106,10 +81,7 @@ const projectListSlice = createSlice({
     setRootDirectory: (state, action: PayloadAction<string | null>) => {
       state.rootDirectory = action.payload;
       state.isLoading = !!action.payload;
-      if (action.payload) {
-        localStorage.setItem(STORAGE_KEYS.root, action.payload);
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.root);
+      if (!action.payload) {
         state.files = [];
         state.folders = [];
       }
@@ -160,19 +132,32 @@ const projectListSlice = createSlice({
         } else {
           state.expandedFolders = state.expandedFolders.filter((p) => p !== folderPath);
         }
-
-        // Persist expanded state
-        try {
-          localStorage.setItem(STORAGE_KEYS.expandedFolders, JSON.stringify(state.expandedFolders));
-        } catch (e) {
-          console.error('Failed to persist expanded folders:', e);
-        }
       }
     },
 
     // Set search query
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
+    },
+
+    /**
+     * Hydrate the slice from the user-preferences DB payload. Called
+     * once on app boot after `GET /api/profile/preferences` resolves.
+     * Skips fields whose payload is null/undefined so a partial blob
+     * doesn't blow away an in-memory value (e.g. user already started
+     * a session before prefs landed).
+     */
+    loadProjectListPrefs: (
+      state,
+      action: PayloadAction<{ rootDirectory?: string | null; expandedFolders?: string[] } | null>,
+    ) => {
+      if (!action.payload) return;
+      if (action.payload.rootDirectory !== undefined) {
+        state.rootDirectory = action.payload.rootDirectory;
+      }
+      if (Array.isArray(action.payload.expandedFolders)) {
+        state.expandedFolders = action.payload.expandedFolders;
+      }
     },
   },
 });
@@ -181,7 +166,8 @@ const projectListSlice = createSlice({
 // Exports
 // =============================================================================
 
-export const { setRootDirectory, setScanResults, setLoading, toggleFolder, setSearchQuery } = projectListSlice.actions;
+export const { setRootDirectory, setScanResults, setLoading, toggleFolder, setSearchQuery, loadProjectListPrefs } =
+  projectListSlice.actions;
 
 export default projectListSlice.reducer;
 

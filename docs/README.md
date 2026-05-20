@@ -1,46 +1,83 @@
 # ICE Documentation
 
-This folder is the long-form documentation for ICE. For the 30-second pitch and install instructions, start at the [repo root README](../README.md).
+Long-form docs for ICE. For the 30-second pitch and install instructions, start at the [repo root README](../README.md).
 
-## Where to start
+## Map
 
-| I want to… | Read |
-|---|---|
-| Install ICE and run a first deploy | [getting-started.md](getting-started.md) |
-| Understand how the whole system fits together | [architecture.md](architecture.md) |
-| Deploy a real app to GCP | [deploying-to-gcp.md](deploying-to-gcp.md) |
-| Deploy to AWS (experimental) | [deploying-to-aws.md](deploying-to-aws.md) |
-| Deploy to Azure (experimental) | [deploying-to-azure.md](deploying-to-azure.md) |
-| Check what works per provider | [provider-status.md](provider-status.md) |
-| Fix something that's broken | [troubleshooting.md](troubleshooting.md) |
-| Look up a term | [glossary.md](glossary.md) |
-| Contribute code or file a bug | [contributing.md](contributing.md) → [../CONTRIBUTING.md](../CONTRIBUTING.md) |
-| Run the test suites | [testing.md](testing.md) |
-| Understand what "Community Edition" means | [community-edition.md](community-edition.md) |
-| Use the multi-agent workflow with Claude Code | [agents.md](agents.md) |
+```mermaid
+flowchart LR
+    R([README<br/>landing]) --> Start[🚀 Getting started]
+    R --> Glossary[📖 Glossary]
 
-## Reference
+    R --> Arch[🏗 Architecture]
+    R --> Ref[🧱 Reference]
+    R --> Contrib[🤝 Contributors]
 
-Shorter pages that describe one subsystem each. Each ends with pointers to the code - treat them as entry points into the source, not replacements for it.
+    Arch -.-> A1[core-engine]
+    Arch -.-> A2[frontend]
+    Arch -.-> A3[services]
+    Arch -.-> A4[database]
+    Arch -.-> A5[desktop]
+    Arch -.-> A6[ai-assistant]
 
-| Page | What it covers |
-|---|---|
-| [core-engine.md](core-engine.md) | Graph, schemas, deploy plan/apply, importers |
-| [frontend.md](frontend.md) | React web app, SVG canvas, Redux state, feature modules |
-| [services.md](services.md) | The six backend services composed by the gateway |
-| [database.md](database.md) | Prisma schema, SQLite for dev, Postgres for prod |
-| [desktop.md](desktop.md) | Electron wrapper, embedded gateway, packaging status |
-| [ai-assistant.md](ai-assistant.md) | Claude integration, SSE streaming, what it can do |
-| [blocks-reference.md](blocks-reference.md) | The concept palette and the provider blocks behind it |
-| [refactoring-patterns.md](refactoring-patterns.md) | Six proven decomposition patterns + common test patterns + gotchas distilled from Phase 1+2 refactors |
+    Ref -.-> Rf1[blocks]
+    Ref -.-> Rf2[extending-providers]
+
+    Contrib -.-> C1[testing]
+
+    style R fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
+    style Start fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style Glossary fill:#e0e7ff,stroke:#6366f1,color:#312e81
+```
+
+## For users
+
+You want to install ICE, build a canvas, and deploy something.
+
+| Page                                  | What it covers                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| [Getting started](getting-started.md) | Install, generate schemas, first run, first deploy, common install issues |
+| [Glossary](glossary.md)               | Block, blueprint, handler, importer, plan, apply, …                       |
+
+Per-provider readiness lives in code: [`PROVIDER_READINESS`](../packages/constants/src/providers.ts).
+
+## For operators
+
+You want to run ICE for a team (self-hosted).
+
+| Page                                            | What it covers                                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [Architecture overview](architecture/README.md) | Bird's-eye view of how the system fits                                                                      |
+| [Database](architecture/database.md)            | The two SQLite DBs (`ice-schemas.db` catalog + `.desktop-dev.db` runtime), Prisma schema, Postgres for prod |
+| [Desktop](architecture/desktop.md)              | Electron wrapper, embedded gateway, packaging, code-signing status                                          |
+| [AI assistant](architecture/ai-assistant.md)    | Anthropic key, OpenAI-compat backends, cost, rate limits                                                    |
+
+## For contributors
+
+You want to read the code, fix bugs, or add features. The canonical contributor doc is [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — pages below complement it.
+
+| Page                                                                | What it covers                                    |
+| ------------------------------------------------------------------- | ------------------------------------------------- |
+| [Testing](testing.md)                                               | Unit · integration · E2E · GCP scenario dashboard |
+| [Architecture → core engine](architecture/core-engine.md)           | Graph, schemas, plan/apply, scheduler, importers  |
+| [Architecture → frontend](architecture/frontend.md)                 | React, Redux slices, SVG canvas, feature folders  |
+| [Architecture → services](architecture/services.md)                 | The six backend services composed by the gateway  |
+| [Reference → blocks](reference/blocks.md)                           | Concept palette + per-provider variants           |
+| [Reference → extending providers](reference/extending-providers.md) | How to add a new cloud provider                   |
 
 ## How these docs are maintained
 
-These pages are hand-written and versioned with the code. When docs and code disagree, **code wins** - open an issue or PR to fix the docs. There is no auto-generated or LLM-generated content under `docs/` (that's a deliberate choice after a brief Obsidian-plugin experiment).
+These pages are hand-written and versioned with the code. When docs and code disagree, **code wins** — open an issue or PR to fix the docs. There is no auto-generated or LLM-generated content under `docs/` (a deliberate choice after a brief Obsidian-plugin experiment).
+
+When in doubt about where a new doc belongs:
+
+- A new subsystem write-up → `architecture/`.
+- A lookup table or list of named things → `reference/`.
+- A contributor how-to → flat at `docs/` root.
 
 ## See also
 
-- [ROADMAP.md](../ROADMAP.md) - what's shipped, in progress, and planned.
-- [../CONTRIBUTING.md](../CONTRIBUTING.md) - contributor workflow.
-- [../SECURITY.md](../SECURITY.md) - how to report vulnerabilities.
-- [../SUPPORT.md](../SUPPORT.md) - where to get help.
+- [ROADMAP.md](../ROADMAP.md) — what's shipped, in progress, and planned.
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — contributor workflow + what we will/won't merge.
+- [SECURITY.md](../SECURITY.md) — how to report vulnerabilities.
+- [SUPPORT.md](../SUPPORT.md) — where to get help.

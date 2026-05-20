@@ -8,8 +8,9 @@
  */
 
 import { FolderPlus, Plus, FolderOpen, Check, X } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { FolderRow } from './folder-row';
 import { ProjectRow } from './project-row';
 import { TreeContextMenu } from './tree-context-menu';
@@ -23,10 +24,11 @@ import {
   selectLoadedOrgId,
   toggleFolderExpanded,
   toggleProjectExpanded,
+  fetchProjectTree,
   type Project,
   type ProjectFolder,
 } from '../../../store/slices/projects-slice';
-import { openDialog } from '../../../store/slices/ui-slice';
+import { createEmptyProjectAndNavigate } from '../../wizard/utils/create-empty-project';
 import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
@@ -81,6 +83,21 @@ export const ProjectTree: React.FC = () => {
   });
 
   // ── Handlers ────────────────────────────────────────────────────────────
+
+  const navigate = useNavigate();
+
+  const handleNewProject = useCallback(() => {
+    if (!selectedOrg) return;
+    void createEmptyProjectAndNavigate({
+      organisationId: selectedOrg.id,
+      organisationName: selectedOrg.name,
+      defaultName: t('projectBrowser.newProjectName'),
+      navigate,
+      onCreated: () => {
+        void dispatch(fetchProjectTree(selectedOrg.id));
+      },
+    });
+  }, [selectedOrg, t, navigate, dispatch]);
 
   const {
     handleProjectClick,
@@ -170,7 +187,7 @@ export const ProjectTree: React.FC = () => {
       {/* Header actions */}
       <div className="flex items-center gap-1.5 px-3 py-2">
         <button
-          onClick={() => dispatch(openDialog('projectWizard'))}
+          onClick={handleNewProject}
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded-md',
             'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors',

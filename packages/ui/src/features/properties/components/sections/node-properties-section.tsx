@@ -177,8 +177,16 @@ export const NodePropertiesSection: React.FC<{
           client-side; no network calls. */}
       <DesignRequirements node={selectedNode} allNodes={activeCard.nodes} edges={activeCard.edges} />
 
-      {/* ── Group color picker (only for container/group nodes) ── */}
-      {selectedNode.type === 'container' && (
+      {/* ── Group color picker — ONLY for synthetic decoration groups,
+          i.e. nodes whose `iceType` follows the `Group.*` convention
+          (Group.Frontend, Group.Monitoring, …).
+          Real palette container-blocks (Network.PrivateNetwork,
+          Network.VPC, Network.Subnet, …) own their own properties UI
+          (ingress / egress, CIDR, etc.) and must NOT show the
+          generic group color/opacity controls — those would suggest
+          the block is just a decoration when it actually carries
+          security semantics. */}
+      {selectedNode.type === 'container' && iceType.startsWith('Group.') && (
         <GroupColorPicker
           color={(selectedNode.data?.groupColor as string) || '#3b82f6'}
           opacity={(selectedNode.data?.groupOpacity as number) ?? 0.1}

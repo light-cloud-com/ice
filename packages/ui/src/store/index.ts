@@ -16,7 +16,6 @@ import ghostsReducer from './slices/ghost-slice';
 import graphReducer from './slices/graph-slice';
 import integrationsReducer from './slices/integrations-slice';
 import logsReducer from './slices/logs-slice';
-import onboardingReducer from './slices/onboarding-slice';
 import pipelineReducer from './slices/pipeline-slice';
 import projectListReducer from './slices/project-list-slice';
 import projectsReducer from './slices/projects-slice';
@@ -34,7 +33,6 @@ const LOGGED_ACTION_PREFIXES = [
   'integrations/',
   'environments/',
   'pipeline/',
-  'onboarding/',
   'ai/',
   'projects/',
   'tour/',
@@ -65,7 +63,6 @@ export const store = configureStore({
     environments: environmentsReducer,
     ghosts: ghostsReducer,
     logs: logsReducer,
-    onboarding: onboardingReducer,
     tour: tourReducer,
     validation: validationReducer,
   },
@@ -75,8 +72,8 @@ export const store = configureStore({
     }).concat(actionLoggerMiddleware),
 });
 
-// Debounced auto-save: persist active card to localStorage + backend
-// Only saves when card data actually changes (dirty check via snapshot hash)
+// Debounced auto-save: persist active card to the backend (DB).
+// Only saves when card data actually changes (dirty check via snapshot hash).
 let _persistTimeout: ReturnType<typeof setTimeout>;
 let _lastSavedHash = '';
 let _backendSaveInFlight = false;
@@ -117,19 +114,6 @@ store.subscribe(() => {
       if (hash === _lastSavedHash) return;
       _lastSavedHash = hash;
 
-      // Always persist to localStorage (works offline, before auth)
-      try {
-        localStorage.setItem(
-          'ice-cards',
-          JSON.stringify({
-            cards: state.cards.cards,
-            activeCardId,
-          }),
-        );
-      } catch {
-        /* ignore quota errors */
-      }
-
       // Persist to backend if authenticated (skip if previous save still in flight)
       if (_backendSaveInFlight) return;
 
@@ -151,24 +135,14 @@ store.subscribe(() => {
   }, 2000);
 });
 
-// FE-5: Persist UI pane state with shallow comparison to skip no-ops
-let _uiPersistTimeout: ReturnType<typeof setTimeout>;
-let _lastUiSplitView: any = null;
-store.subscribe(() => {
-  const splitView = store.getState().ui.splitView;
-  if (splitView === _lastUiSplitView) return; // skip if unchanged
-  _lastUiSplitView = splitView;
-
-  clearTimeout(_uiPersistTimeout);
-  _uiPersistTimeout = setTimeout(() => {
-    try {
-      localStorage.setItem('ice-ui-panes', JSON.stringify(splitView));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, 300);
-});
-
 // Infer types from store
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+// Debounced auto-save of UI preferences (panel visibility, split-view
+// layout, project-tree expanded folders, file-mode root dir) to the
+// /api/profile/preferences endpoint. No-op until hydration completes.
+// Lazy import so the slice + store wiring don't form a circular dep.
+import('./user-preferences').then(({ subscribeUserPreferencesAutoSave }) => {
+  subscribeUserPreferencesAutoSave(store);
+});

@@ -10,21 +10,21 @@
  */
 
 import { Folder, FolderOpen, Loader2, FolderPlus, FilePlus } from 'lucide-react';
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import React, { useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { TreeItem } from './tree-item';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
-import { openDialog } from '../../../store/slices/ui-slice';
+import { createEmptyProjectAndNavigate } from '../../wizard/utils/create-empty-project';
 import { useProjectBrowserActions } from '../hooks/use-project-browser-actions';
 import { useProjectBrowserData } from '../hooks/use-project-browser-data';
-import type { RootState, AppDispatch } from '../../../store';
+import type { RootState } from '../../../store';
 
 export function ProjectBrowser() {
   const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
 
@@ -45,6 +45,17 @@ export function ProjectBrowser() {
       selectedOrg,
     });
 
+  const handleNewProject = useCallback(() => {
+    if (!selectedOrg) return;
+    void createEmptyProjectAndNavigate({
+      organisationId: selectedOrg.id,
+      organisationName: selectedOrg.name,
+      defaultName: t('projectBrowser.newProjectName'),
+      navigate,
+      onCreated: () => fetchProjects(),
+    });
+  }, [selectedOrg, t, navigate, fetchProjects]);
+
   return (
     <div className="flex flex-col h-full">
       <PanelHeader
@@ -60,7 +71,7 @@ export function ProjectBrowser() {
             <PanelHeaderAction
               icon={<FilePlus aria-hidden="true" className="w-3.5 h-3.5" />}
               label={t('projectBrowser.newProject')}
-              onClick={() => dispatch(openDialog('projectWizard'))}
+              onClick={handleNewProject}
             />
             <PanelHeaderAction
               icon={<FolderPlus aria-hidden="true" className="w-3.5 h-3.5" />}
@@ -93,7 +104,7 @@ export function ProjectBrowser() {
             <Folder aria-hidden="true" className="w-8 h-8 text-white/10 mb-2" />
             <p className="text-ice-base text-ice-text-3 mb-3">{t('projectBrowser.emptyState')}</p>
             <button
-              onClick={() => dispatch(openDialog('projectWizard'))}
+              onClick={handleNewProject}
               className="px-3 py-1 text-ice-sm font-medium rounded bg-ice-accent text-white hover:bg-ice-accent-hover transition-[background-color] focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
             >
               {t('projectBrowser.createProject')}

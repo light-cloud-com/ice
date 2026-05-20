@@ -12,6 +12,7 @@
 import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { GitBranch } from 'lucide-react';
 import React from 'react';
+import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
@@ -99,6 +100,11 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
   // body where there's room for the full `github.com/owner/repo` form.
   const title = node.label || t('canvas.blocks.titles.githubRepo');
 
+  // GitHub mark for the body (left-aligned). Resolved at the consumer
+  // so we control size/placement; CardShell receives `brandOverride`
+  // only so the zoomed-out LOD shows it next to the generic icon.
+  const githubBrand = getBrandIcon('github');
+
   return (
     <CardShell
       node={node}
@@ -109,6 +115,11 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
       lod={lod}
       pipelineStatus={pipelineStatus}
       icon={GitBranch}
+      // Pass the GitHub brand identity so the zoomed-out LOD shows the
+      // GitHub mark next to the generic GitBranch icon. At full LOD the
+      // brand renders inline in the body (below) — header stays generic
+      // per the project's "type first, brand second" rule.
+      brandOverride="github"
       accentColor={REPO_ACCENT}
       title={title}
       liveConfig={liveConfig}
@@ -118,64 +129,90 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
         style={{
           height: COMPUTE_BODY_HEIGHT,
           display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 12,
+          minWidth: 0,
         }}
         data-testid={`repo-body-${node.id}`}
       >
-        {/* Repository address — the headline piece of data on a source block. */}
-        {repository ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-              fontSize: 12,
-              color: 'var(--ice-text-1)',
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-            data-testid={`repo-address-${node.id}`}
-            title={`github.com/${repository}`}
-          >
-            <span style={{ color: 'var(--ice-text-tertiary)', opacity: 0.7 }}>github.com/</span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{repository}</span>
-          </div>
-        ) : (
-          <span
-            style={{
-              fontSize: 11,
-              fontStyle: 'italic',
-              color: 'var(--ice-text-tertiary)',
-              opacity: 0.7,
-            }}
-            data-testid={`repo-empty-${node.id}`}
-          >
-            {t('canvas.blocks.github.noRepoConnected')}
-          </span>
+        {/* GitHub brand mark on the left — anchors the block's identity
+            without taking over the header. Falls back to nothing when
+            the brand registry doesn't have a github asset (e.g. SSR'd
+            test environment), keeping the rest of the body untouched. */}
+        {githubBrand?.url && (
+          <img
+            src={githubBrand.url}
+            alt={githubBrand.label}
+            width={36}
+            height={36}
+            draggable={false}
+            style={{ objectFit: 'contain', flexShrink: 0 }}
+            data-testid={`repo-brand-${node.id}`}
+          />
         )}
-        {/* Branch + path row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <BranchTag branch={branch} color={REPO_ACCENT} />
-          <span
-            style={{
-              fontSize: 11,
-              fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-              color: 'var(--ice-text-2)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              opacity: 0.85,
-            }}
-            data-testid={`repo-path-${node.id}`}
-            title={path}
-          >
-            {path}
-          </span>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            justifyContent: 'center',
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          {/* Repository address — the headline piece of data on a source block. */}
+          {repository ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
+                fontSize: 12,
+                color: 'var(--ice-text-1)',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              data-testid={`repo-address-${node.id}`}
+              title={`github.com/${repository}`}
+            >
+              <span style={{ color: 'var(--ice-text-tertiary)', opacity: 0.7 }}>github.com/</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{repository}</span>
+            </div>
+          ) : (
+            <span
+              style={{
+                fontSize: 11,
+                fontStyle: 'italic',
+                color: 'var(--ice-text-tertiary)',
+                opacity: 0.7,
+              }}
+              data-testid={`repo-empty-${node.id}`}
+            >
+              {t('canvas.blocks.github.noRepoConnected')}
+            </span>
+          )}
+          {/* Branch + path row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <BranchTag branch={branch} color={REPO_ACCENT} />
+            <span
+              style={{
+                fontSize: 11,
+                fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
+                color: 'var(--ice-text-2)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: 0.85,
+              }}
+              data-testid={`repo-path-${node.id}`}
+              title={path}
+            >
+              {path}
+            </span>
+          </div>
         </div>
       </div>
     </CardShell>

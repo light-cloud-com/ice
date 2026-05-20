@@ -16,11 +16,11 @@
  * gate stays at `phase === 'placed'`; the runner only flips to
  * `'placed'` after the awaited onEnter settles.
  *
- * Persistence (blueprint §4.2): three-tier — localStorage fast-path,
- * server (`PUT /api/onboarding/completed-tours/:id`), and slice merge.
- * `hydrateFromUser` unions both, server wins on conflict, writes the
- * merged set back to localStorage so the next boot is consistent even
- * before the profile API resolves.
+ * Persistence: DB only. Completion calls
+ * `PUT /api/onboarding/completed-tours/:id`; `hydrateFromUser` seeds
+ * `completedTours` from the user profile on load. No localStorage
+ * fast-path — the server is the single source of truth so the tour
+ * stays consistent across machines and incognito sessions.
  *
  * Action prefix `tour/` is added to `LOGGED_ACTION_PREFIXES` in the
  * root store for E2E observability.
@@ -30,9 +30,6 @@ import axiosInstance from '../../../shared/api/axios-instance';
 import { getTour } from '../utils/tour-registry';
 
 declare const process: { env: { NODE_ENV?: string } };
-
-/** localStorage key for the completed-tours fast-path read. */
-export const COMPLETED_TOURS_STORAGE_KEY = 'ice-completed-tours';
 
 export type TourPhase = 'idle' | 'navigating' | 'resolving' | 'entering' | 'placed' | 'missing';
 
@@ -56,44 +53,11 @@ export interface TourState {
   hydrated: boolean;
 }
 
-/**
- * Read the localStorage fast-path. Wrapped in `try / catch` so a bad
- * JSON blob (or `localStorage` access throwing in private-mode Safari)
- * collapses to an empty array rather than crashing slice init. Matches
- * the pattern used in `onboarding-checklist.tsx:32-38`.
- */
-function readCompletedFromStorage(): string[] {
-  try {
-    if (typeof localStorage === 'undefined') return [];
-    const raw = localStorage.getItem(COMPLETED_TOURS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((x): x is string => typeof x === 'string');
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Write the deduped completed-tours array back to localStorage. Quota
- * errors swallowed — losing the fast-path read on next boot is
- * recoverable (server-side `hydrateFromUser` re-fills it).
- */
-function writeCompletedToStorage(ids: string[]): void {
-  try {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(COMPLETED_TOURS_STORAGE_KEY, JSON.stringify(ids));
-  } catch {
-    /* ignore quota / access errors */
-  }
-}
-
 const initialState: TourState = {
   activeTourId: null,
   stepIdx: 0,
   phase: 'idle',
-  completedTours: readCompletedFromStorage(),
+  completedTours: [],
   perTour: {},
   hydrated: false,
 };
@@ -146,9 +110,9 @@ const tourSlice = createSlice({
       state.phase = action.payload;
     },
     /**
-     * Mark a tour completed: append (deduped, insertion-order), reset
-     * active state, and write through to localStorage. The thunk that
-     * persists to the server is dispatched separately by `useTour`.
+     * Mark a tour completed: append (deduped, insertion-order) and reset
+     * active state. The thunk that persists to the server is dispatched
+     * separately by `useTour`; that PUT is the only durable record.
      */
     markCompleted(state, action: PayloadAction<string>) {
       const id = action.payload;
@@ -158,7 +122,6 @@ const tourSlice = createSlice({
       state.activeTourId = null;
       state.stepIdx = 0;
       state.phase = 'idle';
-      writeCompletedToStorage(state.completedTours);
     },
     /**
      * Close the current tour without marking it completed. Telemetry
@@ -181,11 +144,9 @@ const tourSlice = createSlice({
       else state.perTour[id] = { stepsAdvanced: 0, skipped: true };
     },
     /**
-     * Merge server completedTours with the in-memory + localStorage set.
-     * Server wins on conflict (per blueprint §4.2): the union is
-     * computed by appending any server ids missing from local in their
-     * server-supplied order, then writing the merged list back to
-     * localStorage so future fast-path reads see the latest set.
+     * Seed `completedTours` from the user profile. Server is the source
+     * of truth — the union with the (now-empty) in-memory set just
+     * keeps any tour completed in this session before hydration landed.
      */
     hydrateFromUser(state, action: PayloadAction<{ completedTours: string[] }>) {
       const serverIds = (action.payload.completedTours ?? []).filter((x): x is string => typeof x === 'string');
@@ -199,7 +160,6 @@ const tourSlice = createSlice({
       }
       state.completedTours = merged;
       state.hydrated = true;
-      writeCompletedToStorage(merged);
     },
     /**
      * Increment the per-tour `stepsAdvanced` counter. Called by

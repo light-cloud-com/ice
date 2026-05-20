@@ -92,9 +92,21 @@ describe('expandBlueprint — provider variants', () => {
     expect(out.node.data.provider).toBeUndefined();
   });
 
-  it('injects the provider field when a specific provider is selected', () => {
-    const out = expandBlueprint(makeBlueprint(), { position: { x: 0, y: 0 }, provider: 'aws' });
+  it('injects the provider field when a specific provider is selected AND the blueprint has providerVariants', () => {
+    const bp = makeBlueprint({
+      providerVariants: [{ provider: 'aws', dataOverrides: {} }],
+    });
+    const out = expandBlueprint(bp, { position: { x: 0, y: 0 }, provider: 'aws' });
     expect(out.node.data.provider).toBe('aws');
+  });
+
+  it('does NOT inject the provider field when the blueprint has no providerVariants (provider-agnostic block)', () => {
+    // Source.Repository, Config.Environment, Network.CustomDomain, etc.
+    // are provider-agnostic — they list providers as an allowlist but
+    // have no per-provider behaviour. Stamping a `provider` on them
+    // would render a misleading cloud brand pill on a GitHub repo.
+    const out = expandBlueprint(makeBlueprint(), { position: { x: 0, y: 0 }, provider: 'aws' });
+    expect(out.node.data.provider).toBeUndefined();
   });
 
   it('merges provider variant dataOverrides on top of blueprint.nodeData', () => {

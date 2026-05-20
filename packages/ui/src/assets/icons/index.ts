@@ -71,7 +71,7 @@ export { getBrandIcon, getProviderBrandIcon, type BrandIcon } from './brand-regi
 // Icon Type Mapping
 // =============================================================================
 
-export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'external';
+export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm' | 'external';
 
 export interface IconMapping {
   icon: string;

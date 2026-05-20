@@ -117,8 +117,16 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
     resourceId: blueprint.resourceId,
   };
 
-  // Inject provider field if a specific provider was selected
-  if (resolvedProvider) {
+  // Inject provider field only when the blueprint actually carries
+  // provider-specific behaviour (i.e. defines `providerVariants`).
+  // Provider-agnostic blueprints — Source.Repository, Config.Environment,
+  // Network.CustomDomain, Monitoring.Log, etc. — have a `providers`
+  // allowlist but no per-provider behaviour, so stamping them with
+  // `data.provider = 'gcp'` is incorrect: it makes the canvas render a
+  // misleading GCP brand pill on a GitHub repo block, and it leaks into
+  // the deploy translator as if the block were cloud-targeted.
+  const hasProviderBehaviour = !!(blueprint.providerVariants && blueprint.providerVariants.length > 0);
+  if (resolvedProvider && hasProviderBehaviour) {
     mergedData.provider = resolvedProvider;
   }
 

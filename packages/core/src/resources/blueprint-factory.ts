@@ -14,7 +14,7 @@ import { getAllHighLevelResources } from './high-level-resources';
 // Types
 // =============================================================================
 
-export type BlueprintProvider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
+export type BlueprintProvider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm';
 
 export interface BlueprintProviderVariant {
   /** Which provider this variant applies to */

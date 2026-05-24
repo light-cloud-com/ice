@@ -97,6 +97,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const sagemaker = await load_aws_sdk('@aws-sdk/client-sagemaker');
   if (sagemaker) clients.set('sagemaker', new sagemaker.SageMakerClient({ region }));
 
+  const redshift = await load_aws_sdk('@aws-sdk/client-redshift');
+  if (redshift) clients.set('redshift', new redshift.RedshiftClient({ region }));
+
   return clients;
 }
 

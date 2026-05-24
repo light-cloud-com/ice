@@ -37,6 +37,12 @@ import {
   extract_events_rule_properties,
 } from './aws/compute';
 import {
+  extract_rds_db_instance_properties,
+  extract_dynamodb_table_properties,
+  extract_elasticache_cluster_properties,
+  extract_docdb_cluster_properties,
+} from './aws/database';
+import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
@@ -86,8 +92,13 @@ export const PROPERTY_EXTRACTORS: Record<
   'gcp.firebase.hosting': extract_firebase_hosting_properties,
 
   // ─── AWS — compute ─────────────────────────────────────────────────
-  // (More AWS categories register in commits #3–#6.)
   'aws.ecs.service': extract_ecs_service_properties,
   'aws.lambda.function': extract_lambda_function_properties,
   'aws.events.rule': extract_events_rule_properties,
+
+  // ─── AWS — database ────────────────────────────────────────────────
+  'aws.rds.dbInstance': extract_rds_db_instance_properties,
+  'aws.dynamodb.table': extract_dynamodb_table_properties,
+  'aws.elasticache.cluster': extract_elasticache_cluster_properties,
+  'aws.docdb.cluster': extract_docdb_cluster_properties,
 };

@@ -21,6 +21,7 @@ import { cognito_handler } from './handlers/cognito';
 import { docdb_handler } from './handlers/docdb';
 import { dynamodb_handler } from './handlers/dynamodb';
 import { ec2_handler } from './handlers/ec2';
+import { ecs_handler } from './handlers/ecs';
 import { elasticache_handler } from './handlers/elasticache';
 import { elbv2_handler } from './handlers/elbv2';
 import { events_rule_handler } from './handlers/events-rule';
@@ -60,6 +61,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.elbv2.loadBalancer', handler: elbv2_handler },
   { prefix: 'aws.apigateway.restApi', handler: api_gateway_handler },
   { prefix: 'aws.events.rule', handler: events_rule_handler },
+  { prefix: 'aws.ecs.service', handler: ecs_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

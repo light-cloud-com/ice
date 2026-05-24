@@ -85,6 +85,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const ev = await load_aws_sdk('@aws-sdk/client-eventbridge');
   if (ev) clients.set('eventbridge', new ev.EventBridgeClient({ region }));
 
+  const ecs = await load_aws_sdk('@aws-sdk/client-ecs');
+  if (ecs) clients.set('ecs', new ecs.ECSClient({ region }));
+
   return clients;
 }
 

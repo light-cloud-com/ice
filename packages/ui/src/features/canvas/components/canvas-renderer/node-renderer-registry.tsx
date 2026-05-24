@@ -26,21 +26,24 @@
  *
  *   - The dispatch order is fixed and order-sensitive:
  *
- *       1. `isLogIceType(iceType)`             → `SvgLogNode`
- *       2. `iceType === 'Network.CustomDomain'` → `SvgCustomDomainNode`
- *       3. `iceType === 'Network.PrivateNetwork'` → `SvgPrivateNetworkNode`
- *       4. `isContainerNode(node)`              → `SvgGroupNode`
- *       5. `node.type === 'block'`              → `ConceptRenderer` ?? `SvgCompactNode`
- *       6. (default fallthrough — typically `node.type === 'resource'`) →
- *                                                `ConceptFallbackRenderer`
- *                                                ?? `SvgCompactNode`
+ *       1. `isLogIceType(iceType)`              → `SvgLogNode`
+ *       2. `SPECIAL_NODE_RENDERERS[iceType]`    → bespoke factory (CustomDomain,
+ *                                                 Reroute, PrivateNetwork)
+ *       3. `isContainerNode(node)`              → `SvgGroupNode`
+ *       4. `node.type === 'block'`              → `ConceptRenderer` ?? `SvgCompactNode`
+ *       5. (default fallthrough — typically `node.type === 'resource'`) →
+ *                                                 `ConceptFallbackRenderer`
+ *                                                 ?? `SvgCompactNode`
  *
- *     Re-ordering even subtly changes behaviour. `Network.PrivateNetwork`
- *     MUST stay above the `isContainerNode` arm because the util classifies
- *     PrivateNetwork as a container; flipping the order would render every
- *     PrivateNetwork as a plain `SvgGroupNode` (loss of identity header +
- *     ingress toggle). Likewise `isLogIceType` matches a few iceTypes that
- *     might otherwise fall through to the SvgCompactNode branch.
+ *     Step 2 MUST stay above the `isContainerNode` arm — PrivateNetwork
+ *     and Reroute would otherwise render as a plain `SvgGroupNode` (loss
+ *     of identity header / pass-through dot). Likewise `isLogIceType`
+ *     matches a few iceTypes that might otherwise fall through.
+ *
+ *     `SPECIAL_NODE_RENDERERS` is the schema-declared fact the dispatcher
+ *     iterates over — no `if (iceType === 'X')` branches here. New
+ *     bespoke renderers are added by extending the table (a new entry =
+ *     a new factory), the dispatcher stays unchanged.
  *
  *   - The `innerKey` per branch is load-bearing for reconciliation when no
  *     wrapper-level branch overrides it (i.e. not lifted, no parent, not
@@ -94,6 +97,7 @@ import { SvgPrivateAiServiceNode } from '../nodes/private-ai-service';
 import { SvgPrivateNetworkNode } from '../nodes/private-network';
 import { SvgPublicTrafficNode } from '../nodes/public-traffic';
 import { SvgRedisCacheNode } from '../nodes/redis-cache';
+import { SvgRerouteNode } from '../nodes/reroute-node';
 import { SvgScalableBackendNode } from '../nodes/scalable-backend';
 import { SvgScheduledTaskNode } from '../nodes/scheduled-task';
 import { SvgSecretStoreNode } from '../nodes/secret-store';
@@ -113,6 +117,105 @@ import type { CanvasNode } from '../types';
 // dispatcher loop checks this table first and falls back to SvgCompactNode
 // when no bespoke renderer is registered. Each entry lives in its own
 // folder under ../nodes/<name>/ so customizing one block = editing one file.
+
+// =============================================================================
+// Bespoke renderer registry (cardinal-rule schema-driven dispatch)
+// =============================================================================
+//
+// Some blocks need a renderer with a unique prop set + a unique React
+// reconciliation key derived from custom node-data fields (variable-height
+// row stacks, ingress toggles, animated minimal pass-through dots). Each
+// factory here owns its own component AND its own innerKey formula, so
+// `renderCanvasNode` can dispatch via a generic `Record` lookup without
+// `if (iceType === 'X')` branches in cross-cutting code.
+//
+// Adding a new bespoke renderer: register an entry here. The dispatcher
+// stays untouched. Falls through to the per-concept and SvgCompactNode
+// tables when no bespoke entry matches the node's iceType.
+
+export interface BespokeRenderResult {
+  element: React.ReactNode;
+  innerKey: string;
+}
+
+export type BespokeRendererFactory = (node: CanvasNode, ctx: RenderCtx) => BespokeRenderResult;
+
+export const SPECIAL_NODE_RENDERERS: Record<string, BespokeRendererFactory> = {
+  // Custom Domain — variable-height stack of per-route rows, each with its
+  // own right-edge socket. innerKey re-mounts on routes-array length change
+  // so the renderer re-reads the row layout cleanly.
+  'Network.CustomDomain': (node, ctx) => {
+    const innerKey = `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`;
+    return {
+      innerKey,
+      element: (
+        <SvgCustomDomainNode
+          key={innerKey}
+          node={node}
+          isSelected={ctx.selectedNodes.includes(node.id)}
+          isDragOver={ctx.dragOverGroupId === node.id}
+          onNodeHover={ctx.handleNodeHover}
+          onUpdateData={ctx.handleUpdateNodeData}
+          connectionDragState={ctx.connectionDragTargets?.get(node.id) ?? null}
+        />
+      ),
+    };
+  },
+  // Reroute — minimal 16×16 pass-through dot. MUST be registered BEFORE
+  // the container check in the dispatcher (it's not a container despite
+  // looking like one to the classifier) — the bespoke table is consulted
+  // first so order is preserved by construction.
+  'Util.Reroute': (node, ctx) => {
+    const innerKey = `${node.id}-reroute`;
+    return {
+      innerKey,
+      element: (
+        <SvgRerouteNode
+          key={innerKey}
+          node={node}
+          isSelected={ctx.selectedNodes.includes(node.id)}
+          childNodes={[]}
+          onToggleFold={ctx.handleToggleFold}
+          isDragOver={ctx.dragOverGroupId === node.id}
+          onNodeHover={ctx.handleNodeHover}
+          isRenaming={false}
+          onDoubleClickLabel={() => {}}
+          onRenameCommit={() => {}}
+          onRenameCancel={ctx.handleRenameCancel}
+          onUpdateData={ctx.handleUpdateNodeData}
+          pipelineStatus={ctx.pipelineNodeStatus[node.id]}
+          onPipelineClick={ctx.handlePipelineClick}
+          connectedPipelineStatuses={ctx.getConnectedPipelineStatuses(node)}
+          lod={ctx.lod}
+          zoom={ctx.zoom}
+          connectionDragState={ctx.connectionDragTargets?.get(node.id) ?? null}
+          validationSeverity={ctx.nodeValidationMap.get(node.id)?.severity ?? null}
+          validationCount={ctx.nodeValidationMap.get(node.id)?.count ?? 0}
+        />
+      ),
+    };
+  },
+  // Private Network — container with identity header + ingress toggle.
+  // innerKey re-mounts on ingress mode change so the header reads the new
+  // state cleanly.
+  'Network.PrivateNetwork': (node, ctx) => {
+    const innerKey = `${node.id}-pn${(node.data?.ingress as string) || 'open'}`;
+    return {
+      innerKey,
+      element: (
+        <SvgPrivateNetworkNode
+          key={innerKey}
+          node={node}
+          isSelected={ctx.selectedNodes.includes(node.id)}
+          isDragOver={ctx.dragOverGroupId === node.id}
+          onNodeHover={ctx.handleNodeHover}
+          onUpdateData={ctx.handleUpdateNodeData}
+          connectionDragState={ctx.connectionDragTargets?.get(node.id) ?? null}
+        />
+      ),
+    };
+  },
+};
 
 export const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
   // Frontend
@@ -255,49 +358,18 @@ export function renderCanvasNode(node: CanvasNode, ctx: RenderCtx): { element: R
     };
   }
 
-  // 2. Custom Domain — owns its own renderer with dynamic per-route rows
-  //    + per-row connection ports. Lives outside the compact-node tree so
-  //    it can have variable height and multiple right-side ports.
-  if (iceType === 'Network.CustomDomain') {
-    const innerKey = `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`;
-    return {
-      innerKey,
-      element: (
-        <SvgCustomDomainNode
-          key={innerKey}
-          node={node}
-          isSelected={selectedNodes.includes(node.id)}
-          isDragOver={dragOverGroupId === node.id}
-          onNodeHover={handleNodeHover}
-          onUpdateData={handleUpdateNodeData}
-          connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-        />
-      ),
-    };
-  }
-
-  // 3. Private Network — pure container with a header that shows identity
-  //    (shield icon + title + subtitle) and the Open/Sealed ingress toggle.
-  //    Children nest inside via parentId and render through the standard
-  //    dispatcher loop on top of the Private Network frame. Must come
-  //    BEFORE the generic group dispatch below or it would render as a
-  //    plain SvgGroupNode.
-  if (iceType === 'Network.PrivateNetwork') {
-    const innerKey = `${node.id}-pn${(node.data?.ingress as string) || 'open'}`;
-    return {
-      innerKey,
-      element: (
-        <SvgPrivateNetworkNode
-          key={innerKey}
-          node={node}
-          isSelected={selectedNodes.includes(node.id)}
-          isDragOver={dragOverGroupId === node.id}
-          onNodeHover={handleNodeHover}
-          onUpdateData={handleUpdateNodeData}
-          connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-        />
-      ),
-    };
+  // 2. Bespoke renderers — Custom Domain, Reroute, Private Network. Each
+  //    entry in `SPECIAL_NODE_RENDERERS` owns its own component AND its
+  //    own innerKey formula, so this dispatcher is generic: look up by
+  //    iceType, delegate. No hardcoded iceType branches here.
+  //
+  //    Order is preserved by construction — the bespoke table is consulted
+  //    BEFORE the container check, so Util.Reroute (which the classifier
+  //    would call a container) and Network.PrivateNetwork (a container we
+  //    render with a custom header) hit their bespoke factories first.
+  const bespokeFactory = SPECIAL_NODE_RENDERERS[iceType];
+  if (bespokeFactory) {
+    return bespokeFactory(node, ctx);
   }
 
   // 4. Groups always render as containers.

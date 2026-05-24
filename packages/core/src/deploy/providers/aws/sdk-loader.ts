@@ -91,6 +91,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const os = await load_aws_sdk('@aws-sdk/client-opensearch');
   if (os) clients.set('opensearch', new os.OpenSearchClient({ region }));
 
+  const bedrock = await load_aws_sdk('@aws-sdk/client-bedrock');
+  if (bedrock) clients.set('bedrock', new bedrock.BedrockClient({ region }));
+
   return clients;
 }
 

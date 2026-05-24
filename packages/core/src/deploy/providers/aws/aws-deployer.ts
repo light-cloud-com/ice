@@ -15,6 +15,7 @@
 
 import { create_account_id_resolver } from './account';
 import { api_gateway_handler } from './handlers/api-gateway';
+import { bedrock_handler } from './handlers/bedrock';
 import { cloudfront_handler } from './handlers/cloudfront';
 import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
 import { cognito_handler } from './handlers/cognito';
@@ -64,6 +65,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.events.rule', handler: events_rule_handler },
   { prefix: 'aws.ecs.service', handler: ecs_handler },
   { prefix: 'aws.opensearch.domain', handler: opensearch_handler },
+  { prefix: 'aws.bedrock.endpoint', handler: bedrock_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

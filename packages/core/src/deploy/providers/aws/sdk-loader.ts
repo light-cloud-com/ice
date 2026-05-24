@@ -70,6 +70,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const docdb = await load_aws_sdk('@aws-sdk/client-docdb');
   if (docdb) clients.set('docdb', new docdb.DocDBClient({ region }));
 
+  const cognito = await load_aws_sdk('@aws-sdk/client-cognito-identity-provider');
+  if (cognito) clients.set('cognito', new cognito.CognitoIdentityProviderClient({ region }));
+
   return clients;
 }
 

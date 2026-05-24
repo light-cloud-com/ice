@@ -8,6 +8,7 @@
  * contract.
  */
 
+import { getBlockDeployClassifiers } from '../block-deploy-classifiers';
 import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput } from '../card-translator';
 
@@ -50,12 +51,18 @@ export function propagate_custom_domain_hosts(
     if (!src || !dst) continue;
     const srcIce = (src.data?.iceType as string) || '';
     const dstIce = (dst.data?.iceType as string) || '';
+    // Schema-driven: a "domain propagator" is any block whose iceType
+    // is flagged with `isDomainPropagator` in BLOCK_DEPLOY_CLASSIFIERS.
+    // Adding a new domain-source block adds a table entry; this pass
+    // stays unchanged.
+    const srcIsDomain = !!getBlockDeployClassifiers(srcIce).isDomainPropagator;
+    const dstIsDomain = !!getBlockDeployClassifiers(dstIce).isDomainPropagator;
     let domainNode: typeof src;
     let targetNode: typeof src;
-    if (srcIce === 'Network.CustomDomain') {
+    if (srcIsDomain) {
       domainNode = src;
       targetNode = dst;
-    } else if (dstIce === 'Network.CustomDomain') {
+    } else if (dstIsDomain) {
       domainNode = dst;
       targetNode = src;
     } else {

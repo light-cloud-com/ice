@@ -14,6 +14,7 @@
  * the counter, only the graph + deployables array.
  */
 
+import { isPublicIngressNode } from '../edge-classifier';
 import { sanitize_name, sanitize_label_value } from '../utils/name-utils';
 import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../card-translator';
@@ -95,32 +96,22 @@ export function wire_public_endpoints(args: {
   // Map every PublicEndpoint node to its connected backends.
   const endpointToBackends = new Map<string, BackendEntry[]>();
 
-  // Match both PublicEndpoint AND CustomDomain-nested-inside-PrivateNetwork
-  // as endpoint blocks. Both compile to gcp.compute.globalForwardingRule.
-  //
-  // - PublicEndpoint: standalone public LB for VPC-internal services.
-  // - CustomDomain nested inside PrivateNetwork: the nested CD acts as
-  //   the PrivateNetwork's public gateway, compiling to the same LB
-  //   chain but targeting sibling services inside the parent VPC.
-  //   Standalone CustomDomain (no parent) stays DNS-only and is NOT an
-  //   endpoint — it's handled in Pass 1.6 instead.
-  const isEndpointIceType = (t: string, node?: { parentId?: string | null }) => {
-    if (t === 'Network.PublicEndpoint') return true;
-    if (t === 'Network.CustomDomain' && node?.parentId) {
-      const parent = nodes.find((n) => n.id === node.parentId);
-      return parent?.data?.iceType === 'Network.PrivateNetwork';
-    }
-    return false;
-  };
+  // Public-ingress detection is schema-driven via
+  // `BLOCK_DEPLOY_CLASSIFIERS.publicIngressMode`:
+  //   - 'always' (Network.PublicEndpoint): a standalone public LB.
+  //   - 'when-nested-in-isolated-network' (Network.CustomDomain inside
+  //     Network.PrivateNetwork): the nested CD acts as the network's
+  //     public gateway, compiling to the same LB chain. Standalone CD
+  //     stays DNS-only and is handled in Pass 1.6 instead.
+  // No iceType strings appear here — adding a new ingress block adds a
+  // table entry in `block-deploy-classifiers.ts`.
 
   for (const edge of edges) {
     const src = nodes.find((n) => n.id === edge.source);
     const dst = nodes.find((n) => n.id === edge.target);
     if (!src || !dst) continue;
-    const srcIce = (src.data?.iceType as string) || '';
-    const dstIce = (dst.data?.iceType as string) || '';
-    const srcIsEndpoint = isEndpointIceType(srcIce, src);
-    const dstIsEndpoint = isEndpointIceType(dstIce, dst);
+    const srcIsEndpoint = isPublicIngressNode(src, nodes);
+    const dstIsEndpoint = isPublicIngressNode(dst, nodes);
     if (!srcIsEndpoint && !dstIsEndpoint) continue;
 
     const endpointNode = srcIsEndpoint ? src : dst;

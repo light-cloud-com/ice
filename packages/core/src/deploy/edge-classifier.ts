@@ -103,6 +103,36 @@ export function isStandaloneMetadataOnly(
   return !getBlockDeployClassifiers(parentIceType).isolatesNetworkContext;
 }
 
+/**
+ * Whether a node is a public-ingress endpoint (the head of a load
+ * balancer chain). Schema-shaped: reads `publicIngressMode` from
+ * `BLOCK_DEPLOY_CLASSIFIERS`.
+ *
+ *   - `publicIngressMode === 'always'`: this iceType is always ingress
+ *     (e.g. Network.PublicEndpoint).
+ *   - `publicIngressMode === 'when-nested-in-isolated-network'`: ingress
+ *     only when nested inside an isolation container (Network.
+ *     CustomDomain inside Network.PrivateNetwork acts as the network's
+ *     gateway; standalone CD stays DNS-only).
+ *   - any other value (or unset): never an ingress endpoint.
+ */
+export function isPublicIngressNode(
+  node: { data: Record<string, unknown>; parentId?: string | null },
+  allNodes: Array<{ id: string; data: Record<string, unknown> }>,
+): boolean {
+  const iceType = (node.data?.iceType as string) || '';
+  const mode = getBlockDeployClassifiers(iceType).publicIngressMode;
+  if (mode === 'always') return true;
+  if (mode === 'when-nested-in-isolated-network') {
+    if (!node.parentId) return false;
+    const parent = allNodes.find((n) => n.id === node.parentId);
+    if (!parent) return false;
+    const parentIceType = (parent.data?.iceType as string) || '';
+    return !!getBlockDeployClassifiers(parentIceType).isolatesNetworkContext;
+  }
+  return false;
+}
+
 // Kept temporarily for callers that haven't switched names — both
 // re-export the same body so the rename is risk-free.
 /** @deprecated Use `hasNetworkIsolatingAncestor`. */

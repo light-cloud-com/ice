@@ -35,14 +35,37 @@ export interface BlockDeployClassifiers {
    * nested inside Network.PrivateNetwork = LB ingress chain.
    */
   metadataOnlyWhenStandalone?: boolean;
+  /**
+   * Whether this block acts as a public ingress endpoint (the head of
+   * a load-balancer chain backed by compute services).
+   *   - 'always': the block is ALWAYS a public ingress (e.g.
+   *     Network.PublicEndpoint).
+   *   - 'when-nested-in-isolated-network': only counts as ingress when
+   *     nested inside a block with `isolatesNetworkContext` (e.g.
+   *     Network.CustomDomain inside Network.PrivateNetwork acts as the
+   *     network's gateway; standalone CD stays DNS-only).
+   */
+  publicIngressMode?: 'always' | 'when-nested-in-isolated-network';
+  /**
+   * The block carries a `domain` (root) + `routes` (per-subdomain rows)
+   * and propagates the full host onto every connected compute target.
+   * Read by the domain-propagation pass; iterating this flag lets new
+   * domain-source blocks slot in without touching the pass code.
+   */
+  isDomainPropagator?: boolean;
 }
 
 export const BLOCK_DEPLOY_CLASSIFIERS: Record<string, BlockDeployClassifiers> = {
   'Network.PrivateNetwork': {
     isolatesNetworkContext: true,
   },
+  'Network.PublicEndpoint': {
+    publicIngressMode: 'always',
+  },
   'Network.CustomDomain': {
     metadataOnlyWhenStandalone: true,
+    publicIngressMode: 'when-nested-in-isolated-network',
+    isDomainPropagator: true,
   },
 };
 

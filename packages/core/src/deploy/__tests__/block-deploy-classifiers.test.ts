@@ -19,6 +19,18 @@ describe('BLOCK_DEPLOY_CLASSIFIERS', () => {
   it('marks Network.CustomDomain as having standalone/nested duality', () => {
     expect(BLOCK_DEPLOY_CLASSIFIERS['Network.CustomDomain'].metadataOnlyWhenStandalone).toBe(true);
   });
+
+  it('marks Network.PublicEndpoint as an always-public-ingress block', () => {
+    expect(BLOCK_DEPLOY_CLASSIFIERS['Network.PublicEndpoint'].publicIngressMode).toBe('always');
+  });
+
+  it('marks Network.CustomDomain as ingress only when nested in an isolation container', () => {
+    expect(BLOCK_DEPLOY_CLASSIFIERS['Network.CustomDomain'].publicIngressMode).toBe('when-nested-in-isolated-network');
+  });
+
+  it('marks Network.CustomDomain as the domain propagator', () => {
+    expect(BLOCK_DEPLOY_CLASSIFIERS['Network.CustomDomain'].isDomainPropagator).toBe(true);
+  });
 });
 
 describe('getBlockDeployClassifiers', () => {

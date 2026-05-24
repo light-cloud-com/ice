@@ -19,8 +19,37 @@ import {
   EXTERNAL_TYPES,
   hasPrivateNetworkAncestor,
   isCustomDomainStandalone,
+  isPublicIngressNode,
   map_edge_relationship,
 } from '../edge-classifier';
+
+describe('isPublicIngressNode', () => {
+  it('returns true for Network.PublicEndpoint regardless of nesting', () => {
+    const node = { data: { iceType: 'Network.PublicEndpoint' } };
+    expect(isPublicIngressNode(node, [])).toBe(true);
+  });
+
+  it('returns false for standalone Network.CustomDomain', () => {
+    const node = { data: { iceType: 'Network.CustomDomain' } };
+    expect(isPublicIngressNode(node, [])).toBe(false);
+  });
+
+  it('returns true for Network.CustomDomain nested inside Network.PrivateNetwork', () => {
+    const parent = { id: 'pn1', data: { iceType: 'Network.PrivateNetwork' } };
+    const node = { parentId: 'pn1', data: { iceType: 'Network.CustomDomain' } };
+    expect(isPublicIngressNode(node, [parent])).toBe(true);
+  });
+
+  it('returns false for Network.CustomDomain nested inside a non-isolation parent', () => {
+    const parent = { id: 'g1', data: { iceType: 'Group.Network' } };
+    const node = { parentId: 'g1', data: { iceType: 'Network.CustomDomain' } };
+    expect(isPublicIngressNode(node, [parent])).toBe(false);
+  });
+
+  it('returns false for plain compute nodes (no publicIngressMode flag)', () => {
+    expect(isPublicIngressNode({ data: { iceType: 'Compute.Container' } }, [])).toBe(false);
+  });
+});
 
 describe('UI_ONLY_TYPES', () => {
   it('contains exactly 3 entries', () => {

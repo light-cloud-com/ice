@@ -79,6 +79,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const elb = await load_aws_sdk('@aws-sdk/client-elastic-load-balancing-v2');
   if (elb) clients.set('elbv2', new elb.ElasticLoadBalancingV2Client({ region }));
 
+  const api = await load_aws_sdk('@aws-sdk/client-api-gateway');
+  if (api) clients.set('apigateway', new api.APIGatewayClient({ region }));
+
   return clients;
 }
 

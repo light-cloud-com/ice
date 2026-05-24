@@ -88,6 +88,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const ecs = await load_aws_sdk('@aws-sdk/client-ecs');
   if (ecs) clients.set('ecs', new ecs.ECSClient({ region }));
 
+  const os = await load_aws_sdk('@aws-sdk/client-opensearch');
+  if (os) clients.set('opensearch', new os.OpenSearchClient({ region }));
+
   return clients;
 }
 

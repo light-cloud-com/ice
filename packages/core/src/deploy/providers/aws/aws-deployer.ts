@@ -26,6 +26,7 @@ import { elasticache_handler } from './handlers/elasticache';
 import { elbv2_handler } from './handlers/elbv2';
 import { events_rule_handler } from './handlers/events-rule';
 import { lambda_handler } from './handlers/lambda';
+import { opensearch_handler } from './handlers/opensearch';
 import { rds_handler } from './handlers/rds';
 import { s3_handler } from './handlers/s3';
 import { secrets_manager_handler } from './handlers/secrets-manager';
@@ -62,6 +63,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.apigateway.restApi', handler: api_gateway_handler },
   { prefix: 'aws.events.rule', handler: events_rule_handler },
   { prefix: 'aws.ecs.service', handler: ecs_handler },
+  { prefix: 'aws.opensearch.domain', handler: opensearch_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

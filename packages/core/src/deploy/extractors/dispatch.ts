@@ -32,6 +32,12 @@ import {
   extract_firebase_hosting_properties,
 } from './ancillary';
 import {
+  extract_opensearch_domain_properties,
+  extract_bedrock_endpoint_properties,
+  extract_sagemaker_endpoint_properties,
+  extract_redshift_cluster_properties,
+} from './aws/ai';
+import {
   extract_sqs_queue_properties,
   extract_sns_topic_properties,
   extract_cognito_user_pool_properties,
@@ -127,4 +133,10 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.cognito.userPool': extract_cognito_user_pool_properties,
   'aws.secretsmanager.secret': extract_secrets_manager_secret_properties,
   'aws.cloudwatch.logGroup': extract_cloudwatch_log_group_properties,
+
+  // ─── AWS — AI / analytics ──────────────────────────────────────────
+  'aws.opensearch.domain': extract_opensearch_domain_properties,
+  'aws.bedrock.endpoint': extract_bedrock_endpoint_properties,
+  'aws.sagemaker.endpoint': extract_sagemaker_endpoint_properties,
+  'aws.redshift.cluster': extract_redshift_cluster_properties,
 };

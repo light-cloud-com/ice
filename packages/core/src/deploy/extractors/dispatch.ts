@@ -32,6 +32,13 @@ import {
   extract_firebase_hosting_properties,
 } from './ancillary';
 import {
+  extract_sqs_queue_properties,
+  extract_sns_topic_properties,
+  extract_cognito_user_pool_properties,
+  extract_secrets_manager_secret_properties,
+  extract_cloudwatch_log_group_properties,
+} from './aws/ancillary';
+import {
   extract_ecs_service_properties,
   extract_lambda_function_properties,
   extract_events_rule_properties,
@@ -113,4 +120,11 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.apigateway.restApi': extract_api_gateway_rest_api_properties,
   'aws.cloudfront.distribution': extract_cloudfront_distribution_properties,
   'aws.elbv2.loadBalancer': extract_elbv2_load_balancer_properties,
+
+  // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
+  'aws.sqs.queue': extract_sqs_queue_properties,
+  'aws.sns.topic': extract_sns_topic_properties,
+  'aws.cognito.userPool': extract_cognito_user_pool_properties,
+  'aws.secretsmanager.secret': extract_secrets_manager_secret_properties,
+  'aws.cloudwatch.logGroup': extract_cloudwatch_log_group_properties,
 };

@@ -77,6 +77,7 @@ import { updateCardNodeData, type Card, type CardNode } from '../../../../store/
 import { toggleProperties } from '../../../../store/slices/ui-slice';
 import { buildVisibleTabs } from '../../utils/build-visible-tabs';
 import { nodeHasSourceTab, resolveNodeIconUrl } from '../../utils/node-properties-derivations';
+import { getBlockPropertyPanelConfig } from '../../utils/property-panel-config';
 import { PropertyFields } from '../fields/render-property-field';
 import type { AppDispatch } from '../../../../store';
 import type { CanvasIssue } from '../../../../store/slices/validation-slice';
@@ -161,9 +162,13 @@ export const NodePropertiesSection: React.FC<{
 
       {/* ── Deployment target (provider + region) ──
           Hidden for symbolic block types that don't deploy to a cloud
-          (Source.Repository points at GitHub; Network.PublicTraffic is
-          a canvas-only Internet terminator). */}
-      {iceType !== 'Source.Repository' && iceType !== 'Network.PublicTraffic' && (
+          (e.g. Source.Repository points at GitHub; Network.PublicTraffic is
+          a canvas-only Internet terminator). Whether a block is symbolic
+          is a per-iceType fact declared on the schema-shaped
+          `BLOCK_PROPERTY_PANEL_CONFIGS.skipDeploymentTarget` — this
+          render decision iterates that fact, never names a specific
+          iceType. */}
+      {!getBlockPropertyPanelConfig(iceType).skipDeploymentTarget && (
         <DeploymentTargetCard
           provider={provider}
           region={(selectedNode.data?.region as string) || ''}

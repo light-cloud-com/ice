@@ -49,6 +49,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const cwl = await load_aws_sdk('@aws-sdk/client-cloudwatch-logs');
   if (cwl) clients.set('cloudwatch-logs', new cwl.CloudWatchLogsClient({ region }));
 
+  const sm = await load_aws_sdk('@aws-sdk/client-secrets-manager');
+  if (sm) clients.set('secrets-manager', new sm.SecretsManagerClient({ region }));
+
   return clients;
 }
 

@@ -16,6 +16,7 @@
 
 import { hasBlockRole } from '@ice/constants';
 import { isPublicIngressNode } from '../edge-classifier';
+import { isSelfServingPublicResource } from '../self-serving-resources';
 import { sanitize_name, sanitize_label_value } from '../utils/name-utils';
 import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../card-translator';
@@ -191,33 +192,31 @@ export function wire_public_endpoints(args: {
     // gone; both consumers now read the same role.
 
     for (const be of backends) {
-      // Static sites on GCP now compile to Firebase Hosting (which
-      // gives a public HTTPS URL out of the box, with its own CDN +
-      // managed cert + optional custom domain). The Public Endpoint
-      // load-balancer chain is REDUNDANT for Firebase Hosting — it
-      // serves traffic itself, no backend bucket / URL map / forwarding
-      // rule needed. We skip the LB wiring here and let the Firebase
-      // Hosting handler register the custom domain on its own.
+      // Self-serving public resources (Firebase Hosting today; future:
+      // AWS Amplify, Azure Static Web Apps) bring their own CDN + cert
+      // + public URL, so the Public Endpoint LB chain is REDUNDANT in
+      // front of them. Skip the LB wiring; propagate the upstream
+      // domain onto the node so the resource's own handler can
+      // register the custom domain.
       //
-      // The static site node still gets the user's custom domain
-      // propagated so the Firebase Hosting handler picks it up.
-      if (be.targetIceType === 'Compute.StaticSite') {
-        // Propagate the PublicEndpoint's domain onto the static site
-        // node so the Firebase Hosting handler can register it as a
-        // custom domain. Subdomains become per-site subdomains; blank
-        // becomes the root domain.
-        const targetGraphNode = graph.get_node_by_name(be.targetResourceName);
-        if (targetGraphNode && rootDomain) {
+      // Schema-driven: the set of self-serving resource types lives in
+      // `self-serving-resources.ts`. The check below reads the target
+      // graph node's resolved provider resource_type — no iceType
+      // strings appear here.
+      const targetGraphNode = graph.get_node_by_name(be.targetResourceName);
+      if (targetGraphNode && isSelfServingPublicResource(targetGraphNode.type)) {
+        if (rootDomain) {
           const fullHost = be.subdomain ? `${be.subdomain}.${rootDomain}` : rootDomain;
           (targetGraphNode.properties as any).domain = fullHost;
         }
-        // Mark the static-site → forwarding-rule mapping so the post-deploy
-        // overlay still knows the static site is wired to a public endpoint
-        // (used for the canvas pill propagation). The forwarding rule itself
-        // will be created EMPTY and skipped at deploy time when no other
-        // backend uses it.
+        // Mark the self-serving target → forwarding-rule mapping so
+        // the post-deploy overlay still knows it was wired to a
+        // public endpoint (used for the canvas pill propagation). The
+        // forwarding rule itself will be created EMPTY and skipped at
+        // deploy time when no other backend uses it.
         staticSiteToForwardingRule.set(be.targetNodeId, forwardingResourceName);
-        // Skip adding a host rule — Firebase Hosting serves directly.
+        // Skip adding a host rule — the self-serving resource handles
+        // routing itself.
         continue;
       }
 

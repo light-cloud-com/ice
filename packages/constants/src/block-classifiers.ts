@@ -61,7 +61,17 @@ export type BlockRole =
   | 'privateNetwork'
   | 'reroute'
   // Composite — anything that owns / propagates a public host
-  | 'domain';
+  | 'domain'
+  /**
+   * The block represents a publicly-served static website. When it
+   * compiles to a bucket-style resource on the active provider (e.g.
+   * AWS `Compute.StaticSite` → `aws.s3.bucket`), the bucket extractor
+   * flips `public_access` + `website_hosting` so the asset can serve
+   * traffic directly. Providers where it compiles to a self-serving
+   * resource (e.g. GCP Firebase Hosting) don't need this — the bucket
+   * extractor isn't invoked at all.
+   */
+  | 'publicWebsiteSource';
 
 export const BLOCK_ROLES_BY_ICE_TYPE: Record<string, ReadonlyArray<BlockRole>> = {
   // Service backends — compile to Cloud Run / ECS service with a
@@ -73,6 +83,10 @@ export const BLOCK_ROLES_BY_ICE_TYPE: Record<string, ReadonlyArray<BlockRole>> =
   'Compute.SSRSite': ['serviceBackend'],
   'Compute.Worker': ['serviceBackend'],
   'Compute.ServerlessFunction': ['serviceBackend'],
+  // Frontend block representing a public static site. On providers
+  // where it compiles to a bucket (AWS S3) the storage extractor
+  // flips public + website-hosting based on this role.
+  'Compute.StaticSite': ['publicWebsiteSource'],
   // Ops / Config blocks — narrow exact matches.
   'Source.Repository': ['repo'],
   'Config.Environment': ['envConfig'],

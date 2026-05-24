@@ -82,8 +82,7 @@ describe('PROPERTY_EXTRACTORS table shape', () => {
   it('returns undefined for an unknown key (orchestrator falls through to the error path)', () => {
     expect(PROPERTY_EXTRACTORS['gcp.unknown.thing']).toBeUndefined();
     expect(PROPERTY_EXTRACTORS['']).toBeUndefined();
-    // aws.s3.bucket is intentionally absent until commit #4 (aws/network)
-    expect(PROPERTY_EXTRACTORS['aws.s3.bucket']).toBeUndefined();
+    expect(PROPERTY_EXTRACTORS['aws.unknown.thing']).toBeUndefined();
   });
 });
 

@@ -43,6 +43,12 @@ import {
   extract_docdb_cluster_properties,
 } from './aws/database';
 import {
+  extract_s3_bucket_properties,
+  extract_api_gateway_rest_api_properties,
+  extract_cloudfront_distribution_properties,
+  extract_elbv2_load_balancer_properties,
+} from './aws/network';
+import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
@@ -101,4 +107,10 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.dynamodb.table': extract_dynamodb_table_properties,
   'aws.elasticache.cluster': extract_elasticache_cluster_properties,
   'aws.docdb.cluster': extract_docdb_cluster_properties,
+
+  // ─── AWS — network ─────────────────────────────────────────────────
+  'aws.s3.bucket': extract_s3_bucket_properties,
+  'aws.apigateway.restApi': extract_api_gateway_rest_api_properties,
+  'aws.cloudfront.distribution': extract_cloudfront_distribution_properties,
+  'aws.elbv2.loadBalancer': extract_elbv2_load_balancer_properties,
 };

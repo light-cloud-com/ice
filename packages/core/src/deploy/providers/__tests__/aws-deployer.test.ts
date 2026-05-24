@@ -35,7 +35,14 @@ interface FakeImportRegistry {
   '@aws-sdk/client-ec2'?: unknown;
   '@aws-sdk/client-s3'?: unknown;
   '@aws-sdk/client-lambda'?: unknown;
+  '@aws-sdk/client-sts'?: unknown;
 }
+
+// Fake AWS account id every test uses. The post-#7 S3 handler suffixes
+// every bucket with `-{accountId}` via STS GetCallerIdentity, so this
+// value shows up in every assertion that checks the resulting ARN.
+const FAKE_ACCOUNT_ID = '000000000000';
+const SUFFIX = `-${FAKE_ACCOUNT_ID}`;
 
 const original_function = globalThis.Function;
 
@@ -172,6 +179,27 @@ function makeS3Module(opts: { sendImpl?: (cmd: any) => any | Promise<any> } = {}
       this.input = input;
     }
   }
+  class PutPublicAccessBlockCommand {
+    input: any;
+    __cmd = 'PutPublicAccessBlock';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  class PutBucketPolicyCommand {
+    input: any;
+    __cmd = 'PutBucketPolicy';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  class PutBucketWebsiteCommand {
+    input: any;
+    __cmd = 'PutBucketWebsite';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
   return {
     S3Client,
     CreateBucketCommand,
@@ -179,10 +207,35 @@ function makeS3Module(opts: { sendImpl?: (cmd: any) => any | Promise<any> } = {}
     DeleteBucketCommand,
     ListObjectsV2Command,
     DeleteObjectsCommand,
+    PutPublicAccessBlockCommand,
+    PutBucketPolicyCommand,
+    PutBucketWebsiteCommand,
     send,
     destroy,
     sendCalls,
   };
+}
+
+function makeStsModule(opts: { account?: string } = {}) {
+  const send = vi.fn(async () => ({ Account: opts.account ?? FAKE_ACCOUNT_ID }));
+  const destroy = vi.fn();
+  class STSClient {
+    region: string;
+    send: any;
+    destroy: any;
+    constructor(args: any) {
+      this.region = args.region;
+      this.send = send;
+      this.destroy = destroy;
+    }
+  }
+  class GetCallerIdentityCommand {
+    input: any;
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  return { STSClient, GetCallerIdentityCommand, send, destroy };
 }
 
 function makeLambdaModule(opts: { sendImpl?: (cmd: any) => any | Promise<any> } = {}) {
@@ -247,15 +300,18 @@ function makeFullRegistry() {
   const ec2 = makeEc2Module();
   const s3 = makeS3Module();
   const lambda = makeLambdaModule();
+  const sts = makeStsModule();
   return {
     registry: {
       '@aws-sdk/client-ec2': ec2,
       '@aws-sdk/client-s3': s3,
       '@aws-sdk/client-lambda': lambda,
+      '@aws-sdk/client-sts': sts,
     } satisfies FakeImportRegistry,
     ec2,
     s3,
     lambda,
+    sts,
   };
 }
 
@@ -360,13 +416,15 @@ describe('initialize', () => {
 
   it('initializes only the S3 client when EC2 and Lambda are missing', async () => {
     const s3 = makeS3Module();
-    install_dynamic_import_stub({ '@aws-sdk/client-s3': s3 });
+    const sts = makeStsModule();
+    // STS is needed for the account-id suffix that the S3 handler appends.
+    install_dynamic_import_stub({ '@aws-sdk/client-s3': s3, '@aws-sdk/client-sts': sts });
     const d = new AWSDeployer();
     await d.initialize({ provider: 'aws' });
 
     const out = await d.create('aws.s3.bucket', 'b1', {}, {});
     expect(out.success).toBe(true);
-    expect(out.provider_id).toBe('arn:aws:s3:::b1');
+    expect(out.provider_id).toBe('arn:aws:s3:::b1' + SUFFIX);
   });
 
   it('initializes only the Lambda client when EC2 and S3 are missing', async () => {
@@ -595,7 +653,7 @@ describe('create', () => {
     const out = await d.create('aws.s3.bucket', 'my-bucket', {}, {});
 
     expect(out.success).toBe(true);
-    expect(out.provider_id).toBe('arn:aws:s3:::my-bucket');
+    expect(out.provider_id).toBe('arn:aws:s3:::my-bucket' + SUFFIX);
   });
 
   it('omits CreateBucketConfiguration on S3 create when region is us-east-1', async () => {
@@ -647,6 +705,44 @@ describe('create', () => {
 
     expect(out.success).toBe(false);
     expect(out.error).toMatch(/S3 SDK not available\. Install @aws-sdk\/client-s3/);
+  });
+
+  it('suffixes the S3 bucket name with the AWS account id', async () => {
+    const { d, s3 } = await deployerWithFullSdk();
+    await d.create('aws.s3.bucket', 'my-bucket', {}, {});
+    const createCmd = s3.sendCalls[0];
+    expect(createCmd.__cmd).toBe('CreateBucket');
+    expect(createCmd.input.Bucket).toBe('my-bucket' + SUFFIX);
+  });
+
+  it('attaches public-read bucket policy + website config when public_access + website_hosting', async () => {
+    const { d, s3 } = await deployerWithFullSdk();
+    const out = await d.create(
+      'aws.s3.bucket',
+      'static-site',
+      { public_access: true, website_hosting: true, index_page: 'home.html', not_found_page: 'oops.html' },
+      {},
+    );
+    expect(out.success).toBe(true);
+    // CreateBucket → PutPublicAccessBlock → PutBucketPolicy → PutBucketWebsite
+    const cmds = s3.sendCalls.map((c: any) => c.__cmd);
+    expect(cmds).toEqual(['CreateBucket', 'PutPublicAccessBlock', 'PutBucketPolicy', 'PutBucketWebsite']);
+    // Public-read policy points at the suffixed bucket name.
+    const policy = JSON.parse(s3.sendCalls[2].input.Policy);
+    expect(policy.Statement[0].Resource).toBe(`arn:aws:s3:::static-site${SUFFIX}/*`);
+    // Website config picks up the index/404 overrides from properties.
+    expect(s3.sendCalls[3].input.WebsiteConfiguration).toEqual({
+      IndexDocument: { Suffix: 'home.html' },
+      ErrorDocument: { Key: 'oops.html' },
+    });
+  });
+
+  it('does NOT attach public-read policy on a plain (non-website) bucket', async () => {
+    const { d, s3 } = await deployerWithFullSdk();
+    await d.create('aws.s3.bucket', 'private-bucket', { public_access: false, website_hosting: false }, {});
+    const cmds = s3.sendCalls.map((c: any) => c.__cmd);
+    // CreateBucket only — no PublicAccessBlock / Policy / Website calls.
+    expect(cmds).toEqual(['CreateBucket']);
   });
 
   it('creates a Lambda function and returns the FunctionArn', async () => {

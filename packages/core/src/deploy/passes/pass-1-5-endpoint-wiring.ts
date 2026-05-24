@@ -14,6 +14,7 @@
  * the counter, only the graph + deployables array.
  */
 
+import { hasBlockRole } from '@ice/constants';
 import { isPublicIngressNode } from '../edge-classifier';
 import { sanitize_name, sanitize_label_value } from '../utils/name-utils';
 import type { MutableGraph } from '../../graph/mutable-graph';
@@ -182,16 +183,12 @@ export function wire_public_endpoints(args: {
     }> = [];
     const defaultBackends: BackendEntry[] = [];
 
-    // Compute types that compile to Cloud Run services — each of these
-    // gets wrapped in a Serverless NEG + backend service by the LB
-    // handler at deploy time. Static sites use backendBuckets instead.
-    const SERVICE_BACKEND_ICE_TYPES = new Set([
-      'Compute.Container',
-      'Compute.BackendAPI',
-      'Compute.SSRSite',
-      'Compute.Worker',
-      'Compute.ServerlessFunction',
-    ]);
+    // Whether a backend's iceType compiles to a Cloud Run service
+    // wrapped in a Serverless NEG is a schema-declared fact — see the
+    // `serviceBackend` role in `@ice/constants/block-classifiers.ts`.
+    // The previous in-file duplicate of this set (mirroring
+    // SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS in edge-classifier) is
+    // gone; both consumers now read the same role.
 
     for (const be of backends) {
       // Static sites on GCP now compile to Firebase Hosting (which
@@ -229,7 +226,7 @@ export function wire_public_endpoints(args: {
       // needs the runtime region, which lives on the handler context
       // but not in the translator. We just record the names here and
       // pass them through `host_rules` as metadata.
-      if (SERVICE_BACKEND_ICE_TYPES.has(be.targetIceType)) {
+      if (hasBlockRole(be.targetIceType, 'serviceBackend')) {
         const backendServiceName = sanitize_name(`${be.targetResourceName}-backend`);
         be.sourceServiceName = be.targetResourceName;
         be.backendServiceName = backendServiceName;

@@ -13,6 +13,7 @@
  * classifier functions stay unchanged.
  */
 
+import { BLOCK_ROLES_BY_ICE_TYPE } from '@ice/constants';
 import { getBlockDeployClassifiers } from './block-deploy-classifiers';
 import type { EdgeRelationship } from '../types/graph';
 
@@ -34,17 +35,23 @@ import type { EdgeRelationship } from '../types/graph';
 export const UI_ONLY_TYPES = new Set(['Source.Repository', 'Config.Environment', 'Network.PublicTraffic']);
 
 /**
- * iceTypes whose compute is treated as a service backend. Shared between
- * the LB-wiring path (line ~1059) and the Private Network ingress-override
- * logic below.
+ * iceTypes whose compute is treated as a service backend (compiles to
+ * Cloud Run / ECS service with a Serverless NEG when wired through a
+ * public-ingress endpoint).
+ *
+ * Cardinal-rule schema-driven: the contents come from
+ * `BLOCK_ROLES_BY_ICE_TYPE` via the `serviceBackend` role. This Set is
+ * a thin materialisation kept for back-compat with callers that want
+ * `.has(iceType)`. New iceTypes register the role in the table; the
+ * Set picks them up automatically. The previous in-file inline list +
+ * the duplicate inside `pass-1-5-endpoint-wiring.ts` have both been
+ * replaced with a single role lookup.
  */
-export const SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS = new Set([
-  'Compute.Container',
-  'Compute.BackendAPI',
-  'Compute.SSRSite',
-  'Compute.Worker',
-  'Compute.ServerlessFunction',
-]);
+export const SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS: ReadonlySet<string> = new Set(
+  Object.entries(BLOCK_ROLES_BY_ICE_TYPE)
+    .filter(([, roles]) => roles.includes('serviceBackend'))
+    .map(([iceType]) => iceType),
+);
 
 /**
  * Walk the parent chain to check whether any ancestor is a network-

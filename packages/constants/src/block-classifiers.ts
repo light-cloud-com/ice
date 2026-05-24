@@ -30,6 +30,15 @@ export type BlockRole =
   // Compute
   | 'backend'
   | 'frontend'
+  /**
+   * Compute backend that compiles to a Cloud Run / ECS / Container App
+   * service behind a Serverless NEG when wired through a public-ingress
+   * endpoint. Narrower than `backend` — excludes StaticSite (which
+   * compiles to a backendBucket instead). Used by:
+   *   - the LB-wiring pass (which serverless-NEG vs backendBucket dispatch)
+   *   - the network-isolation ingress override on the translator
+   */
+  | 'serviceBackend'
   // Data
   | 'database'
   | 'cache'
@@ -55,6 +64,15 @@ export type BlockRole =
   | 'domain';
 
 export const BLOCK_ROLES_BY_ICE_TYPE: Record<string, ReadonlyArray<BlockRole>> = {
+  // Service backends — compile to Cloud Run / ECS service with a
+  // Serverless NEG when wired behind a public-ingress endpoint.
+  // Compute.StaticSite is INTENTIONALLY omitted: it compiles to a
+  // backendBucket via Firebase Hosting, not a NEG.
+  'Compute.Container': ['serviceBackend'],
+  'Compute.BackendAPI': ['serviceBackend'],
+  'Compute.SSRSite': ['serviceBackend'],
+  'Compute.Worker': ['serviceBackend'],
+  'Compute.ServerlessFunction': ['serviceBackend'],
   // Ops / Config blocks — narrow exact matches.
   'Source.Repository': ['repo'],
   'Config.Environment': ['envConfig'],

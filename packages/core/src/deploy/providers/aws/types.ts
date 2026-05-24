@@ -11,6 +11,7 @@
  *   - on_log callback for handlers that stream provider-side output
  */
 
+import type { AccountIdResolver } from './account';
 import type { ResourceDeployResult } from '../../types';
 
 /**
@@ -26,6 +27,13 @@ export interface AWSHandlerContext {
    * installed — handlers must guard with a friendly error.
    */
   clients: Map<string, unknown>;
+  /**
+   * Memoised AWS account id (via STS GetCallerIdentity). Fetched on
+   * first call and cached for the deploy's lifetime. Used by S3 to
+   * suffix bucket names + by ECS to build ecsTaskExecutionRole ARNs.
+   * Throws when the STS SDK isn't installed.
+   */
+  ensure_account_id: AccountIdResolver;
   /** Optional log callback for progress messages. */
   on_log?: (message: string) => void;
   /**

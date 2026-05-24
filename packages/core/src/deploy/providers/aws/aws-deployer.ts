@@ -13,6 +13,7 @@
  * branches.
  */
 
+import { create_account_id_resolver } from './account';
 import { ec2_handler } from './handlers/ec2';
 import { lambda_handler } from './handlers/lambda';
 import { s3_handler } from './handlers/s3';
@@ -75,6 +76,13 @@ export class AWSDeployer implements ProviderDeployer {
   private ctx: AWSHandlerContext = {
     region: 'us-east-1',
     clients: new Map(),
+    // Stub resolver until initialize() replaces it. Throws if a
+    // handler tries to use account id before the deployer's
+    // initialise() ran (shouldn't happen in practice but fails
+    // loudly if it ever does).
+    ensure_account_id: async () => {
+      throw new Error('AWSDeployer.ensure_account_id called before initialize()');
+    },
   };
 
   async initialize(options: DeployOptions): Promise<void> {
@@ -84,6 +92,7 @@ export class AWSDeployer implements ProviderDeployer {
       this.ctx = {
         region,
         clients,
+        ensure_account_id: create_account_id_resolver(region),
       };
     } catch (error) {
       throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`, {

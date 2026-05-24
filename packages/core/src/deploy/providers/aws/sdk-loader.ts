@@ -52,6 +52,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const sm = await load_aws_sdk('@aws-sdk/client-secrets-manager');
   if (sm) clients.set('secrets-manager', new sm.SecretsManagerClient({ region }));
 
+  const sqs = await load_aws_sdk('@aws-sdk/client-sqs');
+  if (sqs) clients.set('sqs', new sqs.SQSClient({ region }));
+
   return clients;
 }
 

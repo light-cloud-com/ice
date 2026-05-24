@@ -19,6 +19,7 @@ import { ec2_handler } from './handlers/ec2';
 import { lambda_handler } from './handlers/lambda';
 import { s3_handler } from './handlers/s3';
 import { secrets_manager_handler } from './handlers/secrets-manager';
+import { sqs_handler } from './handlers/sqs';
 import { destroy_aws_clients, initialize_aws_clients } from './sdk-loader';
 import type { AWSHandlerContext, AWSResourceHandler } from './types';
 import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types';
@@ -38,6 +39,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.lambda.function', handler: lambda_handler },
   { prefix: 'aws.cloudwatch.logGroup', handler: cloudwatch_logs_handler },
   { prefix: 'aws.secretsmanager.secret', handler: secrets_manager_handler },
+  { prefix: 'aws.sqs.queue', handler: sqs_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

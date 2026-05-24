@@ -64,6 +64,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const ec = await load_aws_sdk('@aws-sdk/client-elasticache');
   if (ec) clients.set('elasticache', new ec.ElastiCacheClient({ region }));
 
+  const rds = await load_aws_sdk('@aws-sdk/client-rds');
+  if (rds) clients.set('rds', new rds.RDSClient({ region }));
+
   return clients;
 }
 

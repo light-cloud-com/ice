@@ -19,6 +19,7 @@ import { dynamodb_handler } from './handlers/dynamodb';
 import { ec2_handler } from './handlers/ec2';
 import { elasticache_handler } from './handlers/elasticache';
 import { lambda_handler } from './handlers/lambda';
+import { rds_handler } from './handlers/rds';
 import { s3_handler } from './handlers/s3';
 import { secrets_manager_handler } from './handlers/secrets-manager';
 import { sns_handler } from './handlers/sns';
@@ -46,6 +47,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.sns.topic', handler: sns_handler },
   { prefix: 'aws.dynamodb.table', handler: dynamodb_handler },
   { prefix: 'aws.elasticache.cluster', handler: elasticache_handler },
+  { prefix: 'aws.rds.dbInstance', handler: rds_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

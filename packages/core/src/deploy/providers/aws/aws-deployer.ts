@@ -14,6 +14,7 @@
  */
 
 import { create_account_id_resolver } from './account';
+import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
 import { ec2_handler } from './handlers/ec2';
 import { lambda_handler } from './handlers/lambda';
 import { s3_handler } from './handlers/s3';
@@ -34,6 +35,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.ec2.instance', handler: ec2_handler },
   { prefix: 'aws.s3.bucket', handler: s3_handler },
   { prefix: 'aws.lambda.function', handler: lambda_handler },
+  { prefix: 'aws.cloudwatch.logGroup', handler: cloudwatch_logs_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

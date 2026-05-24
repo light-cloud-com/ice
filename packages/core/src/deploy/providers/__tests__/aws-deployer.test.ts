@@ -36,6 +36,7 @@ interface FakeImportRegistry {
   '@aws-sdk/client-s3'?: unknown;
   '@aws-sdk/client-lambda'?: unknown;
   '@aws-sdk/client-sts'?: unknown;
+  '@aws-sdk/client-cloudwatch-logs'?: unknown;
 }
 
 // Fake AWS account id every test uses. The post-#7 S3 handler suffixes
@@ -216,6 +217,55 @@ function makeS3Module(opts: { sendImpl?: (cmd: any) => any | Promise<any> } = {}
   };
 }
 
+function makeCloudWatchLogsModule() {
+  const sendCalls: any[] = [];
+  const send = vi.fn(async (cmd: any) => {
+    sendCalls.push(cmd);
+    return {};
+  });
+  const destroy = vi.fn();
+  class CloudWatchLogsClient {
+    region: string;
+    send: any;
+    destroy: any;
+    constructor(args: any) {
+      this.region = args.region;
+      this.send = send;
+      this.destroy = destroy;
+    }
+  }
+  class CreateLogGroupCommand {
+    input: any;
+    __cmd = 'CreateLogGroup';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  class PutRetentionPolicyCommand {
+    input: any;
+    __cmd = 'PutRetentionPolicy';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  class DeleteLogGroupCommand {
+    input: any;
+    __cmd = 'DeleteLogGroup';
+    constructor(input: any) {
+      this.input = input;
+    }
+  }
+  return {
+    CloudWatchLogsClient,
+    CreateLogGroupCommand,
+    PutRetentionPolicyCommand,
+    DeleteLogGroupCommand,
+    send,
+    destroy,
+    sendCalls,
+  };
+}
+
 function makeStsModule(opts: { account?: string } = {}) {
   const send = vi.fn(async () => ({ Account: opts.account ?? FAKE_ACCOUNT_ID }));
   const destroy = vi.fn();
@@ -301,17 +351,20 @@ function makeFullRegistry() {
   const s3 = makeS3Module();
   const lambda = makeLambdaModule();
   const sts = makeStsModule();
+  const cwl = makeCloudWatchLogsModule();
   return {
     registry: {
       '@aws-sdk/client-ec2': ec2,
       '@aws-sdk/client-s3': s3,
       '@aws-sdk/client-lambda': lambda,
       '@aws-sdk/client-sts': sts,
+      '@aws-sdk/client-cloudwatch-logs': cwl,
     } satisfies FakeImportRegistry,
     ec2,
     s3,
     lambda,
     sts,
+    cwl,
   };
 }
 
@@ -1255,5 +1308,40 @@ describe('delete', () => {
     const out = await d.delete('aws.ec2.instance', 'vm', 'arn:aws:ec2:us-east-1:*:instance/i-1', {});
 
     expect(out.error).toBe('[object Object]');
+  });
+});
+
+// =============================================================================
+// CloudWatch Logs handler — commit #10
+// =============================================================================
+
+describe('aws.cloudwatch.logGroup handler', () => {
+  it('creates a log group with retention when retention_in_days is set', async () => {
+    const { d, cwl } = await deployerWithFullSdk();
+    const out = await d.create(
+      'aws.cloudwatch.logGroup',
+      'my-app-logs',
+      { retention_in_days: 30, tags: { Env: 'prod' } },
+      {},
+    );
+    expect(out.success).toBe(true);
+    expect(out.provider_id).toBe('arn:aws:logs:us-east-1:*:log-group:my-app-logs');
+    const cmds = cwl.sendCalls.map((c: any) => c.__cmd);
+    expect(cmds).toEqual(['CreateLogGroup', 'PutRetentionPolicy']);
+    expect(cwl.sendCalls[0].input).toMatchObject({ logGroupName: 'my-app-logs', tags: { Env: 'prod' } });
+    expect(cwl.sendCalls[1].input).toEqual({ logGroupName: 'my-app-logs', retentionInDays: 30 });
+  });
+
+  it('skips PutRetentionPolicy when retention is not set', async () => {
+    const { d, cwl } = await deployerWithFullSdk();
+    await d.create('aws.cloudwatch.logGroup', 'lg', {}, {});
+    expect(cwl.sendCalls.map((c: any) => c.__cmd)).toEqual(['CreateLogGroup']);
+  });
+
+  it('deletes the log group on delete', async () => {
+    const { d, cwl } = await deployerWithFullSdk();
+    const out = await d.delete('aws.cloudwatch.logGroup', 'lg', 'arn:aws:logs:us-east-1:*:log-group:lg', {});
+    expect(out.success).toBe(true);
+    expect(cwl.sendCalls.map((c: any) => c.__cmd)).toEqual(['DeleteLogGroup']);
   });
 });

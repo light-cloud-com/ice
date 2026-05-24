@@ -46,6 +46,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const lambda = await load_aws_sdk('@aws-sdk/client-lambda');
   if (lambda) clients.set('lambda', new lambda.LambdaClient({ region }));
 
+  const cwl = await load_aws_sdk('@aws-sdk/client-cloudwatch-logs');
+  if (cwl) clients.set('cloudwatch-logs', new cwl.CloudWatchLogsClient({ region }));
+
   return clients;
 }
 

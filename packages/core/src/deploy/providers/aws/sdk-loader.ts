@@ -94,6 +94,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const bedrock = await load_aws_sdk('@aws-sdk/client-bedrock');
   if (bedrock) clients.set('bedrock', new bedrock.BedrockClient({ region }));
 
+  const sagemaker = await load_aws_sdk('@aws-sdk/client-sagemaker');
+  if (sagemaker) clients.set('sagemaker', new sagemaker.SageMakerClient({ region }));
+
   return clients;
 }
 

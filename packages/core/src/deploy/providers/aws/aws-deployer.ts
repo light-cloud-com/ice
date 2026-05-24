@@ -30,6 +30,7 @@ import { lambda_handler } from './handlers/lambda';
 import { opensearch_handler } from './handlers/opensearch';
 import { rds_handler } from './handlers/rds';
 import { s3_handler } from './handlers/s3';
+import { sagemaker_handler } from './handlers/sagemaker';
 import { secrets_manager_handler } from './handlers/secrets-manager';
 import { sns_handler } from './handlers/sns';
 import { sqs_handler } from './handlers/sqs';
@@ -66,6 +67,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.ecs.service', handler: ecs_handler },
   { prefix: 'aws.opensearch.domain', handler: opensearch_handler },
   { prefix: 'aws.bedrock.endpoint', handler: bedrock_handler },
+  { prefix: 'aws.sagemaker.endpoint', handler: sagemaker_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

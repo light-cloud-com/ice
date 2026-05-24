@@ -128,17 +128,33 @@ describe('Card Translator Type Maps', () => {
     });
   });
 
-  describe.skip('AWS Type Map', () => {
-    // AWS deploy path is not yet wired up — PROPERTY_EXTRACTORS only covers
-    // GCP resource types today. Unskip when AWS extractors land.
+  describe('AWS Type Map', () => {
+    // Phase 1 extractors landed across commits #2–#6 (compute,
+    // database, network, ancillary, ai). Every aws.* resource type in
+    // AWS_TYPE_MAP now has a registered PROPERTY_EXTRACTORS entry, so
+    // these used-to-be-skipped tests turn green.
     it('should map AWS iceTypes (ENGINE-1)', async () => {
       const mod = await import('../deploy/card-translator');
       const awsTypes = [
         'Compute.Container',
         'Compute.ServerlessFunction',
+        'Compute.CronJob',
+        'Compute.SSRSite',
         'Database.PostgreSQL',
+        'Database.DynamoDB',
+        'Database.Redis',
         'Storage.Bucket',
         'Messaging.Queue',
+        'Messaging.Topic',
+        'Network.Gateway',
+        'Network.PublicEndpoint',
+        'Network.LoadBalancer',
+        'Security.Identity',
+        'Monitoring.Log',
+        'AI.VectorDB',
+        'AI.LLMGateway',
+        'AI.ModelServing',
+        'Analytics.DataWarehouse',
       ];
 
       for (const iceType of awsTypes) {
@@ -148,7 +164,7 @@ describe('Card Translator Type Maps', () => {
           provider: 'aws',
           projectName: 'test',
         });
-        expect(result.deployable_count).toBeGreaterThan(0);
+        expect(result.deployable_count, `${iceType} should produce a deployable`).toBeGreaterThan(0);
       }
     });
 
@@ -161,6 +177,47 @@ describe('Card Translator Type Maps', () => {
         projectName: 'test',
       });
       expect(result.deployable_count).toBe(1);
+    });
+
+    it('Compute.StaticSite + Security.Secret + Database.PostgreSQL deploys to AWS', async () => {
+      // End-to-end multi-block scenario that covers extractor + deploy-
+      // expansion + provider type resolution all in one go.
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'site',
+            type: 'resource',
+            data: { iceType: 'Compute.StaticSite', label: 'web' },
+          },
+          {
+            id: 'sec',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app-secrets',
+              secrets: [{ key: 'STRIPE_API_KEY', ref: 'prod-stripe' }, { key: 'JWT_SECRET' }],
+            },
+          },
+          {
+            id: 'db',
+            type: 'resource',
+            data: { iceType: 'Database.PostgreSQL', label: 'main', master_user_password: 'set-later' },
+          },
+        ],
+        edges: [],
+        provider: 'aws',
+        projectName: 'demo',
+      });
+      // StaticSite (1) + Secret expansion (2 unique refs) + Postgres (1) = 4 deployables
+      expect(result.deployable_count).toBe(4);
+      const types = result.deployables.map((d) => d.resource_type).sort();
+      expect(types).toEqual([
+        'aws.rds.dbInstance',
+        'aws.s3.bucket',
+        'aws.secretsmanager.secret',
+        'aws.secretsmanager.secret',
+      ]);
     });
   });
 

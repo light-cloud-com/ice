@@ -9,8 +9,8 @@ import {
   UI_ONLY_TYPES,
   SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
   EXTERNAL_TYPES,
-  hasPrivateNetworkAncestor,
-  isCustomDomainStandalone,
+  hasNetworkIsolatingAncestor,
+  isStandaloneMetadataOnly,
   map_edge_relationship,
 } from './edge-classifier';
 import { create_mutable_graph } from '../graph/mutable-graph';
@@ -196,14 +196,16 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Standalone Network.CustomDomain is UI-only (metadata for Pass 1.6
-    // propagation). Nested inside a PrivateNetwork it becomes deployable
-    // — see isCustomDomainStandalone + the dynamic type lookup below.
-    if (isCustomDomainStandalone(node, nodes)) {
+    // Blocks declared with `metadataOnlyWhenStandalone` (today: Network.
+    // CustomDomain) are UI-only when not nested in an isolation container
+    // — downstream propagation passes consume them, no cloud resource
+    // emitted. Nested inside an isolation container they become
+    // deployable via the dynamic type lookup below.
+    if (isStandaloneMetadataOnly(node, nodes)) {
       skipped.push({
         nodeId: node.id,
         label: (node.data.label as string) || node.id,
-        reason: 'Standalone Network.CustomDomain is metadata-only (handled by Pass 1.6)',
+        reason: `Standalone ${ice_type} is metadata-only (handled by downstream propagation passes)`,
       });
       continue;
     }
@@ -300,15 +302,17 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Private Network ingress override.
+    // Network-isolation ingress override.
     //
     // When a service backend (Scalable Backend / SSR Site / Worker /
-    // Serverless Function) is nested inside a Network.PrivateNetwork,
-    // emit the internal-only variant of the underlying compute resource.
-    // A nested Custom Domain (if present) remains the sole external
-    // entry point via its own LB chain; see isCustomDomainStandalone +
+    // Serverless Function) is nested inside a network-isolation
+    // container (today: Network.PrivateNetwork; schema-declared via
+    // BLOCK_DEPLOY_CLASSIFIERS.isolatesNetworkContext), emit the
+    // internal-only variant of the underlying compute resource. A
+    // nested ingress block (if present) remains the sole external
+    // entry point via its own LB chain; see isStandaloneMetadataOnly +
     // the backend-wiring at ~line 1100.
-    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasPrivateNetworkAncestor(node, nodes)) {
+    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasNetworkIsolatingAncestor(node, nodes)) {
       const props = properties as Record<string, unknown>;
       if (gcp_type === 'gcp.run.service') {
         // Internal Cloud Run — only reachable via VPC or internal LB.

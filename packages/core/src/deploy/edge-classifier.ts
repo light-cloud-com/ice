@@ -3,10 +3,17 @@
  *
  * Bundles the predicates and constants the translator uses to decide
  * which canvas nodes compile to real cloud resources, which act as
- * backends behind a Private Network override, and how raw edge
+ * backends behind a network-isolation override, and how raw edge
  * relationship strings resolve to typed `EdgeRelationship` values.
+ *
+ * Cardinal rule: the ancestor walk + standalone-mode predicates read
+ * `BLOCK_DEPLOY_CLASSIFIERS` (a per-iceType flag table) instead of
+ * naming specific iceTypes. Adding a new isolation container or a new
+ * block with standalone/nested duality adds a table entry; the
+ * classifier functions stay unchanged.
  */
 
+import { getBlockDeployClassifiers } from './block-deploy-classifiers';
 import type { EdgeRelationship } from '../types/graph';
 
 // iceTypes that are UI-only and should not be deployed
@@ -40,19 +47,18 @@ export const SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS = new Set([
 ]);
 
 /**
- * Walk the parent chain to check whether any ancestor is a Private Network.
+ * Walk the parent chain to check whether any ancestor is a network-
+ * isolation container (today: Network.PrivateNetwork; tomorrow: any
+ * iceType the schema-shaped table declares with
+ * `isolatesNetworkContext: true`).
  *
- * When a service backend (Compute.Container / SSR / Worker / etc.) is nested
- * inside a Network.PrivateNetwork, the compiler should emit the internal-only
- * variant of the underlying compute resource:
- *   - GCP Cloud Run:      ingress = 'internal-and-cloud-load-balancing'
- *   - AWS ECS:            no public ALB; rely on nested Custom Domain for ingress
+ * When a service backend is nested inside one, the compiler emits the
+ * internal-only variant of the underlying compute resource:
+ *   - GCP Cloud Run:       ingress = 'internal-and-cloud-load-balancing'
+ *   - AWS ECS:             no public ALB; rely on nested ingress block
  *   - Azure Container App: internal ingress
- *
- * The nested Custom Domain (if present) acts as the sole external entry
- * point via its own LB chain — see lines 957-970 for that path.
  */
-export function hasPrivateNetworkAncestor(
+export function hasNetworkIsolatingAncestor(
   node: { id: string; parentId?: string | null },
   allNodes: Array<{ id: string; parentId?: string | null; data: Record<string, unknown> }>,
 ): boolean {
@@ -62,36 +68,47 @@ export function hasPrivateNetworkAncestor(
     visited.add(currentParentId);
     const parent = allNodes.find((n) => n.id === currentParentId);
     if (!parent) return false;
-    if (parent.data?.iceType === 'Network.PrivateNetwork') return true;
+    const parentIceType = (parent.data?.iceType as string) || '';
+    if (getBlockDeployClassifiers(parentIceType).isolatesNetworkContext) return true;
     currentParentId = parent.parentId;
   }
   return false;
 }
 
 /**
- * Network.CustomDomain has two modes:
+ * Blocks declared with `metadataOnlyWhenStandalone: true` have TWO
+ * deploy modes:
  *
- *   1. STANDALONE (no parent, or parent is not a PrivateNetwork):
- *      metadata-only — it carries a root domain + per-edge subdomains
- *      and is consumed by Pass 1.6 to propagate the full host onto
- *      each connected target's `domain` property. Firebase Hosting
- *      (et al.) then registers the custom domain via its native API.
- *      NO dedicated resource is deployed.
+ *   1. STANDALONE (no parent, or parent is NOT a network-isolation
+ *      container): metadata-only. The node is consumed by downstream
+ *      propagation passes but does NOT emit a cloud resource.
  *
- *   2. NESTED inside a Network.PrivateNetwork: the CD is that
- *      network's public ingress gateway. It compiles to the full LB
- *      chain (forwarding rule + URL map + backend services) targeting
- *      sibling services inside the parent VPC.
+ *   2. NESTED inside an isolation container: compiles to the real
+ *      cloud resource (full LB chain in the Custom-Domain-in-Private-
+ *      Network case).
+ *
+ * Returns true ONLY when both conditions hold: the node's iceType
+ * has the duality flag AND there is no isolation-container parent.
  */
-export function isCustomDomainStandalone(
+export function isStandaloneMetadataOnly(
   node: { data: Record<string, unknown>; parentId?: string | null },
   allNodes: Array<{ id: string; data: Record<string, unknown> }>,
 ): boolean {
-  if (node.data?.iceType !== 'Network.CustomDomain') return false;
+  const iceType = (node.data?.iceType as string) || '';
+  if (!getBlockDeployClassifiers(iceType).metadataOnlyWhenStandalone) return false;
   if (!node.parentId) return true;
   const parent = allNodes.find((n) => n.id === node.parentId);
-  return parent?.data?.iceType !== 'Network.PrivateNetwork';
+  if (!parent) return true;
+  const parentIceType = (parent.data?.iceType as string) || '';
+  return !getBlockDeployClassifiers(parentIceType).isolatesNetworkContext;
 }
+
+// Kept temporarily for callers that haven't switched names — both
+// re-export the same body so the rename is risk-free.
+/** @deprecated Use `hasNetworkIsolatingAncestor`. */
+export const hasPrivateNetworkAncestor = hasNetworkIsolatingAncestor;
+/** @deprecated Use `isStandaloneMetadataOnly`. */
+export const isCustomDomainStandalone = isStandaloneMetadataOnly;
 
 // iceTypes that are external services (not GCP-managed)
 export const EXTERNAL_TYPES = new Set(['Database.MongoDB']);

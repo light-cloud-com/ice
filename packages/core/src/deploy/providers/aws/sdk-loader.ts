@@ -76,6 +76,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const cf = await load_aws_sdk('@aws-sdk/client-cloudfront');
   if (cf) clients.set('cloudfront', new cf.CloudFrontClient({ region }));
 
+  const elb = await load_aws_sdk('@aws-sdk/client-elastic-load-balancing-v2');
+  if (elb) clients.set('elbv2', new elb.ElasticLoadBalancingV2Client({ region }));
+
   return clients;
 }
 

@@ -21,6 +21,7 @@ import { docdb_handler } from './handlers/docdb';
 import { dynamodb_handler } from './handlers/dynamodb';
 import { ec2_handler } from './handlers/ec2';
 import { elasticache_handler } from './handlers/elasticache';
+import { elbv2_handler } from './handlers/elbv2';
 import { lambda_handler } from './handlers/lambda';
 import { rds_handler } from './handlers/rds';
 import { s3_handler } from './handlers/s3';
@@ -54,6 +55,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.docdb.cluster', handler: docdb_handler },
   { prefix: 'aws.cognito.userPool', handler: cognito_handler },
   { prefix: 'aws.cloudfront.distribution', handler: cloudfront_handler },
+  { prefix: 'aws.elbv2.loadBalancer', handler: elbv2_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

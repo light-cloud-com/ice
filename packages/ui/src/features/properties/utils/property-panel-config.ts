@@ -18,6 +18,20 @@
  */
 export type PropertyPanelTabId = 'config' | 'domain' | 'scaling' | 'source' | 'connections' | 'deploy';
 
+/**
+ * Identifies a bespoke section component the panel can render inside a
+ * tab. The component itself is wired in `node-properties-section.tsx`
+ * via the `SECTION_COMPONENTS` factory map — this string is the
+ * registry key.
+ */
+export type PropertyPanelSectionId =
+  | 'public-endpoint-domain'
+  | 'custom-domain-panel'
+  | 'private-network-panel'
+  | 'env-vars-editor'
+  | 'source-repository'
+  | 'monitoring-log';
+
 export interface BlockPropertyPanelConfig {
   /**
    * Tabs to FORCE visible for this block regardless of dynamic signals.
@@ -33,27 +47,48 @@ export interface BlockPropertyPanelConfig {
    * canvas-only).
    */
   skipDeploymentTarget?: boolean;
+  /**
+   * Bespoke sections to render inside specific tabs. The panel renders
+   * each entry whose tab matches `activeTab`. Same id can appear under
+   * multiple tabs (e.g. Custom Domain's panel mirrors on both `config`
+   * and `domain`).
+   */
+  sections?: Partial<Record<PropertyPanelTabId, PropertyPanelSectionId[]>>;
 }
 
 export const BLOCK_PROPERTY_PANEL_CONFIGS: Record<string, BlockPropertyPanelConfig> = {
   'Network.PublicEndpoint': {
     forceTabs: ['config', 'domain'],
+    sections: { domain: ['public-endpoint-domain'] },
   },
   'Network.CustomDomain': {
     forceTabs: ['config', 'domain'],
+    // The config tab mirrors the domain tab so the user sees the root
+    // domain field + subdomain routing list as soon as they click the block.
+    sections: { domain: ['custom-domain-panel'], config: ['custom-domain-panel'] },
   },
   'Network.PrivateNetwork': {
     forceTabs: ['config'],
+    sections: { config: ['private-network-panel'] },
   },
   'Network.PublicTraffic': {
     skipDeploymentTarget: true,
   },
   'Config.Environment': {
     forceTabs: ['config'],
+    sections: { config: ['env-vars-editor'] },
   },
   'Source.Repository': {
     forceTabs: ['source'],
     skipDeploymentTarget: true,
+    // SourceRepositorySection renders inside the source tab. (The
+    // previous code also showed it in the config tab when no other tabs
+    // existed; with the source tab now always forced for this block,
+    // that fallback became dead code and was dropped.)
+    sections: { source: ['source-repository'] },
+  },
+  'Monitoring.Log': {
+    sections: { config: ['monitoring-log'] },
   },
 };
 

@@ -14,12 +14,24 @@ describe('BLOCK_PROPERTY_PANEL_CONFIGS', () => {
   it('registers exactly the iceTypes that need a bespoke panel experience', () => {
     expect(Object.keys(BLOCK_PROPERTY_PANEL_CONFIGS).sort()).toEqual([
       'Config.Environment',
+      'Monitoring.Log',
       'Network.CustomDomain',
       'Network.PrivateNetwork',
       'Network.PublicEndpoint',
       'Network.PublicTraffic',
       'Source.Repository',
     ]);
+  });
+
+  it('every registered section id resolves to a configured tab', () => {
+    // Sanity check: every section listed in the table targets one of
+    // the known tab ids. Catches typos before they silently no-op.
+    const validTabs: ReadonlySet<string> = new Set(['config', 'domain', 'scaling', 'source', 'connections', 'deploy']);
+    for (const [iceType, cfg] of Object.entries(BLOCK_PROPERTY_PANEL_CONFIGS)) {
+      for (const tab of Object.keys(cfg.sections ?? {})) {
+        expect(validTabs.has(tab), `${iceType} → unknown tab "${tab}"`).toBe(true);
+      }
+    }
   });
 
   it('forces config + domain tabs for both kinds of public DNS block', () => {

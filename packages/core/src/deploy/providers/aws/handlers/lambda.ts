@@ -55,6 +55,28 @@ export const lambda_handler: AWSResourceHandler = {
     const client = ctx.clients.get('lambda') as any;
     if (!client) return fail(name, 'create', start, 'Lambda SDK not available. Install @aws-sdk/client-lambda');
 
+    // Fail fast on missing required fields — the SDK error for these
+    // is cryptic ("Could not find resource ...") and burns user time.
+    const role = (properties.role as string) || '';
+    if (!role) {
+      return fail(
+        name,
+        'create',
+        start,
+        'Lambda function requires an IAM execution role ARN (properties.role). Wire one in or use the auto-role helper.',
+      );
+    }
+    const hasS3Ref = !!(properties.s3_bucket && properties.s3_key);
+    const hasZipFile = !!properties.zip_file;
+    if (!hasS3Ref && !hasZipFile) {
+      return fail(
+        name,
+        'create',
+        start,
+        'Lambda function code source is missing. Provide properties.code.{s3Bucket,s3Key} or zip_file (auto-build from Source.Repository lands in a later commit).',
+      );
+    }
+
     try {
       const lambda = await load_aws_sdk('@aws-sdk/client-lambda');
       if (!lambda) return fail(name, 'create', start, 'Lambda SDK not available. Install @aws-sdk/client-lambda');
@@ -62,7 +84,7 @@ export const lambda_handler: AWSResourceHandler = {
       const command = new lambda.CreateFunctionCommand({
         FunctionName: name,
         Runtime: (properties.runtime as string) || 'nodejs18.x',
-        Role: properties.role as string,
+        Role: role,
         Handler: (properties.handler as string) || 'index.handler',
         Code: {
           S3Bucket: properties.s3_bucket as string,

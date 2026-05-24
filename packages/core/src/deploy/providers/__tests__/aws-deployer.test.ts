@@ -435,7 +435,15 @@ describe('initialize', () => {
     const d = new AWSDeployer();
     await d.initialize({ provider: 'aws' });
 
-    const out = await d.create('aws.lambda.function', 'f1', {}, {});
+    // The hardened Lambda handler now requires a role + code source up
+    // front (commit #9). Supply both so the create-time validation
+    // passes and the SDK fake's FunctionArn response wins.
+    const out = await d.create(
+      'aws.lambda.function',
+      'f1',
+      { role: 'arn:aws:iam::1:role/r', s3_bucket: 'pkg', s3_key: 'app.zip' },
+      {},
+    );
     expect(out.success).toBe(true);
     expect(out.provider_id).toBe('arn:aws:lambda:us-east-1:1:function:f1');
   });
@@ -753,7 +761,12 @@ describe('create', () => {
 
     ctx.lambda.send.mockResolvedValueOnce({ FunctionArn: 'arn:aws:lambda:us-east-1:1:function:f1' });
 
-    const out = await d.create('aws.lambda.function', 'f1', { role: 'arn:aws:iam::1:role/r' }, {});
+    const out = await d.create(
+      'aws.lambda.function',
+      'f1',
+      { role: 'arn:aws:iam::1:role/r', s3_bucket: 'pkg', s3_key: 'app.zip' },
+      {},
+    );
 
     expect(out.success).toBe(true);
     expect(out.provider_id).toBe('arn:aws:lambda:us-east-1:1:function:f1');
@@ -763,7 +776,7 @@ describe('create', () => {
     const { d, lambda } = await deployerWithFullSdk();
     lambda.send.mockResolvedValueOnce({ FunctionArn: 'arn' });
 
-    await d.create('aws.lambda.function', 'f1', { role: 'r' }, {});
+    await d.create('aws.lambda.function', 'f1', { role: 'r', s3_bucket: 'pkg', s3_key: 'x.zip' }, {});
 
     const cmd = lambda.send.mock.calls[0][0];
     expect(cmd.input.Runtime).toBe('nodejs18.x');
@@ -822,7 +835,7 @@ describe('create', () => {
     const { d, lambda } = await deployerWithFullSdk();
     lambda.send.mockResolvedValueOnce({ FunctionArn: 'arn' });
 
-    await d.create('aws.lambda.function', 'f1', { role: 'r' }, {});
+    await d.create('aws.lambda.function', 'f1', { role: 'r', s3_bucket: 'pkg', s3_key: 'x.zip' }, {});
 
     const cmd = lambda.send.mock.calls[0][0];
     expect(cmd.input.Environment).toBeUndefined();
@@ -832,10 +845,24 @@ describe('create', () => {
     const { d, lambda } = await deployerWithFullSdk();
     lambda.send.mockResolvedValueOnce({ FunctionArn: 'arn' });
 
-    await d.create('aws.lambda.function', 'f1', { role: 'r' }, {});
+    await d.create('aws.lambda.function', 'f1', { role: 'r', s3_bucket: 'pkg', s3_key: 'x.zip' }, {});
 
     const cmd = lambda.send.mock.calls[0][0];
     expect(cmd.input.Code.ZipFile).toBeUndefined();
+  });
+
+  it('fails fast with a clear error when properties.role is missing on Lambda create', async () => {
+    const { d } = await deployerWithFullSdk();
+    const out = await d.create('aws.lambda.function', 'f1', { s3_bucket: 'pkg', s3_key: 'x.zip' }, {});
+    expect(out.success).toBe(false);
+    expect(out.error).toMatch(/IAM execution role/);
+  });
+
+  it('fails fast with a clear error when no code source is supplied on Lambda create', async () => {
+    const { d } = await deployerWithFullSdk();
+    const out = await d.create('aws.lambda.function', 'f1', { role: 'r' }, {});
+    expect(out.success).toBe(false);
+    expect(out.error).toMatch(/code source is missing/);
   });
 
   it('returns success:false with "Lambda SDK not available" when Lambda client is missing', async () => {

@@ -128,6 +128,14 @@ export {
 } from './node-traits';
 
 export {
+  type BlockRole,
+  BLOCK_ROLES_BY_ICE_TYPE,
+  BLOCK_ROLES_BY_PREFIX,
+  BLOCK_ROLES_BY_REGEX,
+  hasBlockRole,
+} from './block-classifiers';
+
+export {
   type TemplateCategory,
   type TemplateCategoryMeta,
   TEMPLATE_CATEGORIES,

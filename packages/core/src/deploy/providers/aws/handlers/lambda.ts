@@ -9,6 +9,7 @@
  * Source.Repository is wired in commit #28 (Phase 3).
  */
 
+import { build_and_upload_lambda } from './lambda-builder';
 import { load_aws_sdk } from '../sdk-loader';
 import type { ResourceDeployResult } from '../../../types';
 import type { AWSResourceHandler } from '../types';
@@ -66,14 +67,42 @@ export const lambda_handler: AWSResourceHandler = {
         'Lambda function requires an IAM execution role ARN (properties.role). Wire one in or use the auto-role helper.',
       );
     }
+
+    // Auto-build path — when no explicit code source is set but the
+    // extractor passed through a `repository` (set by the canvas's
+    // wire_source_repositories pass when Source.Repository is wired
+    // to this block), clone + zip + upload to the bootstrap bucket
+    // and stamp the resulting S3 ref onto `properties` so the rest
+    // of the handler proceeds as if the operator had supplied it.
     const hasS3Ref = !!(properties.s3_bucket && properties.s3_key);
     const hasZipFile = !!properties.zip_file;
-    if (!hasS3Ref && !hasZipFile) {
+    const hasRepo = !!properties.repository;
+    if (!hasS3Ref && !hasZipFile && hasRepo) {
+      try {
+        const built = await build_and_upload_lambda({
+          function_name: name,
+          repository: properties.repository as string,
+          branch: (properties.branch as string) || 'main',
+          ctx,
+        });
+        properties.s3_bucket = built.s3Bucket;
+        properties.s3_key = built.s3Key;
+      } catch (error) {
+        return fail(
+          name,
+          'create',
+          start,
+          `Lambda auto-build failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    if (!properties.s3_bucket && !hasZipFile) {
       return fail(
         name,
         'create',
         start,
-        'Lambda function code source is missing. Provide properties.code.{s3Bucket,s3Key} or zip_file (auto-build from Source.Repository lands in a later commit).',
+        'Lambda function code source is missing. Provide properties.code.{s3Bucket,s3Key}, zip_file, or wire a Source.Repository to enable auto-build.',
       );
     }
 

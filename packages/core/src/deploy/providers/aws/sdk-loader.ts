@@ -67,6 +67,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const rds = await load_aws_sdk('@aws-sdk/client-rds');
   if (rds) clients.set('rds', new rds.RDSClient({ region }));
 
+  const docdb = await load_aws_sdk('@aws-sdk/client-docdb');
+  if (docdb) clients.set('docdb', new docdb.DocDBClient({ region }));
+
   return clients;
 }
 

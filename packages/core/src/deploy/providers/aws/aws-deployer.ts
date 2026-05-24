@@ -15,6 +15,7 @@
 
 import { create_account_id_resolver } from './account';
 import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
+import { docdb_handler } from './handlers/docdb';
 import { dynamodb_handler } from './handlers/dynamodb';
 import { ec2_handler } from './handlers/ec2';
 import { elasticache_handler } from './handlers/elasticache';
@@ -48,6 +49,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.dynamodb.table', handler: dynamodb_handler },
   { prefix: 'aws.elasticache.cluster', handler: elasticache_handler },
   { prefix: 'aws.rds.dbInstance', handler: rds_handler },
+  { prefix: 'aws.docdb.cluster', handler: docdb_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

@@ -26,6 +26,7 @@
 
 // ─── Type re-exports ────────────────────────────────────────────────────────
 export type {
+  DeployExpansion,
   HighLevelCategory,
   HighLevelProperty,
   HighLevelResource,
@@ -43,5 +44,6 @@ export {
   getBehaviorColor,
   getBehaviorLabel,
   getGCPCloudAssetTypes,
+  getHighLevelResourceByIceType,
   getHighLevelResourcesForPalette,
 } from './high-level-resources/helpers';

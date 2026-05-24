@@ -25,6 +25,9 @@ describe('Card Translator Type Maps', () => {
 
     it('should map all standard GCP iceTypes', async () => {
       const mod = await import('../deploy/card-translator');
+      // Security.Secret is intentionally absent here — it now expands per
+      // binding, so a block with no bindings produces zero deployables and
+      // a warning. Covered separately below.
       const gcpTypes = [
         'Compute.StaticSite',
         'Compute.Container',
@@ -32,7 +35,6 @@ describe('Card Translator Type Maps', () => {
         'Database.PostgreSQL',
         'Storage.Bucket',
         'Messaging.CloudPubSub',
-        'Security.Secret',
         'AI.VectorDB',
       ];
 
@@ -45,6 +47,84 @@ describe('Card Translator Type Maps', () => {
         });
         expect(result.deployable_count).toBeGreaterThan(0);
       }
+    });
+
+    it('expands a Security.Secret block into one resource per unique binding', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'sec1',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app-secrets',
+              secrets: [
+                { key: 'STRIPE_API_KEY', ref: 'prod-stripe-key' },
+                { key: 'JWT_SECRET' }, // ref blank → falls back to key
+                { key: 'STRIPE_API_KEY', ref: 'prod-stripe-key' }, // dup
+              ],
+            },
+          },
+        ],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      // Dedup by `ref || key` collapses the duplicate.
+      expect(result.deployable_count).toBe(2);
+      const refs = result.deployables.map((d) => d.resource_name).sort();
+      expect(refs).toEqual(['jwt-secret', 'prod-stripe-key']);
+      // Every emitted deployable still attributes back to the source block.
+      expect(result.deployables.every((d) => d.node_id === 'sec1')).toBe(true);
+      // Each deployable label carries the binding key for plan-UI clarity.
+      expect(result.deployables.some((d) => d.label.includes('STRIPE_API_KEY'))).toBe(true);
+      expect(result.deployables.some((d) => d.label.includes('JWT_SECRET'))).toBe(true);
+    });
+
+    it('warns and skips when a Security.Secret block has no bindings', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [{ id: 'sec1', type: 'resource', data: { iceType: 'Security.Secret', label: 'empty-store' } }],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      expect(result.deployable_count).toBe(0);
+      expect(result.warnings.some((w) => w.includes('empty-store'))).toBe(true);
+      expect(result.skipped.some((s) => s.nodeId === 'sec1')).toBe(true);
+    });
+
+    it('dedupes shared refs across multiple Security.Secret blocks', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'sec1',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app',
+              secrets: [{ key: 'DB_PASSWORD', ref: 'shared-db' }],
+            },
+          },
+          {
+            id: 'sec2',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'worker',
+              secrets: [{ key: 'DB_PASSWORD', ref: 'shared-db' }],
+            },
+          },
+        ],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      // One cloud secret, attributed to whichever block emitted it first.
+      expect(result.deployable_count).toBe(1);
+      expect(result.deployables[0].resource_name).toBe('shared-db');
     });
   });
 

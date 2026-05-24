@@ -20,13 +20,14 @@
  * Extracted from `properties-panel.tsx` lines 296-553 in rf-props-6.
  */
 
-import { Clock, Info, List } from 'lucide-react';
+import { Clock, Globe, Info, Key, List, Network } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { t } from '../../../../i18n';
 import { IceSelect, type IceSelectOption } from '../../../../shared/components/ui/ice-select';
 import { cn } from '../../../../shared/utils/cn';
 import { selectActiveCard } from '../../../../store/slices/cards-slice';
+import { type PortProtocol, type PortSpec, parsePort, stringifyPort } from '../../utils/port-spec';
 import { type QueueSpec, parseQueue, stringifyQueue } from '../../utils/queue-spec';
 import { type TaskSpec, emptyTask, parseTask, stringifyTask } from '../../utils/task-spec';
 import type { CustomInputConfig } from './render-property-field';
@@ -209,6 +210,179 @@ export const QueueListField: React.FC<{
         className="w-full text-ice-2xs text-ice-text-3/60 hover:text-ice-accent transition-colors py-1.5 rounded border border-dashed border-ice-border/40 hover:border-ice-accent/40"
       >
         + {addLabel || t('canvas.properties.fields.queueAdd')}
+      </button>
+    </div>
+  );
+};
+
+// ─── Exposed ports list — multi-port HTTP/TCP listeners on a service ──────
+
+const PORT_PROTOCOL_OPTIONS: PortProtocol[] = ['http', 'https', 'tcp'];
+
+export const PortListField: React.FC<{
+  label: string;
+  value: string[];
+  onChange: (v: string[]) => void;
+  addLabel?: string;
+}> = ({ label, value, onChange, addLabel }) => {
+  const ports = value.map(parsePort);
+  const update = (i: number, next: PortSpec): void => {
+    const arr = [...value];
+    arr[i] = stringifyPort(next);
+    onChange(arr);
+  };
+  return (
+    <div className="py-1 space-y-2">
+      <span className="text-ice-xs text-ice-text-3">{label}</span>
+      <div className="space-y-1.5">
+        {ports.map((p, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-ice-border/40 bg-ice-bg-raised/40 hover:border-ice-accent/40 transition-colors group"
+          >
+            {/* Port icon */}
+            <div
+              className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(236,72,153,0.18), rgba(236,72,153,0.06))',
+                border: '1px solid rgba(236,72,153,0.35)',
+              }}
+            >
+              {p.protocol === 'tcp' ? (
+                <Network className="w-3 h-3 text-rose-300" />
+              ) : (
+                <Globe className="w-3 h-3 text-rose-300" />
+              )}
+            </div>
+            {/* Protocol */}
+            <select
+              value={p.protocol}
+              onChange={(e) => update(i, { ...p, protocol: e.target.value as PortProtocol })}
+              className="bg-transparent text-ice-2xs text-ice-text-2 font-mono outline-none border-b border-ice-border/40 cursor-pointer"
+            >
+              {PORT_PROTOCOL_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            {/* Port number */}
+            <input
+              type="number"
+              min={1}
+              max={65535}
+              value={p.port}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (Number.isFinite(n)) update(i, { ...p, port: n });
+              }}
+              className="w-16 bg-transparent text-ice-xs text-ice-text-1 font-mono outline-none border-b border-ice-border/40 focus:border-ice-accent text-right"
+            />
+            {/* Label */}
+            <input
+              type="text"
+              value={p.label ?? ''}
+              onChange={(e) => update(i, { ...p, label: e.target.value })}
+              placeholder="label"
+              className="flex-1 min-w-0 bg-transparent text-ice-xs text-ice-text-2 font-mono outline-none placeholder:text-ice-text-3/40"
+            />
+            {/* Remove */}
+            <button
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              className="flex-shrink-0 p-0.5 text-ice-text-3/40 hover:text-red-400 transition-colors text-ice-sm opacity-0 group-hover:opacity-100"
+              title="Remove port"
+            >
+              &times;
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onChange([...value, stringifyPort({ port: 8080, protocol: 'http' })])}
+        className="w-full text-ice-2xs text-ice-text-3/60 hover:text-ice-accent transition-colors py-1.5 rounded border border-dashed border-ice-border/40 hover:border-ice-accent/40"
+      >
+        + {addLabel || 'Add port'}
+      </button>
+    </div>
+  );
+};
+
+// ─── Secret bindings — env var name ↔ upstream secret manager ref ────────
+//
+// The Secret Store block does NOT hold secret values — the cloud's secret
+// manager (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault) does.
+// Each row here binds:
+//   - `key`: the environment variable name the service sees at runtime
+//   - `ref`: the id of the entry in the upstream secret manager
+// When `ref` is blank, the deploy translator falls back to `key` so the
+// common case (same name on both sides) needs no extra typing.
+
+export interface SecretBinding {
+  key: string;
+  ref?: string;
+}
+
+export const SecretBindingsField: React.FC<{
+  label: string;
+  value: SecretBinding[];
+  onChange: (v: SecretBinding[]) => void;
+  addLabel?: string;
+}> = ({ label, value, onChange, addLabel }) => {
+  const update = (i: number, next: SecretBinding) => {
+    const arr = [...value];
+    arr[i] = next;
+    onChange(arr);
+  };
+  return (
+    <div className="py-1 space-y-2">
+      <span className="text-ice-xs text-ice-text-3">{label}</span>
+      <div className="space-y-1.5">
+        {value.map((row, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-ice-border/40 bg-ice-bg-raised/40 hover:border-ice-accent/40 transition-colors group"
+          >
+            <div
+              className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(234,179,8,0.18), rgba(234,179,8,0.06))',
+                border: '1px solid rgba(234,179,8,0.35)',
+              }}
+            >
+              <Key className="w-3 h-3 text-amber-300" />
+            </div>
+            <input
+              type="text"
+              value={row.key}
+              onChange={(e) => update(i, { ...row, key: e.target.value })}
+              placeholder="STRIPE_API_KEY"
+              title={t('properties.secretBindings.keyTooltip')}
+              className="flex-1 min-w-0 bg-transparent text-ice-xs text-ice-text-1 font-mono outline-none border-b border-ice-border/40 focus:border-ice-accent placeholder:text-ice-text-3/40"
+            />
+            <span className="text-ice-2xs text-ice-text-3/50 shrink-0">←</span>
+            <input
+              type="text"
+              value={row.ref ?? ''}
+              onChange={(e) => update(i, { ...row, ref: e.target.value })}
+              placeholder={row.key || 'prod-stripe-key'}
+              title={t('properties.secretBindings.refTooltip')}
+              className="flex-1 min-w-0 bg-transparent text-ice-xs text-ice-text-2 font-mono outline-none border-b border-ice-border/40 focus:border-ice-accent placeholder:text-ice-text-3/40"
+            />
+            <button
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              className="flex-shrink-0 p-0.5 text-ice-text-3/40 hover:text-red-400 transition-colors text-ice-sm opacity-0 group-hover:opacity-100"
+              title={t('properties.secretBindings.removeTitle')}
+            >
+              &times;
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onChange([...value, { key: '', ref: '' }])}
+        className="w-full text-ice-2xs text-ice-text-3/60 hover:text-ice-accent transition-colors py-1.5 rounded border border-dashed border-ice-border/40 hover:border-ice-accent/40"
+      >
+        + {addLabel || t('properties.secretBindings.add')}
       </button>
     </div>
   );

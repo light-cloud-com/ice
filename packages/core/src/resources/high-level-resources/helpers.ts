@@ -47,6 +47,33 @@ export function getAllHighLevelResources(): HighLevelResource[] {
   return HIGH_LEVEL_CATEGORIES.flatMap((cat) => cat.resources);
 }
 
+// Lazy iceType → resource index. Built once on first lookup and cached
+// thereafter — `HIGH_LEVEL_CATEGORIES` is a static module-level constant
+// so the map is safe to cache for the lifetime of the process.
+let HIGH_LEVEL_BY_ICE_TYPE: Map<string, HighLevelResource> | null = null;
+
+function buildIceTypeIndex(): Map<string, HighLevelResource> {
+  const map = new Map<string, HighLevelResource>();
+  for (const resource of getAllHighLevelResources()) {
+    if (resource.iceType) map.set(resource.iceType, resource);
+  }
+  return map;
+}
+
+/**
+ * Look up the canonical `HighLevelResource` by iceType.
+ *
+ * The translator (and any other cross-cutting layer) uses this to read
+ * schema-declared deploy semantics like `deployExpansion` WITHOUT
+ * hardcoding iceType-specific branches. Resources that don't set
+ * `iceType` on the schema return `undefined` here.
+ */
+export function getHighLevelResourceByIceType(iceType: string): HighLevelResource | undefined {
+  if (!iceType) return undefined;
+  if (!HIGH_LEVEL_BY_ICE_TYPE) HIGH_LEVEL_BY_ICE_TYPE = buildIceTypeIndex();
+  return HIGH_LEVEL_BY_ICE_TYPE.get(iceType);
+}
+
 /**
  * Get resources formatted for the palette
  */

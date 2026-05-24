@@ -107,20 +107,12 @@ describe('SvgSecretStoreNode', () => {
     expect((tree.props as { liveConfig: string }).liveConfig).toBe('3 secrets');
   });
 
-  it('appends "· auto-rotate" when data.auto_rotate is truthy', () => {
+  it('ignores stale data.auto_rotate (property was removed from the schema)', () => {
     const tree = SvgSecretStoreNode({
       node: makeNode({ data: { secrets: ['X'], auto_rotate: true } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 secret · auto-rotate');
-  });
-
-  it('omits "· auto-rotate" when no secrets, even if flag set', () => {
-    const tree = SvgSecretStoreNode({
-      node: makeNode({ data: { auto_rotate: true } }),
-      isSelected: false,
-    }) as React.ReactElement;
-    expect((tree.props as { liveConfig: string }).liveConfig).toBe('No secrets yet');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 secret');
   });
 
   it('uses node.label as title when present, falls back to "Secret Store"', () => {

@@ -13,8 +13,15 @@ export function extract_secret_manager_properties(
   data: Record<string, unknown>,
   _region: string,
 ): Record<string, unknown> {
+  // Pass the bindings through verbatim. The handler currently creates
+  // a single parent `Secret` resource named after the block; each row
+  // here describes the upstream entry an env var should resolve to
+  // (`{ key: ENV_VAR, ref: secret-id }`). Wiring each binding to its
+  // own provider resource is a translator-level expansion (one block →
+  // N resources) — left for a follow-up.
   return {
     replication_type: data.replicationType || 'automatic',
+    bindings: Array.isArray(data.secrets) ? data.secrets : [],
     labels: {},
   };
 }

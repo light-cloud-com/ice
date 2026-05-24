@@ -2,6 +2,18 @@
  * Secret Manager Handler
  *
  * Handles: gcp.secretmanager.secret
+ *
+ * Translator expansion: one Secret Store block emits one of these per
+ * binding row (see `card-translator.ts` Security.Secret expansion). The
+ * resource `name` is the upstream ref (`ref || key` from the binding),
+ * so service `secretRefs` entries — wired by the canvas propagation
+ * rules — resolve against the same id GCP knows.
+ *
+ * Values are NOT written. This handler creates the parent `Secret`
+ * resource only; `SecretVersion`s must be populated by the operator in
+ * the GCP console / IaC. That keeps actual secret values out of the
+ * ICE project file (and out of the canvas), which is the security
+ * tradeoff we want.
  */
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages';

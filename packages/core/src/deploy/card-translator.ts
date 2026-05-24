@@ -15,10 +15,13 @@ import {
 } from './edge-classifier';
 import { create_mutable_graph } from '../graph/mutable-graph';
 import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
+import { expand_deployable_per_entry } from './passes/deploy-expansion';
 import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
 import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
+import { propagate_socket_port_targets } from './passes/pass-1-46-socket-port-targeting';
 import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
 import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
+import { getHighLevelResourceByIceType } from '../resources/high-level-resources';
 import { sanitize_name, sanitize_label_value } from './utils/name-utils';
 import { generate_stable_name } from './utils/stable-name';
 import type { Graph } from '../types/graph';
@@ -252,6 +255,51 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     }
     const properties = extractor(node.data, region, node.id);
 
+    // ─── Schema-declared 1→N deploy expansion ─────────────────────────
+    //
+    // When the canonical schema sets `deployExpansion`, partition the
+    // extractor's output and emit one cloud resource per entry instead
+    // of one per block. This branch is iceType-agnostic — Secret Store
+    // happens to be the first user, but ANY future block whose schema
+    // declares expansion goes through the same code path.
+    //
+    // No edge connections back to the source block — the canvas-side
+    // propagation rules carry per-entry refs onto consumer nodes
+    // (e.g. service `secretRefs`), and leaving the block out of
+    // `card_id_to_name` makes the deferred edge pass drop any orphan
+    // edges naturally.
+    const schemaResource = getHighLevelResourceByIceType(ice_type);
+    if (schemaResource?.deployExpansion) {
+      const blockLabel = (node.data.label as string) || ice_type.split('.').pop() || 'resource';
+      const baseLabels: Record<string, string> = {
+        'ice-managed': 'true',
+        'ice-source-id': sanitize_label_value(node.id),
+        'ice-type': sanitize_label_value(ice_type),
+        'ice-project': sanitize_label_value(projectName),
+      };
+      if (input.environment) baseLabels['ice-environment'] = sanitize_label_value(input.environment);
+      if (cardId) baseLabels['ice-card-id'] = sanitize_label_value(cardId);
+
+      const expansionResult = expand_deployable_per_entry({
+        expansion: schemaResource.deployExpansion,
+        nodeId: node.id,
+        blockLabel,
+        iceType: ice_type,
+        // `gcp_type` is the provider-resolved type (legacy variable name
+        // — covers AWS / Azure / GCP / K8s); it just gets forwarded.
+        resourceType: gcp_type,
+        properties: properties as Record<string, unknown>,
+        baseLabels,
+        graph,
+        deployables,
+        skipped,
+        warnings,
+        provider,
+      });
+      deployable_count += expansionResult.added;
+      continue;
+    }
+
     // Private Network ingress override.
     //
     // When a service backend (Scalable Backend / SSR Site / Worker /
@@ -357,6 +405,14 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
   // ─── Pass 1.45 — Network.CustomDomain → target host propagation ────────
   propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
+
+  // ─── Pass 1.46 — Socket-driven target-port routing ─────────────────────
+  // Reads `edge.data.targetSocket` / `sourceSocket` ids of shape
+  // `port-<N>-(in|out)` and writes the encoded port onto the compute
+  // node's `target_port` (and `port` if not user-set). Makes multi-port
+  // containers' typed-socket choices actually drive what the LB
+  // targets at deploy time.
+  propagate_socket_port_targets(edges, nodes, card_id_to_name, graph);
 
   // ─── Pass 1.5 — PublicEndpoint semantic wiring ─────────────────────────
   const { deployable_count_delta } = wire_public_endpoints({

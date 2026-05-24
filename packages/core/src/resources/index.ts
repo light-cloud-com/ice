@@ -29,10 +29,12 @@ export {
 export {
   HIGH_LEVEL_CATEGORIES,
   getAllHighLevelResources,
+  getHighLevelResourceByIceType,
   getHighLevelResourcesForPalette,
   filterResourcesByProvider,
   getBehaviorLabel,
   getBehaviorColor,
+  type DeployExpansion,
   type HighLevelResource,
   type HighLevelProperty,
   type HighLevelCategory,

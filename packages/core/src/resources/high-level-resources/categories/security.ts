@@ -25,6 +25,16 @@ export const security: HighLevelCategory = {
   resources: [
     {
       id: 'secret-store',
+      iceType: 'Security.Secret',
+      // Declarative deploy-time expansion: one cloud secret per binding,
+      // not one stub per block. Provider-agnostic — extractors/handlers
+      // own the per-provider resource shape. See `DeployExpansion`.
+      deployExpansion: {
+        partitionBy: 'bindings',
+        nameFrom: { field: 'ref', fallback: 'key' },
+        labelFrom: 'key',
+        tagPerEntry: { labelKey: 'ice-secret-key', fromField: 'key' },
+      },
       name: 'Secret Store',
       description: 'Securely store API keys and credentials',
       icon: 'Key',
@@ -57,31 +67,28 @@ export const security: HighLevelCategory = {
       properties: [
         {
           name: 'name',
-          label: 'Name',
+          label: 'Store name',
           type: 'string',
           required: true,
           tier: 'essential',
-          description: 'A friendly name for this secret',
-          placeholder: 'My Secret',
+          description: 'A friendly name for this secret store',
+          placeholder: 'My Secrets',
         },
         {
           name: 'secrets',
-          label: 'Secret values',
-          type: 'list',
+          label: 'Secret bindings',
+          type: 'secret_bindings',
           required: false,
           tier: 'essential',
-          description: 'The secret key-value pairs to store',
-          placeholder: 'e.g. STRIPE_API_KEY',
-          addLabel: 'Add a secret',
-        },
-        {
-          name: 'auto_rotate',
-          label: 'Auto-rotate?',
-          type: 'boolean',
-          required: false,
-          tier: 'detailed',
-          description: 'Automatically change this secret on a schedule for better security',
-          default: false,
+          // The block does NOT store secret values — values live in the
+          // upstream secret manager (Secrets Manager / Secret Manager /
+          // Key Vault). Each row binds an env-var name (`key`, e.g.
+          // `STRIPE_API_KEY`) to a secret entry there (`ref`, e.g.
+          // `prod-stripe-key`). Wiring this block to a service injects
+          // those env vars at runtime.
+          description:
+            'Bind env var names to entries in your cloud secret manager. Values are managed there, not here.',
+          addLabel: 'Add a binding',
         },
       ],
     },

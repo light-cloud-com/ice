@@ -1300,7 +1300,13 @@
     "noServiceHint": "将此区块连接到服务以配置部署触发器。",
     "addItem": "添加项目",
     "removeConnection": "移除连接",
-    "noLogsRecorded": "暂无日志记录"
+    "noLogsRecorded": "暂无日志记录",
+    "secretBindings": {
+      "keyTooltip": "运行时注入服务的环境变量名。",
+      "refTooltip": "上游密钥管理器中的条目 ID。留空时默认使用环境变量名。",
+      "removeTitle": "移除绑定",
+      "add": "添加绑定"
+    }
   },
   "project": {
     "settings": {

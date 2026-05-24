@@ -32,6 +32,11 @@ import {
   extract_firebase_hosting_properties,
 } from './ancillary';
 import {
+  extract_ecs_service_properties,
+  extract_lambda_function_properties,
+  extract_events_rule_properties,
+} from './aws/compute';
+import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
@@ -79,4 +84,10 @@ export const PROPERTY_EXTRACTORS: Record<
   'gcp.compute.subnetwork': extract_subnet_properties,
   'gcp.compute.securityPolicy': extract_cloud_armor_properties,
   'gcp.firebase.hosting': extract_firebase_hosting_properties,
+
+  // ─── AWS — compute ─────────────────────────────────────────────────
+  // (More AWS categories register in commits #3–#6.)
+  'aws.ecs.service': extract_ecs_service_properties,
+  'aws.lambda.function': extract_lambda_function_properties,
+  'aws.events.rule': extract_events_rule_properties,
 };

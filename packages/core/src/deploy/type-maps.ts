@@ -47,6 +47,12 @@ export const GCP_TYPE_MAP: Record<string, string> = {
   // are set, and the URL map host rules are populated from each
   // outgoing edge's `subdomain` field.
   'Network.PublicEndpoint': 'gcp.compute.globalForwardingRule',
+  // `Network.CustomDomain` resolves to the same forwarding-rule chain
+  // as PublicEndpoint when nested inside a PrivateNetwork (it acts as
+  // that network's public gateway). Standalone CD is skipped before
+  // this lookup by `isStandaloneMetadataOnly` — only the nested case
+  // ever needs the mapping.
+  'Network.CustomDomain': 'gcp.compute.globalForwardingRule',
   // `Network.PrivateNetwork` is the user-facing "private network" block:
   // one group on the canvas that wraps the services we want isolated.
   // Compiles to an auto-mode VPC (`autoCreateSubnetworks: true`) so the
@@ -94,6 +100,9 @@ export const AWS_TYPE_MAP: Record<string, string> = {
   'Storage.ObjectStorage': 'aws.s3.bucket',
   'Network.Gateway': 'aws.apigateway.restApi',
   'Network.PublicEndpoint': 'aws.cloudfront.distribution',
+  // Nested CustomDomain mirrors PublicEndpoint per the same rationale
+  // as the GCP map above.
+  'Network.CustomDomain': 'aws.cloudfront.distribution',
   'Network.LoadBalancer': 'aws.elbv2.loadBalancer',
   'Messaging.Queue': 'aws.sqs.queue',
   'Messaging.Topic': 'aws.sns.topic',
@@ -128,6 +137,9 @@ export const AZURE_TYPE_MAP: Record<string, string> = {
   'Storage.ObjectStorage': 'azure.storage.storageAccount',
   'Network.Gateway': 'azure.apimanagement.service',
   'Network.PublicEndpoint': 'azure.cdn.profile',
+  // Nested CustomDomain mirrors PublicEndpoint per the same rationale
+  // as the GCP map above.
+  'Network.CustomDomain': 'azure.cdn.profile',
   'Network.LoadBalancer': 'azure.network.loadBalancer',
   'Messaging.Queue': 'azure.servicebus.queue',
   'Messaging.Topic': 'azure.servicebus.topic',

@@ -15,8 +15,12 @@ import { GCP_TYPE_MAP, AWS_TYPE_MAP, AZURE_TYPE_MAP, DESIGN_ONLY_PROVIDERS, get_
 import type { DeployProvider } from '../card-translator';
 
 describe('GCP_TYPE_MAP', () => {
-  it('exposes 32 iceType entries', () => {
-    expect(Object.keys(GCP_TYPE_MAP)).toHaveLength(32);
+  it('exposes 33 iceType entries', () => {
+    expect(Object.keys(GCP_TYPE_MAP)).toHaveLength(33);
+  });
+
+  it('maps nested Network.CustomDomain → gcp.compute.globalForwardingRule (mirrors PublicEndpoint)', () => {
+    expect(GCP_TYPE_MAP['Network.CustomDomain']).toBe('gcp.compute.globalForwardingRule');
   });
 
   it('maps Compute.StaticSite → gcp.firebase.hosting (Firebase Hosting choice)', () => {
@@ -43,8 +47,12 @@ describe('GCP_TYPE_MAP', () => {
 });
 
 describe('AWS_TYPE_MAP', () => {
-  it('exposes 27 iceType entries', () => {
-    expect(Object.keys(AWS_TYPE_MAP)).toHaveLength(27);
+  it('exposes 28 iceType entries', () => {
+    expect(Object.keys(AWS_TYPE_MAP)).toHaveLength(28);
+  });
+
+  it('maps nested Network.CustomDomain → aws.cloudfront.distribution (mirrors PublicEndpoint)', () => {
+    expect(AWS_TYPE_MAP['Network.CustomDomain']).toBe('aws.cloudfront.distribution');
   });
 
   it('maps Compute.Container → aws.ecs.service', () => {
@@ -67,8 +75,12 @@ describe('AWS_TYPE_MAP', () => {
 });
 
 describe('AZURE_TYPE_MAP', () => {
-  it('exposes 26 iceType entries', () => {
-    expect(Object.keys(AZURE_TYPE_MAP)).toHaveLength(26);
+  it('exposes 27 iceType entries', () => {
+    expect(Object.keys(AZURE_TYPE_MAP)).toHaveLength(27);
+  });
+
+  it('maps nested Network.CustomDomain → azure.cdn.profile (mirrors PublicEndpoint)', () => {
+    expect(AZURE_TYPE_MAP['Network.CustomDomain']).toBe('azure.cdn.profile');
   });
 
   it('maps Storage.Bucket → azure.storage.storageAccount', () => {

@@ -5,9 +5,9 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
+import { hasBlockRole } from '@ice/constants';
 import {
   UI_ONLY_TYPES,
-  SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
   EXTERNAL_TYPES,
   hasNetworkIsolatingAncestor,
   isStandaloneMetadataOnly,
@@ -15,6 +15,7 @@ import {
 } from './edge-classifier';
 import { create_mutable_graph } from '../graph/mutable-graph';
 import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
+import { applyInternalIngressOverride } from './internal-ingress-overrides';
 import { expand_deployable_per_entry } from './passes/deploy-expansion';
 import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
 import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
@@ -220,11 +221,12 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Look up the deployer type. Nested Network.CustomDomain inside a
-    // PrivateNetwork compiles to the global forwarding rule (same as
-    // Network.PublicEndpoint) — the nested case isn't in the type map
-    // because standalone CDs are UI-only, so we resolve it inline here.
-    const gcp_type = ice_type === 'Network.CustomDomain' ? 'gcp.compute.globalForwardingRule' : type_map[ice_type];
+    // Look up the deployer type. Network.CustomDomain has its own
+    // per-provider entry in each type-map (nested CDs compile to the
+    // same ingress chain as Network.PublicEndpoint on every provider;
+    // standalone CDs are filtered out above by isStandaloneMetadataOnly).
+    // No iceType-specific branches here — pure table lookup.
+    const gcp_type = type_map[ice_type];
     if (!gcp_type) {
       warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
@@ -304,26 +306,15 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
     // Network-isolation ingress override.
     //
-    // When a service backend (Scalable Backend / SSR Site / Worker /
-    // Serverless Function) is nested inside a network-isolation
-    // container (today: Network.PrivateNetwork; schema-declared via
-    // BLOCK_DEPLOY_CLASSIFIERS.isolatesNetworkContext), emit the
-    // internal-only variant of the underlying compute resource. A
-    // nested ingress block (if present) remains the sole external
-    // entry point via its own LB chain; see isStandaloneMetadataOnly +
-    // the backend-wiring at ~line 1100.
-    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasNetworkIsolatingAncestor(node, nodes)) {
-      const props = properties as Record<string, unknown>;
-      if (gcp_type === 'gcp.run.service') {
-        // Internal Cloud Run — only reachable via VPC or internal LB.
-        props.allow_unauthenticated = false;
-        props.ingress = 'internal-and-cloud-load-balancing';
-      } else if (gcp_type === 'aws.ecs.service') {
-        props.assign_public_ip = false;
-        props.internal = true;
-      } else if (gcp_type === 'azure.containerapp.containerApp') {
-        props.ingress_external = false;
-      }
+    // When a `serviceBackend`-role block (Scalable Backend / SSR Site /
+    // Worker / Serverless Function) is nested inside a network-isolation
+    // container (any iceType with BLOCK_DEPLOY_CLASSIFIERS.isolatesNetworkContext),
+    // ask the provider's registered override to mutate the property dict
+    // so the resource serves traffic internally. The provider-specific
+    // logic lives in `internal-ingress-overrides.ts`; the translator
+    // stays provider-agnostic.
+    if (hasBlockRole(ice_type, 'serviceBackend') && hasNetworkIsolatingAncestor(node, nodes)) {
+      applyInternalIngressOverride(gcp_type, properties as Record<string, unknown>);
     }
 
     // Phase 1 — stable resource identity.

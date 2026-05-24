@@ -15,6 +15,7 @@
 
 import { create_account_id_resolver } from './account';
 import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
+import { dynamodb_handler } from './handlers/dynamodb';
 import { ec2_handler } from './handlers/ec2';
 import { lambda_handler } from './handlers/lambda';
 import { s3_handler } from './handlers/s3';
@@ -42,6 +43,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.secretsmanager.secret', handler: secrets_manager_handler },
   { prefix: 'aws.sqs.queue', handler: sqs_handler },
   { prefix: 'aws.sns.topic', handler: sns_handler },
+  { prefix: 'aws.dynamodb.table', handler: dynamodb_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

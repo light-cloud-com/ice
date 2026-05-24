@@ -58,6 +58,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const sns = await load_aws_sdk('@aws-sdk/client-sns');
   if (sns) clients.set('sns', new sns.SNSClient({ region }));
 
+  const dynamo = await load_aws_sdk('@aws-sdk/client-dynamodb');
+  if (dynamo) clients.set('dynamodb', new dynamo.DynamoDBClient({ region }));
+
   return clients;
 }
 

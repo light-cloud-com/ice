@@ -82,6 +82,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const api = await load_aws_sdk('@aws-sdk/client-api-gateway');
   if (api) clients.set('apigateway', new api.APIGatewayClient({ region }));
 
+  const ev = await load_aws_sdk('@aws-sdk/client-eventbridge');
+  if (ev) clients.set('eventbridge', new ev.EventBridgeClient({ region }));
+
   return clients;
 }
 

@@ -14,6 +14,7 @@
  */
 
 import { create_account_id_resolver } from './account';
+import { cloudfront_handler } from './handlers/cloudfront';
 import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
 import { cognito_handler } from './handlers/cognito';
 import { docdb_handler } from './handlers/docdb';
@@ -52,6 +53,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.rds.dbInstance', handler: rds_handler },
   { prefix: 'aws.docdb.cluster', handler: docdb_handler },
   { prefix: 'aws.cognito.userPool', handler: cognito_handler },
+  { prefix: 'aws.cloudfront.distribution', handler: cloudfront_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

@@ -73,6 +73,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const cognito = await load_aws_sdk('@aws-sdk/client-cognito-identity-provider');
   if (cognito) clients.set('cognito', new cognito.CognitoIdentityProviderClient({ region }));
 
+  const cf = await load_aws_sdk('@aws-sdk/client-cloudfront');
+  if (cf) clients.set('cloudfront', new cf.CloudFrontClient({ region }));
+
   return clients;
 }
 

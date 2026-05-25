@@ -19,6 +19,7 @@ flowchart LR
     Arch -.-> A4[database]
     Arch -.-> A5[desktop]
     Arch -.-> A6[ai-assistant]
+    Arch -.-> A7[connections-to-cloud]
 
     Ref -.-> Rf1[blocks]
     Ref -.-> Rf2[extending-providers]
@@ -56,14 +57,15 @@ You want to run ICE for a team (self-hosted).
 
 You want to read the code, fix bugs, or add features. The canonical contributor doc is [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — pages below complement it.
 
-| Page                                                                | What it covers                                    |
-| ------------------------------------------------------------------- | ------------------------------------------------- |
-| [Testing](testing.md)                                               | Unit · integration · E2E · GCP scenario dashboard |
-| [Architecture → core engine](architecture/core-engine.md)           | Graph, schemas, plan/apply, scheduler, importers  |
-| [Architecture → frontend](architecture/frontend.md)                 | React, Redux slices, SVG canvas, feature folders  |
-| [Architecture → services](architecture/services.md)                 | The six backend services composed by the gateway  |
-| [Reference → blocks](reference/blocks.md)                           | Concept palette + per-provider variants           |
-| [Reference → extending providers](reference/extending-providers.md) | How to add a new cloud provider                   |
+| Page                                                                        | What it covers                                              |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [Testing](testing.md)                                                       | Unit · integration · E2E · GCP scenario dashboard           |
+| [Architecture → core engine](architecture/core-engine.md)                   | Graph, schemas, plan/apply, scheduler, importers            |
+| [Architecture → frontend](architecture/frontend.md)                         | React, Redux slices, SVG canvas, feature folders            |
+| [Architecture → services](architecture/services.md)                         | The six backend services composed by the gateway            |
+| [Architecture → connections to cloud](architecture/connections-to-cloud.md) | How a canvas edge becomes env vars, IAM, and network policy |
+| [Reference → blocks](reference/blocks.md)                                   | Concept palette + per-provider variants                     |
+| [Reference → extending providers](reference/extending-providers.md)         | How to add a new cloud provider                             |
 
 ## How these docs are maintained
 

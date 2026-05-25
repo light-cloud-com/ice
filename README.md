@@ -38,7 +38,7 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 ## Providers at a glance
 
 - 🟢 **Google Cloud - stable(ish).** 20 service handlers, 45+ importers, full create / update / destroy.
-- 🟡 **AWS - in progress.**
+- 🟡 **AWS - in progress.** 17 service handlers + 20 extractors; staged rollout via feature flags — see [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md) for the per-category state.
 - 🟡 **Azure - in progress.**
 - ⚪ **IBM Cloud - planned.**
 - ⚪ **Kubernetes - planned.**

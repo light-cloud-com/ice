@@ -5,6 +5,36 @@ silently, the assumptions it bakes in, and the deferred work future
 commits should pick up. Read this before changing any handler or
 adding a new AWS resource type.
 
+## Rollout state
+
+AWS is feature-flagged at the category level in
+`packages/constants/src/feature-flags.ts` (`PROVIDER_FLAGS.aws`). The
+top-level `enabled` flag is **on**; categories are flipped selectively
+based on the deploy path's actual readiness.
+
+| Category   | State  | Notes                                                                                                                                                                                                   |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storage    | ✅ on  | S3 handler + account-id suffix                                                                                                                                                                          |
+| Messaging  | ✅ on  | SQS, SNS, EventBridge — FIFO suffix handled                                                                                                                                                             |
+| Cache      | ✅ on  | ElastiCache                                                                                                                                                                                             |
+| Monitoring | ✅ on  | CloudWatch Logs                                                                                                                                                                                         |
+| Security   | ✅ on  | Secrets Manager (Cognito stays create-only)                                                                                                                                                             |
+| Source     | ✅ on  | Provider-agnostic                                                                                                                                                                                       |
+| Config     | ✅ on  | Provider-agnostic                                                                                                                                                                                       |
+| Compute    | ⛔ off | ECS needs canvas-driven `Network.VPC` / `Network.Subnet` / `Network.SecurityGroup` blocks before it's safe to expose. Lambda alone is solid but the category gate is all-or-nothing today.              |
+| Frontend   | ⛔ off | `Compute.StaticSite` requires the S3 + CloudFront + us-east-1 ACM cert dance and operator-side DNS validation — not yet automated.                                                                      |
+| Scheduler  | ⛔ off | `Compute.CronJob` → EventBridge schedule expression wiring not finished.                                                                                                                                |
+| Network    | ⛔ off | ELBv2 needs VPC blocks; CloudFront is create-only and depends on the cert-validation flow.                                                                                                              |
+| Database   | ⛔ off | DynamoDB-only deploys would be fine; RDS / DocDB / Redshift work for first-deploy but have no update path and RDS takes 5–10 min. Unblock by either a sub-category gate or by shipping update handlers. |
+| AI         | ⛔ off | Bedrock on-demand is a no-op resource (low value); SageMaker has only mocked-SDK coverage.                                                                                                              |
+| Analytics  | ⛔ off | Redshift + OpenSearch are create-only.                                                                                                                                                                  |
+
+Flip an `off` entry to `on` in `PROVIDER_FLAGS.aws.categories` once
+its unblocker lands. The integrity test in
+`packages/constants/src/__tests__/index.test.ts` keeps the map
+exhaustive — adding a new `CategoryId` will require a deliberate
+on/off decision here.
+
 ## Architecture
 
 Mirrors the GCP layout (`../gcp/`):

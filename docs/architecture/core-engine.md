@@ -161,6 +161,8 @@ A clean clone of ICE with no deploys has an empty state store; every node in the
 
 Some block properties are derived from others (`derived`), aggregated across connected nodes (`aggregate`), or propagated along edges (`propagation`). Rules live in `packages/core/src/compute/propagation-rules.ts` and similar. The UI applies these live so that, e.g., a Static Site's "CDN" toggle automatically suggests a Custom Domain requirement.
 
+The full canvas-edge → cloud-resource pipeline (propagation → type-maps → extractors → handlers, with worked GCP examples for Storage→Backend and Cron→Backend) is documented separately in [connections-to-cloud.md](connections-to-cloud.md).
+
 ## Entry points worth reading
 
 - [`packages/core/src/index.ts`](../../packages/core/src/index.ts) - the export surface.

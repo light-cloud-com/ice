@@ -184,4 +184,5 @@ See [`../../SECURITY.md`](../../SECURITY.md) for the disclosure process.
 ## See also
 
 - [core-engine.md](core-engine.md), [frontend.md](frontend.md), [services.md](services.md), [database.md](database.md), [desktop.md](desktop.md).
+- [connections-to-cloud.md](connections-to-cloud.md) — how a canvas edge collapses into env vars, IAM, and network policy at deploy time.
 - [`packages/core/src/`](../../packages/core/src/) — the canonical implementation of everything on this page.

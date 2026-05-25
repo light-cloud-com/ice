@@ -161,7 +161,7 @@ describe('validate.ts — clean run (no templates)', () => {
   it('logs success and does not call process.exit when no issues are found', async () => {
     h.templates = []; // empty registry
     await loadValidate();
-    const allLogs = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const allLogs = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(allLogs).toMatch(/Validated 0 templates/);
     expect(allLogs).toMatch(/All templates pass validation/);
     expect(exitSpy).not.toHaveBeenCalled();
@@ -173,7 +173,7 @@ describe('validate.ts — checkCore', () => {
     h.templates = [makeTemplate()];
     h.coreIssues = [{ severity: 'error', code: 'DANGLING_EDGE_SOURCE', message: 'bad edge' }];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Core:DANGLING_EDGE_SOURCE/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -190,7 +190,7 @@ describe('validate.ts — checkCore', () => {
     h.blueprints.set('Compute.OK', { iceType: 'Compute.OK', providers: ['gcp'] });
     await loadValidate();
     // Warning bucket should contain the line; errors should not.
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/⚠.*warning/);
     expect(out).toMatch(/Core:MISSING_ICE_TYPE/);
     // No error path → no process.exit.
@@ -240,7 +240,7 @@ describe('validate.ts — checkBlueprints (R1)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R1:blueprint/);
     expect(out).toMatch(/Compute.Phantom/);
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -254,7 +254,7 @@ describe('validate.ts — checkBlueprints (R1)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R1:blueprint/);
   });
 });
@@ -279,7 +279,7 @@ describe('validate.ts — checkBounds (R2)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R2:bounds/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -301,7 +301,7 @@ describe('validate.ts — checkBounds (R2)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R2:bounds/);
   });
 
@@ -322,7 +322,7 @@ describe('validate.ts — checkBounds (R2)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R2:bounds/);
   });
 
@@ -356,7 +356,7 @@ describe('validate.ts — checkUngrouped (R3)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R3:ungrouped/);
   });
 
@@ -380,7 +380,7 @@ describe('validate.ts — checkUngrouped (R3)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R3:ungrouped/);
   });
 
@@ -401,14 +401,14 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
   it('skips quickstart templates (early return)', async () => {
     h.templates = [makeTemplate({ category: 'quick-start' })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R5:/);
   });
 
   it('errors when a non-quickstart template has no groups', async () => {
     h.templates = [makeTemplate({ category: 'full-stack', groups: undefined })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R5:vpc/);
     expect(out).toMatch(/must have VPC with Subnets/);
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -431,7 +431,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/No VPC group found/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -465,7 +465,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R5:vpc-empty/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -488,7 +488,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R5:subnet/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -521,7 +521,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Subnet "Subnet" missing parentGroupIndex/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -562,7 +562,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/parentGroupIndex points to non-VPC/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -595,7 +595,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/non-VPC|R5:parent/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -628,7 +628,7 @@ describe('validate.ts — checkVpcSubnet (R5)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R5:/);
   });
 });
@@ -650,7 +650,7 @@ describe('validate.ts — checkProperties (R6)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R6:prop/);
     expect(out).toMatch(/missing required property "storage"/);
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -665,7 +665,7 @@ describe('validate.ts — checkProperties (R6)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R6:prop/);
   });
 
@@ -680,7 +680,7 @@ describe('validate.ts — checkProperties (R6)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R6:prop/);
   });
 
@@ -700,7 +700,7 @@ describe('validate.ts — checkProperties (R6)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R6:prop/);
   });
 });
@@ -724,7 +724,7 @@ describe('validate.ts — checkColors (R7)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R7:color/);
   });
 
@@ -748,7 +748,7 @@ describe('validate.ts — checkColors (R7)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R7:color/);
   });
 
@@ -770,7 +770,7 @@ describe('validate.ts — checkColors (R7)', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R7:color/);
   });
 
@@ -787,7 +787,7 @@ describe('validate.ts — checkMetadata (R10)', () => {
     delete (t as any).description;
     h.templates = [t];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R10:meta/);
     expect(out).toMatch(/Missing required metadata field "description"/);
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -796,7 +796,7 @@ describe('validate.ts — checkMetadata (R10)', () => {
   it('errors when a required array field is empty', async () => {
     h.templates = [makeTemplate({ tags: [] })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/R10:meta/);
     expect(out).toMatch(/Missing required metadata field "tags"/);
   });
@@ -804,7 +804,7 @@ describe('validate.ts — checkMetadata (R10)', () => {
   it('warns when optional difficulty is missing', async () => {
     h.templates = [makeTemplate({ difficulty: undefined })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Missing optional metadata field "difficulty"/);
     expect(exitSpy).not.toHaveBeenCalled();
   });
@@ -812,21 +812,21 @@ describe('validate.ts — checkMetadata (R10)', () => {
   it('warns when optional trust is missing', async () => {
     h.templates = [makeTemplate({ trust: undefined })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Missing optional metadata field "trust"/);
   });
 
   it('warns when optional author is missing', async () => {
     h.templates = [makeTemplate({ author: undefined })];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Missing optional metadata field "author"/);
   });
 
   it('passes when all metadata fields are present', async () => {
     h.templates = [makeTemplate()];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).not.toMatch(/R10:meta/);
   });
 });
@@ -836,7 +836,7 @@ describe('validate.ts — checkExpansion', () => {
     h.expandResult = { nodes: [], edges: [] };
     h.templates = [makeTemplate()];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Expansion for provider .* produced zero nodes/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -845,7 +845,7 @@ describe('validate.ts — checkExpansion', () => {
     h.expandThrows = new Error('boom');
     h.templates = [makeTemplate()];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Expansion failed for provider .*: Error: boom/);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -866,7 +866,7 @@ describe('validate.ts — checkExpansion', () => {
     };
     h.templates = [makeTemplate()];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/unsupported on provider .*: Bad/);
   });
 
@@ -886,7 +886,7 @@ describe('validate.ts — checkExpansion', () => {
     };
     h.templates = [makeTemplate()];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/Compute\.Foo/);
   });
 
@@ -937,7 +937,7 @@ describe('validate.ts — script-level reporting', () => {
   it('prints the warnings section when only warnings are present', async () => {
     h.templates = [makeTemplate({ trust: undefined })]; // R10 trust warn
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/⚠.*1 warning/);
     expect(exitSpy).not.toHaveBeenCalled();
   });
@@ -951,7 +951,7 @@ describe('validate.ts — script-level reporting', () => {
       }),
     ];
     await loadValidate();
-    const out = logSpy.mock.calls.map((c) => c[0]).join('\n');
+    const out = logSpy.mock.calls.map((c: unknown[]) => c[0]).join('\n');
     expect(out).toMatch(/warning/);
     expect(out).toMatch(/error/);
     expect(exitSpy).toHaveBeenCalledWith(1);

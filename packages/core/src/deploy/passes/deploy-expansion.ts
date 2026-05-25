@@ -138,7 +138,7 @@ export function expand_deployable_per_entry(args: ExpandDeployableArgs): ExpandD
     const resourceName = sanitize_name(rawName);
     if (!resourceName || seen.has(resourceName)) continue;
     seen.add(resourceName);
-    if (graph.has_node(resourceName)) continue;
+    if (graph.get_node_by_name(resourceName)) continue;
 
     const perEntryLabels: Record<string, string> = { ...baseLabels };
     if (expansion.tagPerEntry) {

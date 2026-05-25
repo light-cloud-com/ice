@@ -43,7 +43,7 @@
  *                'unmet' generic; throws → 'unmet' with error
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BUILT_IN_REQUIREMENTS,
   dnsARecordRequirement,

@@ -185,8 +185,6 @@ const setupHandlers = (opts: SetupOpts = {}) => {
     onDragOverGroup: pick('onDragOverGroup', onDragOverGroup),
     onDragEnd: pick('onDragEnd', onDragEnd),
     gridSize: opts.gridSize ?? 0, // default 0 = no snapping for clean assertions
-    minZoom: opts.minZoom ?? 0.1,
-    maxZoom: opts.maxZoom ?? 2,
   });
 
   return {

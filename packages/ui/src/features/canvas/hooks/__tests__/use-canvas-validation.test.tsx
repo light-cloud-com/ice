@@ -162,7 +162,7 @@ describe('useCanvasValidation — active card', () => {
     mount();
     vi.advanceTimersByTime(500);
     expect(mocks.validateCanvas).toHaveBeenCalled();
-    const [validatableNodes, validatableEdges, opts] = mocks.validateCanvas.mock.calls[0];
+    const [validatableNodes, validatableEdges, opts] = mocks.validateCanvas.mock.calls[0] as unknown[];
     expect(validatableNodes).toEqual([{ id: 'n1', type: 'block', data: { iceType: 'Compute' }, parentId: undefined }]);
     expect(validatableEdges).toEqual([{ id: 'e1', source: 'n1', target: 'n2', data: { relationship: 'connects_to' } }]);
     expect(opts).toMatchObject({ mode: 'design' });
@@ -175,7 +175,7 @@ describe('useCanvasValidation — active card', () => {
     mount();
     vi.advanceTimersByTime(500);
     expect(mocks.validateCanvas).toHaveBeenCalled();
-    const [, , opts] = mocks.validateCanvas.mock.calls[0];
+    const [, , opts] = mocks.validateCanvas.mock.calls[0] as unknown[];
     expect(opts).toMatchObject({ provider: 'gcp' });
   });
 });

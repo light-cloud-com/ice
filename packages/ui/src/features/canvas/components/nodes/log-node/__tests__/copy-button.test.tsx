@@ -32,7 +32,7 @@ describe('CopyButton', () => {
   it('forwards onClick prop', () => {
     const click = vi.fn();
     const tree = renderCB(click);
-    (tree.props as { onClick: (e: React.MouseEvent) => void }).onClick({} as React.MouseEvent);
+    (tree.props as { onClick: (e: React.MouseEvent) => void }).onClick({} as unknown as React.MouseEvent);
     expect(click).toHaveBeenCalledTimes(1);
   });
 
@@ -41,7 +41,7 @@ describe('CopyButton', () => {
     const stops: string[] = [];
     (tree.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
   });
 

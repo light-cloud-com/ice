@@ -154,3 +154,5 @@ export {
   ICE_TYPE_TO_CATEGORY_ID,
   getCategoryForIceType,
 } from './categories';
+
+export { type IntegrationStatus, INTEGRATION_STATUSES } from './integrations';

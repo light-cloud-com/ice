@@ -115,7 +115,13 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
 }
 
 const findItemByLabel = (tree: unknown, label: string): ElLike | undefined =>
-  findFirst(tree, (el) => el.type === 'button' && (el.props.children as unknown[])?.[0]?.props?.children === label);
+  findFirst(
+    tree,
+    (el) =>
+      el.type === 'button' &&
+      ((el.props.children as unknown[])?.[0] as { props?: { children?: unknown } } | undefined)?.props?.children ===
+        label,
+  );
 
 // Helper: find a SubMenu / CategorySubMenu / MenuItem (FC) by its label prop
 const findFCByLabel = (tree: unknown, label: string): ElLike | undefined =>

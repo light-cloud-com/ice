@@ -36,7 +36,7 @@ vi.mock('../../_shared/provider-pill', () => ({ ProviderPill: mocks.ProviderPill
 vi.mock('../../_shared/cost-label', () => ({ CostLabel: mocks.CostLabel }));
 
 import { BlockSummaryCard, BLOCK_SUMMARY_H, BLOCK_SUMMARY_W } from '../block-summary-card';
-import type { CanvasNode } from '../../svg-canvas';
+import type { CanvasNode } from '../../../svg-canvas';
 
 const MockNodeHeader = mocks.NodeHeader;
 const MockProviderPill = mocks.ProviderPill;

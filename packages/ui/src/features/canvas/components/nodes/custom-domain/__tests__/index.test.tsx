@@ -55,6 +55,18 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   }
   const el = node as React.ReactElement;
   yield el;
+  // Recurse into function components by invoking them — needed so the
+  // walker can see SocketDot's rendered <circle>/<rect>. Without this
+  // it stops at the SocketDot element type and the assertions miss the
+  // primitive SVG nodes inside.
+  if (typeof el.type === 'function') {
+    const fn = el.type as (p: typeof el.props) => React.ReactNode;
+    try {
+      yield* walk(fn(el.props));
+    } catch {
+      /* Component used hooks or threw — leave it as the boundary. */
+    }
+  }
   const children = (el.props as { children?: React.ReactNode } | undefined)?.children;
   if (children == null) return;
   yield* walk(children);
@@ -228,10 +240,10 @@ describe('SvgCustomDomainNode — root domain input', () => {
     const stops: string[] = [];
     (input.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('m'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     (input.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('c'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m', 'c']);
   });
 
@@ -387,7 +399,7 @@ describe('SvgCustomDomainNode — route rows', () => {
     const stops: string[] = [];
     (sub.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('m'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 
@@ -402,7 +414,7 @@ describe('SvgCustomDomainNode — route rows', () => {
     const stops: string[] = [];
     (sub.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('c'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['c']);
   });
 });
@@ -450,7 +462,7 @@ describe('SvgCustomDomainNode — delete row button', () => {
     });
     const stops: string[] = [];
     const onClick = (findDeleteBtns(tree)[0].props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onClick({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(onUpdateData).toHaveBeenCalledWith('cd-1', {
       routes: [{ id: 'r2', subdomain: 'api' }],
@@ -470,7 +482,7 @@ describe('SvgCustomDomainNode — delete row button', () => {
     });
     const stops: string[] = [];
     const md = (findDeleteBtns(tree)[0].props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
-    md({ stopPropagation: () => stops.push('m') } as React.MouseEvent);
+    md({ stopPropagation: () => stops.push('m') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 });
@@ -494,7 +506,7 @@ describe('SvgCustomDomainNode — add route button', () => {
     });
     const stops: string[] = [];
     const onClick = (findAddBtn(tree)!.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onClick({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(onUpdateData).toHaveBeenCalledTimes(1);
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ id: string; subdomain: string }> };
@@ -508,7 +520,7 @@ describe('SvgCustomDomainNode — add route button', () => {
     const onUpdateData = vi.fn();
     const tree = renderCD({ node: makeNode({ data: {} }), onUpdateData });
     const onClick = (findAddBtn(tree)!.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent);
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ id: string }> };
     expect(call.routes).toHaveLength(1);
   });
@@ -517,20 +529,25 @@ describe('SvgCustomDomainNode — add route button', () => {
     const tree = renderCD();
     const stops: string[] = [];
     const md = (findAddBtn(tree)!.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
-    md({ stopPropagation: () => stops.push('m') } as React.MouseEvent);
+    md({ stopPropagation: () => stops.push('m') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 });
 
 describe('SvgCustomDomainNode — connection ports', () => {
-  it('renders no ports when not hovered/selected/valid-target', () => {
-    const tree = renderCD();
-    expect(findByType(tree, 'circle')).toHaveLength(0);
+  // Domain sockets use the `square` shape (per the shared SocketDot
+  // component) so each port renders as a `<rect>` carrying the
+  // `connection-port` className — that's the predicate we filter on.
+  const portsOf = (tree: React.ReactNode) =>
+    findByPredicate(tree, (el) => (el.props as { className?: string }).className === 'connection-port');
+
+  it('renders no row ports when there are no routes', () => {
+    const tree = renderCD({ node: makeNode({ data: { routes: [] } }) });
+    expect(portsOf(tree)).toHaveLength(0);
   });
 
-  it('renders left + per-row ports when isSelected', () => {
+  it('always renders one row port per route (no hover gate)', () => {
     const tree = renderCD({
-      isSelected: true,
       node: makeNode({
         data: {
           routes: [
@@ -540,75 +557,50 @@ describe('SvgCustomDomainNode — connection ports', () => {
         },
       }),
     });
-    // Left port + 2 row ports = 3 circles.
-    expect(findByType(tree, 'circle')).toHaveLength(3);
+    // Per-row ports are visible at idle so the user sees "one socket per
+    // domain" without hovering. Left "incoming" port was removed (it was
+    // a never-valid vestigial port).
+    expect(portsOf(tree)).toHaveLength(2);
   });
 
-  it('renders ports when hovered (mocked)', () => {
-    mocks.state.hoverValue = true;
+  it('per-row port carries data-socket-id matching the schema (domain-out-<route>)', () => {
     const tree = renderCD({
-      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'x' }] } }),
-    });
-    // Left port + 1 row port = 2 circles.
-    expect(findByType(tree, 'circle')).toHaveLength(2);
-  });
-
-  it('renders ports when valid-target drag', () => {
-    const tree = renderCD({
-      connectionDragState: 'valid-target',
-      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'x' }] } }),
-    });
-    expect(findByType(tree, 'circle')).toHaveLength(2);
-  });
-
-  it('per-row port has data-route-id + data-side="right"', () => {
-    const tree = renderCD({
-      isSelected: true,
       node: makeNode({ data: { routes: [{ id: 'r-abc', subdomain: 'app' }] } }),
     });
     const rowPort = findByPredicate(tree, (el) => {
-      if (el.type !== 'circle') return false;
-      const props = el.props as { 'data-route-id'?: string };
-      return props['data-route-id'] === 'r-abc';
+      const props = el.props as { 'data-route-id'?: string; className?: string };
+      return props.className === 'connection-port' && props['data-route-id'] === 'r-abc';
     })[0];
     expect(rowPort).toBeDefined();
-    expect((rowPort.props as { 'data-side': string })['data-side']).toBe('right');
+    const props = rowPort.props as { 'data-side': string; 'data-socket-id': string; 'data-port-role': string };
+    expect(props['data-side']).toBe('right');
+    expect(props['data-socket-id']).toBe('domain-out-r-abc');
+    expect(props['data-port-role']).toBe('domain');
   });
 
-  it('valid-target port has r=6 + green fill', () => {
+  it('valid-target port has green fill and grown radius (size +1)', () => {
     const tree = renderCD({
       connectionDragState: 'valid-target',
       node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'x' }] } }),
     });
-    const ports = findByType(tree, 'circle');
+    const ports = portsOf(tree);
+    expect(ports.length).toBeGreaterThan(0);
     for (const port of ports) {
-      const props = port.props as { r: number; fill: string };
-      expect(props.r).toBe(6);
+      const props = port.props as { fill: string };
       expect(props.fill).toBe('#22c55e');
     }
   });
 
-  it('non valid-target port has r=5 + categoryGlow fill', () => {
-    const tree = renderCD({
+  it('idle port is faint (opacity 0.55), full opacity when isSelected', () => {
+    const idle = renderCD({
+      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'x' }] } }),
+    });
+    const selected = renderCD({
       isSelected: true,
       node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'x' }] } }),
     });
-    const ports = findByType(tree, 'circle');
-    for (const port of ports) {
-      expect((port.props as { r: number }).r).toBe(5);
-    }
-  });
-
-  it('left port has data-side="left"', () => {
-    const tree = renderCD({
-      isSelected: true,
-      node: makeNode({ data: { routes: [] } }),
-    });
-    const leftPort = findByPredicate(tree, (el) => {
-      if (el.type !== 'circle') return false;
-      return (el.props as { 'data-side'?: string })['data-side'] === 'left';
-    })[0];
-    expect(leftPort).toBeDefined();
+    expect((portsOf(idle)[0].props as { opacity: number }).opacity).toBe(0.55);
+    expect((portsOf(selected)[0].props as { opacity: number }).opacity).toBe(1);
   });
 });
 

@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => {
     },
     token: 'tk-1' as string | undefined,
     navigate: vi.fn(),
-    isAuthenticated: vi.fn(() => true),
+    isAuthenticated: vi.fn((..._args: unknown[]) => true),
     axiosPost: vi.fn(),
   };
 });

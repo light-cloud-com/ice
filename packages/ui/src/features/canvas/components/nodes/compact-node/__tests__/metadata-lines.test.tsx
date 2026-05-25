@@ -290,7 +290,7 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
     const stops: string[] = [];
     (span.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(mocks.state.setRepoSelectorOpen).toHaveBeenCalledWith(true);
   });
@@ -310,7 +310,7 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
     const stops: string[] = [];
     (pencil.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(mocks.state.setRepoSelectorOpen).toHaveBeenCalledWith(true);
   });
@@ -329,7 +329,7 @@ describe('MetadataLines — repo line (selected + isSourceRepo)', () => {
     )[0];
     (span.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => {},
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(mocks.state.setRepoSelectorOpen).toHaveBeenCalledWith(false);
   });
 });
@@ -380,7 +380,7 @@ describe('MetadataLines — Link repo prompt', () => {
     const stops: string[] = [];
     (promptSpan.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(mocks.state.setRepoSelectorOpen).toHaveBeenCalledWith(true);
   });
@@ -449,10 +449,10 @@ describe('MetadataLines — RepoSelector dropdown', () => {
     const stops: string[] = [];
     (containerDiv.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('c'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     (containerDiv.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('m'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['c', 'm']);
   });
 });

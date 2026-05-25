@@ -20,8 +20,22 @@ const mocks = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
   dispatch: vi.fn(),
   selectActiveCard: vi.fn(() => null as unknown),
-  computeDerived: vi.fn(() => ({ nodePatches: [], edgePatches: [], edgeDeletions: [] })),
-  diffPatches: vi.fn(() => ({ nodePatches: [], edgePatches: [], edgeDeletions: [] })),
+  computeDerived: vi.fn(
+    (..._args: unknown[]) =>
+      ({ nodePatches: [], edgePatches: [], edgeDeletions: [] }) as {
+        nodePatches: Array<{ nodeId: string; data: Record<string, unknown> }>;
+        edgePatches: Array<{ edgeId: string; data: Record<string, unknown> }>;
+        edgeDeletions: Array<{ edgeId: string }>;
+      },
+  ),
+  diffPatches: vi.fn(
+    (..._args: unknown[]) =>
+      ({ nodePatches: [], edgePatches: [], edgeDeletions: [] }) as {
+        nodePatches: Array<{ nodeId: string; data: Record<string, unknown> }>;
+        edgePatches: Array<{ edgeId: string; data: Record<string, unknown> }>;
+        edgeDeletions: Array<{ edgeId: string }>;
+      },
+  ),
   updateCardNodeData: vi.fn((p: unknown) => ({ type: 'cards/updateCardNodeData', payload: p })),
   updateCardEdgeData: vi.fn((p: unknown) => ({ type: 'cards/updateCardEdgeData', payload: p })),
   deleteCardEdge: vi.fn((p: unknown) => ({ type: 'cards/deleteCardEdge', payload: p })),

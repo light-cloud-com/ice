@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
         canvasPosition: { x: 50, y: 60 },
       },
       showProperties: false,
-      edgeStyle: 'bezier' as const,
+      edgeStyle: 'bezier' as 'bezier' | 'rectangular',
       canvasLocked: false,
     },
     selection: { selectedNodes: [] as string[] },
@@ -38,7 +38,9 @@ const mocks = vi.hoisted(() => ({
   NodeMenu: vi.fn(() => null),
   EdgeMenu: vi.fn(() => null),
   // axios mock
-  axiosPost: vi.fn(() => Promise.resolve({ data: { provider: null } })),
+  axiosPost: vi.fn(
+    (..._args: unknown[]) => Promise.resolve({ data: { provider: null } }) as Promise<{ data: { provider?: unknown } }>,
+  ),
   // Action creators
   expandBlueprintToCard: vi.fn((p: unknown) => ({ type: 'cards/expandBlueprintToCard', payload: p })),
   importToActiveCard: vi.fn((p: unknown) => ({ type: 'cards/importToActiveCard', payload: p })),
@@ -178,7 +180,7 @@ function* walk(node: unknown): Generator<ElLike> {
   }
   if (!isEl(node)) return;
   yield node;
-  if (KNOWN_MOCKS.includes(node.type as ReturnType<typeof vi.fn>)) {
+  if ((KNOWN_MOCKS as unknown[]).includes(node.type)) {
     yield* walk(node.props.children);
     return;
   }

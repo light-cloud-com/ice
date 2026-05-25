@@ -452,7 +452,7 @@ describe('ProjectTree — tree container drag/drop wiring', () => {
         el.props.className.includes('flex-1 overflow-y-auto overflow-x-hidden'),
     );
     const event = {};
-    (container!.props.onDragOver as (e: unknown, parent: unknown) => void)(event);
+    (container!.props.onDragOver as (e: unknown, parent: unknown) => void)(event, null);
     expect(mocks.useTreeDragRet.handleDragOver).toHaveBeenCalledWith(event, null);
   });
 
@@ -476,7 +476,7 @@ describe('ProjectTree — tree container drag/drop wiring', () => {
         el.props.className.includes('flex-1 overflow-y-auto overflow-x-hidden'),
     );
     const event = {};
-    (container!.props.onDrop as (e: unknown, parent: unknown) => void)(event);
+    (container!.props.onDrop as (e: unknown, parent: unknown) => void)(event, null);
     expect(mocks.useTreeDragRet.handleDrop).toHaveBeenCalledWith(event, null);
   });
 });

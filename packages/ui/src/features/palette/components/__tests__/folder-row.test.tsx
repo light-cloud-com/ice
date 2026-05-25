@@ -219,7 +219,7 @@ describe('FolderRow — header click + context menu', () => {
     const onContextMenu = vi.fn();
     const tree = render({ onContextMenu });
     const header = getHeaderRow(tree);
-    const ev = {} as React.MouseEvent;
+    const ev = {} as unknown as React.MouseEvent;
     (header.props.onContextMenu as (e: React.MouseEvent) => void)(ev);
     expect(onContextMenu).toHaveBeenCalledWith(ev, 'folder', 'f-root');
   });

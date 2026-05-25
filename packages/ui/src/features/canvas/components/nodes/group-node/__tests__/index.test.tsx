@@ -58,7 +58,7 @@ import type { CanvasNode } from '../../../svg-canvas';
 
 const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   id: 'g-1',
-  type: 'group',
+  type: 'container',
   x: 100,
   y: 200,
   width: 400,
@@ -204,7 +204,7 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
       lod: 3,
       isBlock: true,
       node: {
-        ...({} as Parameters<typeof renderGN>[0]['node']),
+        ...({} as CanvasNode),
         id: 'b',
         type: 'block',
         x: 0,
@@ -214,7 +214,7 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
         label: '',
         data: {},
         parentId: undefined,
-      } as Parameters<typeof renderGN>[0]['node'],
+      } as CanvasNode,
     });
     expect((tree.props as { displayLabel: string }).displayLabel).toBe('Block');
   });
@@ -355,7 +355,7 @@ describe('SvgGroupNode — block dispatch (LOD3 + isBlock)', () => {
     });
     const stops: string[] = [];
     const handler = (tree.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold;
-    handler({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    handler({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(fold).toHaveBeenCalledWith('b-7');
   });
@@ -363,7 +363,7 @@ describe('SvgGroupNode — block dispatch (LOD3 + isBlock)', () => {
   it('block onToggleFold no-op when onToggleFold prop undefined', () => {
     const tree = renderGN({ lod: 3, isBlock: true });
     const handler = (tree.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold;
-    expect(() => handler({ stopPropagation: () => {} } as React.MouseEvent)).not.toThrow();
+    expect(() => handler({ stopPropagation: () => {} } as unknown as React.MouseEvent)).not.toThrow();
   });
 });
 
@@ -443,7 +443,7 @@ describe('SvgGroupNode — group dispatch (LOD3, no isBlock)', () => {
     const stops: string[] = [];
     (tree.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(fold).toHaveBeenCalled();
   });

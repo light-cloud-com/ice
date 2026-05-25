@@ -25,7 +25,7 @@ import { kubernetesRabbitmqBlueprint } from '../kubernetes/messaging/rabbitmq';
 import { kubernetesGatewayBlueprint } from '../kubernetes/networking/gateway';
 import { kubernetesLogsBlueprint } from '../kubernetes/observability/logs';
 import { kubernetesStorageBlueprint } from '../kubernetes/storage/storage';
-import type { BlockBlueprint } from '../../types';
+import type { BlockBlueprint } from '../types';
 
 const allBlueprints: Array<[string, BlockBlueprint]> = [
   ['env-config', envConfigBlueprint],

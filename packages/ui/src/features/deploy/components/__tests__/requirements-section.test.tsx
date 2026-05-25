@@ -9,7 +9,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  DnsRecordCard: vi.fn(() => null),
+  DnsRecordCard: vi.fn((..._args: unknown[]) => null),
 }));
 
 vi.mock('../dns-record-card', () => ({ DnsRecordCard: mocks.DnsRecordCard }));

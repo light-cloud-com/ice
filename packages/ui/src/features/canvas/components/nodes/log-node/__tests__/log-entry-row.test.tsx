@@ -145,7 +145,7 @@ describe('LogEntryRow', () => {
     const click = vi.fn();
     const log = mkLog();
     const tree = renderRow({ log, onClick: click });
-    const event = {} as React.MouseEvent;
+    const event = {} as unknown as React.MouseEvent;
     (tree.props as { onClick: (e: React.MouseEvent) => void }).onClick(event);
     expect(click).toHaveBeenCalledWith(log, event);
   });

@@ -409,7 +409,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     const stops: string[] = [];
     (header.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold({
       stopPropagation: () => stops.push('s'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(fold).toHaveBeenCalledWith('log-7');
     // Folded slot 1 toggled.
@@ -422,7 +422,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     expect(() =>
       (header.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold({
         stopPropagation: () => {},
-      } as React.MouseEvent),
+      } as unknown as React.MouseEvent),
     ).not.toThrow();
   });
 
@@ -454,7 +454,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
       const header = findByType(tree, MockLogHeader)[0];
       (header.props as { onCopyAll: (e: React.MouseEvent) => void }).onCopyAll({
         stopPropagation: () => {},
-      } as React.MouseEvent);
+      } as unknown as React.MouseEvent);
       expect(writes).toHaveLength(1);
       expect(writes[0]).toBe('12:34:56 [INFO] hello\n12:34:57 [ERROR] bye');
     } finally {
@@ -475,7 +475,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
       expect(() =>
         (header.props as { onCopyAll: (e: React.MouseEvent) => void }).onCopyAll({
           stopPropagation: () => {},
-        } as React.MouseEvent),
+        } as unknown as React.MouseEvent),
       ).not.toThrow();
     } finally {
       Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true, writable: true });
@@ -511,7 +511,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
       ).onCopyLine;
       onCopyLine({ id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' }, {
         stopPropagation: () => {},
-      } as React.MouseEvent);
+      } as unknown as React.MouseEvent);
       expect(writes).toEqual(['12:34:56 [INFO] hi']);
       // Slot 4 is copiedLine.
       expect(mocks.state.stateSetters[4]).toHaveBeenCalledWith('l1');

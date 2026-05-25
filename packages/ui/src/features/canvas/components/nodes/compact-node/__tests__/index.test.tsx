@@ -442,7 +442,7 @@ describe('SvgCompactNode — callbacks', () => {
     const tree = renderSCN({ node, onToggleFold: fold });
     const onToggleFold = (tree.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold;
     const stops: string[] = [];
-    onToggleFold({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onToggleFold({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(fold).toHaveBeenCalledWith('foo');
   });
@@ -450,7 +450,7 @@ describe('SvgCompactNode — callbacks', () => {
   it('handleFold no-op when onToggleFold undefined', () => {
     const tree = renderSCN({});
     const onToggleFold = (tree.props as { onToggleFold: (e: React.MouseEvent) => void }).onToggleFold;
-    expect(() => onToggleFold({ stopPropagation: () => {} } as React.MouseEvent)).not.toThrow();
+    expect(() => onToggleFold({ stopPropagation: () => {} } as unknown as React.MouseEvent)).not.toThrow();
   });
 
   it('onMouseEnter sets hover + calls onNodeHover(id)', () => {

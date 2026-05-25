@@ -6,7 +6,14 @@
  * the ordered list of visible tabs. The orchestrator still owns the
  * setState-during-render fallback (BEHAVIOR-RISK FLAG #2) — see the doc
  * comment on `node-properties-section.tsx` for why that line stays inline.
+ *
+ * Cardinal-rule schema-driven: per-iceType tab visibility comes from
+ * `BLOCK_PROPERTY_PANEL_CONFIGS.forceTabs`. NO `if (iceType === 'X')`
+ * branches in this builder. Adding a new block that needs a forced tab
+ * adds an entry to the config table; this code stays unchanged.
  */
+
+import { getBlockPropertyPanelConfig, type PropertyPanelTabId } from './property-panel-config';
 
 export interface VisibleTab {
   id: string;
@@ -37,23 +44,23 @@ export function buildVisibleTabs({
   outgoingEdgesCount,
   t,
 }: BuildVisibleTabsArgs): VisibleTab[] {
+  const forced = new Set<PropertyPanelTabId>(getBlockPropertyPanelConfig(iceType).forceTabs ?? []);
   const tabs: VisibleTab[] = [];
-  if (
-    dbPropertiesCount > 0 ||
-    iceType === 'Config.Environment' ||
-    iceType === 'Network.PublicEndpoint' ||
-    iceType === 'Network.CustomDomain' ||
-    iceType === 'Network.PrivateNetwork'
-  ) {
+  // Config tab: dynamic when the block has DB-declared properties OR
+  // when the schema-shaped table forces it for a bespoke panel.
+  if (dbPropertiesCount > 0 || forced.has('config')) {
     tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
   }
   if (isScalable) {
     tabs.push({ id: 'scaling', label: t('properties.tabs.scaling'), show: true });
   }
-  if (iceType === 'Network.PublicEndpoint' || iceType === 'Network.CustomDomain') {
+  // Domain tab: schema-shaped table only — no dynamic signal drives it.
+  if (forced.has('domain')) {
     tabs.push({ id: 'domain', label: t('properties.tabs.domain'), show: true });
   }
-  if (hasSource || iceType === 'Source.Repository') {
+  // Source tab: dynamic when the block participates in a build pipeline
+  // OR when the schema-shaped table forces it for the repo block itself.
+  if (hasSource || forced.has('source')) {
     tabs.push({ id: 'source', label: t('properties.tabs.source'), show: true });
   }
   if (incomingEdgesCount > 0 || outgoingEdgesCount > 0) {

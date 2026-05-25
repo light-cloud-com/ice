@@ -125,6 +125,23 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
     [components, localSearch, selectedProvider],
   );
 
+  // Providers with at least one concept whose (category × provider) gate
+  // is open. The palette dropdown enables a provider option iff its id is
+  // in this set — so AWS shows up the moment any of its categories has a
+  // block, even if the active project's provider is something else.
+  const availableProviderIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of components) {
+      for (const p of c.providers) {
+        if (set.has(p)) continue;
+        if (ENABLED_PROVIDER_IDS.has(p) && isCategoryEnabledForProvider(c.category as CategoryId, p as Provider)) {
+          set.add(p);
+        }
+      }
+    }
+    return set;
+  }, [components]);
+
   // Group filtered items by category, preserving order
   const categorizedItems = useMemo(() => {
     const groups: { category: CategoryDef; items: ComponentDef[] }[] = [];
@@ -182,7 +199,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
                   setLocalSearch={setLocalSearch}
                   selectedProvider={selectedProvider}
                   setSelectedProvider={setSelectedProvider}
-                  projectProvider={projectProvider}
+                  availableProviderIds={availableProviderIds}
                   searchInputRef={searchInputRef}
                   filteredComponents={filteredComponents}
                   categorizedItems={categorizedItems}

@@ -42,6 +42,7 @@ describe('extract_secret_manager_properties', () => {
   it('returns defaults for an empty data object', () => {
     expect(extract_secret_manager_properties({}, 'us-central1')).toEqual({
       replication_type: 'automatic',
+      bindings: [],
       labels: {},
     });
   });
@@ -60,6 +61,19 @@ describe('extract_secret_manager_properties', () => {
     const a = extract_secret_manager_properties({}, 'us-central1');
     const b = extract_secret_manager_properties({}, 'europe-west2');
     expect(a).toEqual(b);
+  });
+
+  it('passes bindings through verbatim from data.secrets', () => {
+    const result = extract_secret_manager_properties(
+      { secrets: [{ key: 'API_KEY', ref: 'prod-api-key' }, { key: 'TOKEN' }] },
+      'us-central1',
+    );
+    expect(result.bindings).toEqual([{ key: 'API_KEY', ref: 'prod-api-key' }, { key: 'TOKEN' }]);
+  });
+
+  it('coerces missing or non-array secrets to []', () => {
+    expect(extract_secret_manager_properties({ secrets: 'oops' }, 'us-central1').bindings).toEqual([]);
+    expect(extract_secret_manager_properties({}, 'us-central1').bindings).toEqual([]);
   });
 });
 

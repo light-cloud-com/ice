@@ -555,7 +555,9 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
   it('all-static-site backends → graph.remove_node + deployables.splice + delta-- atomic', () => {
     const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
-      computes: [{ cardId: 'site-card', resourceName: 'firebase-site-1' }],
+      // Mark the static-site graph node with the Firebase Hosting
+      // resource type so the new self-serving-resource check matches.
+      computes: [{ cardId: 'site-card', resourceName: 'firebase-site-1', type: 'gcp.firebase.hosting' }],
     });
     const nodes: CardNodeInput[] = [
       {
@@ -594,7 +596,10 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
     const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
-        { cardId: 'site-card', resourceName: 'firebase-site-1' },
+        // The static-site graph node must carry the Firebase resource
+        // type so the new self-serving-resource check (resolved type,
+        // not iceType) recognises it.
+        { cardId: 'site-card', resourceName: 'firebase-site-1', type: 'gcp.firebase.hosting' },
         { cardId: 'svc-card', resourceName: 'cloud-run-1' },
       ],
     });
@@ -639,7 +644,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
     // double-decrement the delta.
     const { graph, card_id_to_name, deployables } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
-      computes: [{ cardId: 'site-card', resourceName: 'firebase-site-1' }],
+      computes: [{ cardId: 'site-card', resourceName: 'firebase-site-1', type: 'gcp.firebase.hosting' }],
     });
     const nodes: CardNodeInput[] = [
       { id: 'ep-card', type: 'block', data: { iceType: 'Network.PublicEndpoint', domain: 'x.io' } },

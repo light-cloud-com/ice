@@ -29,7 +29,13 @@ interface BlocksSectionProps {
   setLocalSearch: (v: string) => void;
   selectedProvider: string;
   setSelectedProvider: (v: string) => void;
-  projectProvider: string | null;
+  /**
+   * Providers with at least one concept whose category is enabled for
+   * that provider. The dropdown disables any provider option not in
+   * this set — so a provider with zero blocks shows up greyed instead
+   * of being silently selectable into an empty list.
+   */
+  availableProviderIds: ReadonlySet<string>;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   filteredComponents: ComponentDef[];
   categorizedItems: { category: CategoryDef; items: ComponentDef[] }[];
@@ -46,7 +52,7 @@ export const BlocksSection: React.FC<BlocksSectionProps> = ({
   setLocalSearch,
   selectedProvider,
   setSelectedProvider,
-  projectProvider,
+  availableProviderIds,
   searchInputRef,
   filteredComponents,
   categorizedItems,
@@ -114,7 +120,7 @@ export const BlocksSection: React.FC<BlocksSectionProps> = ({
               >
                 <SelectPrimitive.Viewport className="p-0.5">
                   {providers.map((provider) => {
-                    const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
+                    const isLocked = provider.id !== 'all' && !availableProviderIds.has(provider.id);
                     const brand = provider.id !== 'all' ? getBrandIcon(provider.id) : null;
                     return (
                       <SelectPrimitive.Item

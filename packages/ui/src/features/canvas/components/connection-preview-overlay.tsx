@@ -1,24 +1,27 @@
 /**
  * rf-canv-14 — `ConnectionPreviewOverlay` subcomponent.
  *
- * The in-flight connection drag preview: a temporary cubic-bezier from the
- * source port to the current cursor, plus two anchor circles (source + cursor)
- * shown while the user is dragging from a node port toward another node.
+ * The in-flight connection drag preview. Two modes:
  *
- * This component is the JSX shell only. The bezier math
- * (`computeConnectionPreviewPath`) and color picker (`pickPreviewColor`) live
- * in `../utils/connection-preview.ts` (rf-canv-8) — keep them there.
+ *   1. **Snapped (socket-to-socket)** — when the orchestrator has magnet-
+ *      locked the cursor onto a compatible target port, render a solid
+ *      bezier from the source socket to the target socket. This is the
+ *      promise: release here and the wire lands here.
  *
- * Both the path and the two anchor circles render with `pointer-events: none`
- * (set on the wrapping `<g>`) so the preview never intercepts the cursor —
- * the orchestrator's mouse-move handler must keep firing through it. The
- * stroke/fill color, dash pattern, opacities, and circle radii are verbatim
- * from the original orchestrator IIFE; do NOT tweak them under cover of an
- * extraction unit.
+ *   2. **Searching (no target)** — when the cursor is in free space, no
+ *      preview line is drawn. The pulsing source-socket halo (rendered
+ *      by TypedSockets) plus the per-port green halos on compatible
+ *      targets are the only feedback. This matches the user mental
+ *      model: "connections are socket ↔ socket only."
+ *
+ * Both modes use `pointer-events: none` so the preview never intercepts
+ * the cursor — the orchestrator's mouse-move handler must keep firing
+ * through it.
  */
 
 import React from 'react';
-import { computeConnectionPreviewPath, pickPreviewColor } from '../utils/connection-preview';
+import { computeConnectionPreviewPath } from '../utils/connection-preview';
+import { getConnectionDragInfo } from './nodes/_shared/connection-drag-context';
 import type { CanvasNode } from './types';
 
 export interface ConnectionPreviewOverlayProps {
@@ -31,24 +34,20 @@ export interface ConnectionPreviewOverlayProps {
   connectionDragTargets: Map<string, string> | null;
 }
 
-export const ConnectionPreviewOverlay: React.FC<ConnectionPreviewOverlayProps> = ({
-  drawingConnection,
-  effectiveNodes,
-  connectionDragTargets,
-}) => {
+export const ConnectionPreviewOverlay: React.FC<ConnectionPreviewOverlayProps> = ({ drawingConnection }) => {
   const { sourcePoint, currentPoint } = drawingConnection;
+  const drag = getConnectionDragInfo();
+  // Only render a line when the magnet has actually locked on to a
+  // target socket. Until then, the source-socket pulse + per-port
+  // halos are the user's feedback — no floating "block to cursor"
+  // wire to confuse the eye.
+  if (!drag || !drag.snap) return null;
   const pathD = computeConnectionPreviewPath(sourcePoint, currentPoint);
-  const previewColor = pickPreviewColor(
-    currentPoint,
-    effectiveNodes,
-    drawingConnection.sourceId,
-    connectionDragTargets,
-  );
   return (
     <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-      <path d={pathD} stroke={previewColor} strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
-      <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill={previewColor} opacity={0.9} />
-      <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill={previewColor} opacity={0.6} />
+      <path d={pathD} stroke="#22c55e" strokeWidth={2.5} fill="none" opacity={0.9} />
+      <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill="#22c55e" opacity={0.95} />
+      <circle cx={currentPoint.x} cy={currentPoint.y} r={5} fill="#22c55e" opacity={0.95} />
     </g>
   );
 };

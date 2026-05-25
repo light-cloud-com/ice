@@ -27,6 +27,15 @@ export interface HighLevelResource {
   description: string;
   icon: string;
   category: string;
+  /**
+   * Canonical ICE type (e.g. `Security.Secret`). Optional so resources
+   * without a canvas block (raw catalog-only entries) stay valid, but
+   * REQUIRED for anything the deploy translator needs to look up by
+   * iceType — including any resource that declares `deployExpansion`.
+   * Source of truth for the iceType↔resource mapping; blueprints in
+   * `@ice/blocks` reference this transitively via `resourceId`.
+   */
+  iceType?: string;
   // Node behavior type
   behavior: NodeBehavior;
   // Which providers support this resource
@@ -37,6 +46,44 @@ export interface HighLevelResource {
   keywords: string[];
   // Common properties users care about
   properties: HighLevelProperty[];
+  /**
+   * Declarative deploy-time cardinality. When set, the card translator
+   * emits ONE provider resource per entry in `properties[<partitionBy>]`
+   * (which the extractor pulled from `node.data`) instead of the default
+   * one-resource-per-block. Provider-shaped fields stay untouched —
+   * extractor output is forwarded verbatim to each emitted resource —
+   * so this metadata is provider-agnostic and lives on the canonical
+   * schema, not in the translator or a provider file.
+   *
+   * Cardinal rule: cross-cutting layers (translator, dispatcher) MUST
+   * read this from the schema. NEVER hardcode `if (iceType === 'X')`
+   * branches.
+   */
+  deployExpansion?: DeployExpansion;
+}
+
+/**
+ * Declarative 1→N expansion at deploy time. The translator partitions
+ * `properties[partitionBy]` (the extractor's output array) and emits one
+ * cloud resource per entry, with the resource name derived from the
+ * entry's `nameFrom.field` (falling back to `nameFrom.fallback`).
+ *
+ * Optional bookkeeping:
+ *   - `labelFrom`: which entry field is appended to the deployable's
+ *     human label (`"<block> · <entry-label>"`) so the plan UI reads
+ *     well.
+ *   - `tagPerEntry`: copies one entry field into a cloud label on each
+ *     emitted resource (e.g. `ice-secret-key: STRIPE_API_KEY`) so the
+ *     resource → binding mapping survives in the cloud console.
+ *
+ * Dedupes within a block AND across blocks by resolved name — two rows
+ * pointing at the same upstream entry share one cloud resource.
+ */
+export interface DeployExpansion {
+  partitionBy: string;
+  nameFrom: { field: string; fallback?: string };
+  labelFrom?: string;
+  tagPerEntry?: { labelKey: string; fromField: string };
 }
 
 /**
@@ -68,8 +115,22 @@ export interface HighLevelProperty {
    * - `list`: generic string list with add/remove
    * - `queue_list`: bespoke queue renderer — each item shows as a queue pill
    *   with a distinct icon, FIFO badge, and queue-semantic affordances
+   * - `port_list`: list of HTTP/TCP listeners on a service. Each entry
+   *   becomes a typed `http-endpoint` OUT port on the canvas, so a
+   *   user can wire an EC2-style block's port 8080 to a custom domain
+   *   while leaving port 443 free.
    */
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list' | 'task_list';
+  type:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'select'
+    | 'list'
+    | 'queue_list'
+    | 'task_list'
+    | 'port_list'
+    /** Two-input rows binding an env-var name to an upstream secret ref. */
+    | 'secret_bindings';
   required: boolean;
   description: string;
   options?: string[];

@@ -5,20 +5,24 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
+import { hasBlockRole } from '@ice/constants';
 import {
   UI_ONLY_TYPES,
-  SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
   EXTERNAL_TYPES,
-  hasPrivateNetworkAncestor,
-  isCustomDomainStandalone,
+  hasNetworkIsolatingAncestor,
+  isStandaloneMetadataOnly,
   map_edge_relationship,
 } from './edge-classifier';
 import { create_mutable_graph } from '../graph/mutable-graph';
 import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
+import { applyInternalIngressOverride } from './internal-ingress-overrides';
+import { expand_deployable_per_entry } from './passes/deploy-expansion';
 import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
 import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
+import { propagate_socket_port_targets } from './passes/pass-1-46-socket-port-targeting';
 import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
 import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
+import { getHighLevelResourceByIceType } from '../resources/high-level-resources';
 import { sanitize_name, sanitize_label_value } from './utils/name-utils';
 import { generate_stable_name } from './utils/stable-name';
 import type { Graph } from '../types/graph';
@@ -193,14 +197,16 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Standalone Network.CustomDomain is UI-only (metadata for Pass 1.6
-    // propagation). Nested inside a PrivateNetwork it becomes deployable
-    // — see isCustomDomainStandalone + the dynamic type lookup below.
-    if (isCustomDomainStandalone(node, nodes)) {
+    // Blocks declared with `metadataOnlyWhenStandalone` (today: Network.
+    // CustomDomain) are UI-only when not nested in an isolation container
+    // — downstream propagation passes consume them, no cloud resource
+    // emitted. Nested inside an isolation container they become
+    // deployable via the dynamic type lookup below.
+    if (isStandaloneMetadataOnly(node, nodes)) {
       skipped.push({
         nodeId: node.id,
         label: (node.data.label as string) || node.id,
-        reason: 'Standalone Network.CustomDomain is metadata-only (handled by Pass 1.6)',
+        reason: `Standalone ${ice_type} is metadata-only (handled by downstream propagation passes)`,
       });
       continue;
     }
@@ -215,11 +221,12 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Look up the deployer type. Nested Network.CustomDomain inside a
-    // PrivateNetwork compiles to the global forwarding rule (same as
-    // Network.PublicEndpoint) — the nested case isn't in the type map
-    // because standalone CDs are UI-only, so we resolve it inline here.
-    const gcp_type = ice_type === 'Network.CustomDomain' ? 'gcp.compute.globalForwardingRule' : type_map[ice_type];
+    // Look up the deployer type. Network.CustomDomain has its own
+    // per-provider entry in each type-map (nested CDs compile to the
+    // same ingress chain as Network.PublicEndpoint on every provider;
+    // standalone CDs are filtered out above by isStandaloneMetadataOnly).
+    // No iceType-specific branches here — pure table lookup.
+    const gcp_type = type_map[ice_type];
     if (!gcp_type) {
       warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
@@ -252,26 +259,62 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     }
     const properties = extractor(node.data, region, node.id);
 
-    // Private Network ingress override.
+    // ─── Schema-declared 1→N deploy expansion ─────────────────────────
     //
-    // When a service backend (Scalable Backend / SSR Site / Worker /
-    // Serverless Function) is nested inside a Network.PrivateNetwork,
-    // emit the internal-only variant of the underlying compute resource.
-    // A nested Custom Domain (if present) remains the sole external
-    // entry point via its own LB chain; see isCustomDomainStandalone +
-    // the backend-wiring at ~line 1100.
-    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasPrivateNetworkAncestor(node, nodes)) {
-      const props = properties as Record<string, unknown>;
-      if (gcp_type === 'gcp.run.service') {
-        // Internal Cloud Run — only reachable via VPC or internal LB.
-        props.allow_unauthenticated = false;
-        props.ingress = 'internal-and-cloud-load-balancing';
-      } else if (gcp_type === 'aws.ecs.service') {
-        props.assign_public_ip = false;
-        props.internal = true;
-      } else if (gcp_type === 'azure.containerapp.containerApp') {
-        props.ingress_external = false;
-      }
+    // When the canonical schema sets `deployExpansion`, partition the
+    // extractor's output and emit one cloud resource per entry instead
+    // of one per block. This branch is iceType-agnostic — Secret Store
+    // happens to be the first user, but ANY future block whose schema
+    // declares expansion goes through the same code path.
+    //
+    // No edge connections back to the source block — the canvas-side
+    // propagation rules carry per-entry refs onto consumer nodes
+    // (e.g. service `secretRefs`), and leaving the block out of
+    // `card_id_to_name` makes the deferred edge pass drop any orphan
+    // edges naturally.
+    const schemaResource = getHighLevelResourceByIceType(ice_type);
+    if (schemaResource?.deployExpansion) {
+      const blockLabel = (node.data.label as string) || ice_type.split('.').pop() || 'resource';
+      const baseLabels: Record<string, string> = {
+        'ice-managed': 'true',
+        'ice-source-id': sanitize_label_value(node.id),
+        'ice-type': sanitize_label_value(ice_type),
+        'ice-project': sanitize_label_value(projectName),
+      };
+      if (input.environment) baseLabels['ice-environment'] = sanitize_label_value(input.environment);
+      if (cardId) baseLabels['ice-card-id'] = sanitize_label_value(cardId);
+
+      const expansionResult = expand_deployable_per_entry({
+        expansion: schemaResource.deployExpansion,
+        nodeId: node.id,
+        blockLabel,
+        iceType: ice_type,
+        // `gcp_type` is the provider-resolved type (legacy variable name
+        // — covers AWS / Azure / GCP / K8s); it just gets forwarded.
+        resourceType: gcp_type,
+        properties: properties as Record<string, unknown>,
+        baseLabels,
+        graph,
+        deployables,
+        skipped,
+        warnings,
+        provider,
+      });
+      deployable_count += expansionResult.added;
+      continue;
+    }
+
+    // Network-isolation ingress override.
+    //
+    // When a `serviceBackend`-role block (Scalable Backend / SSR Site /
+    // Worker / Serverless Function) is nested inside a network-isolation
+    // container (any iceType with BLOCK_DEPLOY_CLASSIFIERS.isolatesNetworkContext),
+    // ask the provider's registered override to mutate the property dict
+    // so the resource serves traffic internally. The provider-specific
+    // logic lives in `internal-ingress-overrides.ts`; the translator
+    // stays provider-agnostic.
+    if (hasBlockRole(ice_type, 'serviceBackend') && hasNetworkIsolatingAncestor(node, nodes)) {
+      applyInternalIngressOverride(gcp_type, properties as Record<string, unknown>);
     }
 
     // Phase 1 — stable resource identity.
@@ -357,6 +400,14 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
   // ─── Pass 1.45 — Network.CustomDomain → target host propagation ────────
   propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
+
+  // ─── Pass 1.46 — Socket-driven target-port routing ─────────────────────
+  // Reads `edge.data.targetSocket` / `sourceSocket` ids of shape
+  // `port-<N>-(in|out)` and writes the encoded port onto the compute
+  // node's `target_port` (and `port` if not user-set). Makes multi-port
+  // containers' typed-socket choices actually drive what the LB
+  // targets at deploy time.
+  propagate_socket_port_targets(edges, nodes, card_id_to_name, graph);
 
   // ─── Pass 1.5 — PublicEndpoint semantic wiring ─────────────────────────
   const { deployable_count_delta } = wire_public_endpoints({

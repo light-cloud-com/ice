@@ -31,10 +31,25 @@ function allCategoriesOn(): Record<CategoryId, boolean> {
   return Object.fromEntries(CATEGORY_IDS.map((c) => [c, true])) as Record<CategoryId, boolean>;
 }
 
+function categoriesFromOnList(on: CategoryId[]): Record<CategoryId, boolean> {
+  const set = new Set(on);
+  return Object.fromEntries(CATEGORY_IDS.map((c) => [c, set.has(c)])) as Record<CategoryId, boolean>;
+}
+
 export const PROVIDER_FLAGS: Record<Provider, ProviderFlags> = {
+  // AWS staged rollout. Categories left off have a concrete unblocker;
+  // see `packages/core/src/deploy/providers/aws/README.md` → Rollout state.
+  //   off — Compute:    ECS needs canvas-driven VPC/subnet/SG blocks (deferred).
+  //   off — Frontend:   StaticSite+CloudFront combo needs us-east-1 cert validation flow.
+  //   off — Scheduler:  EventBridge schedule expression wiring not finished.
+  //   off — Network:    ELBv2 needs VPC blocks; CloudFront is create-only.
+  //   off — Database:   RDS works but slow + no update path; DynamoDB-only deploys are fine
+  //                     once a sub-category gate exists, today the whole bucket stays off.
+  //   off — AI:         Bedrock is a no-op; SageMaker only has mocked-SDK coverage.
+  //   off — Analytics:  Redshift + OpenSearch are create-only.
   aws: {
-    enabled: false,
-    categories: allCategoriesOff(),
+    enabled: true,
+    categories: categoriesFromOnList(['Storage', 'Messaging', 'Cache', 'Monitoring', 'Security', 'Source', 'Config']),
   },
   gcp: {
     enabled: true,

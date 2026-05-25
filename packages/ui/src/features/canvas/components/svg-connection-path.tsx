@@ -12,13 +12,27 @@
  * connection type.
  */
 
+import { CATEGORY_COLORS } from '@ice/constants';
+import { findPort, getPortsForNode, hasPort, inferEdgePorts, ROLE_CATEGORY, type PortDef } from '@ice/types';
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
+import { CATEGORY_STYLE } from '../../../config/canvas-constants';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
 import { computePath } from './path/compute-path';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
+
+/** Resolve a wire color from a typed port — prefers the peer block's
+ *  category accent (matches the socket dot), falls back to the abstract
+ *  connection-category color. */
+function portColor(port: PortDef): string {
+  if (port.peerStyle) {
+    const style = CATEGORY_STYLE[port.peerStyle];
+    if (style?.glow) return style.glow;
+  }
+  return CATEGORY_COLORS[ROLE_CATEGORY[port.role]];
+}
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -122,6 +136,48 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     const categoryColor = (connection.data?.color as string) || derivedMeta?.color || null;
     const trafficType = (connection.data?.trafficType as string) || derivedMeta?.trafficType || null;
     const isLogEdge = relationship === 'logs_to' || trafficType === 'stream';
+
+    // Dangling edge: the edge references a typed socket that no longer
+    // exists on its source or target node (because a property toggle
+    // removed it). Render orange dashed so the user can decide whether
+    // to clean it up — see properties-panel dangling sweep affordance.
+    const sourceSocketId = (connection.data?.sourceSocket as string) || '';
+    const targetSocketId = (connection.data?.targetSocket as string) || '';
+
+    // Socket-derived wire color. The wire visually inherits the same
+    // color as the socket dots it joins — a repository wire is grey
+    // (Source), a domain wire is rose (Network), a database wire is
+    // green (Database). Falls back to the abstract category color when
+    // no typed sockets are present (legacy edges).
+    const socketColor = useMemo(() => {
+      let port: PortDef | undefined;
+      if (sourceSocketId && fromNode) {
+        port = findPort({ id: fromNode.id, type: fromNode.type, data: fromNode.data }, sourceSocketId);
+      }
+      if (!port && targetSocketId && toNode) {
+        port = findPort({ id: toNode.id, type: toNode.type, data: toNode.data }, targetSocketId);
+      }
+      if (!port && fromNode && toNode) {
+        const inferred = inferEdgePorts(
+          getPortsForNode({ id: fromNode.id, type: fromNode.type, data: fromNode.data }),
+          getPortsForNode({ id: toNode.id, type: toNode.type, data: toNode.data }),
+          connCategory,
+        );
+        port = inferred.sourcePort ?? inferred.targetPort;
+      }
+      return port ? portColor(port) : null;
+    }, [sourceSocketId, targetSocketId, fromNode, toNode, connCategory]);
+    const isDangling = useMemo(() => {
+      if (
+        sourceSocketId &&
+        fromNode &&
+        !hasPort({ id: fromNode.id, type: fromNode.type, data: fromNode.data }, sourceSocketId)
+      )
+        return true;
+      if (targetSocketId && toNode && !hasPort({ id: toNode.id, type: toNode.type, data: toNode.data }, targetSocketId))
+        return true;
+      return false;
+    }, [sourceSocketId, targetSocketId, fromNode, toNode]);
     const isDashedEdge = lineStyle === 'dashed' || isLogEdge;
     const isDottedEdge = lineStyle === 'dotted';
     const isThinEdge = lineStyle === 'thin';
@@ -225,15 +281,21 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
     // Styling — subtle by default, just brighten on hover
     const directionColor = direction ? EDGE_COLORS[direction] : null;
-    // Use category color as the base, fall back to relationship color
-    const baseColor = categoryColor || EDGE_COLORS[relationship] || EDGE_COLORS.default;
+    // Socket-derived color wins so the wire matches the dots it joins.
+    // Category color (from inferConnectionMeta) is the legacy fallback.
+    const baseColor = socketColor || categoryColor || EDGE_COLORS[relationship] || EDGE_COLORS.default;
+    // Dangling edges render in warning amber so the user can spot them
+    // even at idle. Selection / hover still take priority for affordance.
+    const danglingColor = '#d97706';
     const strokeColor = isSelected
       ? EDGE_COLORS.selected
       : isHighlighted
         ? directionColor || baseColor || EDGE_COLORS.hover
         : isHover
           ? EDGE_COLORS.hover
-          : baseColor;
+          : isDangling
+            ? danglingColor
+            : baseColor;
 
     // Inverse-zoom scale factor — keeps strokes visible at low zoom
     const invZoom = 1 / Math.max(zoom, 0.1);
@@ -247,19 +309,24 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           : lod <= 2
             ? 1.2 * invZoom
             : baseWidth;
+    // Connections are first-class — they represent the architecture's
+    // data flow. Render them fully visible at idle so the user can
+    // read the graph without hovering each wire. Thin edges (e.g. log
+    // streams) still sit a notch quieter so they don't compete with
+    // primary traffic.
     const strokeOpacity = isSelected
-      ? 0.7
+      ? 1
       : isHighlighted
-        ? 0.6
+        ? 0.95
         : isHover
-          ? 0.7
+          ? 1
           : lod <= 1
-            ? 0.4
+            ? 0.7
             : lod <= 2
-              ? 0.35
+              ? 0.8
               : isThinEdge
-                ? 0.12
-                : 0.15;
+                ? 0.6
+                : 0.9;
     // Hover target must stay large enough on screen
     const hoverTargetWidth = lod < 3 ? Math.max(16, 24 * invZoom) : 16;
     const showLabels = lod >= 3;
@@ -298,9 +365,9 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           stroke={pipelineActive ? '#3b82f6' : strokeColor}
           strokeWidth={pipelineActive ? 2 * (lod < 3 ? invZoom : 1) : strokeWidth}
           fill="none"
-          strokeDasharray={isDashedEdge ? '6 4' : isDottedEdge ? '2 3' : undefined}
+          strokeDasharray={isDangling ? '5 4' : isDashedEdge ? '6 4' : isDottedEdge ? '2 3' : undefined}
           strokeLinecap="round"
-          opacity={pipelineActive ? 0.6 : strokeOpacity}
+          opacity={pipelineActive ? 0.6 : isDangling ? 0.7 : strokeOpacity}
         />
 
         {/* Pipeline flow animation — animated dashes flowing along the path */}

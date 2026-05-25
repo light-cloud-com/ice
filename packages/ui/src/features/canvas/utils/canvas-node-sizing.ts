@@ -1,18 +1,24 @@
 /**
  * Pure size-computation helpers for the canvas's `nodes → canvasNodes` pipeline.
  *
- * `computeNodeSizes` dispatches over iceType to pick the right width/height
- * trio (compact / custom-domain / private-network), then folds in the
- * folded-state short-circuits so callers get visually-correct dimensions:
+ * `computeNodeSizes` dispatches via the schema-shaped `BESPOKE_NODE_SIZING`
+ * table to pick the right width/height pair (compact / custom-domain /
+ * private-network / cron / …), then folds in the folded-state short-circuits
+ * so callers get visually-correct dimensions:
  *
- *   - Custom Domain + Private Network NEVER collapse to a 36/38px folded
- *     pill — folding them would hide the route slots which are the entire
- *     point of the block. Their `expandedHeight` and `visualHeight` both
- *     equal `defaultHeight`, so the rest of the pipeline can't observe the
- *     fold flag for these two iceTypes.
+ *   - Bespoke entries with `alwaysExpanded: true` NEVER collapse to the
+ *     36/38px folded pill — folding them would hide their dynamic content
+ *     (route slots, per-task ports, ingress toggle), which is the entire
+ *     point of the block. `expandedHeight` and `visualHeight` both equal
+ *     `defaultHeight`, so the rest of the pipeline can't observe the fold
+ *     flag for these iceTypes.
  *   - All other nodes use `Math.max(node.height, defaultHeight)` for
  *     expanded height (caller-stretched containers) and a 36/38px folded
  *     height (group=36, block/resource=38) when `node.data.folded === true`.
+ *
+ * Cardinal rule: dispatch reads the schema-shaped table generically — NO
+ * `if (iceType === 'X')` branches in this file. New bespoke sizing is
+ * added by registering a table entry.
  *
  * `toLocalCanvasNode` then projects a Redux-shape node + the precomputed
  * sizes into the canvas's `CanvasNode` (formerly `LocalCanvasNode`) shape,
@@ -30,7 +36,7 @@
  * (rf-canv-5). Pure — no React, no Redux, no module state.
  */
 
-import { isGroupContainer, isPrivateNetwork as isPrivateNetworkIce } from './node-classification';
+import { isGroupContainer } from './node-classification';
 import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
 import { computeCustomDomainHeight, computeCustomDomainWidth } from '../components/nodes/custom-domain';
 import { computePrivateNetworkHeight, computePrivateNetworkWidth } from '../components/nodes/private-network';
@@ -57,6 +63,41 @@ export interface NodeSizes {
 }
 
 /**
+ * Sizing contract for a bespoke block renderer. `width`/`height` close
+ * over the renderer's own dynamic state (route count, task count, etc.);
+ * `alwaysExpanded: true` opts out of folding so the block can't collapse
+ * to a pill that hides its dynamic content.
+ */
+export interface BespokeSizingEntry {
+  width: (node: SizingInputNode, nodeData: Record<string, unknown>) => number;
+  height: (node: SizingInputNode, nodeData: Record<string, unknown>) => number;
+  alwaysExpanded: boolean;
+}
+
+/**
+ * Schema-shaped table of bespoke node sizing. The dispatcher iterates
+ * this generically — no iceType branches. Adding a new bespoke
+ * renderer's sizing rules adds an entry; this file stays unchanged.
+ */
+export const BESPOKE_NODE_SIZING: Record<string, BespokeSizingEntry> = {
+  'Network.CustomDomain': {
+    width: () => computeCustomDomainWidth(),
+    height: (_node, nodeData) => computeCustomDomainHeight(nodeData),
+    alwaysExpanded: true,
+  },
+  'Network.PrivateNetwork': {
+    width: (node) => computePrivateNetworkWidth(node.width || 0),
+    height: (node) => computePrivateNetworkHeight(node.height || 0),
+    alwaysExpanded: true,
+  },
+  'Compute.CronJob': {
+    width: () => computeCronJobWidth(),
+    height: (_node, nodeData) => computeCronJobHeight(nodeData),
+    alwaysExpanded: true,
+  },
+};
+
+/**
  * Verbatim port of the inline `defaultWidth`/`defaultHeight`/`expandedHeight`/
  * `visualHeight` reducer (svg-canvas.tsx L437–459). `hasPipelineStatus`
  * matches `!!(pipelineNodeStatus[id] && pipelineNodeStatus[id].status !== 'idle')`
@@ -64,36 +105,22 @@ export interface NodeSizes {
  */
 export function computeNodeSizes(node: SizingInputNode, hasPipelineStatus: boolean): NodeSizes {
   const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
-  const isCustomDomain = iceType === 'Network.CustomDomain';
-  const isPrivateNetwork = isPrivateNetworkIce(iceType);
-  const isCronJob = iceType === 'Compute.CronJob';
   const isGroup = isGroupContainer(node);
   const isBlock = node.type === 'block';
   const folded = !!node.data?.folded;
   const nodeData = (node.data as Record<string, unknown>) || {};
 
-  const defaultWidth = isCustomDomain
-    ? computeCustomDomainWidth()
-    : isPrivateNetwork
-      ? computePrivateNetworkWidth(node.width || 0)
-      : isCronJob
-        ? computeCronJobWidth()
-        : computeCompactNodeWidth(isBlock || isGroup);
-  const defaultHeight = isCustomDomain
-    ? computeCustomDomainHeight(nodeData)
-    : isPrivateNetwork
-      ? computePrivateNetworkHeight(node.height || 0)
-      : isCronJob
-        ? computeCronJobHeight(nodeData)
-        : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
+  const bespoke = BESPOKE_NODE_SIZING[iceType];
+  const defaultWidth = bespoke ? bespoke.width(node, nodeData) : computeCompactNodeWidth(isBlock || isGroup);
+  const defaultHeight = bespoke
+    ? bespoke.height(node, nodeData)
+    : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
 
-  // Cron, like custom-domain, has dynamic height tied to its task count.
-  // We never let folding collapse it to a 38px pill — folding hides the
-  // per-task port circles, which are the entire point of the block.
-  const expandedHeight =
-    isCustomDomain || isPrivateNetwork || isCronJob ? defaultHeight : Math.max(node.height || 0, defaultHeight);
-  const visualHeight =
-    folded && !isCustomDomain && !isPrivateNetwork && !isCronJob ? (isGroup ? 36 : 38) : expandedHeight;
+  // `alwaysExpanded` blocks ignore caller-stretched height AND folding —
+  // their height is whatever the bespoke renderer says, full stop.
+  const alwaysExpanded = bespoke?.alwaysExpanded ?? false;
+  const expandedHeight = alwaysExpanded ? defaultHeight : Math.max(node.height || 0, defaultHeight);
+  const visualHeight = folded && !alwaysExpanded ? (isGroup ? 36 : 38) : expandedHeight;
 
   return { defaultWidth, defaultHeight, expandedHeight, visualHeight };
 }

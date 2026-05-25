@@ -45,6 +45,8 @@ import { Globe, Plus, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { CARD_PX, CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import { t } from '../../../../../i18n';
+import { getNodeDragState } from '../_shared/connection-drag-context';
+import { SocketDot, type DotState } from '../_shared/socket-dot';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 // Re-exported so SvgConnectionPath / tests can compute the exact y-coordinate
@@ -451,46 +453,49 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
         </div>
       </foreignObject>
 
-      {/* ── Per-row connection ports ── */}
-      {(isHovered || isSelected || isValidTarget) &&
-        portPositions.map((pos, i) => {
+      {/* ── Per-row connection ports — one socket per route, always visible.
+          Uses the shared `<SocketDot>` so visual state, halos, data
+          attributes, and drag-context highlight stay consistent with
+          every other typed socket on the canvas. Custom Domain owns
+          only the row Y positioning; the dot's looks are not its
+          concern. */}
+      {(() => {
+        const dragState = getNodeDragState(node.id);
+        const dotOpacity = isHovered || isSelected || isValidTarget ? 1 : 0.55;
+        return portPositions.map((pos, i) => {
           const route = routes[i];
           if (!route) return null;
+          const socketId = `domain-out-${route.id}`;
+          let state: DotState = 'idle';
+          if (dragState.snappedPortId === socketId) state = 'snapped';
+          else if (dragState.compatiblePortIds?.has(socketId)) state = 'compatible';
+          else if (dragState.isSource && dragState.sourcePortId === socketId) state = 'source-active';
+          else if (dragState.active && !dragState.isSource && dragState.compatiblePortIds === null)
+            state = 'incompatible';
           return (
-            <circle
+            <SocketDot
               key={route.id}
-              className="connection-port"
-              data-node-id={node.id}
-              data-route-id={route.id}
-              data-side="right"
+              socketId={socketId}
+              nodeId={node.id}
+              side="right"
+              role="domain"
+              direction="out"
+              shape="square"
+              label={route.subdomain || 'Subdomain'}
+              peerStyle="Network"
               cx={pos.cx}
               cy={pos.cy}
-              r={isValidTarget ? 6 : 5}
-              fill={isValidTarget ? '#22c55e' : categoryGlow}
-              stroke="var(--ice-bg-base)"
-              strokeWidth={2}
-              style={{ cursor: 'crosshair' }}
+              isValidTarget={isValidTarget}
+              state={state}
+              opacity={dotOpacity}
+              // Custom Domain's row Y math is referenced by compute-path
+              // via `data.routeId` — keep the attribute on the DOM so
+              // that legacy path still works alongside `data-socket-id`.
+              extraAttrs={{ 'data-route-id': route.id }}
             />
           );
-        })}
-
-      {/* Left-side port for incoming connections (none allowed but kept
-          consistent with other nodes — `canConnect` rejects them
-          anyway). */}
-      {(isHovered || isSelected || isValidTarget) && (
-        <circle
-          className="connection-port"
-          data-node-id={node.id}
-          data-side="left"
-          cx={x}
-          cy={y + H / 2}
-          r={isValidTarget ? 6 : 5}
-          fill={isValidTarget ? '#22c55e' : categoryGlow}
-          stroke="var(--ice-bg-base)"
-          strokeWidth={2}
-          style={{ cursor: 'crosshair' }}
-        />
-      )}
+        });
+      })()}
     </g>
   );
 };

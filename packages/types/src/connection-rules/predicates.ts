@@ -6,88 +6,84 @@
  * logical group (database, cache, queue, ...). The CONNECTION_RULES
  * array composes these predicates into source/target classifiers.
  *
- * Extracted from `connection-rules.ts` in rf-conn-2. The regex bodies
- * are copied byte-identical from the original — adding or removing a
- * single alternation here has shipped behavioral consequences in
- * every caller (canConnect, validateConnection, AI prompt). Touch
- * with care.
+ * Cardinal-rule schema-driven: every predicate body is now a one-line
+ * lookup against `hasBlockRole` (defined in `@ice/constants/block-
+ * classifiers.ts`). The shared role tables there are the single
+ * source of truth for "what role does this iceType play?". Adding or
+ * removing a single alternation only requires editing the role table.
+ *
+ * `@ice/core/compute/propagation-rules.ts` reads the same tables, so
+ * the two packages can no longer drift apart.
  */
 
-import { NETWORK_CONTAINER_TYPES } from '@ice/constants';
+import { hasBlockRole, NETWORK_CONTAINER_TYPES } from '@ice/constants';
 
 export function isDatabase(t: string): boolean {
-  return (
-    t.startsWith('Database.') ||
-    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t)
-  );
+  return hasBlockRole(t, 'database');
 }
 
 export function isCache(t: string): boolean {
-  return /Redis|Cache|Memcache/i.test(t);
+  return hasBlockRole(t, 'cache');
 }
 
 export function isQueue(t: string): boolean {
-  return t.startsWith('Messaging.') || /Queue|SQS|SNS|PubSub|ServiceBus|RabbitMQ|Kafka|Event/i.test(t);
+  return hasBlockRole(t, 'queue');
 }
 
 export function isStorage(t: string): boolean {
-  return t.startsWith('Storage.') || /Bucket|S3|GCS|Blob|ObjectStorage|Spaces/i.test(t);
+  return hasBlockRole(t, 'storage');
 }
 
 export function isBackend(t: string): boolean {
-  return (
-    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Compute.') ||
-    t.startsWith('Compute.')
-  );
+  return hasBlockRole(t, 'backend');
 }
 
 export function isFrontend(t: string): boolean {
-  return /StaticSite|SSRSite|Frontend/i.test(t);
+  return hasBlockRole(t, 'frontend');
 }
 
 export function isGateway(t: string): boolean {
-  return /Gateway|LoadBalancer|Internet|WAF/i.test(t) || t === 'Network.Gateway';
+  return hasBlockRole(t, 'gateway');
 }
 
 export function isAuth(t: string): boolean {
-  return /Auth|Identity|IAM/i.test(t) || t === 'Security.Identity';
+  return hasBlockRole(t, 'auth');
 }
 
 export function isSecrets(t: string): boolean {
-  return /Secret|Vault|Certificate/i.test(t) || t === 'Security.Secret';
+  return hasBlockRole(t, 'secrets');
 }
 
 export function isMonitoring(t: string): boolean {
-  return /Log|Monitor|Observability|Terminal/i.test(t) || t.startsWith('Monitoring.') || t.startsWith('Log.');
+  return hasBlockRole(t, 'monitoring');
 }
 
 export function isSearch(t: string): boolean {
-  return /Search|Elasticsearch/i.test(t) || t === 'Analytics.Search';
+  return hasBlockRole(t, 'search');
 }
 
 export function isDataWarehouse(t: string): boolean {
-  return /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse';
+  return hasBlockRole(t, 'dataWarehouse');
 }
 
 export function isVectorDb(t: string): boolean {
-  return /VectorDB|Vector/i.test(t) || t === 'AI.VectorDB';
+  return hasBlockRole(t, 'vectorDb');
 }
 
 export function isLLM(t: string): boolean {
-  return /LLM|ModelServing/i.test(t) || t === 'AI.LLMGateway' || t === 'AI.ModelServing';
+  return hasBlockRole(t, 'llm');
 }
 
 export function isRepo(t: string): boolean {
-  return t === 'Source.Repository';
+  return hasBlockRole(t, 'repo');
 }
 
 export function isEnvConfig(t: string): boolean {
-  return t === 'Config.Environment';
+  return hasBlockRole(t, 'envConfig');
 }
 
 export function isDomain(t: string): boolean {
-  return t === 'Network.PublicEndpoint' || t === 'Network.CustomDomain' || /Domain|DNS/i.test(t);
+  return hasBlockRole(t, 'domain');
 }
 
 /**
@@ -104,7 +100,7 @@ export function isDomain(t: string): boolean {
  * because the compiler will synthesize the LB.
  */
 export function isCustomDomain(t: string): boolean {
-  return t === 'Network.CustomDomain';
+  return hasBlockRole(t, 'customDomain');
 }
 
 /**
@@ -114,7 +110,17 @@ export function isCustomDomain(t: string): boolean {
  * ingress.
  */
 export function isPrivateNetwork(t: string): boolean {
-  return t === 'Network.PrivateNetwork';
+  return hasBlockRole(t, 'privateNetwork');
+}
+
+/**
+ * `Util.Reroute` is a pass-through routing dot — not a container, not
+ * an infrastructure resource. It exists purely to let users bend wires
+ * cleanly. Edges to/from a Reroute inherit the category of the other
+ * end via the passthrough rule in rules-data.
+ */
+export function isReroute(t: string): boolean {
+  return hasBlockRole(t, 'reroute');
 }
 
 export function isContainer(iceType: string, nodeType?: string): boolean {

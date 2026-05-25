@@ -125,7 +125,12 @@ const MockSvgObjectStorageNode = mocks.SvgObjectStorageNode;
 const MockSvgGithubRepoNode = mocks.SvgGithubRepoNode;
 
 // Imports come AFTER the mocks so vitest hoists/wires them correctly.
-import { CONCEPT_NODE_RENDERERS, renderCanvasNode, type RenderCtx } from '../node-renderer-registry';
+import {
+  CONCEPT_NODE_RENDERERS,
+  SPECIAL_NODE_RENDERERS,
+  renderCanvasNode,
+  type RenderCtx,
+} from '../node-renderer-registry';
 import type { CanvasNode } from '../../types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -163,6 +168,64 @@ const makeCtx = (overrides: Partial<RenderCtx> = {}): RenderCtx => ({
   handlePipelineClick: () => {},
   getConnectedPipelineStatuses: () => [],
   ...overrides,
+});
+
+// ─── SPECIAL_NODE_RENDERERS table ─────────────────────────────────────────
+
+describe('SPECIAL_NODE_RENDERERS', () => {
+  it('contains exactly the bespoke iceTypes that need a custom renderer', () => {
+    // Locked-in list. Adding a new bespoke renderer extends this set;
+    // removing one breaks dispatch. The dispatcher reads this table
+    // generically so the cardinal rule (no hardcoded iceType branches)
+    // is preserved by construction.
+    expect(Object.keys(SPECIAL_NODE_RENDERERS).sort()).toEqual([
+      'Network.CustomDomain',
+      'Network.PrivateNetwork',
+      'Util.Reroute',
+    ]);
+  });
+
+  it('each entry is a factory that returns an element + innerKey', () => {
+    for (const [iceType, factory] of Object.entries(SPECIAL_NODE_RENDERERS)) {
+      const node = makeNode({ data: { iceType } });
+      const result = factory(node, makeCtx());
+      expect(result.element).toBeTruthy();
+      expect(typeof result.innerKey).toBe('string');
+      expect(result.innerKey.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('Custom Domain innerKey encodes route count for stable re-mount on add/remove', () => {
+    const oneRoute = SPECIAL_NODE_RENDERERS['Network.CustomDomain'](
+      makeNode({ data: { iceType: 'Network.CustomDomain', routes: [{ id: 'r1', subdomain: 'a' }] } }),
+      makeCtx(),
+    );
+    const twoRoutes = SPECIAL_NODE_RENDERERS['Network.CustomDomain'](
+      makeNode({
+        data: {
+          iceType: 'Network.CustomDomain',
+          routes: [
+            { id: 'r1', subdomain: 'a' },
+            { id: 'r2', subdomain: 'b' },
+          ],
+        },
+      }),
+      makeCtx(),
+    );
+    expect(oneRoute.innerKey).not.toBe(twoRoutes.innerKey);
+  });
+
+  it('PrivateNetwork innerKey encodes ingress mode for stable re-mount on toggle', () => {
+    const open = SPECIAL_NODE_RENDERERS['Network.PrivateNetwork'](
+      makeNode({ data: { iceType: 'Network.PrivateNetwork', ingress: 'open' } }),
+      makeCtx(),
+    );
+    const sealed = SPECIAL_NODE_RENDERERS['Network.PrivateNetwork'](
+      makeNode({ data: { iceType: 'Network.PrivateNetwork', ingress: 'sealed' } }),
+      makeCtx(),
+    );
+    expect(open.innerKey).not.toBe(sealed.innerKey);
+  });
 });
 
 // ─── CONCEPT_NODE_RENDERERS table ─────────────────────────────────────────

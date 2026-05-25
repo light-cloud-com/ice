@@ -8,62 +8,61 @@
  * that is the single source of truth for all reactive property propagation.
  */
 
-import { DEFAULT_PORTS, DEFAULT_ENV_VARS } from '@ice/constants';
+import { DEFAULT_PORTS, DEFAULT_ENV_VARS, hasBlockRole } from '@ice/constants';
 import type { PropagationRule, AggregateRule, PropagationNode } from './types';
 
 // ─── Block Type Classifiers ─────────────────────────────────────────────────
-// Minimal copies of the classifiers from @ice/types/connection-rules.
-// Kept local to avoid cross-package moduleResolution conflicts.
+// Cardinal-rule schema-driven: every predicate body is a one-line
+// lookup against `hasBlockRole` (defined in `@ice/constants/block-
+// classifiers.ts`). The shared role tables there are the single source
+// of truth shared with `@ice/types/connection-rules/predicates.ts`, so
+// the two packages can no longer drift apart on what "is a database"
+// or "is a backend" means.
 
 function isBackend(t: string): boolean {
-  return (
-    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) || t.startsWith('Compute.')
-  );
+  return hasBlockRole(t, 'backend');
 }
 function isFrontend(t: string): boolean {
-  return /StaticSite|SSRSite|Frontend/i.test(t);
+  return hasBlockRole(t, 'frontend');
 }
 function isService(t: string): boolean {
   return isBackend(t) || isFrontend(t);
 }
 function isDatabase(t: string): boolean {
-  return (
-    t.startsWith('Database.') ||
-    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t)
-  );
+  return hasBlockRole(t, 'database');
 }
 function isCache(t: string): boolean {
-  return /Redis|Cache|Memcache/i.test(t);
+  return hasBlockRole(t, 'cache');
 }
 function isStorage(t: string): boolean {
-  return t.startsWith('Storage.') || /Bucket|S3|GCS|Blob|ObjectStorage|Spaces/i.test(t);
+  return hasBlockRole(t, 'storage');
 }
 function isQueue(t: string): boolean {
-  return t.startsWith('Messaging.') || /Queue|SQS|SNS|PubSub|ServiceBus|RabbitMQ|Kafka|Event/i.test(t);
+  return hasBlockRole(t, 'queue');
 }
 function isSearch(t: string): boolean {
-  return /Search|Elasticsearch/i.test(t) || t === 'Analytics.Search';
+  return hasBlockRole(t, 'search');
 }
 function isVectorDb(t: string): boolean {
-  return /VectorDB|Vector/i.test(t) || t === 'AI.VectorDB';
+  return hasBlockRole(t, 'vectorDb');
 }
 function isLLM(t: string): boolean {
-  return /LLM|ModelServing/i.test(t) || t === 'AI.LLMGateway' || t === 'AI.ModelServing';
+  return hasBlockRole(t, 'llm');
 }
 function isDataWarehouse(t: string): boolean {
-  return /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse';
+  return hasBlockRole(t, 'dataWarehouse');
 }
 function isRepo(t: string): boolean {
-  return t === 'Source.Repository';
+  return hasBlockRole(t, 'repo');
 }
 function isEnvConfig(t: string): boolean {
-  return t === 'Config.Environment';
+  return hasBlockRole(t, 'envConfig');
 }
 function isSecrets(t: string): boolean {
-  return /Secret|Vault|Certificate/i.test(t) || t === 'Security.Secret';
+  return hasBlockRole(t, 'secrets');
 }
 function isCustomDomain(t: string): boolean {
-  return t === 'Network.CustomDomain';
+  return hasBlockRole(t, 'customDomain');
 }
 
 /** Anything that stores data and should restrict network access */

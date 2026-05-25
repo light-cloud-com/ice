@@ -77,6 +77,86 @@ import { updateCardNodeData, type Card, type CardNode } from '../../../../store/
 import { toggleProperties } from '../../../../store/slices/ui-slice';
 import { buildVisibleTabs } from '../../utils/build-visible-tabs';
 import { nodeHasSourceTab, resolveNodeIconUrl } from '../../utils/node-properties-derivations';
+import {
+  getBlockPropertyPanelConfig,
+  type PropertyPanelSectionId,
+  type PropertyPanelTabId,
+} from '../../utils/property-panel-config';
+
+// =============================================================================
+// Schema-driven per-tab section dispatch
+// =============================================================================
+//
+// Each entry maps a `PropertyPanelSectionId` (registered on
+// `BLOCK_PROPERTY_PANEL_CONFIGS[iceType].sections[tab]`) to a factory
+// that renders the corresponding section component. The panel body
+// iterates this table generically — no `if (iceType === 'X')` branches
+// in the JSX. Adding a new bespoke section adds an entry here AND in
+// the schema config; the dispatcher stays untouched.
+
+interface SectionRenderCtx {
+  selectedNode: CardNode;
+  activeCard: Card;
+  outgoingEdges: Card['edges'];
+  updateNodeField: (field: string, value: unknown) => void;
+  dispatch: AppDispatch;
+  nodeRepo: string;
+  activeEnvName: string;
+}
+
+type SectionFactory = (ctx: SectionRenderCtx) => React.ReactNode;
+
+const SECTION_COMPONENTS: Record<PropertyPanelSectionId, SectionFactory> = {
+  'public-endpoint-domain': (ctx) => (
+    <PublicEndpointDomainSection selectedNode={ctx.selectedNode} updateNodeField={ctx.updateNodeField} />
+  ),
+  'custom-domain-panel': (ctx) => (
+    <CustomDomainPanel
+      selectedNode={ctx.selectedNode}
+      outgoingEdges={ctx.outgoingEdges}
+      activeCard={ctx.activeCard}
+      updateNodeField={ctx.updateNodeField}
+      dispatch={ctx.dispatch}
+    />
+  ),
+  'private-network-panel': (ctx) => (
+    <PrivateNetworkPanel selectedNode={ctx.selectedNode} updateNodeField={ctx.updateNodeField} />
+  ),
+  'env-vars-editor': (ctx) => (
+    <EnvVarsEditor
+      variables={
+        (ctx.selectedNode?.data?.variables as Array<{ name: string; value: string; isSecret?: boolean }>) || []
+      }
+      onChange={(vars) => ctx.updateNodeField('variables', vars)}
+    />
+  ),
+  'source-repository': (ctx) => (
+    <SourceRepositorySection
+      nodeRepo={ctx.nodeRepo}
+      nodeBranch={(ctx.selectedNode?.data?.branch as string) || 'main'}
+      buildCommand={(ctx.selectedNode?.data?.buildCommand as string) || ''}
+      outputDirectory={(ctx.selectedNode?.data?.outputDirectory as string) || ''}
+      onUpdateField={ctx.updateNodeField}
+      sourceNodeId={ctx.selectedNode.id}
+      activeCard={ctx.activeCard}
+      activeEnvName={ctx.activeEnvName}
+    />
+  ),
+  'monitoring-log': (ctx) => <MonitoringLogSection nodeId={ctx.selectedNode.id} />,
+};
+
+/**
+ * Render every schema-declared section configured under `tab` for the
+ * given iceType. Returns an array of ReactNodes (one per section);
+ * generic iteration, no iceType-specific branches.
+ */
+function renderSectionsForTab(iceType: string, tab: PropertyPanelTabId, ctx: SectionRenderCtx): React.ReactNode[] {
+  const ids = getBlockPropertyPanelConfig(iceType).sections?.[tab] ?? [];
+  return ids.map((id, idx) => {
+    const factory = SECTION_COMPONENTS[id];
+    return factory ? <React.Fragment key={`${id}-${idx}`}>{factory(ctx)}</React.Fragment> : null;
+  });
+}
 import { PropertyFields } from '../fields/render-property-field';
 import type { AppDispatch } from '../../../../store';
 import type { CanvasIssue } from '../../../../store/slices/validation-slice';
@@ -161,9 +241,13 @@ export const NodePropertiesSection: React.FC<{
 
       {/* ── Deployment target (provider + region) ──
           Hidden for symbolic block types that don't deploy to a cloud
-          (Source.Repository points at GitHub; Network.PublicTraffic is
-          a canvas-only Internet terminator). */}
-      {iceType !== 'Source.Repository' && iceType !== 'Network.PublicTraffic' && (
+          (e.g. Source.Repository points at GitHub; Network.PublicTraffic is
+          a canvas-only Internet terminator). Whether a block is symbolic
+          is a per-iceType fact declared on the schema-shaped
+          `BLOCK_PROPERTY_PANEL_CONFIGS.skipDeploymentTarget` — this
+          render decision iterates that fact, never names a specific
+          iceType. */}
+      {!getBlockPropertyPanelConfig(iceType).skipDeploymentTarget && (
         <DeploymentTargetCard
           provider={provider}
           region={(selectedNode.data?.region as string) || ''}
@@ -248,18 +332,18 @@ export const NodePropertiesSection: React.FC<{
                     />
                   </>
                 )}
-                {iceType === 'Source.Repository' && (
-                  <SourceRepositorySection
-                    nodeRepo={nodeRepo}
-                    nodeBranch={(selectedNode?.data?.branch as string) || 'main'}
-                    buildCommand={(selectedNode?.data?.buildCommand as string) || ''}
-                    outputDirectory={(selectedNode?.data?.outputDirectory as string) || ''}
-                    onUpdateField={updateNodeField}
-                    sourceNodeId={selectedNode!.id}
-                    activeCard={activeCard}
-                    activeEnvName={activeEnvName}
-                  />
-                )}
+                {/* Bespoke sections registered for the source tab in
+                    BLOCK_PROPERTY_PANEL_CONFIGS — currently the
+                    Source.Repository section. */}
+                {renderSectionsForTab(iceType, 'source', {
+                  selectedNode,
+                  activeCard,
+                  outgoingEdges,
+                  updateNodeField,
+                  dispatch,
+                  nodeRepo,
+                  activeEnvName,
+                })}
               </div>
             )}
 
@@ -268,21 +352,20 @@ export const NodePropertiesSection: React.FC<{
               <ScalingSection selectedNode={selectedNode} updateNodeField={updateNodeField} />
             )}
 
-            {/* ════ DOMAIN TAB ════ */}
-            {activeTab === 'domain' && iceType === 'Network.PublicEndpoint' && (
-              <PublicEndpointDomainSection selectedNode={selectedNode} updateNodeField={updateNodeField} />
-            )}
-
-            {/* ════ CUSTOM DOMAIN — DOMAIN TAB ════ */}
-            {activeTab === 'domain' && iceType === 'Network.CustomDomain' && (
-              <CustomDomainPanel
-                selectedNode={selectedNode}
-                outgoingEdges={outgoingEdges}
-                activeCard={activeCard}
-                updateNodeField={updateNodeField}
-                dispatch={dispatch}
-              />
-            )}
+            {/* ════ DOMAIN TAB ════
+                Bespoke sections registered for the domain tab — currently
+                the PublicEndpoint + CustomDomain panels. Dispatch is
+                schema-driven; no iceType branches. */}
+            {activeTab === 'domain' &&
+              renderSectionsForTab(iceType, 'domain', {
+                selectedNode,
+                activeCard,
+                outgoingEdges,
+                updateNodeField,
+                dispatch,
+                nodeRepo,
+                activeEnvName,
+              })}
 
             {/* ════ CONNECTIONS TAB ════ */}
             {activeTab === 'connections' && (incomingEdges.length > 0 || outgoingEdges.length > 0) && (
@@ -348,21 +431,11 @@ export const NodePropertiesSection: React.FC<{
                   />
                 )}
 
-                {/* Source.Repository (when no tabs) */}
-                {visibleTabs.length <= 1 && iceType === 'Source.Repository' && (
-                  <SourceRepositorySection
-                    nodeRepo={nodeRepo}
-                    nodeBranch={(selectedNode?.data?.branch as string) || 'main'}
-                    buildCommand={(selectedNode?.data?.buildCommand as string) || ''}
-                    outputDirectory={(selectedNode?.data?.outputDirectory as string) || ''}
-                    onUpdateField={updateNodeField}
-                    sourceNodeId={selectedNode!.id}
-                    activeCard={activeCard}
-                    activeEnvName={activeEnvName}
-                  />
-                )}
-
-                {/* Source (when no tabs) */}
+                {/* Source (when no tabs) — kept as a dynamic fallback for
+                    service blocks that have a connected Source.Repository
+                    but no dedicated source tab. The Source.Repository
+                    block itself now always has its own source tab via
+                    BLOCK_PROPERTY_PANEL_CONFIGS.forceTabs. */}
                 {visibleTabs.length <= 1 && hasSource && (
                   <>
                     <ServiceSourceSection
@@ -380,37 +453,20 @@ export const NodePropertiesSection: React.FC<{
                   </>
                 )}
 
-                {/* Environment Variables */}
-                {iceType === 'Config.Environment' && (
-                  <EnvVarsEditor
-                    variables={
-                      (selectedNode?.data?.variables as Array<{ name: string; value: string; isSecret?: boolean }>) ||
-                      []
-                    }
-                    onChange={(vars) => updateNodeField('variables', vars)}
-                  />
-                )}
-
-                {/* Custom Domain — config tab mirrors the domain tab so
-                    the user sees the root domain field + subdomain
-                    routing list as soon as they click the block. */}
-                {iceType === 'Network.CustomDomain' && (
-                  <CustomDomainPanel
-                    selectedNode={selectedNode}
-                    outgoingEdges={outgoingEdges}
-                    activeCard={activeCard}
-                    updateNodeField={updateNodeField}
-                    dispatch={dispatch}
-                  />
-                )}
-
-                {/* Private Network — outbound internet (egress) policy */}
-                {iceType === 'Network.PrivateNetwork' && (
-                  <PrivateNetworkPanel selectedNode={selectedNode} updateNodeField={updateNodeField} />
-                )}
-
-                {/* Monitoring.Log — streaming mode + source override + status pill */}
-                {iceType === 'Monitoring.Log' && <MonitoringLogSection nodeId={selectedNode!.id} />}
+                {/* Bespoke sections registered for the config tab in
+                    BLOCK_PROPERTY_PANEL_CONFIGS — env-vars editor for
+                    Config.Environment, mirrored Custom Domain panel,
+                    Private Network egress panel, Monitoring.Log section.
+                    Dispatch is generic — no iceType branches. */}
+                {renderSectionsForTab(iceType, 'config', {
+                  selectedNode,
+                  activeCard,
+                  outgoingEdges,
+                  updateNodeField,
+                  dispatch,
+                  nodeRepo,
+                  activeEnvName,
+                })}
 
                 {/* Cost */}
                 {estimatedCost && (

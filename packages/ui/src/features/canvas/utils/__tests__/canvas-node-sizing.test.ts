@@ -34,7 +34,7 @@ vi.mock('../../components/nodes/private-network', () => ({
   computePrivateNetworkHeight: vi.fn((current: number) => Math.max(current, 200)),
 }));
 
-import { computeNodeSizes, toLocalCanvasNode, type SizingInputNode } from '../canvas-node-sizing';
+import { BESPOKE_NODE_SIZING, computeNodeSizes, toLocalCanvasNode, type SizingInputNode } from '../canvas-node-sizing';
 
 /** Minimal Redux-shape node factory — only the fields these utils read. */
 function n(overrides: Partial<SizingInputNode> & Pick<SizingInputNode, 'id'>): SizingInputNode {
@@ -47,6 +47,26 @@ function n(overrides: Partial<SizingInputNode> & Pick<SizingInputNode, 'id'>): S
     ...overrides,
   };
 }
+
+// =============================================================================
+// BESPOKE_NODE_SIZING — schema-shaped table contract
+// =============================================================================
+
+describe('BESPOKE_NODE_SIZING table', () => {
+  it('registers exactly the iceTypes that need a bespoke sizing rule', () => {
+    expect(Object.keys(BESPOKE_NODE_SIZING).sort()).toEqual([
+      'Compute.CronJob',
+      'Network.CustomDomain',
+      'Network.PrivateNetwork',
+    ]);
+  });
+
+  it('every entry is alwaysExpanded (dynamic content would be hidden by folding)', () => {
+    for (const entry of Object.values(BESPOKE_NODE_SIZING)) {
+      expect(entry.alwaysExpanded).toBe(true);
+    }
+  });
+});
 
 // =============================================================================
 // computeNodeSizes — dispatch arms

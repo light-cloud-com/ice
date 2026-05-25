@@ -25,6 +25,9 @@ describe('Card Translator Type Maps', () => {
 
     it('should map all standard GCP iceTypes', async () => {
       const mod = await import('../deploy/card-translator');
+      // Security.Secret is intentionally absent here — it now expands per
+      // binding, so a block with no bindings produces zero deployables and
+      // a warning. Covered separately below.
       const gcpTypes = [
         'Compute.StaticSite',
         'Compute.Container',
@@ -32,7 +35,6 @@ describe('Card Translator Type Maps', () => {
         'Database.PostgreSQL',
         'Storage.Bucket',
         'Messaging.CloudPubSub',
-        'Security.Secret',
         'AI.VectorDB',
       ];
 
@@ -46,19 +48,113 @@ describe('Card Translator Type Maps', () => {
         expect(result.deployable_count).toBeGreaterThan(0);
       }
     });
+
+    it('expands a Security.Secret block into one resource per unique binding', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'sec1',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app-secrets',
+              secrets: [
+                { key: 'STRIPE_API_KEY', ref: 'prod-stripe-key' },
+                { key: 'JWT_SECRET' }, // ref blank → falls back to key
+                { key: 'STRIPE_API_KEY', ref: 'prod-stripe-key' }, // dup
+              ],
+            },
+          },
+        ],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      // Dedup by `ref || key` collapses the duplicate.
+      expect(result.deployable_count).toBe(2);
+      const refs = result.deployables.map((d) => d.resource_name).sort();
+      expect(refs).toEqual(['jwt-secret', 'prod-stripe-key']);
+      // Every emitted deployable still attributes back to the source block.
+      expect(result.deployables.every((d) => d.node_id === 'sec1')).toBe(true);
+      // Each deployable label carries the binding key for plan-UI clarity.
+      expect(result.deployables.some((d) => d.label.includes('STRIPE_API_KEY'))).toBe(true);
+      expect(result.deployables.some((d) => d.label.includes('JWT_SECRET'))).toBe(true);
+    });
+
+    it('warns and skips when a Security.Secret block has no bindings', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [{ id: 'sec1', type: 'resource', data: { iceType: 'Security.Secret', label: 'empty-store' } }],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      expect(result.deployable_count).toBe(0);
+      expect(result.warnings.some((w) => w.includes('empty-store'))).toBe(true);
+      expect(result.skipped.some((s) => s.nodeId === 'sec1')).toBe(true);
+    });
+
+    it('dedupes shared refs across multiple Security.Secret blocks', async () => {
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'sec1',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app',
+              secrets: [{ key: 'DB_PASSWORD', ref: 'shared-db' }],
+            },
+          },
+          {
+            id: 'sec2',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'worker',
+              secrets: [{ key: 'DB_PASSWORD', ref: 'shared-db' }],
+            },
+          },
+        ],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      // One cloud secret, attributed to whichever block emitted it first.
+      expect(result.deployable_count).toBe(1);
+      expect(result.deployables[0].resource_name).toBe('shared-db');
+    });
   });
 
-  describe.skip('AWS Type Map', () => {
-    // AWS deploy path is not yet wired up — PROPERTY_EXTRACTORS only covers
-    // GCP resource types today. Unskip when AWS extractors land.
+  describe('AWS Type Map', () => {
+    // Phase 1 extractors landed across commits #2–#6 (compute,
+    // database, network, ancillary, ai). Every aws.* resource type in
+    // AWS_TYPE_MAP now has a registered PROPERTY_EXTRACTORS entry, so
+    // these used-to-be-skipped tests turn green.
     it('should map AWS iceTypes (ENGINE-1)', async () => {
       const mod = await import('../deploy/card-translator');
       const awsTypes = [
         'Compute.Container',
         'Compute.ServerlessFunction',
+        'Compute.CronJob',
+        'Compute.SSRSite',
         'Database.PostgreSQL',
+        'Database.DynamoDB',
+        'Database.Redis',
         'Storage.Bucket',
         'Messaging.Queue',
+        'Messaging.Topic',
+        'Network.Gateway',
+        'Network.PublicEndpoint',
+        'Network.LoadBalancer',
+        'Security.Identity',
+        'Monitoring.Log',
+        'AI.VectorDB',
+        'AI.LLMGateway',
+        'AI.ModelServing',
+        'Analytics.DataWarehouse',
       ];
 
       for (const iceType of awsTypes) {
@@ -68,7 +164,7 @@ describe('Card Translator Type Maps', () => {
           provider: 'aws',
           projectName: 'test',
         });
-        expect(result.deployable_count).toBeGreaterThan(0);
+        expect(result.deployable_count, `${iceType} should produce a deployable`).toBeGreaterThan(0);
       }
     });
 
@@ -81,6 +177,47 @@ describe('Card Translator Type Maps', () => {
         projectName: 'test',
       });
       expect(result.deployable_count).toBe(1);
+    });
+
+    it('Compute.StaticSite + Security.Secret + Database.PostgreSQL deploys to AWS', async () => {
+      // End-to-end multi-block scenario that covers extractor + deploy-
+      // expansion + provider type resolution all in one go.
+      const mod = await import('../deploy/card-translator');
+      const result = mod.translate_card_to_graph({
+        nodes: [
+          {
+            id: 'site',
+            type: 'resource',
+            data: { iceType: 'Compute.StaticSite', label: 'web' },
+          },
+          {
+            id: 'sec',
+            type: 'resource',
+            data: {
+              iceType: 'Security.Secret',
+              label: 'app-secrets',
+              secrets: [{ key: 'STRIPE_API_KEY', ref: 'prod-stripe' }, { key: 'JWT_SECRET' }],
+            },
+          },
+          {
+            id: 'db',
+            type: 'resource',
+            data: { iceType: 'Database.PostgreSQL', label: 'main', master_user_password: 'set-later' },
+          },
+        ],
+        edges: [],
+        provider: 'aws',
+        projectName: 'demo',
+      });
+      // StaticSite (1) + Secret expansion (2 unique refs) + Postgres (1) = 4 deployables
+      expect(result.deployable_count).toBe(4);
+      const types = result.deployables.map((d) => d.resource_type).sort();
+      expect(types).toEqual([
+        'aws.rds.dbInstance',
+        'aws.s3.bucket',
+        'aws.secretsmanager.secret',
+        'aws.secretsmanager.secret',
+      ]);
     });
   });
 

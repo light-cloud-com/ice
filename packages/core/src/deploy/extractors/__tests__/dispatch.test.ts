@@ -55,14 +55,21 @@ import {
 } from '../network';
 
 describe('PROPERTY_EXTRACTORS table shape', () => {
-  it('has exactly 27 entries (matches the 27 resolved GCP types the deployer supports)', () => {
-    expect(Object.keys(PROPERTY_EXTRACTORS)).toHaveLength(27);
+  it('counts GCP entries (27) + AWS entries — the latter grows with each AWS handler commit', () => {
+    const keys = Object.keys(PROPERTY_EXTRACTORS);
+    const gcpKeys = keys.filter((k) => k.startsWith('gcp.'));
+    const awsKeys = keys.filter((k) => k.startsWith('aws.'));
+    expect(gcpKeys).toHaveLength(27);
+    // AWS compute (commit #2): ecs.service, lambda.function, events.rule.
+    // Subsequent commits add database / network / ancillary / ai
+    // extractors — this assertion bumps when each lands.
+    expect(awsKeys.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('every key matches the gcp.{service}.{kind} shape', () => {
-    const pattern = /^gcp\.[a-z]+\.[a-zA-Z]+$/;
+  it('every key matches the {provider}.{service}.{kind} shape', () => {
+    const pattern = /^(gcp|aws|azure)\.[a-z0-9]+\.[a-zA-Z]+$/;
     for (const key of Object.keys(PROPERTY_EXTRACTORS)) {
-      expect(key, `key "${key}" should be gcp.{service}.{kind}`).toMatch(pattern);
+      expect(key, `key "${key}" should be {provider}.{service}.{kind}`).toMatch(pattern);
     }
   });
 
@@ -75,7 +82,7 @@ describe('PROPERTY_EXTRACTORS table shape', () => {
   it('returns undefined for an unknown key (orchestrator falls through to the error path)', () => {
     expect(PROPERTY_EXTRACTORS['gcp.unknown.thing']).toBeUndefined();
     expect(PROPERTY_EXTRACTORS['']).toBeUndefined();
-    expect(PROPERTY_EXTRACTORS['aws.s3.bucket']).toBeUndefined();
+    expect(PROPERTY_EXTRACTORS['aws.unknown.thing']).toBeUndefined();
   });
 });
 

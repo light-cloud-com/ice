@@ -7,18 +7,19 @@
  *
  *   1. CanvasGrid (background grid)
  *   2. SelectionFrame
- *   3. ConnectionLayer (mode='background')
- *   4. ParentClipDefs
- *   5. NodesLayer
+ *   3. ParentClipDefs
+ *   4. NodesLayer
+ *   5. ConnectionLayer (mode='background')   — ABOVE nodes per user feedback
  *   6. ConnectionPreviewOverlay (drag-to-connect ghost)
  *   7. UserTrafficOverlay
  *   8. ConnectionLayer (mode='highlighted')
  *   9. GhostOverlay
  *
- * Visual order, prop flow, and dep arrays are preserved verbatim — this
- * is purely a JSX wrap-and-extract. The two `<ConnectionLayer>` instances
- * remain separate (background vs highlighted) because they sandwich the
- * NodesLayer in the original SVG draw order.
+ * The background ConnectionLayer was previously rendered BEFORE the
+ * NodesLayer (under the original "edges sandwich nodes" model). User
+ * feedback flagged that as broken — containers and groups overlapped
+ * the wires, making the data flow unreadable at idle. Both connection
+ * layers now render after NodesLayer so wires are first-class.
  *
  * Earlier rf-canv units (rf-canv-13/14/15/etc.) extracted the leaf
  * components; this unit extracts only their composition and the
@@ -137,12 +138,29 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
 
       {/* VPC/Subnet now render as SvgGroupNode in the nodes layer */}
 
-      {/* Connections layer — non-highlighted (behind nodes).
-          rf-canv-13: extracted to ConnectionLayer in mode='background'.
-          Inner-vs-outer key shape (`anim-edge-${id}` outer wrap,
-          `${id}` SvgConnectionPath inner) preserved verbatim per
-          blueprint risk #4 — SvgConnectionPath's internal hover state
-          survives reconciliation when the wrap toggles. */}
+      {/* rf-canv-11: <defs> block (shift-drag-shadow filter +
+          per-container clipPaths) extracted to ParentClipDefs. */}
+      <ParentClipDefs nodes={sortedNodes} />
+
+      {/* Nodes layer — Groups, Blocks, Resources, or Log terminals.
+          rf-canv-12: per-node dispatch (iceType + node.type → component
+          choice) lives in `./node-renderer-registry`.
+          rf-canv2-7: the wrap-and-key loop lives in `./nodes-layer`; the
+          wrapper's outer-key priority chain (rf-canv-10) is preserved
+          verbatim. */}
+      <NodesLayer
+        sortedNodes={sortedNodes}
+        animatingNodes={animatingNodes}
+        shiftDraggingNodeIds={shiftDraggingNodeIds}
+        dragOverGroupId={dragOverGroupId}
+        renderCtx={renderCtx}
+      />
+
+      {/* Connections layer — ABOVE the nodes layer so containers and
+          groups never occlude the wires. Per user feedback: connections
+          are the architecture's data flow and must be fully visible at
+          idle. Previously rendered before NodesLayer (mode='background')
+          which let group tints overlap them. */}
       <ConnectionLayer
         mode="background"
         canvasConnections={canvasConnections}
@@ -160,24 +178,6 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
         handleEdgeDelete={handleEdgeDelete}
         handleEdgeSelect={handleEdgeSelect}
         handleContextMenu={handleContextMenu}
-      />
-
-      {/* rf-canv-11: <defs> block (shift-drag-shadow filter +
-          per-container clipPaths) extracted to ParentClipDefs. */}
-      <ParentClipDefs nodes={sortedNodes} />
-
-      {/* Nodes layer — Groups, Blocks, Resources, or Log terminals.
-          rf-canv-12: per-node dispatch (iceType + node.type → component
-          choice) lives in `./node-renderer-registry`.
-          rf-canv2-7: the wrap-and-key loop lives in `./nodes-layer`; the
-          wrapper's outer-key priority chain (rf-canv-10) is preserved
-          verbatim. */}
-      <NodesLayer
-        sortedNodes={sortedNodes}
-        animatingNodes={animatingNodes}
-        shiftDraggingNodeIds={shiftDraggingNodeIds}
-        dragOverGroupId={dragOverGroupId}
-        renderCtx={renderCtx}
       />
 
       {/* Connection drawing preview — extracted to ConnectionPreviewOverlay (rf-canv-14).

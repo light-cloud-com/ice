@@ -11,13 +11,83 @@
 
 import { normalize_runtime } from '../utils/name-utils';
 
+/**
+ * Parses the `exposed_ports` array from `data` into typed entries.
+ * Each entry is either a JSON string (`{port, protocol, label?}`) or
+ * a compact text form (`"https:443"`, `"https:443:api"`) — matches
+ * `port-spec.ts` in the UI package. Returns `[]` for absent / malformed
+ * data so callers can safely default.
+ */
+export interface ExposedPort {
+  port: number;
+  protocol: 'http' | 'https' | 'tcp';
+  label?: string;
+}
+
+export function parse_exposed_ports(data: Record<string, unknown>): ExposedPort[] {
+  const raw = data.exposed_ports;
+  if (!Array.isArray(raw)) return [];
+  const out: ExposedPort[] = [];
+  for (const entry of raw) {
+    if (typeof entry === 'string') {
+      try {
+        const parsed = JSON.parse(entry) as { port?: unknown; protocol?: unknown; label?: unknown };
+        if (parsed && typeof parsed.port === 'number' && parsed.port > 0) {
+          const protocol: ExposedPort['protocol'] =
+            parsed.protocol === 'https' || parsed.protocol === 'tcp' ? parsed.protocol : 'http';
+          out.push({
+            port: parsed.port,
+            protocol,
+            ...(typeof parsed.label === 'string' && parsed.label ? { label: parsed.label } : {}),
+          });
+          continue;
+        }
+      } catch {
+        /* fall through to compact form */
+      }
+      const parts = entry.split(':');
+      if (parts.length >= 2 && (parts[0] === 'http' || parts[0] === 'https' || parts[0] === 'tcp')) {
+        const p = Number(parts[1]);
+        if (Number.isFinite(p) && p > 0) {
+          out.push({
+            port: p,
+            protocol: parts[0] as ExposedPort['protocol'],
+            ...(parts[2] ? { label: parts[2] } : {}),
+          });
+        }
+      }
+    } else if (entry && typeof entry === 'object') {
+      const obj = entry as { port?: unknown; protocol?: unknown; label?: unknown };
+      if (typeof obj.port === 'number' && obj.port > 0) {
+        const protocol: ExposedPort['protocol'] =
+          obj.protocol === 'https' || obj.protocol === 'tcp' ? obj.protocol : 'http';
+        out.push({
+          port: obj.port,
+          protocol,
+          ...(typeof obj.label === 'string' && obj.label ? { label: obj.label } : {}),
+        });
+      }
+    }
+  }
+  return out;
+}
+
 export function extract_cloud_run_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+  // Multi-port: when the user declares `exposed_ports` on a Container /
+  // BackendAPI block, the first entry becomes the primary listener and
+  // the full list is forwarded as `additional_ports` so the deployer
+  // can configure all of them (e.g. Container App ingress / ECS
+  // listener rules). Legacy `data.port` scalar is the back-compat
+  // fallback for blocks that haven't set `exposed_ports`.
+  const ports = parse_exposed_ports(data);
+  const primaryPort = ports[0]?.port ?? (data.port as number | undefined) ?? 8080;
   return {
     region,
     image: (data.image as string) || '',
     repository: (data.repository as string) || '',
     branch: (data.branch as string) || 'main',
-    port: data.port || 8080,
+    port: primaryPort,
+    ...(ports.length > 0 && { additional_ports: ports }),
     min_instances: data.minInstances ?? 0,
     max_instances: data.maxInstances ?? 3,
     cpu: data.cpu || '1',

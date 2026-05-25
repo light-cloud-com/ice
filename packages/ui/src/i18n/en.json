@@ -1301,7 +1301,13 @@
     "noServiceHint": "Connect this block to a service to configure deploy triggers.",
     "addItem": "Add item",
     "removeConnection": "Remove connection",
-    "noLogsRecorded": "No logs recorded"
+    "noLogsRecorded": "No logs recorded",
+    "secretBindings": {
+      "keyTooltip": "Environment variable name exposed to the service at runtime.",
+      "refTooltip": "Id of the entry in the upstream secret manager. Defaults to the env var name when blank.",
+      "removeTitle": "Remove binding",
+      "add": "Add a binding"
+    }
   },
   "project": {
     "settings": {

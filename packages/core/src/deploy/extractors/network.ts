@@ -11,24 +11,28 @@
  */
 
 import { createHash } from 'crypto';
+import { hasBlockRole } from '@ice/constants';
 
 export function extract_storage_bucket_properties(
   data: Record<string, unknown>,
   region: string,
 ): Record<string, unknown> {
-  // Phase 8 — when the bucket backs a Compute.StaticSite block we need the
-  // handler to make it publicly readable and enable static website hosting
-  // (index.html / 404.html) so the load balancer's backend bucket can serve
-  // it to the internet. Users who drag a plain Storage.Bucket block don't
-  // get this treatment — private bucket, no website config.
+  // Phase 8 — when the source block is flagged with `publicWebsiteSource`
+  // (today: Compute.StaticSite on providers that compile it to a bucket
+  // such as AWS S3), the handler needs to make the bucket publicly
+  // readable and enable static website hosting (index.html / 404.html)
+  // so the LB backend bucket can serve it to the internet. Plain
+  // Storage.Bucket blocks stay private. Cardinal-rule schema-driven:
+  // the iceType-specific check is replaced by a role lookup in the
+  // shared classifier table.
   const iceType = String(data.iceType || '');
-  const isStaticSite = iceType === 'Compute.StaticSite';
+  const isPublicWebsite = hasBlockRole(iceType, 'publicWebsiteSource');
   return {
     location: region.toUpperCase().split('-').slice(0, 1).join('') || 'US',
     storage_class: data.storageClass || 'STANDARD',
     versioning: data.versioning ?? false,
-    public_access: isStaticSite || data.public_access === true,
-    website_hosting: isStaticSite || data.website_hosting === true,
+    public_access: isPublicWebsite || data.public_access === true,
+    website_hosting: isPublicWebsite || data.website_hosting === true,
     index_page: (data.index_page as string) || 'index.html',
     not_found_page: (data.not_found_page as string) || '404.html',
     labels: {},

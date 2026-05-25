@@ -32,7 +32,18 @@
  */
 
 import React from 'react';
-import { Section, SelectField, ListField, QueueListField, TaskListField, PropertyLabel, CustomValueInput } from '.';
+import {
+  Section,
+  SelectField,
+  ListField,
+  PortListField,
+  QueueListField,
+  SecretBindingsField,
+  TaskListField,
+  PropertyLabel,
+  CustomValueInput,
+  type SecretBinding,
+} from '.';
 import { t } from '../../../../i18n';
 import { IceSelect } from '../../../../shared/components/ui/ice-select';
 import { cn } from '../../../../shared/utils/cn';
@@ -60,7 +71,16 @@ export interface CustomInputConfig {
 export interface HighLevelProperty {
   name: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list' | 'task_list';
+  type:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'select'
+    | 'list'
+    | 'queue_list'
+    | 'task_list'
+    | 'port_list'
+    | 'secret_bindings';
   required: boolean;
   description: string;
   options?: string[];
@@ -197,6 +217,38 @@ export function renderPropertyField(
         onChange={(v) => onChange(prop.name, v)}
         addLabel={prop.addLabel}
         selfNodeId={selfNodeId}
+      />
+    );
+  }
+  if (prop.type === 'port_list') {
+    const listVal = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <PortListField
+        key={prop.name}
+        label={prop.label}
+        value={listVal}
+        onChange={(v) => onChange(prop.name, v)}
+        addLabel={prop.addLabel}
+      />
+    );
+  }
+  if (prop.type === 'secret_bindings') {
+    // Tolerates the legacy `string[]` shape ("Add a secret" used to be
+    // a flat ListField) by lifting each string into `{ key, ref: '' }`
+    // so old projects don't lose data on the first edit.
+    const raw = Array.isArray(value) ? value : [];
+    const rows: SecretBinding[] = raw.map((r) => {
+      if (typeof r === 'string') return { key: r, ref: '' };
+      const o = (r as Record<string, unknown>) ?? {};
+      return { key: String(o.key ?? ''), ref: typeof o.ref === 'string' ? o.ref : undefined };
+    });
+    return (
+      <SecretBindingsField
+        key={prop.name}
+        label={prop.label}
+        value={rows}
+        onChange={(v) => onChange(prop.name, v)}
+        addLabel={prop.addLabel}
       />
     );
   }

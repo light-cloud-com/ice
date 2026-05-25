@@ -32,6 +32,36 @@ import {
   extract_firebase_hosting_properties,
 } from './ancillary';
 import {
+  extract_opensearch_domain_properties,
+  extract_bedrock_endpoint_properties,
+  extract_sagemaker_endpoint_properties,
+  extract_redshift_cluster_properties,
+} from './aws/ai';
+import {
+  extract_sqs_queue_properties,
+  extract_sns_topic_properties,
+  extract_cognito_user_pool_properties,
+  extract_secrets_manager_secret_properties,
+  extract_cloudwatch_log_group_properties,
+} from './aws/ancillary';
+import {
+  extract_ecs_service_properties,
+  extract_lambda_function_properties,
+  extract_events_rule_properties,
+} from './aws/compute';
+import {
+  extract_rds_db_instance_properties,
+  extract_dynamodb_table_properties,
+  extract_elasticache_cluster_properties,
+  extract_docdb_cluster_properties,
+} from './aws/database';
+import {
+  extract_s3_bucket_properties,
+  extract_api_gateway_rest_api_properties,
+  extract_cloudfront_distribution_properties,
+  extract_elbv2_load_balancer_properties,
+} from './aws/network';
+import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
@@ -79,4 +109,34 @@ export const PROPERTY_EXTRACTORS: Record<
   'gcp.compute.subnetwork': extract_subnet_properties,
   'gcp.compute.securityPolicy': extract_cloud_armor_properties,
   'gcp.firebase.hosting': extract_firebase_hosting_properties,
+
+  // ─── AWS — compute ─────────────────────────────────────────────────
+  'aws.ecs.service': extract_ecs_service_properties,
+  'aws.lambda.function': extract_lambda_function_properties,
+  'aws.events.rule': extract_events_rule_properties,
+
+  // ─── AWS — database ────────────────────────────────────────────────
+  'aws.rds.dbInstance': extract_rds_db_instance_properties,
+  'aws.dynamodb.table': extract_dynamodb_table_properties,
+  'aws.elasticache.cluster': extract_elasticache_cluster_properties,
+  'aws.docdb.cluster': extract_docdb_cluster_properties,
+
+  // ─── AWS — network ─────────────────────────────────────────────────
+  'aws.s3.bucket': extract_s3_bucket_properties,
+  'aws.apigateway.restApi': extract_api_gateway_rest_api_properties,
+  'aws.cloudfront.distribution': extract_cloudfront_distribution_properties,
+  'aws.elbv2.loadBalancer': extract_elbv2_load_balancer_properties,
+
+  // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
+  'aws.sqs.queue': extract_sqs_queue_properties,
+  'aws.sns.topic': extract_sns_topic_properties,
+  'aws.cognito.userPool': extract_cognito_user_pool_properties,
+  'aws.secretsmanager.secret': extract_secrets_manager_secret_properties,
+  'aws.cloudwatch.logGroup': extract_cloudwatch_log_group_properties,
+
+  // ─── AWS — AI / analytics ──────────────────────────────────────────
+  'aws.opensearch.domain': extract_opensearch_domain_properties,
+  'aws.bedrock.endpoint': extract_bedrock_endpoint_properties,
+  'aws.sagemaker.endpoint': extract_sagemaker_endpoint_properties,
+  'aws.redshift.cluster': extract_redshift_cluster_properties,
 };

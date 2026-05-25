@@ -14,6 +14,9 @@
  * the counter, only the graph + deployables array.
  */
 
+import { hasBlockRole } from '@ice/constants';
+import { isPublicIngressNode } from '../edge-classifier';
+import { isSelfServingPublicResource } from '../self-serving-resources';
 import { sanitize_name, sanitize_label_value } from '../utils/name-utils';
 import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../card-translator';
@@ -95,32 +98,22 @@ export function wire_public_endpoints(args: {
   // Map every PublicEndpoint node to its connected backends.
   const endpointToBackends = new Map<string, BackendEntry[]>();
 
-  // Match both PublicEndpoint AND CustomDomain-nested-inside-PrivateNetwork
-  // as endpoint blocks. Both compile to gcp.compute.globalForwardingRule.
-  //
-  // - PublicEndpoint: standalone public LB for VPC-internal services.
-  // - CustomDomain nested inside PrivateNetwork: the nested CD acts as
-  //   the PrivateNetwork's public gateway, compiling to the same LB
-  //   chain but targeting sibling services inside the parent VPC.
-  //   Standalone CustomDomain (no parent) stays DNS-only and is NOT an
-  //   endpoint — it's handled in Pass 1.6 instead.
-  const isEndpointIceType = (t: string, node?: { parentId?: string | null }) => {
-    if (t === 'Network.PublicEndpoint') return true;
-    if (t === 'Network.CustomDomain' && node?.parentId) {
-      const parent = nodes.find((n) => n.id === node.parentId);
-      return parent?.data?.iceType === 'Network.PrivateNetwork';
-    }
-    return false;
-  };
+  // Public-ingress detection is schema-driven via
+  // `BLOCK_DEPLOY_CLASSIFIERS.publicIngressMode`:
+  //   - 'always' (Network.PublicEndpoint): a standalone public LB.
+  //   - 'when-nested-in-isolated-network' (Network.CustomDomain inside
+  //     Network.PrivateNetwork): the nested CD acts as the network's
+  //     public gateway, compiling to the same LB chain. Standalone CD
+  //     stays DNS-only and is handled in Pass 1.6 instead.
+  // No iceType strings appear here — adding a new ingress block adds a
+  // table entry in `block-deploy-classifiers.ts`.
 
   for (const edge of edges) {
     const src = nodes.find((n) => n.id === edge.source);
     const dst = nodes.find((n) => n.id === edge.target);
     if (!src || !dst) continue;
-    const srcIce = (src.data?.iceType as string) || '';
-    const dstIce = (dst.data?.iceType as string) || '';
-    const srcIsEndpoint = isEndpointIceType(srcIce, src);
-    const dstIsEndpoint = isEndpointIceType(dstIce, dst);
+    const srcIsEndpoint = isPublicIngressNode(src, nodes);
+    const dstIsEndpoint = isPublicIngressNode(dst, nodes);
     if (!srcIsEndpoint && !dstIsEndpoint) continue;
 
     const endpointNode = srcIsEndpoint ? src : dst;
@@ -191,45 +184,39 @@ export function wire_public_endpoints(args: {
     }> = [];
     const defaultBackends: BackendEntry[] = [];
 
-    // Compute types that compile to Cloud Run services — each of these
-    // gets wrapped in a Serverless NEG + backend service by the LB
-    // handler at deploy time. Static sites use backendBuckets instead.
-    const SERVICE_BACKEND_ICE_TYPES = new Set([
-      'Compute.Container',
-      'Compute.BackendAPI',
-      'Compute.SSRSite',
-      'Compute.Worker',
-      'Compute.ServerlessFunction',
-    ]);
+    // Whether a backend's iceType compiles to a Cloud Run service
+    // wrapped in a Serverless NEG is a schema-declared fact — see the
+    // `serviceBackend` role in `@ice/constants/block-classifiers.ts`.
+    // The previous in-file duplicate of this set (mirroring
+    // SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS in edge-classifier) is
+    // gone; both consumers now read the same role.
 
     for (const be of backends) {
-      // Static sites on GCP now compile to Firebase Hosting (which
-      // gives a public HTTPS URL out of the box, with its own CDN +
-      // managed cert + optional custom domain). The Public Endpoint
-      // load-balancer chain is REDUNDANT for Firebase Hosting — it
-      // serves traffic itself, no backend bucket / URL map / forwarding
-      // rule needed. We skip the LB wiring here and let the Firebase
-      // Hosting handler register the custom domain on its own.
+      // Self-serving public resources (Firebase Hosting today; future:
+      // AWS Amplify, Azure Static Web Apps) bring their own CDN + cert
+      // + public URL, so the Public Endpoint LB chain is REDUNDANT in
+      // front of them. Skip the LB wiring; propagate the upstream
+      // domain onto the node so the resource's own handler can
+      // register the custom domain.
       //
-      // The static site node still gets the user's custom domain
-      // propagated so the Firebase Hosting handler picks it up.
-      if (be.targetIceType === 'Compute.StaticSite') {
-        // Propagate the PublicEndpoint's domain onto the static site
-        // node so the Firebase Hosting handler can register it as a
-        // custom domain. Subdomains become per-site subdomains; blank
-        // becomes the root domain.
-        const targetGraphNode = graph.get_node_by_name(be.targetResourceName);
-        if (targetGraphNode && rootDomain) {
+      // Schema-driven: the set of self-serving resource types lives in
+      // `self-serving-resources.ts`. The check below reads the target
+      // graph node's resolved provider resource_type — no iceType
+      // strings appear here.
+      const targetGraphNode = graph.get_node_by_name(be.targetResourceName);
+      if (targetGraphNode && isSelfServingPublicResource(targetGraphNode.type)) {
+        if (rootDomain) {
           const fullHost = be.subdomain ? `${be.subdomain}.${rootDomain}` : rootDomain;
           (targetGraphNode.properties as any).domain = fullHost;
         }
-        // Mark the static-site → forwarding-rule mapping so the post-deploy
-        // overlay still knows the static site is wired to a public endpoint
-        // (used for the canvas pill propagation). The forwarding rule itself
-        // will be created EMPTY and skipped at deploy time when no other
-        // backend uses it.
+        // Mark the self-serving target → forwarding-rule mapping so
+        // the post-deploy overlay still knows it was wired to a
+        // public endpoint (used for the canvas pill propagation). The
+        // forwarding rule itself will be created EMPTY and skipped at
+        // deploy time when no other backend uses it.
         staticSiteToForwardingRule.set(be.targetNodeId, forwardingResourceName);
-        // Skip adding a host rule — Firebase Hosting serves directly.
+        // Skip adding a host rule — the self-serving resource handles
+        // routing itself.
         continue;
       }
 
@@ -238,7 +225,7 @@ export function wire_public_endpoints(args: {
       // needs the runtime region, which lives on the handler context
       // but not in the translator. We just record the names here and
       // pass them through `host_rules` as metadata.
-      if (SERVICE_BACKEND_ICE_TYPES.has(be.targetIceType)) {
+      if (hasBlockRole(be.targetIceType, 'serviceBackend')) {
         const backendServiceName = sanitize_name(`${be.targetResourceName}-backend`);
         be.sourceServiceName = be.targetResourceName;
         be.backendServiceName = backendServiceName;

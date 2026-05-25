@@ -28,12 +28,14 @@
  */
 
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
+import { getPortsForNode } from '@ice/types';
 import React, { useCallback, useState, type ReactNode } from 'react';
+import { getNodeDragState } from './connection-drag-context';
 import { ConnectionDragGlow } from './connection-drag-glow';
-import { ConnectionPorts } from './connection-ports';
 import { useIsNodeOrphan } from './orphan-context';
 import { ProviderPill } from './provider-pill';
 import { StatusDot } from './status-dot';
+import { TypedSockets } from './typed-sockets';
 import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { getServiceName } from '../../../../../assets/icons/service-names';
 import { CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
@@ -170,9 +172,28 @@ export const CardShell: React.FC<CardShellProps> = ({
   const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
 
-  const isSource = connectionDragState === 'source';
-  const isValidTarget = connectionDragState === 'valid-target';
-  const isInvalidTarget = connectionDragState === 'invalid-target';
+  const rawIsSource = connectionDragState === 'source';
+  const rawIsValidTarget = connectionDragState === 'valid-target';
+  const rawIsInvalidTarget = connectionDragState === 'invalid-target';
+  // Per-node drag state pulled from the orchestrator-provided singleton.
+  // Drives the per-port highlight + magnet-snap glow in TypedSockets.
+  // Pure function call (no hook) so this component stays compatible with
+  // tests that invoke it as a plain function.
+  const {
+    compatiblePortIds,
+    snappedPortId,
+    sourcePortId,
+    isSource: isDragSource,
+    active: typedDragActive,
+  } = getNodeDragState(node.id);
+  // When a typed-port drag is in flight, the per-port glow in
+  // TypedSockets is the only visual feedback — suppress the whole-block
+  // green border / glow so the user reads "socket ↔ socket" not "block
+  // ↔ block." Source / invalid styling still applies for the source
+  // node itself and for genuinely invalid targets (canConnect failures).
+  const isSource = rawIsSource;
+  const isValidTarget = typedDragActive ? false : rawIsValidTarget;
+  const isInvalidTarget = rawIsInvalidTarget;
   // Orphan signal — the canvas orchestrator populates the OrphanNodes
   // context with the set of blocks that have zero edges. We only show
   // the indicator while no drag is active, so the orphan warning
@@ -184,7 +205,22 @@ export const CardShell: React.FC<CardShellProps> = ({
   // hover/selection/source/valid-target, faded out when this block is
   // an invalid drop target during an active drag.
   const renderPorts = !customPorts;
-  const portOpacity = isInvalidTarget ? 0.12 : isHovered || isSelected || isValidTarget || isSource ? 1 : 0.35;
+  // Dim blocks that have no compatible port during a typed drag so the
+  // user reads "these are out of play" without a tooltip.
+  const isNonCompatibleDuringDrag =
+    typedDragActive && !isDragSource && (compatiblePortIds === null || compatiblePortIds.size === 0);
+  const portOpacity = isInvalidTarget
+    ? 0.12
+    : isNonCompatibleDuringDrag
+      ? 0.25
+      : isHovered || isSelected || isValidTarget || isSource
+        ? 1
+        : 0.35;
+  // Derive the typed port list from the node's iceType + property bag.
+  // `getPortsForNode` is schema-driven (one port per real semantic
+  // connection — repository / domain / database / …) and memoizes
+  // internally, so we can call it on every render.
+  const sockets = getPortsForNode({ id: node.id, type: node.type, data: node.data });
 
   const onEnter = useCallback(() => {
     setIsHovered(true);
@@ -252,7 +288,7 @@ export const CardShell: React.FC<CardShellProps> = ({
                 : isHovered
                   ? '0 2px 8px -2px rgba(0,0,0,0.15)'
                   : '0 1px 3px rgba(0,0,0,0.06)',
-              opacity: isSource ? 0.85 : 1,
+              opacity: isNonCompatibleDuringDrag ? 0.35 : isSource ? 0.85 : 1,
               padding: 12,
             }}
             data-testid={`cardshell-lod1-${node.id}`}
@@ -373,15 +409,20 @@ export const CardShell: React.FC<CardShellProps> = ({
           />
         )}
         {renderPorts && (
-          <ConnectionPorts
+          <TypedSockets
             nodeId={node.id}
             x={x}
             y={y}
             width={W}
             height={H}
-            color={ACCENT}
+            sockets={sockets}
             isValidTarget={isValidTarget}
             opacity={portOpacity}
+            lod={lod ?? 3}
+            compatiblePortIds={compatiblePortIds}
+            snappedPortId={snappedPortId}
+            isDragSource={isDragSource}
+            sourcePortId={sourcePortId}
           />
         )}
       </g>
@@ -426,7 +467,7 @@ export const CardShell: React.FC<CardShellProps> = ({
               : isHovered
                 ? '0 2px 8px -2px rgba(0,0,0,0.15)'
                 : '0 1px 3px rgba(0,0,0,0.06)',
-            opacity: isSource ? 0.85 : 1,
+            opacity: isNonCompatibleDuringDrag ? 0.35 : isSource ? 0.85 : 1,
             transition: 'box-shadow 150ms ease, border-color 150ms ease',
           }}
         >
@@ -612,15 +653,16 @@ export const CardShell: React.FC<CardShellProps> = ({
         />
       )}
       {renderPorts && (
-        <ConnectionPorts
+        <TypedSockets
           nodeId={node.id}
           x={x}
           y={y}
           width={W}
           height={H}
-          color={ACCENT}
+          sockets={sockets}
           isValidTarget={isValidTarget}
           opacity={portOpacity}
+          lod={lod ?? 3}
         />
       )}
     </g>

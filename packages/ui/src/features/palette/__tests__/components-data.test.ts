@@ -128,8 +128,8 @@ describe('def — fallback branch', () => {
 // ─── COMPONENTS data ─────────────────────────────────────────────────────────
 
 describe('COMPONENTS — count', () => {
-  it('declares 24 blocks (verbatim from source — the source comment says "25" but the array has 24)', () => {
-    expect(COMPONENTS).toHaveLength(24);
+  it('declares 25 blocks (Reroute added under Util in the geometry-nodes refactor)', () => {
+    expect(COMPONENTS).toHaveLength(25);
   });
 });
 
@@ -160,6 +160,7 @@ describe('COMPONENTS — declaration order by type', () => {
       'Monitoring.Log',
       'Source.Repository',
       'Config.Environment',
+      'Util.Reroute',
     ]);
   });
 });
@@ -235,6 +236,7 @@ describe('COMPONENTS — category', () => {
         'Monitoring',
         'Source',
         'Config',
+        'Util',
       ]),
     );
   });

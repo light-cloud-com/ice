@@ -43,4 +43,12 @@ export interface PathResult {
   pathD: string;
   midX: number;
   midY: number;
+  /** Wire's actual exit point from the source — may differ from the visible socket dot when magnetic routing is active. */
+  start?: Point;
+  /** Wire's actual entry point on the target — may differ from the visible socket dot when magnetic routing is active. */
+  end?: Point;
+  /** Source side the wire exits — used by the orchestrator to draw tails or hover overlays. */
+  exitSide?: Side;
+  /** Target side the wire enters. */
+  entrySide?: Side;
 }

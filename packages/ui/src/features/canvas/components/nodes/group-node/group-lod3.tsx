@@ -86,7 +86,8 @@ export const GroupLod3: React.FC<GroupLod3Props> = memo(
         )}
         {isChildExiting && <ChildExitingIndicator x={x} y={y} width={nodeWidth} height={nodeHeight} />}
 
-        {/* Dashed border body */}
+        {/* Solid frame border — Blender-style. Drag-over still falls
+            back to dashed so the drop affordance is unambiguous. */}
         <rect
           x={x}
           y={y}
@@ -96,23 +97,24 @@ export const GroupLod3: React.FC<GroupLod3Props> = memo(
           fill={groupTint}
           stroke={getBorderColor()}
           strokeWidth={isSelected ? 1.5 : 1}
-          strokeDasharray={isDragOver ? undefined : '4 4'}
-          strokeOpacity={0.6}
+          strokeDasharray={isDragOver ? '8 4' : undefined}
+          strokeOpacity={0.85}
         />
 
-        {/* Label row above box + fold chevron */}
-        <foreignObject x={x} y={y} width={nodeWidth} height={22}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-            <div style={{ flex: 1 }}>
-              <GroupLabelRow label={displayLabel} color={userColor} childCount={childCount} />
-            </div>
-            <FoldButton folded={folded} onClick={onToggleFold} opacity={isHovered ? 0.8 : 0.4} />
+        {/* Label tab — anchored top-left, flush against the border, with
+            child-count badge. The fold chevron sits at the tab's right edge. */}
+        <foreignObject x={x + 8} y={y - 18} width={nodeWidth - 16} height={20}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <GroupLabelRow label={displayLabel} color={userColor} childCount={childCount} />
+            <span style={{ flex: 1 }} />
+            <FoldButton folded={folded} onClick={onToggleFold} opacity={isHovered ? 0.95 : 0.6} />
           </div>
         </foreignObject>
 
-        {/* Empty state */}
+        {/* Empty state — label is now a tab outside the body, so the
+            empty hint centers within the full frame. */}
         {!folded && childCount === 0 && (
-          <foreignObject x={x} y={y + 24} width={nodeWidth} height={nodeHeight - 24}>
+          <foreignObject x={x} y={y} width={nodeWidth} height={nodeHeight}>
             <EmptyStateText text={t('canvas.nodes.dropHere')} />
           </foreignObject>
         )}

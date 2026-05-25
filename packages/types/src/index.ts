@@ -8,3 +8,5 @@ export * from './events';
 export * from './ai';
 export * from './connection-rules';
 export * from './propagation-rules';
+export * from './sockets';
+export * from './ports';

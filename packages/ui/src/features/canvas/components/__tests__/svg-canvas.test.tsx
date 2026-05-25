@@ -141,6 +141,7 @@ const components = vi.hoisted(() => ({
   ConnectionTooltip: vi.fn(() => null),
   CanvasDeployBanner: vi.fn(() => null),
   CanvasContent: vi.fn(() => null),
+  SocketHoverTooltip: vi.fn(() => null),
 }));
 
 const dispatchSpy = vi.fn();
@@ -177,6 +178,9 @@ vi.mock('../controls-help-modal', () => ({
 }));
 vi.mock('../connection-tooltip', () => ({
   ConnectionTooltip: components.ConnectionTooltip,
+}));
+vi.mock('../nodes/_shared/socket-hover-tooltip', () => ({
+  SocketHoverTooltip: components.SocketHoverTooltip,
 }));
 vi.mock('../deploy-banner', () => ({
   CanvasDeployBanner: components.CanvasDeployBanner,

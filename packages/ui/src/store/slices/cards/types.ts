@@ -25,7 +25,14 @@ export interface CardEdge {
   id: string;
   source: string;
   target: string;
-  data?: { relationship?: string; [key: string]: unknown };
+  data?: {
+    relationship?: string;
+    /** Identifier of the typed socket on the source node this edge attaches to. */
+    sourceSocket?: string;
+    /** Identifier of the typed socket on the target node this edge attaches to. */
+    targetSocket?: string;
+    [key: string]: unknown;
+  };
 }
 
 export interface CardViewport {

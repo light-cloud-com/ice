@@ -100,6 +100,19 @@ export interface UIState {
    * `maxWidth` on entry and clears them on exit so guided steps fit.
    */
   sidebarOverride: { left: number | null; right: number | null };
+
+  /**
+   * Shift+A "spotlight" add-block menu — Blender-style fuzzy-search palette
+   * spawned at the cursor. `canvasX`/`canvasY` are canvas-space coords used
+   * to position the spawned block. `recentTypes` is a small LRU of recently
+   * picked iceTypes for pinning at the top of the menu.
+   */
+  spotlight: {
+    open: boolean;
+    canvasX: number;
+    canvasY: number;
+    recentTypes: string[];
+  };
 }
 
 // =============================================================================
@@ -165,6 +178,12 @@ const initialState: UIState = {
   },
   splitView: PANES_DEFAULT,
   sidebarOverride: { left: null, right: null },
+  spotlight: {
+    open: false,
+    canvasX: 0,
+    canvasY: 0,
+    recentTypes: [],
+  },
 };
 
 const uiSlice = createSlice({
@@ -255,6 +274,20 @@ const uiSlice = createSlice({
     },
     toggleCanvasLocked: (state) => {
       state.canvasLocked = !state.canvasLocked;
+    },
+    openSpotlight: (state, action: PayloadAction<{ canvasX: number; canvasY: number }>) => {
+      state.spotlight.open = true;
+      state.spotlight.canvasX = action.payload.canvasX;
+      state.spotlight.canvasY = action.payload.canvasY;
+    },
+    closeSpotlight: (state) => {
+      state.spotlight.open = false;
+    },
+    /** Mark an iceType as recently-used and bubble it to the top of the LRU. */
+    pushSpotlightRecent: (state, action: PayloadAction<string>) => {
+      const iceType = action.payload;
+      const filtered = state.spotlight.recentTypes.filter((t) => t !== iceType);
+      state.spotlight.recentTypes = [iceType, ...filtered].slice(0, 8);
     },
     openContextMenu: (
       state,
@@ -482,6 +515,9 @@ export const {
   toggleCanvasLocked,
   toggleValidation,
   openValidation,
+  openSpotlight,
+  closeSpotlight,
+  pushSpotlightRecent,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

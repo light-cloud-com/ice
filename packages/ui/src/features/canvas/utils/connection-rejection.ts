@@ -14,7 +14,13 @@ import { t } from '../../../i18n';
 export type RejectionCause =
   | { kind: 'no-rule' }
   | { kind: 'special-conflict'; label: string }
-  | { kind: 'validation-error'; message: string };
+  | { kind: 'validation-error'; message: string }
+  /**
+   * The drag started from a typed port (e.g. `repository-out`) and the
+   * target block has no matching IN port for that role. Carries the
+   * source port's role so the message can be specific.
+   */
+  | { kind: 'role-mismatch'; role: string };
 
 /** "Database.MySQL" → "MySQL"; "Compute.ServerlessFunction" → "Serverless Function".
  *
@@ -32,6 +38,13 @@ export function buildRejectionMessage(srcIceType: string, tgtIceType: string, ca
   if (cause.kind === 'validation-error') return cause.message;
   if (cause.kind === 'special-conflict') {
     return t('canvas.rejection.specialConflict', { label: cause.label });
+  }
+  if (cause.kind === 'role-mismatch') {
+    const tgt = humanizeIceType(tgtIceType) || t('canvas.rejection.fallbackTgt');
+    // No i18n key for this yet — inline English with the role surfaced
+    // so the user sees exactly what's expected. Translators can take
+    // it later via the standard key extraction pass.
+    return `${tgt} has no ${cause.role} input`;
   }
   const src = humanizeIceType(srcIceType) || t('canvas.rejection.fallbackSrc');
   const tgt = humanizeIceType(tgtIceType) || t('canvas.rejection.fallbackTgt');

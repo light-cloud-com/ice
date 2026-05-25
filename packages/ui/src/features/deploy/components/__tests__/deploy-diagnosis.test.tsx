@@ -14,7 +14,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mocks = vi.hoisted(() => ({
   state: {
     deploy: {
-      diagnosis: { status: 'idle' as 'idle' | 'loading' | 'error' | 'loaded', result: null, error: null },
+      diagnosis: {
+        status: 'idle' as 'idle' | 'loading' | 'error' | 'loaded',
+        result: null as null | { diagnosis: string; suggestedFixes: string[] },
+        error: null as null | string,
+      },
       provider: 'gcp',
       region: 'us-central1',
     },
@@ -151,7 +155,7 @@ function collectText(tree: unknown): string {
   return s;
 }
 
-const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
+const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const render = (props: {
   error: string;

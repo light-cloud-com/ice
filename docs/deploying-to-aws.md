@@ -25,18 +25,35 @@ Same flow as [deploying-to-gcp.md](deploying-to-gcp.md) - drag blocks, connect t
 
 ## What works today
 
-The block categories listed in the provider matrix (`docs/provider-status.md` - to be added) are the source of truth. As of this release, the AWS handler set covers compute, storage, basic networking, and managed databases. Anything outside that set will either no-op or surface an "unsupported on AWS" error in the plan modal.
+17 service handlers + 20 extractors live in [`packages/core/src/deploy/providers/aws/`](../packages/core/src/deploy/providers/aws/). The categories exposed to the palette / plan modal are gated by feature flags — see the **Rollout state** table in [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md) for the per-category truth source. Today: Storage (S3), Messaging (SQS, SNS, EventBridge), Cache (ElastiCache), Monitoring (CloudWatch Logs), Security (Secrets Manager), Source, and Config are on. Compute (ECS), Frontend, Scheduler, Network, Database (RDS / DynamoDB / DocDB), AI, and Analytics are gated until their concrete unblockers ship.
+
+For the source-of-truth provider matrix across all clouds, see [provider-status.md](provider-status.md).
+
+## AWS-specific quirks
+
+The deployer handles several AWS-specific gotchas silently. The full list lives in [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md); highlights:
+
+- **S3 bucket names** get a `-{accountId}` suffix because S3 names are globally unique.
+- **CloudFront ACM certs** are pinned to `us-east-1` regardless of deploy region.
+- **ECS auto-provisions** a default cluster + task execution role on first deploy. Subnets and security groups are still operator-supplied today; canvas VPC blocks for AWS are deferred.
+- **RDS / DocDB / Redshift** refuse to ship without a `master_user_password` — wire a `Security.Secret` or set the property explicitly.
+- **RDS provisioning** takes 5–10 minutes; the handler polls `DescribeDBInstances` and reports progress via `ctx.on_step`.
+- **Lambda auto-build** clones a connected `Source.Repository`, runs `npm install`, zips, and uploads to `ice-bootstrap-{accountId}-{region}` — needs local `git` / `npm` / `zip` on the deploy host. AWS CodeBuild integration is deferred.
+- **SQS / SNS FIFO** queues + topics get the required `.fifo` suffix automatically.
 
 ## Known gaps vs. GCP
 
-- No live cost estimate parity for several AWS-specific services.
-- The importer (`Import → From AWS`) is not implemented yet.
-- Some block types render on the canvas but have no AWS handler - they'll show a yellow "no provider for AWS" pip during plan.
+- No importer (`Import → From AWS`) — manual canvas only.
+- VPC-aware canvas blocks for ECS subnets/security groups not yet wired.
+- Update paths for CloudFront / Cognito / DocDB / Redshift are create-only.
+- Tests use mocked AWS SDKs only — no LocalStack integration tests yet.
+- Cost estimate parity is sparser than GCP.
 
-If you hit a gap that matters to you, please file a feature request - AWS parity is high-priority on the [ROADMAP](../ROADMAP.md) and contributions are welcome (see [contributing.md](contributing.md)).
+If you hit a gap that matters to you, please file a feature request — AWS parity is high-priority on the [ROADMAP](../ROADMAP.md) and contributions are welcome (see [contributing.md](contributing.md)).
 
 ## See also
 
-- [deploying-to-gcp.md](deploying-to-gcp.md) - the canonical end-to-end tutorial.
-- [architecture.md](architecture.md) - how plan / apply work.
-- [`packages/providers/aws/src/handlers/`](../packages/providers/aws/src/handlers/) - per-service handler source.
+- [deploying-to-gcp.md](deploying-to-gcp.md) — the canonical end-to-end tutorial.
+- [architecture/README.md](architecture/README.md) — how plan / apply work.
+- [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md) — operator notes covering every AWS quirk and the rollout-state table.
+- [`packages/core/src/deploy/providers/aws/handlers/`](../packages/core/src/deploy/providers/aws/handlers/) — per-service handler source.

@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   // react-redux
-  selectorImpl: vi.fn(() => null as unknown),
+  selectorImpl: vi.fn((..._args: unknown[]) => null as unknown),
   // useState slot — resourceMap state
   resourceMapRef: { current: null as Map<string, unknown> | null },
   setResourceMapSpy: vi.fn(),

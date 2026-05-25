@@ -233,7 +233,7 @@ describe('PipelineRow — interactions', () => {
     const tree = renderPR({ status: 'success' });
     const stops: string[] = [];
     const onMouseDown = (tree.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
-    onMouseDown({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onMouseDown({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
   });
 });

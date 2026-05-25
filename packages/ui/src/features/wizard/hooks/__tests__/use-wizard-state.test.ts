@@ -233,7 +233,9 @@ describe('useWizardState — step 2 setters', () => {
 
   it('applyEnvironmentPresets enables matching presets and disables others', () => {
     const out = useWizardState();
-    out.applyEnvironmentPresets([{ type: 'production', region: 'eu-west1', securityLevel: 'strict' }]);
+    out.applyEnvironmentPresets([
+      { type: 'production', name: 'production', region: 'eu-west1', securityLevel: 'strict' },
+    ]);
     const next = driveReducer({
       step: 2,
       projectName: '',

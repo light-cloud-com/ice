@@ -388,7 +388,7 @@ describe('store — defensive branches in card persistence', () => {
     }
     expect(mocks.graphSave).toHaveBeenCalledTimes(1);
     // Resolve the first to clean up
-    resolveFirst?.();
+    (resolveFirst as (() => void) | null)?.();
     for (let i = 0; i < 5; i++) {
       await Promise.resolve();
     }

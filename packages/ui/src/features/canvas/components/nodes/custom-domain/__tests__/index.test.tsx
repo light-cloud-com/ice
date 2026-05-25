@@ -240,10 +240,10 @@ describe('SvgCustomDomainNode — root domain input', () => {
     const stops: string[] = [];
     (input.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('m'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     (input.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('c'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m', 'c']);
   });
 
@@ -399,7 +399,7 @@ describe('SvgCustomDomainNode — route rows', () => {
     const stops: string[] = [];
     (sub.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
       stopPropagation: () => stops.push('m'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 
@@ -414,7 +414,7 @@ describe('SvgCustomDomainNode — route rows', () => {
     const stops: string[] = [];
     (sub.props as { onClick: (e: React.MouseEvent) => void }).onClick({
       stopPropagation: () => stops.push('c'),
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(stops).toEqual(['c']);
   });
 });
@@ -462,7 +462,7 @@ describe('SvgCustomDomainNode — delete row button', () => {
     });
     const stops: string[] = [];
     const onClick = (findDeleteBtns(tree)[0].props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onClick({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(onUpdateData).toHaveBeenCalledWith('cd-1', {
       routes: [{ id: 'r2', subdomain: 'api' }],
@@ -482,7 +482,7 @@ describe('SvgCustomDomainNode — delete row button', () => {
     });
     const stops: string[] = [];
     const md = (findDeleteBtns(tree)[0].props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
-    md({ stopPropagation: () => stops.push('m') } as React.MouseEvent);
+    md({ stopPropagation: () => stops.push('m') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 });
@@ -506,7 +506,7 @@ describe('SvgCustomDomainNode — add route button', () => {
     });
     const stops: string[] = [];
     const onClick = (findAddBtn(tree)!.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => stops.push('s') } as React.MouseEvent);
+    onClick({ stopPropagation: () => stops.push('s') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['s']);
     expect(onUpdateData).toHaveBeenCalledTimes(1);
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ id: string; subdomain: string }> };
@@ -520,7 +520,7 @@ describe('SvgCustomDomainNode — add route button', () => {
     const onUpdateData = vi.fn();
     const tree = renderCD({ node: makeNode({ data: {} }), onUpdateData });
     const onClick = (findAddBtn(tree)!.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent);
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ id: string }> };
     expect(call.routes).toHaveLength(1);
   });
@@ -529,7 +529,7 @@ describe('SvgCustomDomainNode — add route button', () => {
     const tree = renderCD();
     const stops: string[] = [];
     const md = (findAddBtn(tree)!.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
-    md({ stopPropagation: () => stops.push('m') } as React.MouseEvent);
+    md({ stopPropagation: () => stops.push('m') } as unknown as React.MouseEvent);
     expect(stops).toEqual(['m']);
   });
 });

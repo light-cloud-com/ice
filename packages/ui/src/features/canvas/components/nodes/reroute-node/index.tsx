@@ -23,7 +23,7 @@ import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { TypedSockets } from '../_shared/typed-sockets';
 import type { CanvasConnection } from '../../types';
 import type { SvgCompactNodeProps } from '../compact-node/types';
-import type { SocketDef } from '@ice/types';
+import type { PortDef } from '@ice/types';
 
 interface RerouteNodeProps extends SvgCompactNodeProps {
   /** All edges on the active card — used to derive the passthrough color. */
@@ -43,24 +43,22 @@ export const SvgRerouteNode: React.FC<RerouteNodeProps> = memo(
     const category = findPassthroughCategory(node.id, allConnections) ?? 'traffic';
     const color = CATEGORY_COLORS[category];
 
-    const sockets: SocketDef[] = [
+    const sockets: PortDef[] = [
       {
         id: 'in',
         side: 'left',
-        category,
+        role: 'any',
         direction: 'in',
         label: 'Input',
         shape: 'circle',
-        multi: true,
       },
       {
         id: 'out',
         side: 'right',
-        category,
+        role: 'any',
         direction: 'out',
         label: 'Output',
         shape: 'circle',
-        multi: true,
       },
     ];
 

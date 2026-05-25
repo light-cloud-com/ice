@@ -51,7 +51,7 @@ const mocks = vi.hoisted(() => {
     state: { ui: { splitView: { activePaneId: 'pane-1' } } },
     dispatch: vi.fn(),
     searchSpy: vi.fn(),
-    expandSpy: vi.fn(() => ({ nodes: [{ id: 'n1' }], edges: [] })),
+    expandSpy: vi.fn((..._args: unknown[]) => ({ nodes: [{ id: 'n1' }], edges: [] })),
     createCardSpy: vi.fn((arg: unknown) => ({ type: 'cards/create', payload: arg })),
     importToActiveCardSpy: vi.fn((arg: unknown) => ({ type: 'cards/import', payload: arg })),
     openTabInPaneSpy: vi.fn((arg: unknown) => ({ type: 'ui/openTab', payload: arg })),

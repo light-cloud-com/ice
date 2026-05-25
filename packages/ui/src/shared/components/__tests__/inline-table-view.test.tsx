@@ -32,12 +32,12 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   pathname: '/projects/p1/canvas/table',
   // Sub-components — markers.
-  Toolbar: vi.fn(() => null),
-  ColumnHeader: vi.fn(() => null),
-  TableBody: vi.fn(() => null),
-  TableFooter: vi.fn(() => null),
+  Toolbar: vi.fn((..._args: unknown[]) => null),
+  ColumnHeader: vi.fn((..._args: unknown[]) => null),
+  TableBody: vi.fn((..._args: unknown[]) => null),
+  TableFooter: vi.fn((..._args: unknown[]) => null),
   // useTableRows mock.
-  useTableRows: vi.fn(() => ({
+  useTableRows: vi.fn((..._args: unknown[]) => ({
     rows: [{ node: { id: 'n1' }, label: 'A' }],
     sorted: [{ node: { id: 'n1' }, label: 'A' }],
     grouped: [],
@@ -134,7 +134,7 @@ function* walk(node: unknown): Generator<ElLike> {
   }
   if (!isEl(node)) return;
   yield node;
-  if (KNOWN_MOCKS.includes(node.type as ReturnType<typeof vi.fn>)) {
+  if ((KNOWN_MOCKS as unknown[]).includes(node.type)) {
     yield* walk(node.props.children);
     return;
   }
@@ -354,7 +354,7 @@ describe('InlineTableView — TableBody wiring', () => {
         onSelectRow: (id: string, e: React.MouseEvent) => void;
       }
     ).onSelectRow;
-    onSelect('n1', { metaKey: false, ctrlKey: false } as React.MouseEvent);
+    onSelect('n1', { metaKey: false, ctrlKey: false } as unknown as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n1']);
     // showProperties=false so toggleProperties is dispatched.
     expect(mocks.toggleProperties).toHaveBeenCalled();
@@ -369,7 +369,7 @@ describe('InlineTableView — TableBody wiring', () => {
         onSelectRow: (id: string, e: React.MouseEvent) => void;
       }
     ).onSelectRow;
-    onSelect('n1', { metaKey: true } as React.MouseEvent);
+    onSelect('n1', { metaKey: true } as unknown as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n1']);
   });
 
@@ -382,7 +382,7 @@ describe('InlineTableView — TableBody wiring', () => {
         onSelectRow: (id: string, e: React.MouseEvent) => void;
       }
     ).onSelectRow;
-    onSelect('n1', { ctrlKey: true } as React.MouseEvent);
+    onSelect('n1', { ctrlKey: true } as unknown as React.MouseEvent);
     expect(mocks.setSelectedNodes).toHaveBeenCalledWith(['n2']);
   });
 
@@ -392,7 +392,7 @@ describe('InlineTableView — TableBody wiring', () => {
     const body = findFirst(tree, (el) => el.type === mocks.TableBody)!;
     (body.props as { onSelectRow: (id: string, e: React.MouseEvent) => void }).onSelectRow('n1', {
       metaKey: false,
-    } as React.MouseEvent);
+    } as unknown as React.MouseEvent);
     expect(mocks.toggleProperties).not.toHaveBeenCalled();
   });
 

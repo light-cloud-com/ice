@@ -52,7 +52,7 @@ const renderRegion = (node: CanvasNode): React.ReactElement => {
 
 const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   id: 'rl-1',
-  type: 'region',
+  type: 'container',
   x: 50,
   y: 100,
   width: 500,

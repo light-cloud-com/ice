@@ -584,7 +584,7 @@ describe('ResultsSummary — URL click handlers', () => {
     })[0];
     expect(valueSpan).toBeDefined();
     const onClick = (valueSpan.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ shiftKey: false } as React.MouseEvent);
+    onClick({ shiftKey: false } as unknown as React.MouseEvent);
     expect(mocks.openExternalUrl).toHaveBeenCalledWith('https://foo.example');
     expect(mocks.writeText).not.toHaveBeenCalled();
   });
@@ -598,7 +598,7 @@ describe('ResultsSummary — URL click handlers', () => {
       return typeof title === 'string' && title.startsWith('Click to open · Shift+click to copy: ');
     })[0];
     const onClick = (valueSpan.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ shiftKey: true } as React.MouseEvent);
+    onClick({ shiftKey: true } as unknown as React.MouseEvent);
     expect(mocks.writeText).toHaveBeenCalledWith('https://foo.example');
     expect(mocks.openExternalUrl).not.toHaveBeenCalled();
   });
@@ -613,7 +613,7 @@ describe('ResultsSummary — URL click handlers', () => {
     })[0];
     expect(valueSpan).toBeDefined();
     const onClick = (valueSpan.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    onClick({ shiftKey: false } as React.MouseEvent);
+    onClick({ shiftKey: false } as unknown as React.MouseEvent);
     expect(mocks.writeText).toHaveBeenCalledWith('gs://my-bucket');
     expect(mocks.openExternalUrl).not.toHaveBeenCalled();
   });
@@ -739,13 +739,13 @@ describe('ResultsSummary — default_url row', () => {
 
     mocks.openExternalUrl.mockClear();
     mocks.writeText.mockClear();
-    onClick({ shiftKey: false } as React.MouseEvent);
+    onClick({ shiftKey: false } as unknown as React.MouseEvent);
     expect(mocks.openExternalUrl).toHaveBeenCalledWith('https://default.example');
     expect(mocks.writeText).not.toHaveBeenCalled();
 
     mocks.openExternalUrl.mockClear();
     mocks.writeText.mockClear();
-    onClick({ shiftKey: true } as React.MouseEvent);
+    onClick({ shiftKey: true } as unknown as React.MouseEvent);
     expect(mocks.writeText).toHaveBeenCalledWith('https://default.example');
     expect(mocks.openExternalUrl).not.toHaveBeenCalled();
   });

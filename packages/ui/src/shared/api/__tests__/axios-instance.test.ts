@@ -53,7 +53,7 @@ const mockInstance = {
   },
 };
 
-const createSpy = vi.fn(() => mockInstance);
+const createSpy = vi.fn((..._args: unknown[]) => mockInstance);
 
 vi.mock('axios', () => ({
   default: { create: (...a: unknown[]) => createSpy(...(a as [])) },

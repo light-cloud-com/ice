@@ -782,7 +782,7 @@ describe('CompactLod3 — unfolded composition', () => {
     expect(() =>
       (pr.props as { onClick: (e: React.MouseEvent) => void }).onClick({
         stopPropagation: () => {},
-      } as React.MouseEvent),
+      } as unknown as React.MouseEvent),
     ).not.toThrow();
   });
 

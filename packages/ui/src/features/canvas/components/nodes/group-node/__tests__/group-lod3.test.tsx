@@ -198,11 +198,11 @@ describe('GroupLod3 — rect stroke / fill', () => {
     expect((findRect(renderL3({})).props as { strokeWidth: number }).strokeWidth).toBe(1);
   });
 
-  it('strokeDasharray undefined when dragOver, "4 4" otherwise', () => {
-    expect(
-      (findRect(renderL3({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray,
-    ).toBeUndefined();
-    expect((findRect(renderL3({})).props as { strokeDasharray: string }).strokeDasharray).toBe('4 4');
+  it('strokeDasharray "8 4" when dragOver (drop affordance), undefined otherwise — Blender-frame chrome uses a solid border by default', () => {
+    expect((findRect(renderL3({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray).toBe(
+      '8 4',
+    );
+    expect((findRect(renderL3({})).props as { strokeDasharray?: string }).strokeDasharray).toBeUndefined();
   });
 
   it('fill = groupTint', () => {
@@ -226,11 +226,11 @@ describe('GroupLod3 — label + fold + content', () => {
     expect((lbl.props as { color?: string }).color).toBe('#abc123');
   });
 
-  it('FoldButton: opacity 0.8 when hovered, 0.4 otherwise', () => {
+  it('FoldButton: opacity 0.95 when hovered, 0.6 otherwise (raised from 0.8/0.4 with the tab restyle)', () => {
     expect((findByType(renderL3({ isHovered: true }), MockFoldButton)[0].props as { opacity: number }).opacity).toBe(
-      0.8,
+      0.95,
     );
-    expect((findByType(renderL3({}), MockFoldButton)[0].props as { opacity: number }).opacity).toBe(0.4);
+    expect((findByType(renderL3({}), MockFoldButton)[0].props as { opacity: number }).opacity).toBe(0.6);
   });
 
   it('FoldButton onClick = onToggleFold', () => {

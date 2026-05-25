@@ -31,6 +31,7 @@ import {
   isMonitoring,
   isQueue,
   isRepo,
+  isReroute,
   isRoutable,
   isSearch,
   isSecrets,
@@ -343,6 +344,29 @@ export const CONNECTION_RULES: ConnectionRule[] = [
     reverse: true,
   },
 
+  // ── REROUTE ────────────────────────────────────────────────────────────
+  // Pass-through dot. Accepts from / emits to any non-container block.
+  // The visual category of the wire is inherited from whichever end is
+  // NOT the reroute — see `reroute-node/passthrough.ts` for the color
+  // derivation. Without these two entries `canConnect` would reject the
+  // edge as no-rule.
+  {
+    label: 'Anything → Reroute',
+    source: (t) => !isContainer(t) && !isReroute(t),
+    target: isReroute,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Reroute → Anything',
+    source: isReroute,
+    target: (t) => !isContainer(t),
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+
   // ── DNS ────────────────────────────────────────────────────────────────
   { label: 'Domain → Routable', source: isDomain, target: isRoutable, category: 'dns', lineStyle: 'solid' },
   // Reverse: user drags service→domain, we flip
@@ -416,5 +440,44 @@ The arrow shows "who initiates." Auto-flip ensures:
 - Repo is always SOURCE (repo → service)
 - EnvVars/Secrets is always TARGET (service → config)
 - Domain is always SOURCE (domain → service)
-- Monitoring is always TARGET (service → logs)`;
+- Monitoring is always TARGET (service → logs)
+
+### Port roles (typed sockets)
+Every block in the catalog exposes named "ports" anchored to its real
+properties — e.g. a Frontend has a 'repository-in' port (wires from a
+GitHub repo), a 'domain-in' port (wires from a Custom Domain), and a
+'web-out' port (its HTTPS endpoint). When you create an edge, you SHOULD
+include explicit \`sourceSocket\` and \`targetSocket\` ids on edge.data
+so the canvas snaps the wire to the right dots.
+
+Common port ids you should target:
+- Frontends / Backends (Compute.StaticSite, Compute.SSRSite,
+  Compute.Container, Compute.BackendAPI, Compute.ServerlessFunction,
+  Compute.Worker, Compute.CronJob):
+  - in: \`repository-in\`, \`env-in\`, \`secret-in\`, \`domain-in\`,
+        \`db-in\`, \`cache-in\`, \`storage-in\`, \`search-in\`,
+        \`vector-in\`, \`llm-in\`, \`queue-in\` (subscribe)
+  - out: \`web-out\` (HTTP/HTTPS), \`queue-out\` (publish), \`logs-out\`
+- Source.Repository: out \`repository-out\`
+- Network.CustomDomain: out \`domain-out\`
+- Network.Gateway: in \`upstream-in\`, \`domain-in\`; out \`public-out\`
+- Database.PostgreSQL / .MySQL / .MongoDB: out \`db-out\`
+- Database.Redis: out \`cache-out\`
+- Storage.Bucket: out \`storage-out\`
+- Messaging.Queue / .EventStream: in \`queue-in\` (from publishers), out \`queue-out\` (to subscribers)
+- Messaging.Email: in \`queue-in\`
+- Security.Secret: out \`secret-out\`
+- Config.Environment: out \`env-out\`
+- Monitoring.Log: in \`logs-in\`
+- AI.VectorDB: out \`vector-out\`
+- AI.LLMGateway: out \`llm-out\`
+
+If you omit the port ids the canvas will infer them at render time from
+the category, but the edge will appear "loose" until the user touches
+it — always emit explicit ids when you know them.
+
+For multi-port services (Compute.Container, Compute.BackendAPI), the
+user may have added \`exposed_ports: [{port, protocol, label}]\` — each
+entry becomes a \`port-<N>-out\` socket. Pick the one matching the
+listener you intend (e.g. \`port-8080-out\` for HTTP :8080).`;
 }

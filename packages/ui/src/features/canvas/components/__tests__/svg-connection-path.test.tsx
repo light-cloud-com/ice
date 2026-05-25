@@ -352,21 +352,21 @@ describe('SvgConnectionPath — stroke styling', () => {
       return props.fill === 'none' && props.stroke !== 'transparent' && props.stroke !== undefined;
     })[0];
 
-  it('renders selected stroke = EDGE_COLORS.selected with strokeWidth=2.5 and opacity=0.7', () => {
+  it('renders selected stroke = EDGE_COLORS.selected with strokeWidth=2.5 and opacity=1 (fully visible)', () => {
     const tree = renderEdge({ isSelected: true });
     const path = mainPath(tree)!;
     const props = path.props as { stroke: string; strokeWidth: number; opacity: number };
     expect(props.stroke).toBe(EDGE_COLORS.selected);
     expect(props.strokeWidth).toBe(2.5);
-    expect(props.opacity).toBe(0.7);
+    expect(props.opacity).toBe(1);
   });
 
-  it('renders highlighted stroke (no direction → category color or default)', () => {
+  it('renders highlighted stroke with opacity 0.95 (near-full visibility)', () => {
     const tree = renderEdge({ isHighlighted: true });
     const path = mainPath(tree)!;
     const props = path.props as { stroke: string; opacity: number };
     expect(props.stroke).toBe(EDGE_COLORS.default);
-    expect(props.opacity).toBe(0.6);
+    expect(props.opacity).toBe(0.95);
   });
 
   it('renders highlighted + direction="outgoing" stroke = EDGE_COLORS.outgoing', () => {
@@ -383,12 +383,12 @@ describe('SvgConnectionPath — stroke styling', () => {
     expect(props.stroke).toBe(EDGE_COLORS.incoming);
   });
 
-  it('renders default stroke (relationship "default") with low opacity', () => {
+  it('renders default stroke (relationship "default") at high opacity — connections are fully visible at idle', () => {
     const tree = renderEdge();
     const path = mainPath(tree)!;
     const props = path.props as { stroke: string; opacity: number };
     expect(props.stroke).toBe(EDGE_COLORS.default);
-    expect(props.opacity).toBe(0.15);
+    expect(props.opacity).toBe(0.9);
   });
 
   it('uses the category color from connection.data.color when present', () => {
@@ -419,7 +419,7 @@ describe('SvgConnectionPath — stroke styling', () => {
     expect((path.props as { stroke: string }).stroke).toBe(EDGE_COLORS.depends_on);
   });
 
-  it('renders pipelineActive stroke = #3b82f6 with opacity 0.6', () => {
+  it('renders pipelineActive stroke = #3b82f6 with opacity 0.6 (animated overlay sits quieter than the base wire)', () => {
     const tree = renderEdge({ pipelineActive: true });
     const path = mainPath(tree)!;
     const props = path.props as { stroke: string; opacity: number };
@@ -473,28 +473,28 @@ describe('SvgConnectionPath — stroke styling', () => {
     expect((path.props as { strokeWidth: number }).strokeWidth).toBe(0.6);
   });
 
-  it('thin lineStyle reduces opacity floor to 0.12 at full LOD', () => {
+  it('thin lineStyle drops opacity to 0.6 at full LOD (a notch quieter than primary traffic but still fully readable)', () => {
     const tree = renderEdge({
       connection: makeConn({ data: { lineStyle: 'thin' } }),
     });
     const path = mainPath(tree)!;
-    expect((path.props as { opacity: number }).opacity).toBe(0.12);
+    expect((path.props as { opacity: number }).opacity).toBe(0.6);
   });
 
-  it('LOD 1 reduces strokeWidth to 1.5 * invZoom and opacity to 0.4', () => {
+  it('LOD 1 reduces strokeWidth to 1.5 * invZoom and opacity to 0.7', () => {
     const tree = renderEdge({ lod: 1, zoom: 1 });
     const path = mainPath(tree)!;
     const props = path.props as { strokeWidth: number; opacity: number };
     expect(props.strokeWidth).toBeCloseTo(1.5);
-    expect(props.opacity).toBe(0.4);
+    expect(props.opacity).toBe(0.7);
   });
 
-  it('LOD 2 reduces strokeWidth to 1.2 * invZoom and opacity to 0.35', () => {
+  it('LOD 2 reduces strokeWidth to 1.2 * invZoom and opacity to 0.8', () => {
     const tree = renderEdge({ lod: 2, zoom: 1 });
     const path = mainPath(tree)!;
     const props = path.props as { strokeWidth: number; opacity: number };
     expect(props.strokeWidth).toBeCloseTo(1.2);
-    expect(props.opacity).toBe(0.35);
+    expect(props.opacity).toBe(0.8);
   });
 
   it('LOD 1 with zoom 0.5 doubles invZoom-scaled strokeWidth (1.5 * 2 = 3)', () => {

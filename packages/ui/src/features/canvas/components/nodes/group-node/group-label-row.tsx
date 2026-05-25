@@ -9,10 +9,27 @@ interface GroupLabelRowProps {
   childCount?: number;
 }
 
+/**
+ * Blender-style frame tab — rounded top corners only, flush against the
+ * group's body border. The colored swatch on the left mirrors the
+ * group's user color so multi-group canvases stay readable at a glance.
+ */
 export const GroupLabelRow: React.FC<GroupLabelRowProps> = memo(({ label, color, childCount }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+  <div
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '2px 8px',
+      background: color ? `${color}1A` : 'var(--ice-bg-raised)',
+      borderRadius: '4px 4px 0 0',
+      border: color ? `1px solid ${color}55` : '1px solid var(--ice-border)',
+      borderBottom: 'none',
+      maxWidth: '100%',
+    }}
+  >
     {color && (
-      <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, opacity: 0.7, flexShrink: 0 }} />
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, opacity: 0.85, flexShrink: 0 }} />
     )}
     <span
       style={{
@@ -24,6 +41,7 @@ export const GroupLabelRow: React.FC<GroupLabelRowProps> = memo(({ label, color,
         textTransform: 'uppercase',
         pointerEvents: 'none',
         flex: 1,
+        minWidth: 0,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
@@ -38,6 +56,9 @@ export const GroupLabelRow: React.FC<GroupLabelRowProps> = memo(({ label, color,
           fontSize: 10,
           fontWeight: 500,
           fontFamily: FONT_MONO,
+          padding: '0 4px',
+          borderRadius: 3,
+          background: 'var(--ice-bg-hover)',
           flexShrink: 0,
         }}
       >

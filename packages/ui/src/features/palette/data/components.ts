@@ -163,5 +163,11 @@ export function getComponents(t: Translator): ComponentDef[] {
     def(t, 'Source.Repository', GitBranch, ['aws', 'gcp', 'azure'], 'Source'),
     // ── Config ──
     def(t, 'Config.Environment', Cog, ['aws', 'gcp', 'azure'], 'Config'),
+    // ── Util ──
+    def(t, 'Util.Reroute', Waypoints, ['aws', 'gcp', 'azure'], 'Util', undefined, {
+      name: 'Reroute',
+      description: 'Pass-through dot to bend wires cleanly. No deploy footprint.',
+      tooltip: 'Pass-through routing dot — keeps wires tidy without altering the graph.',
+    }),
   ];
 }

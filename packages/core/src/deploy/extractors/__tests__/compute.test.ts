@@ -18,6 +18,7 @@ import {
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
   extract_cloud_scheduler_properties,
+  parse_exposed_ports,
 } from '../compute';
 
 describe('extract_cloud_run_properties', () => {
@@ -84,6 +85,81 @@ describe('extract_cloud_run_properties', () => {
   it('always returns labels: {} regardless of input', () => {
     const result = extract_cloud_run_properties({ labels: { keep: 'me' } }, 'us-central1');
     expect(result.labels).toEqual({});
+  });
+
+  it('honors exposed_ports — primary port is the first entry, full list in additional_ports', () => {
+    const result = extract_cloud_run_properties(
+      {
+        exposed_ports: [
+          JSON.stringify({ port: 8080, protocol: 'http', label: 'api' }),
+          JSON.stringify({ port: 8443, protocol: 'https' }),
+        ],
+      },
+      'us-central1',
+    );
+    expect(result.port).toBe(8080);
+    expect(result.additional_ports).toEqual([
+      { port: 8080, protocol: 'http', label: 'api' },
+      { port: 8443, protocol: 'https' },
+    ]);
+  });
+
+  it('exposed_ports wins over the legacy data.port scalar when both are set', () => {
+    const result = extract_cloud_run_properties(
+      {
+        port: 3000,
+        exposed_ports: [JSON.stringify({ port: 8080, protocol: 'http' })],
+      },
+      'us-central1',
+    );
+    expect(result.port).toBe(8080);
+  });
+
+  it('falls back to data.port when exposed_ports is missing', () => {
+    const result = extract_cloud_run_properties({ port: 3000 }, 'us-central1');
+    expect(result.port).toBe(3000);
+    expect(result.additional_ports).toBeUndefined();
+  });
+});
+
+describe('parse_exposed_ports', () => {
+  it('returns [] for missing or non-array input', () => {
+    expect(parse_exposed_ports({})).toEqual([]);
+    expect(parse_exposed_ports({ exposed_ports: 'nope' })).toEqual([]);
+    expect(parse_exposed_ports({ exposed_ports: null })).toEqual([]);
+  });
+
+  it('parses JSON-stringified entries', () => {
+    const out = parse_exposed_ports({
+      exposed_ports: [JSON.stringify({ port: 8080, protocol: 'http', label: 'api' })],
+    });
+    expect(out).toEqual([{ port: 8080, protocol: 'http', label: 'api' }]);
+  });
+
+  it('parses compact text entries like "https:443:web"', () => {
+    expect(parse_exposed_ports({ exposed_ports: ['https:443:web'] })).toEqual([
+      { port: 443, protocol: 'https', label: 'web' },
+    ]);
+  });
+
+  it('parses plain object entries', () => {
+    expect(parse_exposed_ports({ exposed_ports: [{ port: 9000, protocol: 'tcp' }] })).toEqual([
+      { port: 9000, protocol: 'tcp' },
+    ]);
+  });
+
+  it('defaults to http when protocol is unknown', () => {
+    expect(parse_exposed_ports({ exposed_ports: [{ port: 8080, protocol: 'weird' }] })).toEqual([
+      { port: 8080, protocol: 'http' },
+    ]);
+  });
+
+  it('drops malformed entries silently', () => {
+    expect(
+      parse_exposed_ports({
+        exposed_ports: ['', 'garbage', JSON.stringify({ port: 0 }), JSON.stringify({ port: 5000 })],
+      }),
+    ).toEqual([{ port: 5000, protocol: 'http' }]);
   });
 });
 

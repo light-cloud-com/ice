@@ -97,21 +97,21 @@ describe('CanvasContent', () => {
     expect(el.props.transform).toBe('translate(5, 7) scale(2)');
   });
 
-  it('renders the documented child sequence in order — when no preview is active', () => {
+  it('renders the documented child sequence in order — when no preview is active (connections ABOVE nodes per user feedback)', () => {
     const el = renderResult(baseProps);
     expect(childTypes(el)).toEqual([
       mocks.CanvasGrid,
       mocks.SelectionFrame,
-      mocks.ConnectionLayer, // background mode
       mocks.ParentClipDefs,
       mocks.NodesLayer,
+      mocks.ConnectionLayer, // background mode — now ABOVE nodes
       mocks.UserTrafficOverlay,
       mocks.ConnectionLayer, // highlighted mode
       mocks.GhostOverlay,
     ]);
   });
 
-  it('inserts the connection-drawing preview between nodes-layer and user-traffic when drawingConnection is set', () => {
+  it('inserts the connection-drawing preview between background-connections and user-traffic when drawingConnection is set', () => {
     const el = renderResult({
       ...baseProps,
       drawingConnection: {
@@ -123,9 +123,9 @@ describe('CanvasContent', () => {
     expect(childTypes(el)).toEqual([
       mocks.CanvasGrid,
       mocks.SelectionFrame,
-      mocks.ConnectionLayer,
       mocks.ParentClipDefs,
       mocks.NodesLayer,
+      mocks.ConnectionLayer,
       mocks.ConnectionPreviewOverlay,
       mocks.UserTrafficOverlay,
       mocks.ConnectionLayer,

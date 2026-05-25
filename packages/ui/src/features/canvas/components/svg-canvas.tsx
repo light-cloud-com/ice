@@ -30,6 +30,8 @@ import { useCanvasDrop } from '../hooks/use-canvas-drop';
 import { useCanvasEffects } from '../hooks/use-canvas-effects';
 import { useCanvasHandlers } from '../hooks/use-canvas-handlers';
 import { useCanvasInteractionsBindings } from '../hooks/use-canvas-interactions-bindings';
+import { Spotlight } from './add-menu/spotlight';
+import { useSpotlightShortcut } from './add-menu/use-spotlight-state';
 import { useCanvasMouseRouting } from '../hooks/use-canvas-mouse-routing';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
 import { useCanvasSelectors } from '../hooks/use-canvas-selectors';
@@ -43,11 +45,14 @@ import { useContainerMove } from '../hooks/use-container-move';
 import { useContainerResize } from '../hooks/use-container-resize';
 import { useDragTargetHighlight } from '../hooks/use-drag-target-highlight';
 import { useGhostMode } from '../hooks/use-ghost-mode';
+import { useGroupShortcut } from '../hooks/use-group-shortcut';
 import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
 import { useRenderCtx } from '../hooks/use-render-ctx';
 import { isContainerNode } from '../utils/node-classification';
+import { ConnectionDragProvider } from './nodes/_shared/connection-drag-context';
 import { OrphanNodesProvider } from './nodes/_shared/orphan-context';
+import { SocketHoverTooltip } from './nodes/_shared/socket-hover-tooltip';
 import type { AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -337,6 +342,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const {
     drawingConnection,
     connectionDragTargets,
+    connectionDragInfo,
     rejection: connectionRejection,
     handleConnectionPortDown,
     handleConnectionMove,
@@ -433,52 +439,68 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             `./canvas-renderer/canvas-content`. Visual draw order, prop
             flow, and dep arrays are preserved verbatim. */}
         <OrphanNodesProvider value={orphanNodeIds}>
-          <CanvasContent
-            viewport={viewport}
-            dimensions={dimensions}
-            canvasConnections={canvasConnections}
-            effectiveNodes={effectiveNodes}
-            portMap={portMap}
-            animatingEdges={animatingEdges}
-            pipelineNodeStatus={pipelineNodeStatus}
-            selectedNodes={selectedNodes}
-            selectedEdges={selectedEdges}
-            hoveredNodeId={hoveredNodeId}
-            lod={lod}
-            edgeStyle={edgeStyle}
-            handleConnectionHover={handleConnectionHover}
-            handleEdgeDelete={handleEdgeDelete}
-            handleEdgeSelect={handleEdgeSelect}
-            handleContextMenu={handleContextMenu}
-            sortedNodes={sortedNodes}
-            animatingNodes={animatingNodes}
-            shiftDraggingNodeIds={shiftDraggingNodeIds}
-            dragOverGroupId={dragOverGroupId}
-            renderCtx={renderCtx}
-            drawingConnection={drawingConnection}
-            connectionDragTargets={connectionDragTargets}
-            connectionRejection={connectionRejection}
-            showVirtualUserNode={showVirtualUserNode}
-            userConnections={userConnections}
-            nodesWithUserNode={nodesWithUserNode}
-            pinnedUserPos={pinnedUserPos}
-            setUserNodePos={setUserNodePos}
-            ghosts={ghosts}
-            nodes={nodes}
-            onAcceptGhost={handleAcceptGhost}
-            onDismissGhost={handleDismissGhost}
-          />
+          <ConnectionDragProvider value={connectionDragInfo}>
+            <CanvasContent
+              viewport={viewport}
+              dimensions={dimensions}
+              canvasConnections={canvasConnections}
+              effectiveNodes={effectiveNodes}
+              portMap={portMap}
+              animatingEdges={animatingEdges}
+              pipelineNodeStatus={pipelineNodeStatus}
+              selectedNodes={selectedNodes}
+              selectedEdges={selectedEdges}
+              hoveredNodeId={hoveredNodeId}
+              lod={lod}
+              edgeStyle={edgeStyle}
+              handleConnectionHover={handleConnectionHover}
+              handleEdgeDelete={handleEdgeDelete}
+              handleEdgeSelect={handleEdgeSelect}
+              handleContextMenu={handleContextMenu}
+              sortedNodes={sortedNodes}
+              animatingNodes={animatingNodes}
+              shiftDraggingNodeIds={shiftDraggingNodeIds}
+              dragOverGroupId={dragOverGroupId}
+              renderCtx={renderCtx}
+              drawingConnection={drawingConnection}
+              connectionDragTargets={connectionDragTargets}
+              connectionRejection={connectionRejection}
+              showVirtualUserNode={showVirtualUserNode}
+              userConnections={userConnections}
+              nodesWithUserNode={nodesWithUserNode}
+              pinnedUserPos={pinnedUserPos}
+              setUserNodePos={setUserNodePos}
+              ghosts={ghosts}
+              nodes={nodes}
+              onAcceptGhost={handleAcceptGhost}
+              onDismissGhost={handleDismissGhost}
+            />
+          </ConnectionDragProvider>
         </OrphanNodesProvider>
       </svg>
 
       {/* Connection tooltip — follows mouse, rendered as HTML overlay */}
       <ConnectionTooltip info={connTooltip} />
 
+      {/* Socket hover chip — instant styled tooltip on socket dot hover. */}
+      <SocketHoverTooltip />
+
       {/* Controls help button — bottom-right */}
       <ControlsHelpModal />
 
       {/* Context Menu overlay */}
       <CanvasContextMenu />
+
+      {/* Shift+A spotlight add-block menu + the key listener that opens it. */}
+      <SpotlightMount screenToCanvas={screenToCanvas} />
     </div>
   );
+};
+
+const SpotlightMount: React.FC<{ screenToCanvas: (cx: number, cy: number) => { x: number; y: number } }> = ({
+  screenToCanvas,
+}) => {
+  useSpotlightShortcut({ screenToCanvas });
+  useGroupShortcut();
+  return <Spotlight />;
 };

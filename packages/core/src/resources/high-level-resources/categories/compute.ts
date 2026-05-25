@@ -336,6 +336,16 @@ export const compute: HighLevelCategory = {
           description: 'Scale up when the metric exceeds this percentage',
           default: 70,
         },
+        {
+          name: 'exposed_ports',
+          label: 'Exposed ports',
+          type: 'port_list',
+          required: false,
+          tier: 'detailed',
+          description:
+            'HTTP/TCP listeners this API exposes. Each port becomes a typed output socket on the canvas — wire a custom domain to one and leave the others private.',
+          addLabel: 'Add port',
+        },
       ],
     },
     {
@@ -965,6 +975,16 @@ export const compute: HighLevelCategory = {
           tier: 'detailed',
           description: 'Scale up when the metric exceeds this percentage',
           default: 70,
+        },
+        {
+          name: 'exposed_ports',
+          label: 'Exposed ports',
+          type: 'port_list',
+          required: false,
+          tier: 'detailed',
+          description:
+            'HTTP/TCP listeners this container exposes. Each port becomes a typed output socket on the canvas — wire a custom domain to one and leave the others private.',
+          addLabel: 'Add port',
         },
       ],
     },

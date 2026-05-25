@@ -1,56 +1,46 @@
 /**
  * Top-level path-builder dispatcher: turns a (connection, from-node,
- * to-node, port slot, edge style, lod/zoom) bundle into the
- * `{ pathD, midX, midY }` triple the orchestrator hands to its `<path>`.
+ * to-node, edge style, lod/zoom) bundle into the `{ pathD, midX, midY,
+ * start, end, exitSide, entrySide }` result the orchestrator hands to
+ * its `<path>`.
  *
- * Extracted as the rf-conpath-7 (orchestrator slim-down) helper of the
- * svg-connection-path decomposition. The orchestrator's `useMemo` body
- * was a ~70-LOC pure function over its arguments (no DOM, no React
- * state) and lifted cleanly. Pulling it out gives the orchestrator one
- * import in place of an inline branch tree, and exposes the dispatch
- * to fixture-style tests without rendering the React tree.
+ * Unified resolution model (post-`socket-position`):
  *
- * Dispatch order (preserved verbatim from the original orchestrator):
- *   1. If either node is missing, return `null` (orchestrator renders
- *      nothing).
- *   2. Determine `(exitSide, entrySide, start)`:
- *      a. Special case: `Network.CustomDomain` source AND the edge
- *         carries a `routeId` AND the source has a matching route in
- *         `data.routes` → anchor the start point to the row's port-Y
- *         (computed via `getCustomDomainRoutePortY`), force exit side
- *         to `'right'`, pick entry side relative to where the start
- *         point sits (NOT the source's bounds midpoint, so the curve
- *         doesn't loop back if the target is above/below the row).
- *      b. The "route was deleted but the edge still references it"
- *         fallback path runs `chooseSides(effFrom, effTo)` like the
- *         general case.
- *      c. General case: `chooseSides(effFrom, effTo)` + a
- *         `getEdgePoint`-based start computed from the source's port
- *         index/count.
- *   3. Compute `end = getEdgePoint(effTo, entrySide, ...)`.
- *   4. Dispatch on `edgeStyle`:
- *      - `'straight'` → `buildStraightPath`.
- *      - `'rectangular'` → if `connection.data.routePoints` has 3+
- *        points, try `buildDagreRoutedPath`; if that returns null,
- *        fall back to `buildRectangularPath`.
- *      - default (`'bezier'`) → `buildBezierPath`.
+ *   1. Resolve both endpoints' `PortDef` from `edge.data.sourceSocket`
+ *      / `targetSocket`. If either is missing, fill in via
+ *      `inferEdgePorts` so legacy edges still anchor to the right
+ *      typed dots without a data migration.
+ *   2. Look up each end's canvas-space position via
+ *      `getSocketCanvasPosition` — the SINGLE function the canvas uses
+ *      to know "where does this socket dot live?" Custom Domain row
+ *      ports, standard typed-socket distribution, and any future
+ *      bespoke renderer all route through it.
+ *   3. Fall back to chooseSides + magnetic-attach only when neither end
+ *      has a socket id AND inference produced no port.
+ *   4. Dispatch on `edgeStyle` (bezier / straight / rectangular) and
+ *      enrich the result with the resolved start/end/sides.
  *
- * The CustomDomain-row tie-break uses strict `>` for the
- * `Math.abs(dx) > Math.abs(dy)` axis pick, mirroring `chooseSides`'s
- * tie-break (vertical wins on equal-magnitude). DO NOT cross-port
- * with `connection-preview.ts`'s `>=` — see the dominant-axis-tie-
- * breaks-are-load-bearing-do-not-cross-port learning.
+ * Why one path instead of three: the canvas had distinct branches for
+ * the CustomDomain row case, the typed-socket case, and the legacy
+ * case, each with its own end-Y math. They disagreed in subtle ways —
+ * e.g. CustomDomain-row pinned the source Y but used the side midpoint
+ * for the target, so wires "landed at the wrong socket" on multi-port
+ * blocks. Funnel everything through `getSocketCanvasPosition` and the
+ * wires and the dots agree by construction.
  */
 
+import { findPort, getPortsForNode, inferEdgePorts, type PortDef } from '@ice/types';
 import { chooseSides, getEdgePoint, getEffectiveBounds } from './bounds-and-sides';
-import { getCustomDomainRoutePortY } from '../nodes/custom-domain';
 import { buildBezierPath } from './builders/bezier';
 import { buildDagreRoutedPath } from './builders/dagre-routed';
 import { buildRectangularPath } from './builders/rectangular';
 import { buildStraightPath } from './builders/straight';
+import { getMagneticAttach } from './magnetic-attach';
+import { getSocketCanvasPosition } from './socket-position';
 import type { PathResult, Point, Side } from './types';
 import type { EdgeStyle } from '../../../../store/slices/ui-slice';
 import type { CanvasConnection, CanvasNode } from '../svg-canvas';
+import type { ConnectionCategory } from '@ice/constants';
 
 export interface ComputePathArgs {
   connection: CanvasConnection;
@@ -87,65 +77,78 @@ export function computePath(args: ComputePathArgs): PathResult | null {
   const effFrom = getEffectiveBounds(fromNode, lod, zoom);
   const effTo = getEffectiveBounds(toNode, lod, zoom);
 
-  const fromIce = (fromNode.data?.iceType as string) || '';
-  const routeId = (connection.data as { routeId?: string } | undefined)?.routeId;
-  // Network.CustomDomain exposes per-row connection ports that the path
-  // should anchor to EXACTLY (not at the generic right-side midpoint).
-  // Works for standalone and nested-inside-PrivateNetwork usage alike —
-  // the CD's routes are always on its own right edge.
-  const isCustomDomainSource = fromIce === 'Network.CustomDomain' && !!routeId;
-  const isRowSource = isCustomDomainSource;
+  // ── Resolve socket endpoints ───────────────────────────────────────
+  //
+  // When the edge carries socket ids, fetch each end's PortDef so we
+  // know its declared anchor side. For pre-port-aware edges, infer the
+  // best pair from the schemas + category — purely visual, the storage
+  // stays untouched until the user explicitly locks in.
+  const edgeData = (connection.data ?? {}) as {
+    sourceSocket?: string;
+    targetSocket?: string;
+    connectionCategory?: ConnectionCategory;
+  };
+  let sourceSocket: PortDef | undefined = edgeData.sourceSocket ? findPort(fromNode, edgeData.sourceSocket) : undefined;
+  let targetSocket: PortDef | undefined = edgeData.targetSocket ? findPort(toNode, edgeData.targetSocket) : undefined;
+  if (!sourceSocket || !targetSocket) {
+    const inferred = inferEdgePorts(
+      sourceSocket ? [sourceSocket] : getPortsForNode(fromNode),
+      targetSocket ? [targetSocket] : getPortsForNode(toNode),
+      edgeData.connectionCategory ?? null,
+    );
+    if (!sourceSocket) sourceSocket = inferred.sourcePort;
+    if (!targetSocket) targetSocket = inferred.targetPort;
+  }
 
+  // ── Position each end via the unified socket-position helper ───────
   let exitSide: Side;
   let entrySide: Side;
   let start: Point;
+  let end: Point;
 
-  if (isRowSource) {
-    const routes = (fromNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
-    const rowIndex = routes.findIndex((r) => r.id === routeId);
-    if (rowIndex >= 0) {
-      exitSide = 'right';
-      start = {
-        x: effFrom.x + effFrom.width,
-        y: effFrom.y + getCustomDomainRoutePortY(rowIndex),
-      };
-      // Entry side picked relative to where the start point sits, not
-      // the source bounds midpoint, so the curve doesn't loop back if
-      // the target is above/below the row.
-      const dx = effTo.x + effTo.width / 2 - start.x;
-      const dy = effTo.y + effTo.height / 2 - start.y;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        entrySide = dx > 0 ? 'left' : 'right';
-      } else {
-        entrySide = dy > 0 ? 'top' : 'bottom';
-      }
-    } else {
-      // Route was deleted but the edge still references it — fall back
-      // to the generic side selection.
-      const sides = chooseSides(effFrom, effTo);
-      exitSide = sides.exitSide;
-      entrySide = sides.entrySide;
-      start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
-    }
+  const sourcePos = sourceSocket ? getSocketCanvasPosition(fromNode, sourceSocket.id) : null;
+  const targetPos = targetSocket ? getSocketCanvasPosition(toNode, targetSocket.id) : null;
+
+  if (sourcePos && sourceSocket) {
+    start = sourcePos;
+    exitSide = sourceSocket.side;
+  } else if (sourceSocket) {
+    // Schema knew the side but the position lookup failed (rare —
+    // e.g. dangling port). Use the side midpoint as a safe fallback.
+    exitSide = sourceSocket.side;
+    start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
   } else {
+    // Fully untyped edge — chooseSides + magnetic-attach for the
+    // legacy "anonymous wire" feel.
     const sides = chooseSides(effFrom, effTo);
     exitSide = sides.exitSide;
-    entrySide = sides.entrySide;
-    start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
+    const toCenter: Point = { x: effTo.x + effTo.width / 2, y: effTo.y + effTo.height / 2 };
+    start = getMagneticAttach(effFrom, exitSide, toCenter).attach;
   }
 
-  const end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
-  if (edgeStyle === 'straight') return buildStraightPath(start, end);
+  if (targetPos && targetSocket) {
+    end = targetPos;
+    entrySide = targetSocket.side;
+  } else if (targetSocket) {
+    entrySide = targetSocket.side;
+    end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
+  } else {
+    const sides = chooseSides(effFrom, effTo);
+    entrySide = sides.entrySide;
+    const fromCenter: Point = { x: effFrom.x + effFrom.width / 2, y: effFrom.y + effFrom.height / 2 };
+    end = getMagneticAttach(effTo, entrySide, fromCenter).attach;
+  }
+
+  const enrich = (r: PathResult): PathResult => ({ ...r, start, end, exitSide, entrySide });
+
+  if (edgeStyle === 'straight') return enrich(buildStraightPath(start, end));
   if (edgeStyle === 'rectangular') {
-    // If auto-layout left us a routed polyline on this edge, follow
-    // it — dagre already bent the path around obstacles. Fall back to
-    // a plain L when the route is absent or too short.
     const routePoints = (connection.data as { routePoints?: Point[] } | undefined)?.routePoints;
     if (routePoints && routePoints.length >= 3) {
       const routed = buildDagreRoutedPath(routePoints, start, end);
-      if (routed) return routed;
+      if (routed) return enrich(routed);
     }
-    return buildRectangularPath(start, end, exitSide, entrySide);
+    return enrich(buildRectangularPath(start, end, exitSide, entrySide));
   }
-  return buildBezierPath(start, end, exitSide, entrySide);
+  return enrich(buildBezierPath(start, end, exitSide, entrySide));
 }

@@ -220,7 +220,7 @@ function makeProps(overrides: Partial<Parameters<typeof BlocksSection>[0]> = {})
     setLocalSearch: vi.fn(),
     selectedProvider: 'all',
     setSelectedProvider: vi.fn(),
-    projectProvider: null,
+    availableProviderIds: new Set<string>(['aws', 'gcp', 'azure']),
     searchInputRef: { current: null },
     filteredComponents: [comp],
     categorizedItems: [{ category: cat, items: [comp] }],
@@ -334,8 +334,8 @@ describe('BlocksSection — provider dropdown', () => {
     expect(items).toHaveLength(3);
   });
 
-  it('disables non-matching items when projectProvider is set', () => {
-    const tree = renderSection(makeProps({ projectProvider: 'gcp', selectedProvider: 'gcp' }));
+  it('disables providers that are not in availableProviderIds (no blocks for them)', () => {
+    const tree = renderSection(makeProps({ availableProviderIds: new Set(['gcp', 'azure']) }));
     const items = findByPredicate(tree, (el) => {
       const props = el.props as Record<string, unknown>;
       return el.type === 'div' && props['data-radix'] === 'Item';
@@ -343,14 +343,14 @@ describe('BlocksSection — provider dropdown', () => {
     const allItem = items.find((i) => (i.props as { value?: string }).value === 'all');
     const awsItem = items.find((i) => (i.props as { value?: string }).value === 'aws');
     const gcpItem = items.find((i) => (i.props as { value?: string }).value === 'gcp');
-    // 'all' is never locked; aws is locked (project is gcp); gcp is selected, not locked.
+    // 'all' is never locked; aws has no blocks → locked; gcp has blocks → enabled.
     expect((allItem?.props as { disabled?: boolean }).disabled).toBe(false);
     expect((awsItem?.props as { disabled?: boolean }).disabled).toBe(true);
     expect((gcpItem?.props as { disabled?: boolean }).disabled).toBe(false);
   });
 
-  it('does not lock any item when projectProvider is null', () => {
-    const tree = renderSection(makeProps({ projectProvider: null }));
+  it('does not lock any item when every provider has at least one available block', () => {
+    const tree = renderSection(makeProps({ availableProviderIds: new Set(['aws', 'gcp', 'azure']) }));
     const items = findByPredicate(tree, (el) => {
       const props = el.props as Record<string, unknown>;
       return el.type === 'div' && props['data-radix'] === 'Item';

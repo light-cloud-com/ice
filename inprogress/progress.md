@@ -128,7 +128,7 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 modular azure-deployer.ts with HANDLER_REGISTRY
   - 🟢 migrate VM/Storage/Web handlers into per-file modules
   - 🟢 back-compat shim at `azure-deployer.ts`
-  - 🔴 test harness (`_azure-test-harness.ts`)
+  - 🟢 test harness (`_azure-test-harness.ts`)
   - 🟢 (C) existing tests still green
   - 🔴 (D) VM/Storage/Web round-trip post-refactor on a real subscription
 - 🟠 **B2 P0 — must-have handlers (14)**

@@ -101,11 +101,35 @@ export const cloudfront_handler: AWSResourceHandler = {
     }
   },
 
-  async update(name, provider_id, _properties, _current, _ctx) {
-    // CloudFront updates require fetching the current config + ETag,
-    // mutating, then UpdateDistribution. Deferred until the canvas
-    // exposes the live origin / behaviour edits.
-    return ok(name, TYPE, 'update', Date.now(), { provider_id });
+  async update(name, provider_id, properties, _current, ctx) {
+    const start = Date.now();
+    const client = ctx.clients.get('cloudfront') as any;
+    if (!client) return sdkMissing(name, TYPE, 'update', start, 'CloudFront', SDK);
+
+    try {
+      const cf = await load_aws_sdk(SDK);
+      if (!cf) return sdkMissing(name, TYPE, 'update', start, 'CloudFront', SDK);
+
+      // CloudFront's UpdateDistribution requires the current DistributionConfig
+      // plus an If-Match ETag. Round-trip: GetDistributionConfig → mutate →
+      // UpdateDistribution.
+      const id = provider_id.split('/').pop();
+      const cur = await client.send(new cf.GetDistributionConfigCommand({ Id: id }));
+      const config = cur?.DistributionConfig ?? {};
+      const eTag = cur?.ETag;
+      if (!eTag) return err(name, TYPE, 'update', start, 'GetDistributionConfig returned no ETag');
+
+      // Apply the limited set of operator-mutable fields. Origins +
+      // behaviours stay where the canvas creator left them.
+      if (typeof properties.price_class === 'string') config.PriceClass = properties.price_class;
+      if (properties.enabled !== undefined) config.Enabled = properties.enabled === true;
+      if (properties.comment !== undefined) config.Comment = properties.comment as string;
+
+      await client.send(new cf.UpdateDistributionCommand({ Id: id, IfMatch: eTag, DistributionConfig: config }));
+      return ok(name, TYPE, 'update', start, { provider_id });
+    } catch (error) {
+      return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, provider_id, ctx) {

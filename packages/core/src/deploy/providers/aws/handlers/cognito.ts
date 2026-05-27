@@ -49,10 +49,42 @@ export const cognito_handler: AWSResourceHandler = {
     }
   },
 
-  async update(name, provider_id, _properties, _current, _ctx) {
-    // Cognito attribute changes are mostly destructive — defer to a
-    // future commit. No-op the update path until then.
-    return ok(name, TYPE, 'update', Date.now(), { provider_id });
+  async update(name, provider_id, properties, _current, ctx) {
+    const start = Date.now();
+    const client = ctx.clients.get('cognito') as any;
+    if (!client) return sdkMissing(name, TYPE, 'update', start, 'Cognito Identity Provider', SDK);
+
+    try {
+      const cognito = await load_aws_sdk(SDK);
+      if (!cognito) return sdkMissing(name, TYPE, 'update', start, 'Cognito Identity Provider', SDK);
+
+      // UpdateUserPool: password_policy + MFA + auto-verify are the
+      // safe-to-mutate fields. PoolName + immutable attribute changes
+      // need a recreate (out of scope).
+      const pp = (properties.password_policy as Record<string, unknown>) || {};
+      await client.send(
+        new cognito.UpdateUserPoolCommand({
+          UserPoolId: provider_id,
+          AutoVerifiedAttributes: properties.auto_verified_attributes as string[] | undefined,
+          MfaConfiguration: properties.mfa_configuration as string | undefined,
+          Policies: properties.password_policy
+            ? {
+                PasswordPolicy: {
+                  MinimumLength: (pp.minimum_length as number) || 8,
+                  RequireUppercase: pp.require_uppercase !== false,
+                  RequireLowercase: pp.require_lowercase !== false,
+                  RequireNumbers: pp.require_numbers !== false,
+                  RequireSymbols: pp.require_symbols === true,
+                },
+              }
+            : undefined,
+          UserPoolTags: properties.tags as Record<string, string> | undefined,
+        }),
+      );
+      return ok(name, TYPE, 'update', start, { provider_id });
+    } catch (error) {
+      return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, provider_id, ctx) {

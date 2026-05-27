@@ -61,8 +61,33 @@ export const docdb_handler: AWSResourceHandler = {
     }
   },
 
-  async update(name, provider_id, _properties, _current, _ctx) {
-    return ok(name, TYPE, 'update', Date.now(), { provider_id });
+  async update(name, provider_id, properties, _current, ctx) {
+    const start = Date.now();
+    const client = ctx.clients.get('docdb') as any;
+    if (!client) return sdkMissing(name, TYPE, 'update', start, 'DocumentDB', SDK);
+
+    try {
+      const docdb = await load_aws_sdk(SDK);
+      if (!docdb) return sdkMissing(name, TYPE, 'update', start, 'DocumentDB', SDK);
+
+      // ModifyDBCluster covers the safe-to-mutate fields. ApplyImmediately
+      // is true so callers see the effect on the next describe call;
+      // some changes still queue for the maintenance window in AWS land.
+      const clusterId = (properties.db_cluster_identifier as string) || name;
+      await client.send(
+        new docdb.ModifyDBClusterCommand({
+          DBClusterIdentifier: clusterId,
+          BackupRetentionPeriod: properties.backup_retention_period as number | undefined,
+          PreferredBackupWindow: properties.preferred_backup_window as string | undefined,
+          PreferredMaintenanceWindow: properties.preferred_maintenance_window as string | undefined,
+          MasterUserPassword: properties.master_user_password as string | undefined,
+          ApplyImmediately: true,
+        }),
+      );
+      return ok(name, TYPE, 'update', start, { provider_id });
+    } catch (error) {
+      return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, _provider_id, ctx) {

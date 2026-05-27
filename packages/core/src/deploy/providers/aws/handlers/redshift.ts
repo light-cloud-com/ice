@@ -49,8 +49,31 @@ export const redshift_handler: AWSResourceHandler = {
     }
   },
 
-  async update(name, provider_id, _properties, _current, _ctx) {
-    return ok(name, TYPE, 'update', Date.now(), { provider_id });
+  async update(name, provider_id, properties, _current, ctx) {
+    const start = Date.now();
+    const client = ctx.clients.get('redshift') as any;
+    if (!client) return sdkMissing(name, TYPE, 'update', start, 'Redshift', SDK);
+
+    try {
+      const rs = await load_aws_sdk(SDK);
+      if (!rs) return sdkMissing(name, TYPE, 'update', start, 'Redshift', SDK);
+
+      // ModifyCluster — reshape (node_type + number_of_nodes) is the
+      // big one operators care about. Password rotation also supported.
+      await client.send(
+        new rs.ModifyClusterCommand({
+          ClusterIdentifier: name,
+          NodeType: properties.node_type as string | undefined,
+          NumberOfNodes: properties.number_of_nodes as number | undefined,
+          ClusterType: properties.cluster_type as string | undefined,
+          MasterUserPassword: properties.master_user_password as string | undefined,
+          PreferredMaintenanceWindow: properties.preferred_maintenance_window as string | undefined,
+        }),
+      );
+      return ok(name, TYPE, 'update', start, { provider_id });
+    } catch (error) {
+      return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, _provider_id, ctx) {

@@ -44,13 +44,13 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - [ ] feature flag: flip Scheduler
 - [ ] **A4 — Update paths**
   - [ ] cloudfront UpdateDistribution
-    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test (update round-trip)
+    - [x] (C) handler · [ ] (C) mocked test · [ ] (D) live test (update round-trip)
   - [ ] cognito UpdateUserPool
-    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+    - [x] (C) handler · [ ] (C) mocked test · [ ] (D) live test
   - [ ] docdb ModifyDBCluster
-    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+    - [x] (C) handler · [ ] (C) mocked test · [ ] (D) live test
   - [ ] redshift ModifyCluster
-    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+    - [x] (C) handler · [ ] (C) mocked test · [ ] (D) live test
   - [ ] ec2 ModifyVolume
     - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
   - [ ] feature flag: flip Database

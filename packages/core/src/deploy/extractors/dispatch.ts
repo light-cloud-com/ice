@@ -83,6 +83,7 @@ import {
   extract_azure_container_apps_properties,
   extract_azure_function_app_properties,
 } from './azure/compute';
+import { extract_azure_cosmosdb_account_properties } from './azure/database';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
@@ -169,6 +170,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.web.appServicePlan': extract_azure_app_service_plan_properties,
   'azure.containerapps.app': extract_azure_container_apps_properties,
   'azure.web.functionApp': extract_azure_function_app_properties,
+  'azure.cosmosdb.account': extract_azure_cosmosdb_account_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

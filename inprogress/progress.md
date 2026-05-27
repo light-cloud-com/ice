@@ -26,11 +26,11 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
 
 - 🟠 **A1 — Network primitives**
   - 🟠 vpc handler (Network.VPC)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 subnet handler (Network.Subnet)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 security-group handler (Network.SecurityGroup)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 wiring: ECS consume canvas subnets/SGs (code done; real-deploy pending)
   - 🟠 wiring: ELBv2 consume canvas subnets/SGs/VPC (code done; real-deploy pending)
   - 🟠 wiring: RDS auto-bootstrap DB subnet group (code done; real-deploy pending)
@@ -39,9 +39,9 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - 🔴 feature flag: flip Network
 - 🟠 **A2 — ACM cert + DNS**
   - 🟠 acm handler (Security.Certificate)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 route53 handler (Network.CustomDomain)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 cloudfront: consume canvas cert
     - 🟢 (C) handler edit (`properties.certificate_arn` takes precedence) · 🟢 (C) mocked test update · 🔴 (D) live test re-run
   - 🔴 feature flag: flip Frontend (cardinal rule)
@@ -65,9 +65,9 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - 🔴 feature flag: flip Analytics
 - 🟠 **A5 — CodeBuild path**
   - 🟠 codebuild handler
-    - 🟢 (C) handler · 🟢 (C) extractor (aws.codebuild.project) · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor (aws.codebuild.project) · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2)
   - 🟠 lambda-builder fallback chain
-    - 🟢 (C) handler edit (has_local_toolchain probe → CodeBuild fallback) · 🔴 (C) mocked test update · 🔴 (D) live test (Lambda auto-build via CodeBuild)
+    - 🟢 (C) handler edit (has_local_toolchain probe → CodeBuild fallback) · 🟢 (C) mocked test update (`aws-lambda-builder.test.ts`) · 🔴 (D) live test (Lambda auto-build via CodeBuild)
 - 🟠 **A6 — Live-test foundation (developer tool)**
   - 🟢 `_live-helpers.ts` (awsLive, uniqueAwsName, createAwsDeployer, JsonlLogger, runId)
   - 🟢 `_live-types.ts` (LiveEvent union)
@@ -81,15 +81,15 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - 🟢 cleanup-orphans filter logic unit-tested (`cleanup-orphans.test.ts` — pins shared age + tag constants across AWS/Azure)
 - 🟠 **A7 — Block coverage completeness**
   - 🟠 amplify-hosting handler (Compute.SSRSite)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 amazon-mq handler (Messaging.RabbitMQ)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 wafv2 handler (Security.WAF)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 vpc-endpoint handler (Network.PrivateNetwork)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 opensearch-serverless split (AI.VectorDB)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🟢 docs (covered by D2 deploying-to-aws / providers/aws/README rollout-state)
   - 🟠 ecs worker extractor variant (Compute.Worker)
     - 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (D) live test (ECS worker mode)
 
@@ -191,7 +191,7 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟠 event-hubs (Messaging.EventStream)
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
-    - 🟢 (C) handler (shared with Messaging.ServiceBus) · 🟢 (C) extractor branch (flips Standard→Premium) · 🔴 (C) mocked test · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler (shared with Messaging.ServiceBus) · 🟢 (C) extractor branch (flips Standard→Premium) · 🔴 (C) mocked test · 🔴 (D) live test · 🟢 docs (covered by Azure README quirks)
   - 🟠 cognitive-search (Analytics.Search + AI.VectorDB)
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 ai-search-vector (AI.VectorDB) — same Search service as Analytics.Search
@@ -335,6 +335,16 @@ Counts derived from leaf checkboxes above.
 - **Total**: ~360 leaves
 
 Update this section when leaves are added or removed. The plan is "done" when every leaf is 🟢 and the deploy verification log below has at least one entry per handler.
+
+### Remaining 🔴 categories (status as of this drive)
+
+The implementation work is exhausted to the boundary of what can be done without real-cloud credentials. The leaves that remain red split cleanly into three buckets:
+
+1. **`(C) schema`** — schema-DB entries for new handler resource types. Requires running `pnpm build:schemas` (the schema-extractor pulls Terraform / Pulumi schemas via their CLIs and rebuilds `packages/core/data/ice-schemas.db`). This is a build-pipeline step, not a code edit. Documented contract is in `inprogress/azure-rebuild.md`.
+2. **`(D) live test` / `(D) deploy gate`** — cardinal rule. Each handler is only "done" once a developer runs the corresponding `*.live.test.ts` against their own AWS/Azure account and records the JSONL in the verification log below. The live tests themselves are written and runnable now (`pnpm test:live:aws <service>` / `pnpm test:live:azure <service>`).
+3. **Feature flag flips** in `PROVIDER_FLAGS.{aws,azure}.categories` — gated on the category's full deploy-gate sweep landing green (cardinal rule transitive).
+
+D1 (`PROVIDER_READINESS.{aws,azure} = 'stable'`) and D6 (deploy-gate sweep + template demos) are explicitly cardinal-rule blocked — they require the human-in-the-loop verification pass per handler.
 
 ## Deploy verification log
 

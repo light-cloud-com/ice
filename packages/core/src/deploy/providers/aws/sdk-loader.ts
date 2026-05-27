@@ -100,6 +100,15 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const redshift = await load_aws_sdk('@aws-sdk/client-redshift');
   if (redshift) clients.set('redshift', new redshift.RedshiftClient({ region }));
 
+  // ACM is pinned to us-east-1 for CloudFront certs; the handler
+  // creates its own client when it needs a different region. The
+  // shared instance lives in the operator's deploy region.
+  const acm = await load_aws_sdk('@aws-sdk/client-acm');
+  if (acm) clients.set('acm', new acm.ACMClient({ region }));
+
+  const route53 = await load_aws_sdk('@aws-sdk/client-route-53');
+  if (route53) clients.set('route53', new route53.Route53Client({ region }));
+
   return clients;
 }
 

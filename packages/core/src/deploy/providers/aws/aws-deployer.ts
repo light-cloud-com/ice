@@ -14,6 +14,7 @@
  */
 
 import { create_account_id_resolver } from './account';
+import { acm_handler } from './handlers/acm';
 import { api_gateway_handler } from './handlers/api-gateway';
 import { bedrock_handler } from './handlers/bedrock';
 import { cloudfront_handler } from './handlers/cloudfront';
@@ -30,6 +31,7 @@ import { lambda_handler } from './handlers/lambda';
 import { opensearch_handler } from './handlers/opensearch';
 import { rds_handler } from './handlers/rds';
 import { redshift_handler } from './handlers/redshift';
+import { route53_handler } from './handlers/route53';
 import { s3_handler } from './handlers/s3';
 import { sagemaker_handler } from './handlers/sagemaker';
 import { secrets_manager_handler } from './handlers/secrets-manager';
@@ -77,6 +79,8 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.bedrock.endpoint', handler: bedrock_handler },
   { prefix: 'aws.sagemaker.endpoint', handler: sagemaker_handler },
   { prefix: 'aws.redshift.cluster', handler: redshift_handler },
+  { prefix: 'aws.acm.certificate', handler: acm_handler },
+  { prefix: 'aws.route53.recordSet', handler: route53_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

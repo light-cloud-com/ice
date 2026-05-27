@@ -9,6 +9,8 @@
  *   - aws.ec2.vpc                    (Network.VPC, Network.PrivateNetwork)
  *   - aws.ec2.subnet                 (Network.Subnet)
  *   - aws.ec2.securityGroup          (Network.SecurityGroup)
+ *   - aws.acm.certificate            (Security.Certificate)
+ *   - aws.route53.recordSet          (Network.CustomDomain DNS records)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -171,6 +173,44 @@ export function extract_security_group_properties(
     ingress: (data.ingress as unknown[]) ?? [],
     egress: (data.egress as unknown[]) ?? [],
     revoke_default_egress: data.revoke_default_egress === true,
+    tags: {},
+  };
+}
+
+/**
+ * ACM certificate. When wired to a CloudFront distribution, the
+ * extractor force-pins region to `us-east-1` (CloudFront constraint).
+ * Otherwise defaults to the operator's deploy region.
+ *
+ * Canvas blocks set `domain` for the primary domain and an optional
+ * `additionalDomains` array for SANs.
+ */
+export function extract_acm_certificate_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  const isForCloudFront = data.usage === 'cloudfront' || data.for_cloudfront === true;
+  return {
+    region: isForCloudFront ? 'us-east-1' : region,
+    domain_name: (data.domain as string) || (data.domain_name as string) || '',
+    subject_alternative_names:
+      (data.additionalDomains as string[]) || (data.subject_alternative_names as string[]) || [],
+    tags: {},
+  };
+}
+
+/**
+ * Route53 RecordSet. Canvas Network.CustomDomain blocks may carry an
+ * inline `records[]` array (`{ name, type, ttl, values[] }`) or
+ * receive validation records from a connected ACM certificate.
+ */
+export function extract_route53_record_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    hosted_zone_id: (data.hosted_zone_id as string) || (data.zoneId as string) || '',
+    records: (data.records as unknown[]) ?? [],
     tags: {},
   };
 }

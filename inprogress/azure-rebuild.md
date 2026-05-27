@@ -371,58 +371,104 @@ The integrity test in `packages/constants/src/__tests__/index.test.ts` keeps the
 - [ ] Flesh out `azure/README.md` quirks
 - [ ] Update `docs/provider-status.md` matrix per flip
 
-## B8 — Real-cloud validation harness
+## B8 — Live-cloud deployability tests (developer tool)
 
-The cardinal rule requires every Azure handler to be verified by a real-Azure deploy. B8 is the Azure counterpart to AWS A6 — same shape, parallel implementation, shared dashboard surface if practical.
+The cardinal rule (see [README.md](README.md#cardinal-rule)) requires every Azure handler to be verified by a real-Azure deploy. B8 ships the **developer-run** live-test surface that proves a handler works against real Azure.
 
-Two tiers — both required:
+**Not CI.** These tests touch real cloud, cost real money, take real time. They're a developer self-serve tool — `pnpm test:live:azure <handler>` runs a single live test against the developer's own subscription.
 
-### B8.1 — Azurite tier (cheap, on every PR)
+### B8.1 — Foundation
 
-Azurite emulates Storage (Blob / Queue / Table). For ARM resources beyond storage, no widely-used local emulator exists, so Azurite covers a smaller surface than LocalStack does for AWS. Still worth wiring up for blob-storage and the auto-provisioned Functions storage account.
-
-**Files to create**
-
-- `packages/core/src/deploy/providers/__tests__/integration/azure-azurite.test.ts` covering blob-storage + functions storage-account auto-provision.
-
-**Acceptance**
-
-- CI job runs `azure-azurite` on every PR touching `packages/core/src/deploy/providers/azure/`.
-
-### B8.2 — Real-Azure tier (gated, on-demand or scheduled)
-
-Same shape as AWS A6.2.
+Pattern mirrors AWS A6.1. Shared helpers module + per-provider factories.
 
 **Files to create**
 
-- `e2e/azure-deployment-tests/` — recipe directory.
-- `e2e/azure-deployment-tests/recipes/<handler>.yaml` — one per handler.
-- `e2e/azure-deployment-tests/runner.ts` — plan → apply → verify → destroy → diff per recipe; JSONL output.
-- `e2e/azure-deployment-tests/dashboard.html` — at-a-glance pass/fail per recipe.
-- `e2e/azure-deployment-tests/README.md` — credential setup, expected spend, recipe authoring.
+- Extend `packages/core/src/deploy/providers/__tests__/live/_live-helpers.ts` (created in A6.1) with `azureLive` skip-aware describe wrapper, `uniqueAzureName(prefix, maxLen)` respecting per-service name limits (Storage Account 24, Key Vault 24, Function App 60, etc.), `createAzureDeployer()` that returns an initialised `AzureDeployer` using `DefaultAzureCredential`, Azure-specific resource-group bootstrap.
+- `e2e/azure-deployment-tests/README.md` — developer notes: env contract (`AZURE_SUBSCRIPTION_ID`, `AZURE_LOCATION`, credentials via `az login` or service-principal env vars), sample commands, per-handler expected cost.
+- `e2e/azure-deployment-tests/runs/.gitkeep` — pre-create the JSONL output directory.
+- `e2e/azure-deployment-tests/cleanup-orphans.ts` — scans for `ice:test-run-id` tag via Azure Resource Graph, deletes leaked resources older than 1 hour. Manual-run.
 
-If the AWS A6.2 runner is generic enough, share it: `e2e/deployment-tests/runner.ts` with per-provider recipe directories underneath.
+**Files to modify**
 
-**Acceptance**
+- `scripts/run-live-tests.mjs` (created in A6.1) — already accepts a provider arg; no change.
+- `package.json` (root) — add `test:live:azure` script.
 
-- Recipe present for every handler in the Azure Block-to-handler matrix.
-- Manual `pnpm e2e:azure --recipe <name>` succeeds against a real Azure subscription and writes a JSONL entry.
-- A scheduled CI run (nightly or on-demand) executes every recipe and updates the dashboard.
+### B8.2 — Per-handler live test
 
-### B8.3 — Per-handler deploy-verification gate
+Every Azure handler in the Block-to-handler coverage matrix has a `*.live.test.ts` at `packages/core/src/deploy/providers/__tests__/live/azure-<service>.live.test.ts`. Template:
 
-Every handler in `progress.md` has TWO checkboxes — code gate (B1–B7 work merged + mocked tests green) and deploy gate (real-Azure recipe ran green at least once with JSONL evidence). The B6 category flips require the deploy gate ticked for every handler in the category.
+```ts
+azureLive('azure.<service>.<resource>', () => {
+  let deployer: AzureDeployer;
+  let logger: JsonlLogger;
+  let rg: string;
+
+  beforeAll(async () => {
+    deployer = await createAzureDeployer();
+    rg = await ensure_test_resource_group(); // ice-test-rg-<runId>
+    logger = new JsonlLogger('azure-<service>');
+  });
+  afterAll(async () => {
+    await deployer.cleanup();
+    await delete_test_resource_group(rg); // sweeps everything tagged with this run id
+    logger.close();
+  });
+
+  it('create + delete round-trip', async () => {
+    const name = uniqueAzureName('<service>', <max-len>);
+    let providerId: string | undefined;
+    try {
+      const r = await deployer.create('azure.<service>.<resource>', name, { resource_group: rg, location, ... }, {});
+      logger.log({ kind: 'create', result: r });
+      expect(r.success).toBe(true);
+      providerId = r.provider_id;
+    } finally {
+      if (providerId) {
+        const d = await deployer.delete('azure.<service>.<resource>', name, providerId, {});
+        logger.log({ kind: 'delete', result: d });
+        expect(d.success).toBe(true);
+      }
+    }
+  });
+
+  // for handlers with update path: it('update round-trip', ...)
+});
+```
+
+Each test file's header comment lists expected runtime + cost + quirks (e.g. "Cosmos DB with serverless capacity — sub-$1 per run; provisions in ~3 min").
+
+### B8.3 — Deploy gate
+
+Developer ergonomics:
+
+```
+az login                           # or set service-principal env vars
+export AZURE_SUBSCRIPTION_ID=...
+export AZURE_LOCATION=eastus
+
+pnpm test:live:azure               # run every Azure live test
+pnpm test:live:azure key-vault     # run only key-vault
+pnpm test:live:azure key-vault service-bus cosmosdb   # run three
+```
+
+Without env, tests skip with a one-line banner explaining what to export. The developer who runs a live test successfully appends a row to `progress.md` → Deploy verification log; their corresponding deploy-gate checkbox flips.
+
+### B8.4 — Cleanup contract
+
+- Every test's `finally` block deletes its resource.
+- `afterAll` deletes the entire test resource group, which sweeps any leaks from this run.
+- Resources are tagged `ice:test-run-id=<runId>`.
+- If a test crashes hard, `pnpm tsx e2e/azure-deployment-tests/cleanup-orphans.ts --delete` sweeps orphaned resource groups + resources from prior crashed runs.
 
 **Tasks**
 
-- [ ] B8.1 Azurite container in CI
-- [ ] B8.1 wire to PR workflow
-- [ ] B8.2 `e2e/azure-deployment-tests/` recipe directory
-- [ ] B8.2 shared or Azure-specific runner with JSONL output
-- [ ] B8.2 dashboard
-- [ ] B8.2 one recipe per handler (29 recipes — see coverage matrix)
-- [ ] B8.2 scheduled CI run + dashboard auto-refresh
-- [ ] B8.3 deploy-verification gate enforced in plan-merge checklist
+- [ ] B8.1 extend `_live-helpers.ts` with Azure helpers
+- [ ] B8.1 `e2e/azure-deployment-tests/` README + cleanup-orphans
+- [ ] B8.1 `test:live:azure` script
+- [ ] B8.2 live test per existing handler (3 files: VM, Storage Account, Web App)
+- [ ] B8.2 live test per new handler (added in the handler's PR — see B2 P0/P1/P2)
+- [ ] B8.3 Developer-run docs in `e2e/azure-deployment-tests/README.md`
+- [ ] B8.4 cleanup-orphans tested locally
 
 ## Cross-cutting acceptance
 
@@ -432,8 +478,8 @@ When Phase B is done:
 - 25+ handlers ship under `packages/core/src/deploy/providers/azure/handlers/`.
 - `packages/core/src/deploy/extractors/azure/` covers every Azure iceType the canvas can emit.
 - `azure/README.md` rollout-state table is all green.
-- **Cardinal rule**: every handler row in the Block-to-handler matrix has its deploy gate ticked in `progress.md` with a JSONL entry in `e2e/azure-deployment-tests/` for proof.
-- Azure still listed `experimental` until Phase D — Importer (C2) ships first AND the deploy log shows N consecutive green scheduled runs across all handlers.
+- **Cardinal rule**: every handler row in the Block-to-handler matrix has its deploy gate ticked in `progress.md` with a JSONL entry in `e2e/azure-deployment-tests/runs/` for proof.
+- Azure still listed `experimental` until Phase D — Importer (C2) ships first AND every handler has been deploy-verified at least once by a developer.
 
 ## Dependencies within Phase B
 

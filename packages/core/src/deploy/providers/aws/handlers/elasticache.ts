@@ -9,7 +9,9 @@
  * has standby nodes.
  */
 
+import { resolve_aws_network_refs } from '../network-resolver';
 import { load_aws_sdk } from '../sdk-loader';
+import { delete_elasticache_subnet_group_if_present, ensure_elasticache_subnet_group } from '../subnet-groups';
 import { err, ok, sdkMissing } from './_result';
 import type { AWSResourceHandler } from '../types';
 
@@ -26,6 +28,13 @@ export const elasticache_handler: AWSResourceHandler = {
       const ec = await load_aws_sdk(SDK);
       if (!ec) return sdkMissing(name, TYPE, 'create', start, 'ElastiCache', SDK);
 
+      // Auto-bootstrap a CacheSubnetGroup when canvas Network.Subnet
+      // blocks are wired. Operator's properties.cache_subnet_group_name
+      // wins if set; otherwise fall back to AWS default-VPC behaviour
+      // (un-wired).
+      const subnetGroup = await ensure_elasticache_subnet_group(name, properties, ctx);
+      const network = await resolve_aws_network_refs(properties, ctx);
+
       const isReplicated = (properties.num_cache_nodes as number) > 1;
       if (isReplicated) {
         await client.send(
@@ -39,6 +48,8 @@ export const elasticache_handler: AWSResourceHandler = {
             AutomaticFailoverEnabled: true,
             Port: (properties.port as number) || 6379,
             CacheParameterGroupName: properties.parameter_group_name as string,
+            CacheSubnetGroupName: subnetGroup,
+            SecurityGroupIds: network.security_groups.length > 0 ? network.security_groups : undefined,
           }),
         );
       } else {
@@ -51,6 +62,8 @@ export const elasticache_handler: AWSResourceHandler = {
             NumCacheNodes: 1,
             Port: (properties.port as number) || 6379,
             CacheParameterGroupName: properties.parameter_group_name as string,
+            CacheSubnetGroupName: subnetGroup,
+            SecurityGroupIds: network.security_groups.length > 0 ? network.security_groups : undefined,
           }),
         );
       }
@@ -82,6 +95,11 @@ export const elasticache_handler: AWSResourceHandler = {
         await client.send(new ec.DeleteCacheClusterCommand({ CacheClusterId: name }));
       } catch {
         await client.send(new ec.DeleteReplicationGroupCommand({ ReplicationGroupId: name }));
+      }
+      try {
+        await delete_elasticache_subnet_group_if_present(name, ctx);
+      } catch {
+        /* leave to operator / cleanup-orphans sweep */
       }
       return ok(name, TYPE, 'delete', start);
     } catch (error) {

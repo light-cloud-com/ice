@@ -12,7 +12,9 @@
  * call CreateDBInstance when master_user_password is empty.
  */
 
+import { resolve_aws_network_refs } from '../network-resolver';
 import { load_aws_sdk } from '../sdk-loader';
+import { delete_rds_db_subnet_group_if_present, ensure_rds_db_subnet_group } from '../subnet-groups';
 import { err, ok, sdkMissing } from './_result';
 import type { AWSHandlerContext, AWSResourceHandler } from '../types';
 
@@ -56,6 +58,13 @@ export const rds_handler: AWSResourceHandler = {
       const rds = await load_aws_sdk(SDK);
       if (!rds) return sdkMissing(name, TYPE, 'create', start, 'RDS', SDK);
 
+      // Auto-bootstrap a DBSubnetGroup when canvas Network.Subnet
+      // blocks are wired. Falls back to the operator's
+      // properties.db_subnet_group_name, then to AWS default-VPC
+      // behaviour when nothing is supplied.
+      const subnetGroup = await ensure_rds_db_subnet_group(name, properties, ctx);
+      const network = await resolve_aws_network_refs(properties, ctx);
+
       await client.send(
         new rds.CreateDBInstanceCommand({
           DBInstanceIdentifier: name,
@@ -70,6 +79,8 @@ export const rds_handler: AWSResourceHandler = {
           PubliclyAccessible: !!properties.publicly_accessible,
           MultiAZ: !!properties.multi_az,
           BackupRetentionPeriod: (properties.backup_retention_period as number) ?? 7,
+          DBSubnetGroupName: subnetGroup,
+          VpcSecurityGroupIds: network.security_groups.length > 0 ? network.security_groups : undefined,
         }),
       );
 
@@ -124,6 +135,16 @@ export const rds_handler: AWSResourceHandler = {
           DeleteAutomatedBackups: true,
         }),
       );
+      // Sweep the ICE-managed subnet group too. AWS rejects the
+      // call while the instance still references it, so wait for
+      // the instance to clear before retrying. For now best-effort:
+      // operators get a clear "delete subnet group" follow-up if
+      // this races.
+      try {
+        await delete_rds_db_subnet_group_if_present(name, ctx);
+      } catch {
+        /* leave to operator / cleanup-orphans sweep */
+      }
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       return err(name, TYPE, 'delete', start, error instanceof Error ? error.message : String(error));

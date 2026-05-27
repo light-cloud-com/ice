@@ -12,6 +12,8 @@
  *   - aws.acm.certificate            (Security.Certificate)
  *   - aws.route53.recordSet          (Network.CustomDomain DNS records)
  *   - aws.amplify.app                (Compute.SSRSite)
+ *   - aws.wafv2.webAcl               (Security.WAF)
+ *   - aws.ec2.vpcEndpoint            (Network.PrivateNetwork)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -234,6 +236,46 @@ export function extract_amplify_app_properties(
       (data.environmentVariables as Record<string, string>) ||
       (data.environment_variables as Record<string, string>) ||
       {},
+    tags: {},
+  };
+}
+
+/**
+ * WAFv2 Web ACL. Canvas Security.WAF blocks set `usage='cloudfront'` to
+ * mean "scope this to CloudFront" (requires us-east-1). Default action
+ * is Allow + managed rules block; flip default_action: 'BLOCK' for
+ * deny-by-default.
+ */
+export function extract_wafv2_web_acl_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    scope: data.usage === 'cloudfront' || data.for_cloudfront === true ? 'CLOUDFRONT' : 'REGIONAL',
+    default_action: (data.default_action as string) || 'ALLOW',
+    description: (data.description as string) || '',
+    rules: (data.rules as unknown[]) ?? [],
+    tags: {},
+  };
+}
+
+/**
+ * VPC Endpoint (Network.PrivateNetwork). Canvas blocks supply the
+ * AWS service to reach via `service`/`service_name`. Interface vs
+ * Gateway endpoint inferred from `endpoint_type` (default Interface,
+ * one ENI per subnet, widest service support).
+ */
+export function extract_vpc_endpoint_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  const service = (data.service as string) || (data.service_name as string) || '';
+  return {
+    region,
+    service_name: service.startsWith('com.amazonaws.') ? service : service ? `com.amazonaws.${region}.${service}` : '',
+    endpoint_type: (data.endpoint_type as string) || 'Interface',
+    private_dns_enabled: data.private_dns_enabled !== false,
+    route_table_ids: (data.route_table_ids as string[]) || [],
     tags: {},
   };
 }

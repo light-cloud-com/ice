@@ -43,6 +43,7 @@ import { sns_handler } from './handlers/sns';
 import { sqs_handler } from './handlers/sqs';
 import { subnet_handler } from './handlers/subnet';
 import { vpc_handler } from './handlers/vpc';
+import { vpc_endpoint_handler } from './handlers/vpc-endpoint';
 import { wafv2_handler } from './handlers/wafv2';
 import { destroy_aws_clients, initialize_aws_clients } from './sdk-loader';
 import type { AWSHandlerContext, AWSResourceHandler } from './types';
@@ -58,7 +59,10 @@ import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../.
 // meaningful — kept consistent with the GCP shape for symmetry.
 
 const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> = [
-  // More-specific EC2 prefixes must precede `aws.ec2.instance`.
+  // More-specific EC2 prefixes must precede less-specific ones —
+  // `aws.ec2.vpcEndpoint` starts with `aws.ec2.vpc`, so the endpoint
+  // entry has to come first or the VPC handler will swallow it.
+  { prefix: 'aws.ec2.vpcEndpoint', handler: vpc_endpoint_handler },
   { prefix: 'aws.ec2.vpc', handler: vpc_handler },
   { prefix: 'aws.ec2.subnet', handler: subnet_handler },
   { prefix: 'aws.ec2.securityGroup', handler: security_group_handler },

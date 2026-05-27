@@ -43,6 +43,7 @@ import { sns_handler } from './handlers/sns';
 import { sqs_handler } from './handlers/sqs';
 import { subnet_handler } from './handlers/subnet';
 import { vpc_handler } from './handlers/vpc';
+import { wafv2_handler } from './handlers/wafv2';
 import { destroy_aws_clients, initialize_aws_clients } from './sdk-loader';
 import type { AWSHandlerContext, AWSResourceHandler } from './types';
 import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types';
@@ -87,6 +88,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.codebuild.project', handler: codebuild_handler },
   { prefix: 'aws.amplify.app', handler: amplify_hosting_handler },
   { prefix: 'aws.mq.broker', handler: amazon_mq_handler },
+  { prefix: 'aws.wafv2.webAcl', handler: wafv2_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

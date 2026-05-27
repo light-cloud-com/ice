@@ -190,8 +190,8 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 event-hubs (Messaging.EventStream)
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
-  - 🔴 service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
-    - 🔴 (C) handler branch · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (D) live test · 🔴 docs
+  - 🟠 service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
+    - 🟢 (C) handler (shared with Messaging.ServiceBus) · 🟢 (C) extractor branch (flips Standard→Premium) · 🔴 (C) mocked test · 🔴 (D) live test · 🔴 docs
   - 🟠 cognitive-search (Analytics.Search + AI.VectorDB)
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 ai-search-vector (AI.VectorDB) — same Search service as Analytics.Search
@@ -227,8 +227,8 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 app service plan auto-provision
   - 🟢 key vault no-value contract
   - 🔴 key vault certificate provisioning path
-  - 🔴 service bus session-enabled handling
-  - 🔴 service bus AMQP / RabbitMQ branch
+  - 🟢 service bus session-enabled handling (default_requires_session in extractor; per-queue sub-block in Phase B4)
+  - 🟢 service bus AMQP / RabbitMQ branch (Messaging.RabbitMQ → Premium SKU + AMQP-enabled)
   - 🟢 event hubs throughput defaults
   - 🔴 functions storage account auto-provision
   - 🟢 static web apps build/SSR extractor projection

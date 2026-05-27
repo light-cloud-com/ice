@@ -37,18 +37,32 @@ export function extract_azure_keyvault_vault_properties(
 
 /**
  * Service Bus namespace — backs Messaging.ServiceBus, Messaging.Queue,
- * Messaging.Topic on Azure. Default SKU = Standard (cheapest tier
- * supporting topics + sessions).
+ * Messaging.Topic, and Messaging.RabbitMQ on Azure. Default SKU =
+ * Standard (cheapest tier supporting topics + sessions).
+ *
+ * RabbitMQ branch: `iceType === 'Messaging.RabbitMQ'` projects an AMQP
+ * 1.0 namespace (Service Bus is AMQP-compatible, which lets clients
+ * written against RabbitMQ over AMQP connect with minimal change).
+ * Premium SKU is required for guaranteed AMQP throughput; the
+ * extractor flips Standard → Premium when the iceType is RabbitMQ.
+ *
+ * Per-queue / per-topic session enablement is a sub-block concern —
+ * extracted via canvas sub-block parsing in Phase B4. The namespace
+ * level carries the default flag below.
  */
 export function extract_azure_servicebus_namespace_properties(
   data: Record<string, unknown>,
   region: string,
 ): Record<string, unknown> {
+  const isRabbit = data.iceType === 'Messaging.RabbitMQ';
+  const default_sku = isRabbit ? 'Premium' : 'Standard';
   return {
     region,
     location: (data.location as string) || region,
-    sku: (data.sku as string) || 'Standard',
+    sku: (data.sku as string) || default_sku,
     zone_redundant: data.zone_redundant === true,
+    amqp_enabled: true,
+    default_requires_session: data.default_requires_session === true,
     tags: {},
   };
 }

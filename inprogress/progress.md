@@ -146,20 +146,20 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
     - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🔴 sql-database (template-only)
     - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 postgresql-flex (Database.PostgreSQL)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 mysql-flex (Database.MySQL)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 redis-cache (Database.Redis)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 postgresql-flex (Database.PostgreSQL)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 mysql-flex (Database.MySQL)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 redis-cache (Database.Cache)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟢 blob-storage (Storage.Bucket) — covered by legacy storage-account handler
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 log-analytics (Monitoring.Log)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 app-insights (Monitoring.Metrics)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 static-web-apps (Compute.StaticSite + Compute.SSRSite)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 static-web-apps (Compute.StaticSite + Compute.SSRSite)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
 - 🔴 **B2 P1 — network + container + APIM + WAF (11)**
   - 🔴 vnet (Network.VPC)
     - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs

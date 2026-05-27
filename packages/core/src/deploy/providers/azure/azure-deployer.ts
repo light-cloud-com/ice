@@ -21,12 +21,15 @@ import { functions_handler } from './handlers/functions';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
 import { mysql_flex_handler } from './handlers/mysql-flex';
+import { nsg_handler } from './handlers/nsg';
 import { postgresql_flex_handler } from './handlers/postgresql-flex';
 import { redis_cache_handler } from './handlers/redis-cache';
 import { service_bus_handler } from './handlers/service-bus';
 import { static_web_apps_handler } from './handlers/static-web-apps';
 import { storage_account_handler } from './handlers/storage-account';
+import { subnet_handler } from './handlers/subnet';
 import { virtual_machine_handler } from './handlers/virtual-machine';
+import { vnet_handler } from './handlers/vnet';
 import { web_app_handler } from './handlers/web-app';
 import { initialize_azure_clients } from './sdk-loader';
 import type { AzureHandlerContext, AzureResourceHandler } from './types';
@@ -53,6 +56,10 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.postgresqlflex.server', handler: postgresql_flex_handler },
   { prefix: 'azure.mysqlflex.server', handler: mysql_flex_handler },
   { prefix: 'azure.cache.redis', handler: redis_cache_handler },
+  // Network primitives — order matters; subnet is more specific than vnet.
+  { prefix: 'azure.network.virtualNetwork', handler: vnet_handler },
+  { prefix: 'azure.network.subnet', handler: subnet_handler },
+  { prefix: 'azure.network.networkSecurityGroup', handler: nsg_handler },
 ];
 // Note: azure.web.staticSite is registered above with the other
 // azure.web.* entries — its prefix is more specific than azure.web.app

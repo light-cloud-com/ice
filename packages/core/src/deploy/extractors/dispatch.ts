@@ -91,6 +91,19 @@ import {
   extract_azure_redis_cache_properties,
 } from './azure/database';
 import {
+  extract_azure_acr_properties,
+  extract_azure_aks_properties,
+  extract_azure_apim_properties,
+  extract_azure_app_gateway_properties,
+  extract_azure_dns_zone_properties,
+  extract_azure_front_door_properties,
+  extract_azure_nsg_properties,
+  extract_azure_private_endpoint_properties,
+  extract_azure_subnet_properties,
+  extract_azure_vnet_properties,
+  extract_azure_waf_properties,
+} from './azure/network';
+import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
@@ -181,6 +194,19 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.postgresqlflex.server': extract_azure_postgresql_flex_properties,
   'azure.mysqlflex.server': extract_azure_mysql_flex_properties,
   'azure.cache.redis': extract_azure_redis_cache_properties,
+
+  // ─── Azure — network ───────────────────────────────────────────────
+  'azure.network.virtualNetwork': extract_azure_vnet_properties,
+  'azure.network.subnet': extract_azure_subnet_properties,
+  'azure.network.networkSecurityGroup': extract_azure_nsg_properties,
+  'azure.network.privateEndpoint': extract_azure_private_endpoint_properties,
+  'azure.network.dnsZone': extract_azure_dns_zone_properties,
+  'azure.network.applicationGateway': extract_azure_app_gateway_properties,
+  'azure.network.frontDoor': extract_azure_front_door_properties,
+  'azure.network.webApplicationFirewallPolicy': extract_azure_waf_properties,
+  'azure.apimanagement.service': extract_azure_apim_properties,
+  'azure.containerservice.managedCluster': extract_azure_aks_properties,
+  'azure.containerregistry.registry': extract_azure_acr_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

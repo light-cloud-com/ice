@@ -216,7 +216,7 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 every entry registered in `dispatch.ts` (B2 P0 + P1 + P2 all wired)
   - 🟢 `dispatch.test.ts` Azure parity case (counts azure.\* keys ≥ 25)
 - 🟠 **B4 — Quirks**
-  - 🔴 storage account global-uniqueness suffix
+  - 🟢 storage account name validation (3-24 lowercase alphanumeric, global-uniqueness guidance in error)
   - 🟢 cosmos consistency default = Session
   - 🟢 cosmos API mode projection (Mongo vs SQL)
   - 🟢 SQL/PG/MySQL password enforcement (handlers refuse to create without password)

@@ -3,6 +3,11 @@
  *
  * Migrated from the legacy monolith. Auto-resource-group support
  * added; everything else is unchanged.
+ *
+ * Naming constraints: 3-24 chars, lowercase alphanumeric only (no
+ * hyphens, periods, or uppercase). Globally unique across Azure. The
+ * handler refuses up front with a clear error rather than letting the
+ * SDK return a cryptic 400.
  */
 
 import { extract_resource_group_from_id } from '../resource-group';
@@ -12,11 +17,23 @@ import type { AzureResourceHandler } from '../types';
 const TYPE = 'azure.storage.account';
 const SDK = '@azure/arm-storage';
 
+const STORAGE_NAME_RE = /^[a-z0-9]{3,24}$/;
+
 export const storage_account_handler: AzureResourceHandler = {
   async create(name, properties, ctx) {
     const start = Date.now();
     const client = ctx.clients.get('storage') as any;
     if (!client) return sdkMissing(name, TYPE, 'create', start, 'Storage', SDK);
+
+    if (!STORAGE_NAME_RE.test(name)) {
+      return err(
+        name,
+        TYPE,
+        'create',
+        start,
+        `Storage Account name must be 3-24 lowercase alphanumeric chars (got "${name}"). Azure also requires global uniqueness — append a suffix if a name collision occurs.`,
+      );
+    }
 
     try {
       const location = (properties.location as string) || ctx.location;

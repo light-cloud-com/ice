@@ -78,7 +78,7 @@ import {
   extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
 } from './azure/ancillary';
-import { extract_azure_app_service_plan_properties } from './azure/compute';
+import { extract_azure_app_service_plan_properties, extract_azure_container_apps_properties } from './azure/compute';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
@@ -163,6 +163,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.monitor.logAnalytics': extract_azure_log_analytics_properties,
   'azure.insights.appInsights': extract_azure_app_insights_properties,
   'azure.web.appServicePlan': extract_azure_app_service_plan_properties,
+  'azure.containerApps.app': extract_azure_container_apps_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

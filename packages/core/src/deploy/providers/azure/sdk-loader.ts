@@ -90,5 +90,9 @@ export async function initialize_azure_clients(
   if (appinsights)
     clients.set('app-insights', new appinsights.ApplicationInsightsManagementClient(credential, subscription_id));
 
+  const containerApps = await load_azure_sdk('@azure/arm-appcontainers');
+  if (containerApps)
+    clients.set('container-apps', new containerApps.ContainerAppsAPIClient(credential, subscription_id));
+
   return { credential, clients };
 }

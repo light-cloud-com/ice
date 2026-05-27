@@ -15,6 +15,7 @@
 
 import { app_insights_handler } from './handlers/app-insights';
 import { app_service_plan_handler } from './handlers/app-service';
+import { container_apps_handler } from './handlers/container-apps';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
 import { service_bus_handler } from './handlers/service-bus';
@@ -39,6 +40,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },
   { prefix: 'azure.monitor.logAnalytics', handler: log_analytics_handler },
   { prefix: 'azure.insights.appInsights', handler: app_insights_handler },
+  { prefix: 'azure.containerApps.app', handler: container_apps_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

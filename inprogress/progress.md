@@ -214,7 +214,7 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 `extractors/azure/messaging.ts`
   - 🟢 `extractors/azure/network.ts`
   - 🟢 every entry registered in `dispatch.ts` (B2 P0 + P1 + P2 all wired)
-  - 🔴 `dispatch.test.ts` Azure parity case
+  - 🟢 `dispatch.test.ts` Azure parity case (counts azure.\* keys ≥ 25)
 - 🟠 **B4 — Quirks**
   - 🔴 storage account global-uniqueness suffix
   - 🟢 cosmos consistency default = Session

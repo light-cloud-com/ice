@@ -66,6 +66,13 @@ describe('PROPERTY_EXTRACTORS table shape', () => {
     expect(awsKeys.length).toBeGreaterThanOrEqual(3);
   });
 
+  it('counts Azure entries — grows with each Azure handler commit (B2 P0 + P1 + P2)', () => {
+    const azureKeys = Object.keys(PROPERTY_EXTRACTORS).filter((k) => k.startsWith('azure.'));
+    // After Phase B (compute, database, network, messaging, AI, ancillary)
+    // we expect 25+ Azure entries. Bump this floor when adding new handlers.
+    expect(azureKeys.length).toBeGreaterThanOrEqual(25);
+  });
+
   it('every key matches the {provider}.{service}.{kind} shape', () => {
     const pattern = /^(gcp|aws|azure)\.[a-z0-9]+\.[a-zA-Z]+$/;
     for (const key of Object.keys(PROPERTY_EXTRACTORS)) {

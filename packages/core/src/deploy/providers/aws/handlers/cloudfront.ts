@@ -54,8 +54,12 @@ export const cloudfront_handler: AWSResourceHandler = {
       if (!cf) return sdkMissing(name, TYPE, 'create', start, 'CloudFront', SDK);
 
       const domain = (properties.domain as string) || '';
-      let certArn: string | undefined;
-      if (properties.enableHttps !== false && properties.auto_provision_cert !== false && domain) {
+      // Prefer a canvas-wired certificate ARN (Security.Certificate
+      // block → aws.acm.certificate handler → wired here via the
+      // network wiring pass). Falls back to auto-provisioning a fresh
+      // cert when no canvas cert is connected.
+      let certArn: string | undefined = (properties.certificate_arn as string | undefined) ?? undefined;
+      if (!certArn && properties.enableHttps !== false && properties.auto_provision_cert !== false && domain) {
         certArn = await request_acm_cert_in_us_east_1(domain);
       }
 

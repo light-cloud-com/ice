@@ -8,7 +8,7 @@ afterEach(() => restore_dynamic_import_stub());
 async function setup() {
   const rs = makeSdkMock({
     client_class_name: 'RedshiftClient',
-    command_class_names: ['CreateClusterCommand', 'DeleteClusterCommand'],
+    command_class_names: ['CreateClusterCommand', 'DeleteClusterCommand', 'ModifyClusterCommand'],
   });
   install_dynamic_import_stub({ '@aws-sdk/client-redshift': rs.module });
   const d = new AWSDeployer();
@@ -42,5 +42,23 @@ describe('aws.redshift.cluster handler', () => {
     expect(out.success).toBe(true);
     expect(rs.sendCalls[0].__cmd).toBe('CreateCluster');
     expect(rs.sendCalls[0].input.ClusterIdentifier).toBe('dw');
+  });
+
+  it('updates the cluster via ModifyCluster (A4 update path)', async () => {
+    const { d, rs } = await setup();
+    const out = await d.update(
+      'aws.redshift.cluster',
+      'dw',
+      'arn:aws:redshift:us-east-1:123:cluster/dw',
+      { node_type: 'dc2.8xlarge', number_of_nodes: 4 },
+      {},
+      {},
+    );
+    expect(out.success).toBe(true);
+    const modify_call = rs.sendCalls.find((c) => c.__cmd === 'ModifyCluster');
+    expect(modify_call).toBeDefined();
+    expect(modify_call?.input.ClusterIdentifier).toBe('dw');
+    expect(modify_call?.input.NodeType).toBe('dc2.8xlarge');
+    expect(modify_call?.input.NumberOfNodes).toBe(4);
   });
 });

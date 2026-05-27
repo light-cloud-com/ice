@@ -11,6 +11,7 @@
  *   - aws.ecs.service           (Compute.Container, BackendAPI, SSRSite, Worker)
  *   - aws.lambda.function       (Compute.ServerlessFunction)
  *   - aws.events.rule           (Compute.CronJob)
+ *   - aws.codebuild.project     (Source.Build — backs CodeBuild fallback)
  *
  * Loose `Record<string, unknown>` types on the parameter and return
  * value are intentional — handlers further down the pipeline coerce
@@ -149,6 +150,32 @@ export function extract_events_rule_properties(data: Record<string, unknown>, re
     state: data.enabled === false ? 'DISABLED' : 'ENABLED',
     target_type: (data.targetType as string) || 'lambda',
     target_arn: (data.targetArn as string) || '',
+    tags: {},
+  };
+}
+
+/**
+ * CodeBuild project — backs Source.Build. Used as the Lambda
+ * auto-build fallback when the local toolchain isn't available, and
+ * (in the future) as a standalone CI step. Default image is the
+ * AWS-managed Amazon Linux 2 standard:5.0 — has node, python, go,
+ * docker, git built in.
+ */
+export function extract_codebuild_project_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    source_type: (data.source_type as string) || 'GITHUB',
+    source_location: (data.source_location as string) || (data.repository as string) || '',
+    source_branch: (data.source_branch as string) || (data.branch as string) || 'main',
+    buildspec: (data.buildspec as string) || '',
+    environment_image: (data.environment_image as string) || 'aws/codebuild/amazonlinux2-x86_64-standard:5.0',
+    compute_type: (data.compute_type as string) || 'BUILD_GENERAL1_SMALL',
+    service_role: (data.service_role as string) || '',
+    artifact_type: (data.artifact_type as string) || 'NO_ARTIFACTS',
+    artifact_location: (data.artifact_location as string) || '',
     tags: {},
   };
 }

@@ -109,6 +109,8 @@ export const ec2_handler: AWSResourceHandler = {
       if (!ec2) return fail(name, TYPE, 'update', start, 'EC2 SDK not available');
 
       const instance_id = provider_id.split('/').pop();
+
+      // Tag refresh — pass-through CreateTagsCommand.
       if (properties.tags) {
         const command = new ec2.CreateTagsCommand({
           Resources: [instance_id],
@@ -116,6 +118,25 @@ export const ec2_handler: AWSResourceHandler = {
         });
         await client.send(command);
       }
+
+      // Volume size resize — ModifyVolume targets the root EBS volume
+      // attached to the instance. `volume_size_gb` (or `disk_size_gb`)
+      // on canvas → DescribeInstances → ModifyVolume per attached
+      // volume. EBS only allows GROWING volumes, never shrinking; we
+      // surface the SDK error verbatim if the caller tries to shrink.
+      const new_size =
+        (properties.volume_size_gb as number | undefined) ?? (properties.disk_size_gb as number | undefined);
+      if (new_size && ec2.DescribeInstancesCommand && ec2.ModifyVolumeCommand) {
+        const describe = await client.send(new ec2.DescribeInstancesCommand({ InstanceIds: [instance_id] }));
+        const mappings = describe?.Reservations?.[0]?.Instances?.[0]?.BlockDeviceMappings ?? [];
+        for (const m of mappings) {
+          const volume_id = m?.Ebs?.VolumeId;
+          if (volume_id) {
+            await client.send(new ec2.ModifyVolumeCommand({ VolumeId: volume_id, Size: new_size }));
+          }
+        }
+      }
+
       return result(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return fail(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

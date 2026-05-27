@@ -51,6 +51,7 @@ import {
   extract_ecs_worker_properties,
   extract_lambda_function_properties,
   extract_events_rule_properties,
+  extract_codebuild_project_properties,
 } from './aws/compute';
 import {
   extract_rds_db_instance_properties,
@@ -173,6 +174,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.ecs.worker': extract_ecs_worker_properties,
   'aws.lambda.function': extract_lambda_function_properties,
   'aws.events.rule': extract_events_rule_properties,
+  'aws.codebuild.project': extract_codebuild_project_properties,
 
   // ─── AWS — database ────────────────────────────────────────────────
   'aws.rds.dbInstance': extract_rds_db_instance_properties,

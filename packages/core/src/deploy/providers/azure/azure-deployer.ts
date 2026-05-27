@@ -24,6 +24,7 @@ import { mysql_flex_handler } from './handlers/mysql-flex';
 import { postgresql_flex_handler } from './handlers/postgresql-flex';
 import { redis_cache_handler } from './handlers/redis-cache';
 import { service_bus_handler } from './handlers/service-bus';
+import { static_web_apps_handler } from './handlers/static-web-apps';
 import { storage_account_handler } from './handlers/storage-account';
 import { virtual_machine_handler } from './handlers/virtual-machine';
 import { web_app_handler } from './handlers/web-app';
@@ -41,6 +42,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.storage.account', handler: storage_account_handler },
   { prefix: 'azure.web.appServicePlan', handler: app_service_plan_handler },
   { prefix: 'azure.web.functionApp', handler: functions_handler },
+  { prefix: 'azure.web.staticSite', handler: static_web_apps_handler },
   { prefix: 'azure.web.app', handler: web_app_handler },
   { prefix: 'azure.keyvault.vault', handler: key_vault_handler },
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },
@@ -52,6 +54,9 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.mysqlflex.server', handler: mysql_flex_handler },
   { prefix: 'azure.cache.redis', handler: redis_cache_handler },
 ];
+// Note: azure.web.staticSite is registered above with the other
+// azure.web.* entries — its prefix is more specific than azure.web.app
+// so registration order matters.
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {
   for (const entry of HANDLER_REGISTRY) {

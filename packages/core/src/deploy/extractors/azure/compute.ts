@@ -5,6 +5,7 @@
  *   - azure.web.appServicePlan      (Compute.Container, web variant — hosts Web Apps)
  *   - azure.containerApps.app       (Compute.Container, serverless variant; Compute.Worker)
  *   - azure.web.functionApp         (Compute.ServerlessFunction)
+ *   - azure.web.staticSite          (Compute.SSRSite)
  */
 
 /**
@@ -67,6 +68,31 @@ export function extract_azure_function_app_properties(
     location: (data.location as string) || region,
     runtime: (data.runtime as string) || 'node',
     app_settings: (data.envVars as Record<string, string>) || {},
+    tags: {},
+  };
+}
+
+/**
+ * Static Web App. Backs Compute.SSRSite. Free tier by default; the
+ * canvas connects a GitHub Repo block to populate repository_url +
+ * branch + build properties.
+ */
+export function extract_azure_static_site_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    sku_name: (data.sku_name as string) || (data.tier as string) || 'Free',
+    sku_tier: (data.sku_tier as string) || (data.sku_name as string) || (data.tier as string) || 'Free',
+    repository_url: (data.repository_url as string) || (data.repo_url as string) || '',
+    branch: (data.branch as string) || 'main',
+    repository_token: (data.repository_token as string) || '',
+    app_location: (data.app_location as string) || '/',
+    output_location: (data.output_location as string) || 'dist',
+    api_location: (data.api_location as string) || '',
+    app_build_command: (data.app_build_command as string) || (data.build_command as string) || '',
     tags: {},
   };
 }

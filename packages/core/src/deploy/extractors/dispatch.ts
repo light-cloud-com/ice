@@ -82,6 +82,7 @@ import {
   extract_azure_app_service_plan_properties,
   extract_azure_container_apps_properties,
   extract_azure_function_app_properties,
+  extract_azure_static_site_properties,
 } from './azure/compute';
 import {
   extract_azure_cosmosdb_account_properties,
@@ -175,6 +176,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.web.appServicePlan': extract_azure_app_service_plan_properties,
   'azure.containerapps.app': extract_azure_container_apps_properties,
   'azure.web.functionApp': extract_azure_function_app_properties,
+  'azure.web.staticSite': extract_azure_static_site_properties,
   'azure.cosmosdb.account': extract_azure_cosmosdb_account_properties,
   'azure.postgresqlflex.server': extract_azure_postgresql_flex_properties,
   'azure.mysqlflex.server': extract_azure_mysql_flex_properties,

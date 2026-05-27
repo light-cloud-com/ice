@@ -73,6 +73,7 @@ import {
   extract_vpc_endpoint_properties as extract_aws_vpc_endpoint_properties,
 } from './aws/network';
 import {
+  extract_azure_app_insights_properties,
   extract_azure_keyvault_vault_properties,
   extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
@@ -159,6 +160,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.keyvault.vault': extract_azure_keyvault_vault_properties,
   'azure.servicebus.namespace': extract_azure_servicebus_namespace_properties,
   'azure.monitor.logAnalytics': extract_azure_log_analytics_properties,
+  'azure.insights.appInsights': extract_azure_app_insights_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

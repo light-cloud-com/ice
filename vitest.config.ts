@@ -24,12 +24,16 @@ export default defineConfig({
     ],
     // `.int.test.ts` files are integration tests that require a live SQLite DB
     // (via `pnpm dev:setup`). Run them with `pnpm test:int` instead.
+    // `.live.test.ts` files hit real cloud providers (AWS / Azure). Run them
+    // with `pnpm test:live:aws` / `pnpm test:live:azure`.
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
       'packages/core/src/schemas/generated/**',
       '**/*.int.test.ts',
       '**/*.int.test.tsx',
+      '**/*.live.test.ts',
+      '**/*.live.test.tsx',
       '**/*.svg',
     ],
     coverage: {

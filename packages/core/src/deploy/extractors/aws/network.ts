@@ -6,6 +6,7 @@
  *   - aws.apigateway.restApi         (Network.Gateway)
  *   - aws.cloudfront.distribution    (Network.PublicEndpoint, Network.CustomDomain)
  *   - aws.elbv2.loadBalancer         (Network.LoadBalancer)
+ *   - aws.ec2.vpc                    (Network.VPC, Network.PrivateNetwork)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -104,6 +105,21 @@ export function extract_elbv2_load_balancer_properties(
     listener_protocol: data.listener_protocol ?? (data.enable_https !== false ? 'HTTPS' : 'HTTP'),
     target_group_port: data.target_group_port ?? 80,
     target_group_protocol: data.target_group_protocol ?? 'HTTP',
+    tags: {},
+  };
+}
+
+/**
+ * VPC. Backs both `Network.VPC` (operator-supplied CIDR) and
+ * `Network.PrivateNetwork` (defaults to 10.0.0.0/16). DNS support
+ * defaults on; DNS hostnames default off (operator opts in).
+ */
+export function extract_vpc_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+  return {
+    cidr_block: (data.cidr_block as string) || (data.cidr as string) || '10.0.0.0/16',
+    instance_tenancy: (data.instance_tenancy as string) || 'default',
+    enable_dns_support: data.enable_dns_support ?? true,
+    enable_dns_hostnames: data.enable_dns_hostnames === true,
     tags: {},
   };
 }

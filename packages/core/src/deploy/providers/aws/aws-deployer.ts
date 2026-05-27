@@ -35,6 +35,7 @@ import { sagemaker_handler } from './handlers/sagemaker';
 import { secrets_manager_handler } from './handlers/secrets-manager';
 import { sns_handler } from './handlers/sns';
 import { sqs_handler } from './handlers/sqs';
+import { vpc_handler } from './handlers/vpc';
 import { destroy_aws_clients, initialize_aws_clients } from './sdk-loader';
 import type { AWSHandlerContext, AWSResourceHandler } from './types';
 import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types';
@@ -49,6 +50,8 @@ import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../.
 // meaningful — kept consistent with the GCP shape for symmetry.
 
 const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> = [
+  // More-specific EC2 prefixes must precede `aws.ec2.instance`.
+  { prefix: 'aws.ec2.vpc', handler: vpc_handler },
   { prefix: 'aws.ec2.instance', handler: ec2_handler },
   { prefix: 'aws.s3.bucket', handler: s3_handler },
   { prefix: 'aws.lambda.function', handler: lambda_handler },

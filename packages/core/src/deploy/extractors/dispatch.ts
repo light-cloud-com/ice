@@ -60,6 +60,7 @@ import {
   extract_api_gateway_rest_api_properties,
   extract_cloudfront_distribution_properties,
   extract_elbv2_load_balancer_properties,
+  extract_vpc_properties as extract_aws_vpc_properties,
 } from './aws/network';
 import {
   extract_cloud_run_properties,
@@ -126,6 +127,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.apigateway.restApi': extract_api_gateway_rest_api_properties,
   'aws.cloudfront.distribution': extract_cloudfront_distribution_properties,
   'aws.elbv2.loadBalancer': extract_elbv2_load_balancer_properties,
+  'aws.ec2.vpc': extract_aws_vpc_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

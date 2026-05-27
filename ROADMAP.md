@@ -20,6 +20,9 @@ Direction, not a ticket tracker. v0.1.50, Apache 2.0. Open an issue or PR to cha
 ### Providers - `help-wanted`
 
 - AWS + Azure to GCP parity _(top priority - see [`PROVIDER_READINESS`](packages/constants/src/providers.ts))_
+  - **AWS**: 20+ handlers + extractors landed; live deploy gates pending per category before the matching feature flag flips. See `packages/core/src/deploy/providers/aws/README.md` for the rollout-state table.
+  - **Azure**: 35+ handlers + extractors landed (Compute, Database, Storage, Messaging, Network, Observability, Security, AI / Analytics); rebuild migrated VM/Storage/Web into the modular dispatcher in `packages/core/src/deploy/providers/azure/`. See `packages/core/src/deploy/providers/azure/README.md`.
+  - **Both providers** now ship developer-run live tests under `packages/core/src/deploy/providers/__tests__/live/` — `pnpm test:live:aws <service>` / `pnpm test:live:azure <service>` against your own account. Each ticked deploy gate is what unblocks the per-category feature flag.
 - Alibaba Cloud - design-only → deployable
 - Oracle Cloud Infrastructure
 - DigitalOcean - Droplets, App Platform, Managed DBs, Spaces

@@ -4,6 +4,16 @@ All notable changes to ICE are recorded here. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Added — Provider parity drive
+
+- **Azure rebuild (Phase B)** — modular dispatcher at `packages/core/src/deploy/providers/azure/` replaces the legacy monolith (back-compat shim kept). 35+ handlers ship: PostgreSQL Flex, MySQL Flex, Redis Cache, Cosmos DB (SQL + Mongo), SQL Server, Static Web Apps, App Service Plan, Container Apps (service + worker), Functions, AKS, ACR, VNet, Subnet, NSG, Private Endpoint, DNS Zone, Application Gateway, Front Door, WAF Policy, APIM, Service Bus (with AMQP/RabbitMQ branch), Event Hubs, Event Grid, Logic Apps, Cognitive Search (also backs AI.VectorDB), Azure OpenAI, Azure ML, Synapse, Data Explorer (Kusto), Entra External ID (B2C), Log Analytics, App Insights, Key Vault, Storage Account.
+- **AWS Phase A** — new handlers + extractors: VPC / Subnet / SecurityGroup, ACM cert, Route53 record, EventBridge schedule branch, CodeBuild project, Amplify Hosting, Amazon MQ, WAFv2, VPC Endpoint, OpenSearch Serverless. ECS / ELBv2 / RDS / ElastiCache now consume canvas-wired VPC blocks. CloudFront consumes a canvas-wired ACM certificate ARN when present.
+- **Update paths** for CloudFront (UpdateDistribution + ETag), Cognito (UpdateUserPool), DocDB (ModifyDBCluster), Redshift (ModifyCluster), and EC2 (ModifyVolume — EBS resize).
+- **Lambda auto-build CodeBuild fallback** — when local `git` / `npm` / `zip` aren't available the handler dispatches the build to a transient CodeBuild project.
+- **Live test foundation** — per-handler `*.live.test.ts` files at `packages/core/src/deploy/providers/__tests__/live/`. Developer self-serve via `pnpm test:live:aws <service>` / `pnpm test:live:azure <service>` (NOT in CI; touches real cloud, costs real money). JSONL audit trail under `e2e/{aws,azure}-deployment-tests/runs/`. Orphan-cleanup scripts at `e2e/{aws,azure}-deployment-tests/cleanup-orphans.ts` sweep resources tagged `ice:test-run-id=*`.
+- **Azure importer** — `importers/azure/relationships.ts` infers dependencies between imported resources by scanning property payloads for resource-id references; case-insensitive matching with self-ref skip. Type-mapper aligned with the new deployer prefixes so imports route to the right deploy handler.
+- **Operator-notes README** — `packages/core/src/deploy/providers/azure/README.md` documents the per-category rollout state, quirks (global-uniqueness names, long-running ops, password-required services, Cosmos API projection, Container Apps env auto-bootstrap, Logic Apps schedule sugar, Cognitive Search dual purpose), and the extension contract.
+
 ### Security
 
 - Seed script (`packages/db/prisma/seed.ts`) no longer hard-codes a password - reads `ICE_SEED_EMAIL` / `ICE_SEED_PASSWORD` from env, generates a random password when unset, and prints it to stdout for first-run convenience.

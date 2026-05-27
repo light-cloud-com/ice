@@ -25,7 +25,9 @@ Same flow as [deploying-to-gcp.md](deploying-to-gcp.md) - drag blocks, connect t
 
 ## What works today
 
-17 service handlers + 20 extractors live in [`packages/core/src/deploy/providers/aws/`](../packages/core/src/deploy/providers/aws/). The categories exposed to the palette / plan modal are gated by feature flags — see the **Rollout state** table in [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md) for the per-category truth source. Today: Storage (S3), Messaging (SQS, SNS, EventBridge), Cache (ElastiCache), Monitoring (CloudWatch Logs), Security (Secrets Manager), Source, and Config are on. Compute (ECS), Frontend, Scheduler, Network, Database (RDS / DynamoDB / DocDB), AI, and Analytics are gated until their concrete unblockers ship.
+20+ service handlers + extractors live in [`packages/core/src/deploy/providers/aws/`](../packages/core/src/deploy/providers/aws/). The categories exposed to the palette / plan modal are gated by feature flags — see the **Rollout state** table in [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md) for the per-category truth source. Currently on by default: Storage (S3), Messaging (SQS, SNS, EventBridge), Cache (ElastiCache), Monitoring (CloudWatch Logs), Security (Secrets Manager), Source, and Config. Network primitives (VPC / Subnet / SecurityGroup), Compute (ECS / Lambda / EC2), Frontend (CloudFront / Amplify Hosting), Scheduler (EventBridge schedule), Database (RDS / DynamoDB / DocDB / Redshift), AI (Bedrock / SageMaker / OpenSearch Serverless vector), and Analytics (OpenSearch / Redshift) all ship handlers — they flip on as each category's deploy-gate row turns green in the rollout table.
+
+A7 also added: Amplify Hosting (`Compute.SSRSite`), Amazon MQ (`Messaging.RabbitMQ`), WAFv2 (`Security.WAF`), VPC Endpoint (`Network.PrivateNetwork`), CodeBuild (`Source.Build`), ECS Worker (`Compute.Worker`).
 
 For the source-of-truth provider matrix across all clouds, see [provider-status.md](provider-status.md).
 
@@ -34,19 +36,18 @@ For the source-of-truth provider matrix across all clouds, see [provider-status.
 The deployer handles several AWS-specific gotchas silently. The full list lives in [`providers/aws/README.md`](../packages/core/src/deploy/providers/aws/README.md); highlights:
 
 - **S3 bucket names** get a `-{accountId}` suffix because S3 names are globally unique.
-- **CloudFront ACM certs** are pinned to `us-east-1` regardless of deploy region.
-- **ECS auto-provisions** a default cluster + task execution role on first deploy. Subnets and security groups are still operator-supplied today; canvas VPC blocks for AWS are deferred.
+- **CloudFront ACM certs** are pinned to `us-east-1` regardless of deploy region. CloudFront now consumes a canvas-wired `Security.Certificate` ARN when present, falling back to auto-provisioning only when no cert is connected.
+- **ECS auto-provisions** a default cluster + task execution role on first deploy. With A1 wiring, canvas `Network.VPC` / `Subnet` / `SecurityGroup` blocks now flow through to ECS / ELBv2 / RDS / ElastiCache.
 - **RDS / DocDB / Redshift** refuse to ship without a `master_user_password` — wire a `Security.Secret` or set the property explicitly.
 - **RDS provisioning** takes 5–10 minutes; the handler polls `DescribeDBInstances` and reports progress via `ctx.on_step`.
-- **Lambda auto-build** clones a connected `Source.Repository`, runs `npm install`, zips, and uploads to `ice-bootstrap-{accountId}-{region}` — needs local `git` / `npm` / `zip` on the deploy host. AWS CodeBuild integration is deferred.
+- **Lambda auto-build** clones a connected `Source.Repository`, runs `npm install`, zips, and uploads to `ice-bootstrap-{accountId}-{region}`. When local `git` / `npm` / `zip` aren't available the handler falls back to AWS CodeBuild automatically.
 - **SQS / SNS FIFO** queues + topics get the required `.fifo` suffix automatically.
+- **CloudFront / Cognito / DocDB / Redshift / EC2** all support update paths now: UpdateDistribution (via GetDistributionConfig + ETag), UpdateUserPool, ModifyDBCluster, ModifyCluster, ModifyVolume (EBS resize).
 
 ## Known gaps vs. GCP
 
 - No importer (`Import → From AWS`) — manual canvas only.
-- VPC-aware canvas blocks for ECS subnets/security groups not yet wired.
-- Update paths for CloudFront / Cognito / DocDB / Redshift are create-only.
-- Tests use mocked AWS SDKs only — no LocalStack integration tests yet.
+- Tests use mocked AWS SDKs only — live deploy gates require a developer-run pass.
 - Cost estimate parity is sparser than GCP.
 
 If you hit a gap that matters to you, please file a feature request — AWS parity is high-priority on the [ROADMAP](../ROADMAP.md) and contributions are welcome (see [contributing.md](contributing.md)).

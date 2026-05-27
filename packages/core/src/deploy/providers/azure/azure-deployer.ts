@@ -19,14 +19,22 @@ import { apim_handler } from './handlers/apim';
 import { app_gateway_handler } from './handlers/app-gateway';
 import { app_insights_handler } from './handlers/app-insights';
 import { app_service_plan_handler } from './handlers/app-service';
+import { azure_ml_handler } from './handlers/azure-ml';
+import { azure_openai_handler } from './handlers/azure-openai';
 import { azure_waf_handler } from './handlers/azure-waf';
+import { cognitive_search_handler } from './handlers/cognitive-search';
 import { container_apps_handler } from './handlers/container-apps';
 import { cosmosdb_handler } from './handlers/cosmosdb';
+import { data_explorer_handler } from './handlers/data-explorer';
 import { dns_zone_handler } from './handlers/dns-zone';
+import { entra_b2c_handler } from './handlers/entra-b2c';
+import { event_grid_handler } from './handlers/event-grid';
+import { event_hubs_handler } from './handlers/event-hubs';
 import { front_door_handler } from './handlers/front-door';
 import { functions_handler } from './handlers/functions';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
+import { logic_apps_handler } from './handlers/logic-apps';
 import { mysql_flex_handler } from './handlers/mysql-flex';
 import { nsg_handler } from './handlers/nsg';
 import { postgresql_flex_handler } from './handlers/postgresql-flex';
@@ -36,6 +44,7 @@ import { service_bus_handler } from './handlers/service-bus';
 import { static_web_apps_handler } from './handlers/static-web-apps';
 import { storage_account_handler } from './handlers/storage-account';
 import { subnet_handler } from './handlers/subnet';
+import { synapse_handler } from './handlers/synapse';
 import { virtual_machine_handler } from './handlers/virtual-machine';
 import { vnet_handler } from './handlers/vnet';
 import { web_app_handler } from './handlers/web-app';
@@ -76,6 +85,16 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.apimanagement.service', handler: apim_handler },
   { prefix: 'azure.containerservice.managedCluster', handler: aks_handler },
   { prefix: 'azure.containerregistry.registry', handler: acr_handler },
+  // P2 long-tail.
+  { prefix: 'azure.logic.workflow', handler: logic_apps_handler },
+  { prefix: 'azure.eventgrid.topic', handler: event_grid_handler },
+  { prefix: 'azure.eventhub.namespace', handler: event_hubs_handler },
+  { prefix: 'azure.search.service', handler: cognitive_search_handler },
+  { prefix: 'azure.cognitiveservices.account', handler: azure_openai_handler },
+  { prefix: 'azure.machinelearning.workspace', handler: azure_ml_handler },
+  { prefix: 'azure.synapse.workspace', handler: synapse_handler },
+  { prefix: 'azure.kusto.cluster', handler: data_explorer_handler },
+  { prefix: 'azure.aadb2c.directory', handler: entra_b2c_handler },
 ];
 // Note: azure.web.staticSite is registered above with the other
 // azure.web.* entries — its prefix is more specific than azure.web.app

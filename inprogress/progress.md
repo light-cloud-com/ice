@@ -183,29 +183,29 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 azure-waf (Security.WAF)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-- 🔴 **B2 P2 — long tail (11)**
-  - 🔴 logic-apps (Compute.CronJob)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 event-grid (template-only)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 event-hubs (Messaging.EventStream)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+- 🟠 **B2 P2 — long tail (11)**
+  - 🟠 logic-apps (Compute.CronJob)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 event-grid (template-only)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 event-hubs (Messaging.EventStream)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🔴 service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
     - 🔴 (C) handler branch · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (D) live test · 🔴 docs
-  - 🔴 cognitive-search (Analytics.Search)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 ai-search-vector (AI.VectorDB)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 entra-b2c (Security.Identity)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 azure-openai (AI.LLMGateway)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 azure-ml (AI.ModelServing)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 synapse (Analytics.DataWarehouse)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 data-explorer (template-only)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 cognitive-search (Analytics.Search + AI.VectorDB)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 ai-search-vector (AI.VectorDB) — same Search service as Analytics.Search
+    - 🟢 (C) handler (shared) · 🟢 (C) extractor branch · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 entra-b2c (Security.Identity) — `azure.aadb2c.directory`
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 azure-openai (AI.LLMGateway)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 azure-ml (AI.ModelServing)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 synapse (Analytics.DataWarehouse)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 data-explorer (template-only)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
 - 🟠 **B3 — Extractor module files**
   - 🔴 `extractors/azure/ai.ts`
   - 🟢 `extractors/azure/ancillary.ts`

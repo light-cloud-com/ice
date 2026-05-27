@@ -109,5 +109,36 @@ export async function initialize_azure_clients(
   const cdn = await load_azure_sdk('@azure/arm-cdn');
   if (cdn) clients.set('cdn', new cdn.CdnManagementClient(credential, subscription_id));
 
+  const logic = await load_azure_sdk('@azure/arm-logic');
+  if (logic) clients.set('logic', new logic.LogicManagementClient(credential, subscription_id));
+
+  const eventgrid = await load_azure_sdk('@azure/arm-eventgrid');
+  if (eventgrid) clients.set('eventgrid', new eventgrid.EventGridManagementClient(credential, subscription_id));
+
+  const eventhub = await load_azure_sdk('@azure/arm-eventhub');
+  if (eventhub) clients.set('eventhub', new eventhub.EventHubManagementClient(credential, subscription_id));
+
+  const search = await load_azure_sdk('@azure/arm-search');
+  if (search) clients.set('search', new search.SearchManagementClient(credential, subscription_id));
+
+  const cognitiveservices = await load_azure_sdk('@azure/arm-cognitiveservices');
+  if (cognitiveservices)
+    clients.set(
+      'cognitiveservices',
+      new cognitiveservices.CognitiveServicesManagementClient(credential, subscription_id),
+    );
+
+  const ml = await load_azure_sdk('@azure/arm-machinelearning');
+  if (ml) clients.set('ml', new ml.AzureMachineLearningServicesManagementClient(credential, subscription_id));
+
+  const synapse = await load_azure_sdk('@azure/arm-synapse');
+  if (synapse) clients.set('synapse', new synapse.SynapseManagementClient(credential, subscription_id));
+
+  const kusto = await load_azure_sdk('@azure/arm-kusto');
+  if (kusto) clients.set('kusto', new kusto.KustoManagementClient(credential, subscription_id));
+
+  const aad = await load_azure_sdk('@azure/arm-aad');
+  if (aad) clients.set('aad', new aad.ActiveDirectoryB2CManagementClient(credential, subscription_id));
+
   return { credential, clients };
 }

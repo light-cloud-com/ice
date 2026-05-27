@@ -73,6 +73,14 @@ import {
   extract_vpc_endpoint_properties as extract_aws_vpc_endpoint_properties,
 } from './aws/network';
 import {
+  extract_azure_cognitive_search_properties,
+  extract_azure_data_explorer_properties,
+  extract_azure_entra_b2c_properties,
+  extract_azure_ml_properties,
+  extract_azure_openai_properties,
+  extract_azure_synapse_properties,
+} from './azure/ai';
+import {
   extract_azure_app_insights_properties,
   extract_azure_keyvault_vault_properties,
   extract_azure_log_analytics_properties,
@@ -90,6 +98,11 @@ import {
   extract_azure_postgresql_flex_properties,
   extract_azure_redis_cache_properties,
 } from './azure/database';
+import {
+  extract_azure_event_grid_properties,
+  extract_azure_event_hubs_properties,
+  extract_azure_logic_apps_properties,
+} from './azure/messaging';
 import {
   extract_azure_acr_properties,
   extract_azure_aks_properties,
@@ -207,6 +220,17 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.apimanagement.service': extract_azure_apim_properties,
   'azure.containerservice.managedCluster': extract_azure_aks_properties,
   'azure.containerregistry.registry': extract_azure_acr_properties,
+
+  // ─── Azure — P2 long tail (messaging + AI + analytics + identity) ──
+  'azure.logic.workflow': extract_azure_logic_apps_properties,
+  'azure.eventgrid.topic': extract_azure_event_grid_properties,
+  'azure.eventhub.namespace': extract_azure_event_hubs_properties,
+  'azure.search.service': extract_azure_cognitive_search_properties,
+  'azure.cognitiveservices.account': extract_azure_openai_properties,
+  'azure.machinelearning.workspace': extract_azure_ml_properties,
+  'azure.synapse.workspace': extract_azure_synapse_properties,
+  'azure.kusto.cluster': extract_azure_data_explorer_properties,
+  'azure.aadb2c.directory': extract_azure_entra_b2c_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

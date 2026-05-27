@@ -51,6 +51,27 @@ describe('scale-presets-data — category bundles', () => {
   });
 });
 
+describe('SCALE_PRESETS — provider coverage (C3 regression)', () => {
+  // Resources that intentionally don't carry per-provider variants:
+  // monitoring + security presets are universal settings (retention,
+  // severity labels) that don't depend on the cloud provider.
+  const PROVIDER_AGNOSTIC_KEYS = new Set<string>(['log-group', 'alert', 'secret-store', 'firewall']);
+
+  it('every cloud-block scale tier with provider-specific values lists both AWS and Azure', () => {
+    const missing: string[] = [];
+    for (const [key, tiers] of Object.entries(SCALE_PRESETS)) {
+      if (PROVIDER_AGNOSTIC_KEYS.has(key)) continue;
+      for (const [tier, preset] of Object.entries(tiers ?? {})) {
+        const providers = (preset as { _providers?: Record<string, unknown> })._providers;
+        if (!providers) continue; // skip provider-agnostic tiers
+        if (!providers.aws) missing.push(`${key}.${tier}: missing aws`);
+        if (!providers.azure) missing.push(`${key}.${tier}: missing azure`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+});
+
 describe('SCALE_PRESETS — assembled dict', () => {
   it('contains exactly the union of every category bundle key', () => {
     const assembled = new Set(Object.keys(SCALE_PRESETS));

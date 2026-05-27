@@ -115,6 +115,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '128' },
         gcp: { memory: '128-200mhz' },
+        azure: { memory: '128', plan: 'Consumption' },
       },
     },
     low: {
@@ -123,6 +124,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '256' },
         gcp: { memory: '256-400mhz' },
+        azure: { memory: '256', plan: 'Consumption' },
       },
     },
     moderate: {
@@ -131,6 +133,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '512' },
         gcp: { memory: '512-800mhz' },
+        azure: { memory: '512', plan: 'Consumption' },
       },
     },
     medium: {
@@ -139,6 +142,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '1024' },
         gcp: { memory: '1024-1400mhz' },
+        azure: { memory: '1024', plan: 'EP1' },
       },
     },
     high: {
@@ -147,6 +151,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '2048' },
         gcp: { memory: '2048-2800mhz' },
+        azure: { memory: '2048', plan: 'EP2' },
       },
     },
     'very-high': {
@@ -155,6 +160,7 @@ export const COMPUTE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPrese
       _providers: {
         aws: { memory: '4096' },
         gcp: { memory: '4096-4800mhz' },
+        azure: { memory: '4096', plan: 'EP3' },
       },
     },
   },

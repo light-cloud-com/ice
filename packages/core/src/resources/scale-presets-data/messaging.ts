@@ -127,6 +127,10 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.t3.micro' },
         gcp: { size: 'lemur' },
+        // Azure: no native RabbitMQ — Service Bus Premium with AMQP 1.0
+        // is the closest managed equivalent (handler routes Messaging.RabbitMQ
+        // through the service-bus handler with the Premium SKU branch).
+        azure: { size: 'sb-premium-1' },
         kubernetes: { size: 'k8s-1-2' },
       },
     },
@@ -137,6 +141,7 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.t3.micro' },
         gcp: { size: 'lemur' },
+        azure: { size: 'sb-premium-1' },
         kubernetes: { size: 'k8s-1-2' },
       },
     },
@@ -147,6 +152,7 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.m5.large' },
         gcp: { size: 'tiger' },
+        azure: { size: 'sb-premium-1' },
         kubernetes: { size: 'k8s-2-4' },
       },
     },
@@ -157,6 +163,7 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.m5.large' },
         gcp: { size: 'tiger' },
+        azure: { size: 'sb-premium-2' },
         kubernetes: { size: 'k8s-2-4' },
       },
     },
@@ -167,6 +174,7 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.m5.xlarge' },
         gcp: { size: 'lion' },
+        azure: { size: 'sb-premium-4' },
         kubernetes: { size: 'k8s-4-8' },
       },
     },
@@ -177,6 +185,7 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
       _providers: {
         aws: { size: 'mq.m5.2xlarge' },
         gcp: { size: 'lion' },
+        azure: { size: 'sb-premium-8' },
         kubernetes: { size: 'k8s-4-8' },
       },
     },
@@ -191,24 +200,44 @@ export const MESSAGING_PRESETS: Record<string, Partial<Record<ScaleTier, TierPre
     'very-high': { order_matters: true },
   },
 
+  // Azure-native primary, with AWS analogue via SQS+SNS / EventBridge
+  // for cross-cloud price-comparison support.
   'service-bus': {
     dev: {
-      _providers: { azure: { size: 'basic' } },
+      _providers: {
+        aws: { size: 'sqs-sns-standard' },
+        azure: { size: 'basic' },
+      },
     },
     low: {
-      _providers: { azure: { size: 'basic' } },
+      _providers: {
+        aws: { size: 'sqs-sns-standard' },
+        azure: { size: 'basic' },
+      },
     },
     moderate: {
-      _providers: { azure: { size: 'standard' } },
+      _providers: {
+        aws: { size: 'sqs-sns-standard' },
+        azure: { size: 'standard' },
+      },
     },
     medium: {
-      _providers: { azure: { size: 'standard' } },
+      _providers: {
+        aws: { size: 'sqs-sns-standard' },
+        azure: { size: 'standard' },
+      },
     },
     high: {
-      _providers: { azure: { size: 'premium-1' } },
+      _providers: {
+        aws: { size: 'sqs-sns-fifo' },
+        azure: { size: 'premium-1' },
+      },
     },
     'very-high': {
-      _providers: { azure: { size: 'premium-2' } },
+      _providers: {
+        aws: { size: 'sqs-sns-fifo' },
+        azure: { size: 'premium-2' },
+      },
     },
   },
 

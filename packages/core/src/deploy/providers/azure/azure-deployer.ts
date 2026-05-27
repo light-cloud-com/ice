@@ -16,6 +16,7 @@
 import { app_insights_handler } from './handlers/app-insights';
 import { app_service_plan_handler } from './handlers/app-service';
 import { container_apps_handler } from './handlers/container-apps';
+import { functions_handler } from './handlers/functions';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
 import { service_bus_handler } from './handlers/service-bus';
@@ -35,6 +36,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.compute.virtual_machine', handler: virtual_machine_handler },
   { prefix: 'azure.storage.account', handler: storage_account_handler },
   { prefix: 'azure.web.appServicePlan', handler: app_service_plan_handler },
+  { prefix: 'azure.web.functionApp', handler: functions_handler },
   { prefix: 'azure.web.app', handler: web_app_handler },
   { prefix: 'azure.keyvault.vault', handler: key_vault_handler },
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },

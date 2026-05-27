@@ -4,6 +4,7 @@
  * Resources covered:
  *   - azure.web.appServicePlan      (Compute.Container, web variant — hosts Web Apps)
  *   - azure.containerApps.app       (Compute.Container, serverless variant; Compute.Worker)
+ *   - azure.web.functionApp         (Compute.ServerlessFunction)
  */
 
 /**
@@ -47,6 +48,25 @@ export function extract_azure_app_service_plan_properties(
     tier: (data.tier as string) || (data.sku as string) || 'F1',
     capacity: (data.capacity as number) ?? 1,
     reserved: data.reserved !== false,
+    tags: {},
+  };
+}
+
+/**
+ * Function App. Backs Compute.ServerlessFunction. Runtime defaults to
+ * Node 20; operator overrides via `properties.runtime` (node, dotnet,
+ * python, java). `storage_account_id` is required (Azure Functions
+ * hard requirement); auto-bootstrap quirk lands in B4.
+ */
+export function extract_azure_function_app_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    runtime: (data.runtime as string) || 'node',
+    app_settings: (data.envVars as Record<string, string>) || {},
     tags: {},
   };
 }

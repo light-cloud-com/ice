@@ -78,7 +78,11 @@ import {
   extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
 } from './azure/ancillary';
-import { extract_azure_app_service_plan_properties, extract_azure_container_apps_properties } from './azure/compute';
+import {
+  extract_azure_app_service_plan_properties,
+  extract_azure_container_apps_properties,
+  extract_azure_function_app_properties,
+} from './azure/compute';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,

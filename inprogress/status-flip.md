@@ -2,7 +2,7 @@
 
 Final step. Only land this when A, B, C are all done and the rollout-state tables for both providers are all green.
 
-> **Cardinal rule gate** ([README.md](README.md#cardinal-rule)): `stable` advertises "this works on the real cloud". Before flipping `PROVIDER_READINESS` to `stable`, every handler must have its deploy gate ticked in `progress.md` AND the scheduled real-cloud run must have been green for at least N consecutive nights (suggest N = 7) to prove the harness catches drift.
+> **Cardinal rule gate** ([README.md](README.md#cardinal-rule)): `stable` advertises "this works on the real cloud". Before flipping `PROVIDER_READINESS` to `stable`, every handler must have its deploy gate ticked in `progress.md` — at least one developer must have run the live test for that handler against their own cloud account and observed it pass.
 
 ## D1 — Bump readiness
 
@@ -82,14 +82,14 @@ After this phase:
 - `PROVIDER_READINESS.aws === 'stable'` and `PROVIDER_READINESS.azure === 'stable'`.
 - `docs/provider-status.md` matrix shows both as `stable` with no caveats.
 - `pnpm test` green across the monorepo.
-- Every handler row in both Block-to-handler matrices has its deploy gate ticked.
-- The most recent 7 scheduled real-cloud runs (AWS + Azure) are green in `e2e/{aws,azure}-deployment-tests/dashboard.html`.
+- Every handler row in both Block-to-handler matrices has its deploy gate ticked — a developer ran the live test against their own account and recorded the run.
+- The deploy verification log in `progress.md` lists at least one entry per handler.
 - A demo deploy on each of AWS and Azure for the templates in `packages/templates/` succeeds end-to-end on a real account and is logged.
 
 ## Tasks
 
-- [ ] D6: 7 consecutive green scheduled runs for AWS recipes
-- [ ] D6: 7 consecutive green scheduled runs for Azure recipes
+- [ ] D6: every AWS handler's deploy gate ticked at least once by a developer
+- [ ] D6: every Azure handler's deploy gate ticked at least once by a developer
 - [ ] D6: template demo deploy on real AWS account (per template in `packages/templates/`)
 - [ ] D6: template demo deploy on real Azure subscription (per template in `packages/templates/`)
 

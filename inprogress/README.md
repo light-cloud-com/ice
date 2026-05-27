@@ -23,7 +23,9 @@ Mocked-SDK unit tests in `__tests__/` are necessary but not sufficient. They don
 Two gates must be ticked before a handler checkbox flips in `progress.md`:
 
 1. **Code gate** — handler + extractor + mocked-SDK tests land in main; CI green.
-2. **Deploy gate** — at least one successful real-cloud deploy logged in the "Deploy verification log" at the bottom of `progress.md`, with a link to the canvas / commit / run that exercised it.
+2. **Deploy gate** — a developer ran the live test (`pnpm test:live:<provider> <service>`) against their own cloud account at least once, observed it pass, and appended a row to the "Deploy verification log" at the bottom of `progress.md` with the JSONL run path.
+
+Live tests are not CI — they touch real cloud, cost real money, run on the developer's account. See A6 / B8 in the phase docs for the harness.
 
 A category feature flag flips to `on` only after every handler in that category has both gates ticked. The provider `PROVIDER_READINESS` flip to `stable` (Phase D) requires every handler in `packages/core/src/deploy/providers/{aws,azure}/handlers/` to have both gates ticked.
 

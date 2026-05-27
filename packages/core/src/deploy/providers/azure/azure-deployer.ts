@@ -13,6 +13,7 @@
  * and add one entry to HANDLER_REGISTRY.
  */
 
+import { key_vault_handler } from './handlers/key-vault';
 import { storage_account_handler } from './handlers/storage-account';
 import { virtual_machine_handler } from './handlers/virtual-machine';
 import { web_app_handler } from './handlers/web-app';
@@ -28,6 +29,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.compute.virtual_machine', handler: virtual_machine_handler },
   { prefix: 'azure.storage.account', handler: storage_account_handler },
   { prefix: 'azure.web.app', handler: web_app_handler },
+  { prefix: 'azure.keyvault.vault', handler: key_vault_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

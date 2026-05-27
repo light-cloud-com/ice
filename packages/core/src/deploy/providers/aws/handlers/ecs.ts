@@ -19,6 +19,7 @@
  */
 
 import { ensureEcsTaskExecutionRole } from '../iam-roles';
+import { resolve_aws_network_refs } from '../network-resolver';
 import { load_aws_sdk } from '../sdk-loader';
 import { err, ok, sdkMissing } from './_result';
 import type { AWSHandlerContext, AWSResourceHandler } from '../types';
@@ -50,6 +51,12 @@ export const ecs_handler: AWSResourceHandler = {
 
       ctx.on_step?.(name, { label: 'Ensuring default ECS cluster', index: 1, total: 4 });
       await ensureDefaultCluster(client, ecs, ctx);
+
+      // Resolve canvas-driven Network.Subnet / Network.SecurityGroup
+      // references to actual subnet-… / sg-… ids via DescribeSubnets /
+      // DescribeSecurityGroups. Operator-supplied raw arrays still
+      // pass through; canvas-driven entries are appended.
+      const network = await resolve_aws_network_refs(properties, ctx);
 
       ctx.on_step?.(name, { label: 'Registering task definition', index: 2, total: 4 });
       const taskDef = await client.send(
@@ -86,11 +93,8 @@ export const ecs_handler: AWSResourceHandler = {
           networkConfiguration: {
             awsvpcConfiguration: {
               assignPublicIp: properties.assign_public_ip === false ? 'DISABLED' : 'ENABLED',
-              // Subnets + security groups need to come from a wired
-              // VPC block (or AWS account default-VPC) — handled in a
-              // follow-up commit when canvas VPCs land for AWS.
-              subnets: (properties.subnets as string[]) || [],
-              securityGroups: (properties.security_groups as string[]) || [],
+              subnets: network.subnets,
+              securityGroups: network.security_groups,
             },
           },
         }),

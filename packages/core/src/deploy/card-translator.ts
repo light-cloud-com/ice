@@ -21,6 +21,7 @@ import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
 import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
 import { propagate_socket_port_targets } from './passes/pass-1-46-socket-port-targeting';
 import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
+import { wire_aws_network } from './passes/pass-1-6-aws-network-wiring';
 import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
 import { getHighLevelResourceByIceType } from '../resources/high-level-resources';
 import { sanitize_name, sanitize_label_value } from './utils/name-utils';
@@ -408,6 +409,14 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
   // containers' typed-socket choices actually drive what the LB
   // targets at deploy time.
   propagate_socket_port_targets(edges, nodes, card_id_to_name, graph);
+
+  // ─── Pass 1.6 — AWS Network.Subnet / SecurityGroup → target wiring ─────
+  // Stamps `connected_subnet_names[]` and `connected_security_group_names[]`
+  // onto compute / data targets connected to a Network.Subnet or
+  // Network.SecurityGroup block. Downstream AWS handlers resolve those
+  // names → subnet-… / sg-… ids via DescribeSubnets / DescribeSecurityGroups
+  // (tag:Name filter). Operator-supplied raw arrays still work.
+  wire_aws_network(edges, nodes, card_id_to_name, graph);
 
   // ─── Pass 1.5 — PublicEndpoint semantic wiring ─────────────────────────
   const { deployable_count_delta } = wire_public_endpoints({

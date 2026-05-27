@@ -215,27 +215,27 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 `extractors/azure/network.ts`
   - 🟢 every entry registered in `dispatch.ts` (B2 P0 + P1 + P2 all wired)
   - 🔴 `dispatch.test.ts` Azure parity case
-- 🔴 **B4 — Quirks**
+- 🟠 **B4 — Quirks**
   - 🔴 storage account global-uniqueness suffix
-  - 🔴 cosmos consistency default = Session
-  - 🔴 cosmos API mode projection (Mongo vs SQL)
-  - 🔴 SQL/PG/MySQL password enforcement
-  - 🔴 long-running op polling helper
+  - 🟢 cosmos consistency default = Session
+  - 🟢 cosmos API mode projection (Mongo vs SQL)
+  - 🟢 SQL/PG/MySQL password enforcement (handlers refuse to create without password)
+  - 🟢 long-running op polling helper (uses native `beginXxxAndWait` SDK methods)
   - 🔴 resource-group auto-bootstrap
-  - 🔴 container apps env auto-provision
-  - 🔴 container apps worker (job) extractor
+  - 🟢 container apps env auto-provision (ensure_managed_environment in container-apps handler)
+  - 🟢 container apps worker (job) extractor
   - 🔴 app service plan auto-provision
   - 🟢 key vault no-value contract
   - 🔴 key vault certificate provisioning path
   - 🔴 service bus session-enabled handling
   - 🔴 service bus AMQP / RabbitMQ branch
-  - 🔴 event hubs throughput defaults
+  - 🟢 event hubs throughput defaults
   - 🔴 functions storage account auto-provision
-  - 🔴 static web apps build/SSR extractor projection
-  - 🔴 private endpoint subnet preflight
-  - 🔴 WAF SKU + canvas-edge association
-  - 🔴 MySQL flexible server SKU defaults
-  - 🔴 ACR security defaults
+  - 🟢 static web apps build/SSR extractor projection
+  - 🟢 private endpoint subnet preflight (handler refuses to create without subnet_id + target_id)
+  - 🟢 WAF SKU + canvas-edge association (Detection mode default; target via target_resource_id)
+  - 🟢 MySQL flexible server SKU defaults (Standard_B1s burstable)
+  - 🟢 ACR security defaults (admin user disabled by default)
   - 🔴 `azure/README.md` quirks section
 - 🟠 **B5 — Auth + tests**
   - 🟢 auth.ts: `validate_azure_credentials`

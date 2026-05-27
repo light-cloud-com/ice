@@ -26,7 +26,7 @@ export interface ResolvedNetworkRefs {
 
 async function describe_by_name(
   ctx: AWSHandlerContext,
-  describer: 'subnet' | 'security-group',
+  describer: 'subnet' | 'security-group' | 'vpc',
   names: string[],
 ): Promise<string[]> {
   if (names.length === 0) return [];
@@ -42,12 +42,27 @@ async function describe_by_name(
       .filter((id): id is string => !!id);
   }
 
+  if (describer === 'vpc') {
+    const out = await client.send(new ec2.DescribeVpcsCommand({ Filters: [{ Name: 'tag:Name', Values: names }] }));
+    return ((out?.Vpcs ?? []) as Array<{ VpcId?: string }>).map((v) => v.VpcId).filter((id): id is string => !!id);
+  }
+
   const out = await client.send(
     new ec2.DescribeSecurityGroupsCommand({ Filters: [{ Name: 'tag:Name', Values: names }] }),
   );
   return ((out?.SecurityGroups ?? []) as Array<{ GroupId?: string }>)
     .map((s) => s.GroupId)
     .filter((id): id is string => !!id);
+}
+
+/**
+ * Look up a single VPC id by its `Name` tag. Used by handlers (e.g.
+ * ELBv2 target groups) that need a single VPC id. Returns undefined
+ * when no match is found.
+ */
+export async function resolve_aws_vpc_id_by_name(vpcName: string, ctx: AWSHandlerContext): Promise<string | undefined> {
+  const ids = await describe_by_name(ctx, 'vpc', [vpcName]);
+  return ids[0];
 }
 
 /**

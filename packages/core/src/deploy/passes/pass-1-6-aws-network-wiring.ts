@@ -22,7 +22,7 @@
 import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput } from '../card-translator';
 
-const NETWORK_PROVIDERS = new Set(['Network.Subnet', 'Network.SecurityGroup']);
+const NETWORK_PROVIDERS = new Set(['Network.Subnet', 'Network.SecurityGroup', 'Network.VPC']);
 
 function ice_type(node: CardNodeInput): string {
   return (node.data?.iceType as string) || '';
@@ -57,9 +57,9 @@ export function wire_aws_network(
     } else {
       continue;
     }
-    // Network primitives don't carry network primitives themselves.
+    // Network primitives don't carry other network primitives.
     const targetType = ice_type(target);
-    if (NETWORK_PROVIDERS.has(targetType) || targetType === 'Network.VPC') continue;
+    if (NETWORK_PROVIDERS.has(targetType)) continue;
 
     const targetName = card_id_to_name.get(target.id);
     const netName = card_id_to_name.get(netNode.id);
@@ -70,6 +70,11 @@ export function wire_aws_network(
 
     const props = targetGraphNode.properties as Record<string, unknown>;
     const netType = ice_type(netNode);
+    if (netType === 'Network.VPC') {
+      // VPC is a single-value reference, not an array.
+      if (!props.connected_vpc_name) props.connected_vpc_name = netName;
+      continue;
+    }
     const key = netType === 'Network.Subnet' ? 'connected_subnet_names' : 'connected_security_group_names';
     const current = Array.isArray(props[key]) ? (props[key] as string[]) : [];
     push_unique(current, netName);

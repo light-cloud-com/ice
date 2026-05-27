@@ -5,6 +5,7 @@
  * Uses Azure Resource Graph to discover ALL resources.
  */
 
+import { infer_relationships as infer_relationships_module } from './relationships';
 import { get_ice_type, map_properties } from './type-mapper';
 import { classifyAzureError } from '../../errors/import-errors';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
@@ -123,9 +124,10 @@ export async function import_azure(options: AzureImportOptions = {}): Promise<Az
     });
   }
 
-  // Infer dependencies
+  // Infer dependencies via the dedicated relationships module so the
+  // logic stays testable in isolation (see relationships.test.ts).
   if (opts.infer_dependencies) {
-    infer_relationships(imported_resources);
+    infer_relationships_module(imported_resources, []);
   }
 
   const metadata: AzureImportMetadata = {

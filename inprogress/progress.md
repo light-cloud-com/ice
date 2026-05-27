@@ -286,14 +286,14 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 credential reuse from Settings → Providers
   - 🔴 (D) AWS zero-diff round-trip on a real account
 - 🟠 **C2 — Azure importer enhancements**
-  - 🔴 `importers/azure/relationships.ts`
+  - 🟢 `importers/azure/relationships.ts` (extracted module; case-insensitive id matching + self-ref skip)
   - 🟢 type-mapper completeness vs B2 handler set (aligned with camelCase deployer prefixes)
   - 🔴 wire `import_azure` into desktop import wizard
   - 🔴 Azure region/subscription multi-select UI
   - 🔴 credential reuse
   - 🔴 (D) Azure zero-diff round-trip on a real subscription
-  - 🔴 relationships test
-  - 🔴 integration test
+  - 🟢 relationships test (6 cases — nested, case-insensitive, dedupe, self-ref skip)
+  - 🟢 integration test (existing azure-importer.test.ts passes against new module)
 - 🔴 **C3 — Cost estimation**
   - 🔴 AWS cost-data coverage inventory
   - 🔴 Azure cost-data coverage inventory

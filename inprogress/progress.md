@@ -133,79 +133,79 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 (D) VM/Storage/Web round-trip post-refactor on a real subscription
 - 🟠 **B2 P0 — must-have handlers (14)**
   - 🟠 key-vault (Security.Secret + Security.Certificate)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 service-bus (Messaging.ServiceBus + Queue + Topic)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 app-service (Compute.Container web variant)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 container-apps (Compute.Container + Compute.Worker)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 functions (Compute.ServerlessFunction)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
-  - 🔴 cosmosdb SQL + Mongo (Database.CosmosDB + Database.MongoDB)
-    - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+  - 🟠 app-service (Compute.Container web variant)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
+  - 🟠 container-apps (Compute.Container + Compute.Worker)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
+  - 🟠 functions (Compute.ServerlessFunction)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
+  - 🟠 cosmosdb SQL + Mongo (Database.CosmosDB + Database.MongoDB)
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🔴 sql-database (template-only)
     - 🔴 (C) handler · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 postgresql-flex (Database.PostgreSQL)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 mysql-flex (Database.MySQL)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 redis-cache (Database.Cache)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟢 blob-storage (Storage.Bucket) — covered by legacy storage-account handler
-    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 log-analytics (Monitoring.Log)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 app-insights (Monitoring.Metrics)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
   - 🟠 static-web-apps (Compute.StaticSite + Compute.SSRSite)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
 - 🟠 **B2 P1 — network + container + APIM + WAF (11)**
   - 🟠 vnet (Network.VPC)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 subnet (Network.Subnet)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 nsg (Network.SecurityGroup)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 private-endpoint (Network.PrivateNetwork)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 dns-zone (Network.CustomDomain)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 aks (Compute.Kubernetes)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 acr (Compute.ContainerRegistry)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 apim (Network.Gateway)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 (D) deploy gate
   - 🟠 front-door (Network.LoadBalancer global)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 app-gateway (Network.LoadBalancer regional)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 azure-waf (Security.WAF)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
 - 🟠 **B2 P2 — long tail (11)**
   - 🟠 logic-apps (Compute.CronJob)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 event-grid (template-only)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 event-hubs (Messaging.EventStream)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🔴 service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
     - 🔴 (C) handler branch · 🔴 (C) extractor · 🔴 (C) mocked test · 🔴 (D) live test · 🔴 docs
   - 🟠 cognitive-search (Analytics.Search + AI.VectorDB)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 ai-search-vector (AI.VectorDB) — same Search service as Analytics.Search
-    - 🟢 (C) handler (shared) · 🟢 (C) extractor branch · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler (shared) · 🟢 (C) extractor branch · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 entra-b2c (Security.Identity) — `azure.aadb2c.directory`
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 (D) deploy gate
   - 🟠 azure-openai (AI.LLMGateway)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
   - 🟠 azure-ml (AI.ModelServing)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 (D) deploy gate
   - 🟠 synapse (Analytics.DataWarehouse)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 (D) deploy gate
   - 🟠 data-explorer (template-only)
-    - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
+    - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🟢 (C) live test · 🔴 (D) deploy gate
 - 🟠 **B3 — Extractor module files**
   - 🟢 `extractors/azure/ai.ts`
   - 🟢 `extractors/azure/ancillary.ts`

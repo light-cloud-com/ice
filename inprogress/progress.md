@@ -58,7 +58,7 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - [ ] feature flag: flip Analytics
 - [ ] **A5 — CodeBuild path**
   - [ ] codebuild handler
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [ ] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] lambda-builder fallback chain
     - [ ] (C) handler edit · [ ] (C) mocked test update · [ ] (D) live test (Lambda auto-build via CodeBuild)
 - [ ] **A6 — Live-test foundation (developer tool)**

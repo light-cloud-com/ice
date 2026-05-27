@@ -109,6 +109,9 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const route53 = await load_aws_sdk('@aws-sdk/client-route-53');
   if (route53) clients.set('route53', new route53.Route53Client({ region }));
 
+  const codebuild = await load_aws_sdk('@aws-sdk/client-codebuild');
+  if (codebuild) clients.set('codebuild', new codebuild.CodeBuildClient({ region }));
+
   return clients;
 }
 

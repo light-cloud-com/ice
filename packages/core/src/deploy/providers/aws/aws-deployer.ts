@@ -19,6 +19,7 @@ import { api_gateway_handler } from './handlers/api-gateway';
 import { bedrock_handler } from './handlers/bedrock';
 import { cloudfront_handler } from './handlers/cloudfront';
 import { cloudwatch_logs_handler } from './handlers/cloudwatch-logs';
+import { codebuild_handler } from './handlers/codebuild';
 import { cognito_handler } from './handlers/cognito';
 import { docdb_handler } from './handlers/docdb';
 import { dynamodb_handler } from './handlers/dynamodb';
@@ -81,6 +82,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.redshift.cluster', handler: redshift_handler },
   { prefix: 'aws.acm.certificate', handler: acm_handler },
   { prefix: 'aws.route53.recordSet', handler: route53_handler },
+  { prefix: 'aws.codebuild.project', handler: codebuild_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

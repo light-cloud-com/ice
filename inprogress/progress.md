@@ -285,9 +285,9 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 region multi-select UI
   - 🔴 credential reuse from Settings → Providers
   - 🔴 (D) AWS zero-diff round-trip on a real account
-- 🔴 **C2 — Azure importer enhancements**
+- 🟠 **C2 — Azure importer enhancements**
   - 🔴 `importers/azure/relationships.ts`
-  - 🔴 type-mapper completeness vs B2 handler set
+  - 🟢 type-mapper completeness vs B2 handler set (aligned with camelCase deployer prefixes)
   - 🔴 wire `import_azure` into desktop import wizard
   - 🔴 Azure region/subscription multi-select UI
   - 🔴 credential reuse

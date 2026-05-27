@@ -19,13 +19,15 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
 
 - [ ] **A1 — Network primitives**
   - [ ] vpc handler (Network.VPC)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] subnet handler (Network.Subnet)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] security-group handler (Network.SecurityGroup)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
-  - [ ] wiring: ECS consume canvas subnets/SGs (code + real-deploy verified)
-  - [ ] wiring: RDS/ElastiCache/ELBv2 consume canvas subnets/SGs (code + real-deploy verified)
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] wiring: ECS consume canvas subnets/SGs (code done; real-deploy pending)
+  - [ ] wiring: ELBv2 consume canvas subnets/SGs/VPC (code done; real-deploy pending)
+  - [ ] wiring: RDS auto-bootstrap DB subnet group (code done; real-deploy pending)
+  - [ ] wiring: ElastiCache auto-bootstrap cache subnet group (code done; real-deploy pending)
   - [ ] feature flag: flip Compute
   - [ ] feature flag: flip Network
 - [ ] **A2 — ACM cert + DNS**

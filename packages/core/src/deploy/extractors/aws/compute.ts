@@ -60,6 +60,41 @@ export function extract_ecs_service_properties(data: Record<string, unknown>, re
 }
 
 /**
+ * Worker-mode ECS service — backs Compute.Worker. Differs from the
+ * standard service in three ways:
+ *
+ *  - `service_type: 'worker'` flag the handler reads to skip the
+ *    load-balancer target-group attachment and the listener wiring.
+ *  - Public IP defaults OFF (workers usually live in private subnets
+ *    and reach the world via NAT / VPC Endpoint).
+ *  - Port defaults are dropped (workers consume queues, don't serve
+ *    HTTP). Operators can still set `port` if the worker exposes a
+ *    health-check endpoint.
+ *
+ * Resolves to the same `aws.ecs.service` handler — the worker shape
+ * is a property variant, not a separate resource.
+ */
+export function extract_ecs_worker_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+  return {
+    region,
+    service_type: 'worker',
+    image: (data.image as string) || '',
+    repository: (data.repository as string) || '',
+    branch: (data.branch as string) || 'main',
+    port: (data.port as number) || undefined,
+    desired_count: data.minInstances ?? 1,
+    min_capacity: data.minInstances ?? 1,
+    max_capacity: data.maxInstances ?? 3,
+    cpu: data.cpu || '256',
+    memory: data.memory || '512',
+    assign_public_ip: data.assign_public_ip === true,
+    internal: true,
+    env_vars: data.envVars || {},
+    tags: {},
+  };
+}
+
+/**
  * Lambda function. The handler accepts the S3-ref code source today
  * (`code: { s3Bucket, s3Key }`); auto-build from a connected
  * Source.Repository ships in commit #28 (Phase 3).

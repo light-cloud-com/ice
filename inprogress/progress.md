@@ -74,17 +74,17 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - [ ] cleanup-orphans tested locally
 - [ ] **A7 — Block coverage completeness**
   - [ ] amplify-hosting handler (Compute.SSRSite)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] amazon-mq handler (Messaging.RabbitMQ)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] wafv2 handler (Security.WAF)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] vpc-endpoint handler (Network.PrivateNetwork)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] opensearch-serverless split (AI.VectorDB)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
-  - [ ] ecs worker extractor variant (Compute.Worker)
-    - [ ] (C) extractor · [ ] (C) mocked test · [ ] (D) live test (ECS worker mode)
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [x] ecs worker extractor variant (Compute.Worker)
+    - [x] (C) extractor · [x] (C) mocked test · [ ] (D) live test (ECS worker mode)
 
 ### A — existing-handler deploy gates (21 handlers in the foundation PR)
 

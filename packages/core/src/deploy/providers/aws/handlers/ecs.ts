@@ -58,6 +58,14 @@ export const ecs_handler: AWSResourceHandler = {
       // pass through; canvas-driven entries are appended.
       const network = await resolve_aws_network_refs(properties, ctx);
 
+      // Worker-mode services skip portMappings (they're queue
+      // consumers, not HTTP servers) unless an explicit port is set
+      // for a health-check endpoint.
+      const isWorker = properties.service_type === 'worker';
+      const port = properties.port as number | undefined;
+      const portMappings =
+        port && !isWorker ? [{ containerPort: port }] : isWorker && port ? [{ containerPort: port }] : undefined;
+
       ctx.on_step?.(name, { label: 'Registering task definition', index: 2, total: 4 });
       const taskDef = await client.send(
         new ecs.RegisterTaskDefinitionCommand({
@@ -71,7 +79,7 @@ export const ecs_handler: AWSResourceHandler = {
             {
               name,
               image: properties.image as string,
-              portMappings: [{ containerPort: properties.port as number }],
+              portMappings,
               environment: Object.entries((properties.env_vars as Record<string, string>) || {}).map(([k, v]) => ({
                 name: k,
                 value: v,

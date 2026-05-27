@@ -48,6 +48,7 @@ import {
 } from './aws/ancillary';
 import {
   extract_ecs_service_properties,
+  extract_ecs_worker_properties,
   extract_lambda_function_properties,
   extract_events_rule_properties,
 } from './aws/compute';
@@ -121,6 +122,9 @@ export const PROPERTY_EXTRACTORS: Record<
 
   // ─── AWS — compute ─────────────────────────────────────────────────
   'aws.ecs.service': extract_ecs_service_properties,
+  // Worker variant — resolves to the same handler but with the
+  // `service_type: 'worker'` shape flag the handler reads.
+  'aws.ecs.worker': extract_ecs_worker_properties,
   'aws.lambda.function': extract_lambda_function_properties,
   'aws.events.rule': extract_events_rule_properties,
 

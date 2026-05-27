@@ -38,8 +38,8 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 ## Providers at a glance
 
 - 🟢 **Google Cloud - stable(ish).** 20 service handlers, 45+ importers, full create / update / destroy.
-- 🟡 **AWS - in progress.** 17 service handlers + 20 extractors; staged rollout via feature flags — see [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md) for the per-category state.
-- 🟡 **Azure - in progress.**
+- 🟡 **AWS - in progress.** 20+ service handlers + extractors covering Compute (ECS, Lambda, EC2), Database (RDS / DynamoDB / DocDB / Redshift / ElastiCache), Network (VPC / Subnet / SG / VPC Endpoint / ELBv2 / CloudFront / ACM / Route53), Storage (S3), Messaging (SQS / SNS / EventBridge / Amazon MQ), Security (Secrets Manager / Cognito / WAFv2), AI/Analytics (Bedrock / SageMaker / OpenSearch / OpenSearch Serverless / Redshift), Frontend (CloudFront / Amplify Hosting), Monitoring (CloudWatch Logs), Source (CodeBuild). Staged rollout via feature flags — see [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md).
+- 🟡 **Azure - in progress.** 35+ service handlers + extractors covering Compute (VM, Web App, Functions, Container Apps, Static Web Apps, AKS, ACR), Database (PostgreSQL Flex, MySQL Flex, Cosmos SQL+Mongo, Redis Cache, SQL Server), Storage (Blob), Messaging (Service Bus + AMQP/RabbitMQ branch, Event Hubs, Event Grid, Logic Apps), Network (VNet, Subnet, NSG, Private Endpoint, DNS Zone, App Gateway, Front Door, APIM, WAF), Observability (Log Analytics, App Insights), Security (Key Vault, Entra B2C), AI/Analytics (Cognitive Search, Azure OpenAI, Azure ML, Synapse, Data Explorer). See [`packages/core/src/deploy/providers/azure/README.md`](packages/core/src/deploy/providers/azure/README.md).
 - ⚪ **IBM Cloud - planned.**
 - ⚪ **Kubernetes - planned.**
 - ⚪ **Alibaba Cloud - planned.**

@@ -241,8 +241,8 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 auth.ts: `validate_azure_credentials`
   - 🟢 auth.ts: `list_azure_subscriptions`
   - 🔴 wire validation into provider settings UI
-  - 🟢 per-handler mocked-SDK tests (B2 P0 + consolidated P1 + P2 smoke tests; 1527 deploy tests green)
-  - 🔴 `errors/import-errors/azure.ts` error mapping
+  - 🟢 per-handler mocked-SDK tests (B2 P0 + consolidated P1 + P2 smoke tests; 1528 deploy tests green)
+  - 🟢 `errors/import-errors/azure.ts` error mapping (already existed; classifyAzureError covers auth/quota/throttle/network paths)
 - 🔴 **B6 — Feature flags (each flips only when every handler in the category has C + D)**
   - 🔴 `azure.enabled = true`
   - 🔴 Storage

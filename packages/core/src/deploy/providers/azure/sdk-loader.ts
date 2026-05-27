@@ -94,5 +94,20 @@ export async function initialize_azure_clients(
   if (containerApps)
     clients.set('container-apps', new containerApps.ContainerAppsAPIClient(credential, subscription_id));
 
+  const dns = await load_azure_sdk('@azure/arm-dns');
+  if (dns) clients.set('dns', new dns.DnsManagementClient(credential, subscription_id));
+
+  const aks = await load_azure_sdk('@azure/arm-containerservice');
+  if (aks) clients.set('aks', new aks.ContainerServiceClient(credential, subscription_id));
+
+  const acr = await load_azure_sdk('@azure/arm-containerregistry');
+  if (acr) clients.set('acr', new acr.ContainerRegistryManagementClient(credential, subscription_id));
+
+  const apim = await load_azure_sdk('@azure/arm-apimanagement');
+  if (apim) clients.set('apim', new apim.ApiManagementClient(credential, subscription_id));
+
+  const cdn = await load_azure_sdk('@azure/arm-cdn');
+  if (cdn) clients.set('cdn', new cdn.CdnManagementClient(credential, subscription_id));
+
   return { credential, clients };
 }

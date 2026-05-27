@@ -13,16 +13,24 @@
  * and add one entry to HANDLER_REGISTRY.
  */
 
+import { acr_handler } from './handlers/acr';
+import { aks_handler } from './handlers/aks';
+import { apim_handler } from './handlers/apim';
+import { app_gateway_handler } from './handlers/app-gateway';
 import { app_insights_handler } from './handlers/app-insights';
 import { app_service_plan_handler } from './handlers/app-service';
+import { azure_waf_handler } from './handlers/azure-waf';
 import { container_apps_handler } from './handlers/container-apps';
 import { cosmosdb_handler } from './handlers/cosmosdb';
+import { dns_zone_handler } from './handlers/dns-zone';
+import { front_door_handler } from './handlers/front-door';
 import { functions_handler } from './handlers/functions';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
 import { mysql_flex_handler } from './handlers/mysql-flex';
 import { nsg_handler } from './handlers/nsg';
 import { postgresql_flex_handler } from './handlers/postgresql-flex';
+import { private_endpoint_handler } from './handlers/private-endpoint';
 import { redis_cache_handler } from './handlers/redis-cache';
 import { service_bus_handler } from './handlers/service-bus';
 import { static_web_apps_handler } from './handlers/static-web-apps';
@@ -56,10 +64,18 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.postgresqlflex.server', handler: postgresql_flex_handler },
   { prefix: 'azure.mysqlflex.server', handler: mysql_flex_handler },
   { prefix: 'azure.cache.redis', handler: redis_cache_handler },
-  // Network primitives — order matters; subnet is more specific than vnet.
+  // Network primitives — order matters; more-specific prefixes first.
   { prefix: 'azure.network.virtualNetwork', handler: vnet_handler },
   { prefix: 'azure.network.subnet', handler: subnet_handler },
   { prefix: 'azure.network.networkSecurityGroup', handler: nsg_handler },
+  { prefix: 'azure.network.privateEndpoint', handler: private_endpoint_handler },
+  { prefix: 'azure.network.dnsZone', handler: dns_zone_handler },
+  { prefix: 'azure.network.applicationGateway', handler: app_gateway_handler },
+  { prefix: 'azure.network.frontDoor', handler: front_door_handler },
+  { prefix: 'azure.network.webApplicationFirewallPolicy', handler: azure_waf_handler },
+  { prefix: 'azure.apimanagement.service', handler: apim_handler },
+  { prefix: 'azure.containerservice.managedCluster', handler: aks_handler },
+  { prefix: 'azure.containerregistry.registry', handler: acr_handler },
 ];
 // Note: azure.web.staticSite is registered above with the other
 // azure.web.* entries — its prefix is more specific than azure.web.app

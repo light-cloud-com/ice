@@ -11,6 +11,7 @@
  *   - aws.ec2.securityGroup          (Network.SecurityGroup)
  *   - aws.acm.certificate            (Security.Certificate)
  *   - aws.route53.recordSet          (Network.CustomDomain DNS records)
+ *   - aws.amplify.app                (Compute.SSRSite)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -211,6 +212,28 @@ export function extract_route53_record_properties(
   return {
     hosted_zone_id: (data.hosted_zone_id as string) || (data.zoneId as string) || '',
     records: (data.records as unknown[]) ?? [],
+    tags: {},
+  };
+}
+
+/**
+ * Amplify Hosting app (Compute.SSRSite). Source.Repository wiring
+ * supplies `repository` + `branch` + build settings via pass-1-4.
+ * Platform defaults to WEB_COMPUTE (Next.js / Nuxt / Astro SSR);
+ * static-only sites can set `platform: 'WEB'`.
+ */
+export function extract_amplify_app_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    platform: (data.platform as string) || 'WEB_COMPUTE',
+    auto_build: data.auto_build !== false,
+    build_spec: (data.buildSpec as string) || (data.build_spec as string) || undefined,
+    environment_variables:
+      (data.environmentVariables as Record<string, string>) ||
+      (data.environment_variables as Record<string, string>) ||
+      {},
     tags: {},
   };
 }

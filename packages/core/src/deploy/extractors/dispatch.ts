@@ -65,6 +65,7 @@ import {
   extract_security_group_properties as extract_aws_security_group_properties,
   extract_acm_certificate_properties as extract_aws_acm_certificate_properties,
   extract_route53_record_properties as extract_aws_route53_record_properties,
+  extract_amplify_app_properties as extract_aws_amplify_app_properties,
 } from './aws/network';
 import {
   extract_cloud_run_properties,
@@ -136,6 +137,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.ec2.securityGroup': extract_aws_security_group_properties,
   'aws.acm.certificate': extract_aws_acm_certificate_properties,
   'aws.route53.recordSet': extract_aws_route53_record_properties,
+  'aws.amplify.app': extract_aws_amplify_app_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

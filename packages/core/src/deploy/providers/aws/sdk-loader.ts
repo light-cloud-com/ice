@@ -112,6 +112,19 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   const codebuild = await load_aws_sdk('@aws-sdk/client-codebuild');
   if (codebuild) clients.set('codebuild', new codebuild.CodeBuildClient({ region }));
 
+  const amplify = await load_aws_sdk('@aws-sdk/client-amplify');
+  if (amplify) clients.set('amplify', new amplify.AmplifyClient({ region }));
+
+  const mq = await load_aws_sdk('@aws-sdk/client-mq');
+  if (mq) clients.set('mq', new mq.MqClient({ region }));
+
+  const wafv2 = await load_aws_sdk('@aws-sdk/client-wafv2');
+  if (wafv2) clients.set('wafv2', new wafv2.WAFV2Client({ region }));
+
+  const opensearchServerless = await load_aws_sdk('@aws-sdk/client-opensearchserverless');
+  if (opensearchServerless)
+    clients.set('opensearch-serverless', new opensearchServerless.OpenSearchServerlessClient({ region }));
+
   return clients;
 }
 

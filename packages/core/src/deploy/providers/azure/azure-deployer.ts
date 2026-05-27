@@ -33,7 +33,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.web.app', handler: web_app_handler },
   { prefix: 'azure.keyvault.vault', handler: key_vault_handler },
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },
-  { prefix: 'azure.monitor.log_analytics', handler: log_analytics_handler },
+  { prefix: 'azure.monitor.logAnalytics', handler: log_analytics_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

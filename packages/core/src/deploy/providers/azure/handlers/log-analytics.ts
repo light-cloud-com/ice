@@ -12,7 +12,7 @@ import { extract_resource_group_from_id } from '../resource-group';
 import { err, ok, sdkMissing } from './_result';
 import type { AzureResourceHandler } from '../types';
 
-const TYPE = 'azure.monitor.log_analytics';
+const TYPE = 'azure.monitor.logAnalytics';
 const SDK = '@azure/arm-operationalinsights';
 
 export const log_analytics_handler: AzureResourceHandler = {

@@ -35,11 +35,19 @@ export const events_rule_handler: AWSResourceHandler = {
         }),
       );
 
-      if (properties.target_arn) {
+      // Resolve target ARN: operator-supplied wins; otherwise derive
+      // from canvas-wired Compute.ServerlessFunction name + account/region.
+      let targetArn = properties.target_arn as string | undefined;
+      if (!targetArn && properties.connected_target_lambda_name) {
+        const account = await ctx.ensure_account_id();
+        targetArn = `arn:aws:lambda:${ctx.region}:${account}:function:${properties.connected_target_lambda_name}`;
+      }
+
+      if (targetArn) {
         await client.send(
           new ev.PutTargetsCommand({
             Rule: name,
-            Targets: [{ Id: '1', Arn: properties.target_arn as string }],
+            Targets: [{ Id: '1', Arn: targetArn }],
           }),
         );
       }

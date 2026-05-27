@@ -23,6 +23,8 @@ import type { MutableGraph } from '../../graph/mutable-graph';
 import type { CardEdgeInput, CardNodeInput } from '../card-translator';
 
 const NETWORK_PROVIDERS = new Set(['Network.Subnet', 'Network.SecurityGroup', 'Network.VPC']);
+const TARGET_LAMBDA_PROVIDERS = new Set(['Compute.ServerlessFunction']);
+const SCHEDULER_TYPES = new Set(['Compute.CronJob']);
 
 function ice_type(node: CardNodeInput): string {
   return (node.data?.iceType as string) || '';
@@ -79,5 +81,35 @@ export function wire_aws_network(
     const current = Array.isArray(props[key]) ? (props[key] as string[]) : [];
     push_unique(current, netName);
     props[key] = current;
+  }
+
+  // Second sweep: stamp `connected_target_lambda_name` on Compute.CronJob
+  // blocks connected to a Compute.ServerlessFunction. The events-rule
+  // handler resolves the name → Lambda ARN at dispatch time and registers
+  // it as the rule's target.
+  for (const edge of edges) {
+    const src = nodes.find((n) => n.id === edge.source);
+    const dst = nodes.find((n) => n.id === edge.target);
+    if (!src || !dst) continue;
+    const srcType = ice_type(src);
+    const dstType = ice_type(dst);
+    let lambdaNode: CardNodeInput;
+    let cronNode: CardNodeInput;
+    if (SCHEDULER_TYPES.has(srcType) && TARGET_LAMBDA_PROVIDERS.has(dstType)) {
+      cronNode = src;
+      lambdaNode = dst;
+    } else if (SCHEDULER_TYPES.has(dstType) && TARGET_LAMBDA_PROVIDERS.has(srcType)) {
+      cronNode = dst;
+      lambdaNode = src;
+    } else {
+      continue;
+    }
+    const cronName = card_id_to_name.get(cronNode.id);
+    const lambdaName = card_id_to_name.get(lambdaNode.id);
+    if (!cronName || !lambdaName) continue;
+    const cronGraphNode = graph.get_node_by_name(cronName);
+    if (!cronGraphNode) continue;
+    const props = cronGraphNode.properties as Record<string, unknown>;
+    if (!props.connected_target_lambda_name) props.connected_target_lambda_name = lambdaName;
   }
 }

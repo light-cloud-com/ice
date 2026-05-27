@@ -32,9 +32,9 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - [ ] feature flag: flip Network
 - [ ] **A2 — ACM cert + DNS**
   - [ ] acm handler (Security.Certificate)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] route53 handler (Network.CustomDomain)
-    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+    - [x] (C) handler · [x] (C) extractor · [x] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
   - [ ] cloudfront: consume canvas cert (handler edit + re-verify)
     - [ ] (C) handler edit · [ ] (C) mocked test update · [ ] (D) live test re-run
   - [ ] feature flag: flip Frontend

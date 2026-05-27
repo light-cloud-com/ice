@@ -83,7 +83,11 @@ import {
   extract_azure_container_apps_properties,
   extract_azure_function_app_properties,
 } from './azure/compute';
-import { extract_azure_cosmosdb_account_properties } from './azure/database';
+import {
+  extract_azure_cosmosdb_account_properties,
+  extract_azure_mysql_flex_properties,
+  extract_azure_postgresql_flex_properties,
+} from './azure/database';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
@@ -171,6 +175,8 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.containerapps.app': extract_azure_container_apps_properties,
   'azure.web.functionApp': extract_azure_function_app_properties,
   'azure.cosmosdb.account': extract_azure_cosmosdb_account_properties,
+  'azure.postgresqlflex.server': extract_azure_postgresql_flex_properties,
+  'azure.mysqlflex.server': extract_azure_mysql_flex_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

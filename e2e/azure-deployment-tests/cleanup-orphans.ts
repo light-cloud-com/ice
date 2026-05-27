@@ -27,8 +27,8 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const TAG_KEY = 'ice:test-run-id';
-const ORPHAN_AGE_HOURS = 1;
+export const TAG_KEY = 'ice:test-run-id';
+export const ORPHAN_AGE_HOURS = 1;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RUNS_DIR = resolve(__dirname, 'runs');
@@ -73,10 +73,10 @@ function readRunRegister(): Map<string, Date> {
   return register;
 }
 
-function isOrphan(runId: string, register: Map<string, Date>): boolean {
+export function isOrphan(runId: string, register: Map<string, Date>, now: Date = new Date()): boolean {
   const lastSeen = register.get(runId);
   if (!lastSeen) return true;
-  const ageHours = (Date.now() - lastSeen.getTime()) / (1000 * 60 * 60);
+  const ageHours = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60);
   return ageHours >= ORPHAN_AGE_HOURS;
 }
 

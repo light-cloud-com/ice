@@ -7,6 +7,7 @@
  *   - aws.cloudfront.distribution    (Network.PublicEndpoint, Network.CustomDomain)
  *   - aws.elbv2.loadBalancer         (Network.LoadBalancer)
  *   - aws.ec2.vpc                    (Network.VPC, Network.PrivateNetwork)
+ *   - aws.ec2.subnet                 (Network.Subnet)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -120,6 +121,37 @@ export function extract_vpc_properties(data: Record<string, unknown>, _region: s
     instance_tenancy: (data.instance_tenancy as string) || 'default',
     enable_dns_support: data.enable_dns_support ?? true,
     enable_dns_hostnames: data.enable_dns_hostnames === true,
+    tags: {},
+  };
+}
+
+/**
+ * Subnet. AWS subnets are zonal — when the canvas doesn't pin an AZ,
+ * derive a stable one from the node id so two subnets in the same
+ * canvas land in different AZs (matching what `gcp/handlers/subnet.ts`
+ * does via the third arg to the extractor).
+ */
+const AZ_SUFFIXES = ['a', 'b', 'c', 'd', 'e', 'f'];
+
+export function extract_subnet_properties(
+  data: Record<string, unknown>,
+  region: string,
+  node_id?: string,
+): Record<string, unknown> {
+  // Stable AZ assignment: hash node_id → suffix. Canvas with three
+  // subnet blocks lands in 'a', 'b', 'c' deterministically.
+  let azSuffix: string | undefined;
+  if (data.availability_zone) {
+    azSuffix = undefined; // operator-supplied, pass through
+  } else if (node_id) {
+    let acc = 0;
+    for (const ch of node_id) acc = (acc * 31 + ch.charCodeAt(0)) | 0;
+    azSuffix = AZ_SUFFIXES[Math.abs(acc) % AZ_SUFFIXES.length];
+  }
+  return {
+    cidr_block: (data.cidr_block as string) || (data.cidr as string) || '10.0.0.0/24',
+    availability_zone: (data.availability_zone as string) || (azSuffix ? `${region}${azSuffix}` : undefined),
+    map_public_ip_on_launch: data.map_public_ip_on_launch === true || data.public === true,
     tags: {},
   };
 }

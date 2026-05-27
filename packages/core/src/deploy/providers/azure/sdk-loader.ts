@@ -86,5 +86,9 @@ export async function initialize_azure_clients(
   if (loganalytics)
     clients.set('log-analytics', new loganalytics.OperationalInsightsManagementClient(credential, subscription_id));
 
+  const appinsights = await load_azure_sdk('@azure/arm-appinsights');
+  if (appinsights)
+    clients.set('app-insights', new appinsights.ApplicationInsightsManagementClient(credential, subscription_id));
+
   return { credential, clients };
 }

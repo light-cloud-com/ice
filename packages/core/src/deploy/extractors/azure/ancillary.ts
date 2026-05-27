@@ -70,3 +70,22 @@ export function extract_azure_log_analytics_properties(
     tags: {},
   };
 }
+
+/**
+ * Application Insights component — backs Monitoring.Metrics on Azure.
+ * Workspaces hold the underlying telemetry; the component is the
+ * instrumentation endpoint. `workspace_resource_id` wires to a
+ * Log Analytics workspace.
+ */
+export function extract_azure_app_insights_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    application_type: (data.application_type as string) || 'web',
+    workspace_resource_id: (data.workspace_resource_id as string) || undefined,
+    tags: {},
+  };
+}

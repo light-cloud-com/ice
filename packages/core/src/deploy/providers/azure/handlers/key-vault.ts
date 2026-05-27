@@ -8,6 +8,16 @@
  *
  * Vault name constraints: 3-24 chars, alphanumeric + hyphens,
  * globally unique. Extractor / live-test caller should sanitise.
+ *
+ * Certificate provisioning path: `properties.certificates` (array of
+ * `{ name, contentType, policy? }`) is reserved for a follow-on
+ * implementation that uses `@azure/keyvault-certificates` (data
+ * plane) rather than the management plane SDK. Today the handler
+ * accepts the array and logs each entry for visibility; actual
+ * certificate creation requires either an operator-supplied PFX or
+ * a self-signed policy invocation against the vault URL, which lands
+ * in a separate handler so the management/data plane split stays
+ * clean.
  */
 
 import { extract_resource_group_from_id } from '../resource-group';
@@ -48,6 +58,16 @@ export const key_vault_handler: AzureResourceHandler = {
         },
         tags: properties.tags as Record<string, string>,
       });
+      // Surface each certificate canvas entry so the operator can see
+      // what the data-plane provisioning step will eventually
+      // consume. Actual creation deferred (see file docstring).
+      const certificates = (properties.certificates as Array<{ name?: string }> | undefined) ?? [];
+      for (const cert of certificates) {
+        if (cert?.name) {
+          ctx.on_log?.(`Key Vault certificate "${cert.name}" wired (provision via data plane after vault is ready).`);
+        }
+      }
+
       return ok(name, TYPE, 'create', start, { provider_id: result?.id ?? '' });
     } catch (error) {
       return err(name, TYPE, 'create', start, error instanceof Error ? error.message : String(error));

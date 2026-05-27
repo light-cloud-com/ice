@@ -119,13 +119,25 @@ function makeWebModule() {
   const beginCreateOrUpdateAndWait = vi.fn();
   const update = vi.fn();
   const del = vi.fn();
+  // App Service Plan auto-bootstrap: web-app handler calls
+  // appServicePlans.get to check for an existing plan, then
+  // beginCreateOrUpdateAndWait if missing. The mock returns a
+  // pre-existing id so the create path doesn't have to provision.
+  const planGet = vi.fn().mockResolvedValue({
+    id: '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Web/serverfarms/ice-default-plan',
+  });
+  const planCreate = vi.fn().mockResolvedValue({
+    id: '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Web/serverfarms/ice-default-plan',
+  });
   class WebSiteManagementClient {
     webApps: any;
+    appServicePlans: any;
     constructor(_credential: any, _subscriptionId: string) {
       this.webApps = { beginCreateOrUpdateAndWait, update, delete: del };
+      this.appServicePlans = { get: planGet, beginCreateOrUpdateAndWait: planCreate };
     }
   }
-  return { WebSiteManagementClient, beginCreateOrUpdateAndWait, update, del };
+  return { WebSiteManagementClient, beginCreateOrUpdateAndWait, update, del, planGet, planCreate };
 }
 
 // Default registry: every SDK loads successfully.

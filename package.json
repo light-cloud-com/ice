@@ -1,7 +1,7 @@
 {
   "name": "ice",
   "license": "Apache-2.0",
-  "version": "0.1.859",
+  "version": "0.1.860",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",

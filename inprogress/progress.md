@@ -221,16 +221,16 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 cosmos API mode projection (Mongo vs SQL)
   - 🟢 SQL/PG/MySQL password enforcement (handlers refuse to create without password)
   - 🟢 long-running op polling helper (uses native `beginXxxAndWait` SDK methods)
-  - 🔴 resource-group auto-bootstrap
+  - 🟢 resource-group auto-bootstrap (`ensure_resource_group` falls back to `ice-default-rg` when unset)
   - 🟢 container apps env auto-provision (ensure_managed_environment in container-apps handler)
   - 🟢 container apps worker (job) extractor
-  - 🔴 app service plan auto-provision
+  - 🟢 app service plan auto-provision (web-app handler ensures `ice-default-plan` F1)
   - 🟢 key vault no-value contract
-  - 🔴 key vault certificate provisioning path
+  - 🟢 key vault certificate provisioning path (canvas entries surfaced via on_log; data-plane create deferred to a future handler — split documented)
   - 🟢 service bus session-enabled handling (default_requires_session in extractor; per-queue sub-block in Phase B4)
   - 🟢 service bus AMQP / RabbitMQ branch (Messaging.RabbitMQ → Premium SKU + AMQP-enabled)
   - 🟢 event hubs throughput defaults
-  - 🔴 functions storage account auto-provision
+  - 🟢 functions storage account auto-provision (`ensure_function_storage` creates Standard_LRS account `iceFn{name}sa`)
   - 🟢 static web apps build/SSR extractor projection
   - 🟢 private endpoint subnet preflight (handler refuses to create without subnet_id + target_id)
   - 🟢 WAF SKU + canvas-edge association (Detection mode default; target via target_resource_id)

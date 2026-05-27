@@ -72,7 +72,10 @@ import {
   extract_wafv2_web_acl_properties as extract_aws_wafv2_web_acl_properties,
   extract_vpc_endpoint_properties as extract_aws_vpc_endpoint_properties,
 } from './aws/network';
-import { extract_azure_keyvault_vault_properties } from './azure/ancillary';
+import {
+  extract_azure_keyvault_vault_properties,
+  extract_azure_servicebus_namespace_properties,
+} from './azure/ancillary';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
@@ -153,6 +156,7 @@ export const PROPERTY_EXTRACTORS: Record<
 
   // ─── Azure — ancillary ─────────────────────────────────────────────
   'azure.keyvault.vault': extract_azure_keyvault_vault_properties,
+  'azure.servicebus.namespace': extract_azure_servicebus_namespace_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

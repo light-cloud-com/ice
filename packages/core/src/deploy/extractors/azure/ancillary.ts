@@ -2,7 +2,8 @@
  * Property extractors for Azure ancillary services.
  *
  * Resources covered:
- *   - azure.keyvault.vault   (Security.Secret, Security.Certificate)
+ *   - azure.keyvault.vault           (Security.Secret, Security.Certificate)
+ *   - azure.servicebus.namespace     (Messaging.ServiceBus + Queue + Topic)
  *
  * Vault name needs to be globally unique + 3-24 chars + alphanumeric/hyphens.
  * The translator gives us the resource name; we don't sanitise here (the
@@ -30,6 +31,24 @@ export function extract_azure_keyvault_vault_properties(
     soft_delete_retention_days: (data.soft_delete_retention_days as number) ?? 7,
     enable_purge_protection: data.enable_purge_protection === true,
     bindings: Array.isArray(data.secrets) ? data.secrets : [],
+    tags: {},
+  };
+}
+
+/**
+ * Service Bus namespace — backs Messaging.ServiceBus, Messaging.Queue,
+ * Messaging.Topic on Azure. Default SKU = Standard (cheapest tier
+ * supporting topics + sessions).
+ */
+export function extract_azure_servicebus_namespace_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    sku: (data.sku as string) || 'Standard',
+    zone_redundant: data.zone_redundant === true,
     tags: {},
   };
 }

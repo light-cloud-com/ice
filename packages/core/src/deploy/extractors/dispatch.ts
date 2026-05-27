@@ -67,6 +67,7 @@ import {
   extract_acm_certificate_properties as extract_aws_acm_certificate_properties,
   extract_route53_record_properties as extract_aws_route53_record_properties,
   extract_amplify_app_properties as extract_aws_amplify_app_properties,
+  extract_wafv2_web_acl_properties as extract_aws_wafv2_web_acl_properties,
 } from './aws/network';
 import {
   extract_cloud_run_properties,
@@ -140,6 +141,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.route53.recordSet': extract_aws_route53_record_properties,
   'aws.amplify.app': extract_aws_amplify_app_properties,
   'aws.mq.broker': extract_amazon_mq_broker_properties,
+  'aws.wafv2.webAcl': extract_aws_wafv2_web_acl_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

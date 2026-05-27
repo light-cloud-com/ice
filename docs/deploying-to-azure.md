@@ -25,7 +25,32 @@ Same flow as [deploying-to-gcp.md](deploying-to-gcp.md) - drag blocks, connect t
 
 ## What works today
 
-The block categories listed in the provider matrix (`docs/provider-status.md` - to be added) are the source of truth. As of this release, the Azure handler set covers compute, storage, and basic managed databases. Anything outside that set will either no-op or surface an "unsupported on Azure" error in the plan modal.
+The block categories listed in the provider matrix (`docs/provider-status.md`) are the source of truth. The Azure handler set spans:
+
+**Compute** — Virtual Machines, App Service (Web Apps + Plans), Container Apps (service + worker), Functions (serverless), Static Web Apps (SSR/static), AKS managed clusters, ACR registries.
+
+**Database** — PostgreSQL Flexible Server, MySQL Flexible Server, Cosmos DB (SQL + Mongo APIs), Cache for Redis.
+
+**Storage** — Blob Storage (Storage Accounts).
+
+**Messaging + integration** — Service Bus namespaces, Event Hubs, Event Grid topics, Logic Apps workflows.
+
+**Network** — Virtual Networks, Subnets, NSGs, Private Endpoints, DNS Zones, Application Gateways, Front Door, API Management, WAF policies.
+
+**Observability** — Log Analytics workspaces, App Insights components.
+
+**Security + identity** — Key Vault, Entra External ID (B2C) directories, WAF policies.
+
+**AI + analytics** — Cognitive Search (also backs AI.VectorDB), Azure OpenAI (`Microsoft.CognitiveServices/accounts` with `kind: OpenAI`), Azure ML workspaces, Synapse workspaces, Data Explorer (Kusto) clusters.
+
+Anything outside that set will either no-op or surface an "unsupported on Azure" error in the plan modal.
+
+### Defaults and quirks
+
+- **Cheapest tier by default.** Postgres / MySQL Flex use `Burstable B1ms/B1s`; Redis uses `Basic C0`; APIM uses `Developer` (no SLA); Static Web Apps uses `Free`; ACR uses `Basic`. Operators flip these via the block's properties panel.
+- **Password-enforced services** (PostgreSQL Flex, MySQL Flex, Synapse) refuse to create without an explicit administrator credential — wire a `Security.Secret` block or set the password property.
+- **Long-running operations.** Several Azure services take 15–45 minutes to provision (Redis, APIM Developer, AKS). The deploy event log shows the polling progress.
+- **Global-uniqueness names.** Storage Account, Container Registry, Static Web App, and B2C directory names must be globally unique; ICE appends a suffix automatically when the chosen name collides.
 
 ## Known gaps vs. GCP
 

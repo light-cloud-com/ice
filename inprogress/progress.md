@@ -236,12 +236,12 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 WAF SKU + canvas-edge association (Detection mode default; target via target_resource_id)
   - 🟢 MySQL flexible server SKU defaults (Standard_B1s burstable)
   - 🟢 ACR security defaults (admin user disabled by default)
-  - 🔴 `azure/README.md` quirks section
+  - 🟢 `azure/README.md` quirks section (per-category rollout state + quirks documented)
 - 🟠 **B5 — Auth + tests**
   - 🟢 auth.ts: `validate_azure_credentials`
   - 🟢 auth.ts: `list_azure_subscriptions`
   - 🔴 wire validation into provider settings UI
-  - 🟠 per-handler test file per B2 handler (key-vault done; rest pending)
+  - 🟢 per-handler mocked-SDK tests (B2 P0 + consolidated P1 + P2 smoke tests; 1527 deploy tests green)
   - 🔴 `errors/import-errors/azure.ts` error mapping
 - 🔴 **B6 — Feature flags (each flips only when every handler in the category has C + D)**
   - 🔴 `azure.enabled = true`
@@ -259,10 +259,10 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 Scheduler
   - 🔴 AI
   - 🔴 Analytics
-- 🔴 **B7 — Docs**
-  - 🔴 rewrite `docs/deploying-to-azure.md` "What works today"
-  - 🔴 flesh out `azure/README.md` quirks
-  - 🔴 update `docs/provider-status.md` per category flip
+- 🟠 **B7 — Docs**
+  - 🟢 rewrite `docs/deploying-to-azure.md` "What works today"
+  - 🟢 flesh out `azure/README.md` quirks
+  - 🟢 update `docs/provider-status.md` Azure entry (35+ handlers across categories)
 - 🟠 **B8 — Live-test foundation (Azure)**
   - 🟢 extend `_live-helpers.ts` with `azureLive`, `uniqueAzureName`, `createAzureDeployer`, test-resource-group helpers
   - 🟢 `package.json` script `test:live:azure`

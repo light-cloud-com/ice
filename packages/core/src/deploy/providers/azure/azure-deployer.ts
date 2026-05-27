@@ -41,6 +41,7 @@ import { postgresql_flex_handler } from './handlers/postgresql-flex';
 import { private_endpoint_handler } from './handlers/private-endpoint';
 import { redis_cache_handler } from './handlers/redis-cache';
 import { service_bus_handler } from './handlers/service-bus';
+import { sql_server_handler } from './handlers/sql-database';
 import { static_web_apps_handler } from './handlers/static-web-apps';
 import { storage_account_handler } from './handlers/storage-account';
 import { subnet_handler } from './handlers/subnet';
@@ -95,6 +96,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.synapse.workspace', handler: synapse_handler },
   { prefix: 'azure.kusto.cluster', handler: data_explorer_handler },
   { prefix: 'azure.aadb2c.directory', handler: entra_b2c_handler },
+  { prefix: 'azure.sql.server', handler: sql_server_handler },
 ];
 // Note: azure.web.staticSite is registered above with the other
 // azure.web.* entries — its prefix is more specific than azure.web.app

@@ -140,5 +140,8 @@ export async function initialize_azure_clients(
   const aad = await load_azure_sdk('@azure/arm-aad');
   if (aad) clients.set('aad', new aad.ActiveDirectoryB2CManagementClient(credential, subscription_id));
 
+  const sql = await load_azure_sdk('@azure/arm-sql');
+  if (sql) clients.set('sql', new sql.SqlManagementClient(credential, subscription_id));
+
   return { credential, clients };
 }

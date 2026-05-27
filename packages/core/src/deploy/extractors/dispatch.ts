@@ -97,6 +97,7 @@ import {
   extract_azure_mysql_flex_properties,
   extract_azure_postgresql_flex_properties,
   extract_azure_redis_cache_properties,
+  extract_azure_sql_server_properties,
 } from './azure/database';
 import {
   extract_azure_event_grid_properties,
@@ -207,6 +208,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.postgresqlflex.server': extract_azure_postgresql_flex_properties,
   'azure.mysqlflex.server': extract_azure_mysql_flex_properties,
   'azure.cache.redis': extract_azure_redis_cache_properties,
+  'azure.sql.server': extract_azure_sql_server_properties,
 
   // ─── Azure — network ───────────────────────────────────────────────
   'azure.network.virtualNetwork': extract_azure_vnet_properties,

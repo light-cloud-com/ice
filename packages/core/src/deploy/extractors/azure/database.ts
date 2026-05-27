@@ -6,6 +6,7 @@
  *   - azure.postgresqlflex.server       (Database.PostgreSQL)
  *   - azure.mysqlflex.server            (Database.MySQL)
  *   - azure.cache.redis                 (Database.Cache)
+ *   - azure.sql.server                  (Database.SQL — template-only)
  */
 
 /**
@@ -74,6 +75,26 @@ export function extract_azure_redis_cache_properties(
     enable_non_ssl_port: data.enable_non_ssl_port === true,
     minimum_tls_version: (data.minimum_tls_version as string) || '1.2',
     redis_version: (data.redis_version as string) || '6',
+    tags: {},
+  };
+}
+
+/**
+ * SQL Server (logical). Backs Database.SQL on Azure (template-only).
+ * Password is required. v12.0 is the only supported version today.
+ */
+export function extract_azure_sql_server_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    version: (data.version as string) || '12.0',
+    administrator_login: (data.administrator_login as string) || (data.master_username as string) || '',
+    administrator_login_password:
+      (data.administrator_login_password as string) || (data.master_user_password as string) || '',
+    public_network_access: (data.public_network_access as string) || 'Enabled',
     tags: {},
   };
 }

@@ -22,6 +22,7 @@ import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
 import { mysql_flex_handler } from './handlers/mysql-flex';
 import { postgresql_flex_handler } from './handlers/postgresql-flex';
+import { redis_cache_handler } from './handlers/redis-cache';
 import { service_bus_handler } from './handlers/service-bus';
 import { storage_account_handler } from './handlers/storage-account';
 import { virtual_machine_handler } from './handlers/virtual-machine';
@@ -49,6 +50,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.cosmosdb.account', handler: cosmosdb_handler },
   { prefix: 'azure.postgresqlflex.server', handler: postgresql_flex_handler },
   { prefix: 'azure.mysqlflex.server', handler: mysql_flex_handler },
+  { prefix: 'azure.cache.redis', handler: redis_cache_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

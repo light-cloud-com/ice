@@ -87,6 +87,7 @@ import {
   extract_azure_cosmosdb_account_properties,
   extract_azure_mysql_flex_properties,
   extract_azure_postgresql_flex_properties,
+  extract_azure_redis_cache_properties,
 } from './azure/database';
 import {
   extract_cloud_run_properties,
@@ -177,6 +178,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.cosmosdb.account': extract_azure_cosmosdb_account_properties,
   'azure.postgresqlflex.server': extract_azure_postgresql_flex_properties,
   'azure.mysqlflex.server': extract_azure_mysql_flex_properties,
+  'azure.cache.redis': extract_azure_redis_cache_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

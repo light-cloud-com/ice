@@ -74,6 +74,7 @@ import {
 } from './aws/network';
 import {
   extract_azure_keyvault_vault_properties,
+  extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
 } from './azure/ancillary';
 import {
@@ -157,6 +158,7 @@ export const PROPERTY_EXTRACTORS: Record<
   // ─── Azure — ancillary ─────────────────────────────────────────────
   'azure.keyvault.vault': extract_azure_keyvault_vault_properties,
   'azure.servicebus.namespace': extract_azure_servicebus_namespace_properties,
+  'azure.monitor.log_analytics': extract_azure_log_analytics_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

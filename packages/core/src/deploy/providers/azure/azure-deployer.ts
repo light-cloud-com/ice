@@ -14,6 +14,7 @@
  */
 
 import { key_vault_handler } from './handlers/key-vault';
+import { log_analytics_handler } from './handlers/log-analytics';
 import { service_bus_handler } from './handlers/service-bus';
 import { storage_account_handler } from './handlers/storage-account';
 import { virtual_machine_handler } from './handlers/virtual-machine';
@@ -32,6 +33,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.web.app', handler: web_app_handler },
   { prefix: 'azure.keyvault.vault', handler: key_vault_handler },
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },
+  { prefix: 'azure.monitor.log_analytics', handler: log_analytics_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

@@ -52,3 +52,21 @@ export function extract_azure_servicebus_namespace_properties(
     tags: {},
   };
 }
+
+/**
+ * Log Analytics workspace — backs Monitoring.Log on Azure. Default
+ * retention = 30 days. Pay-as-you-go SKU; switch to Free for 7-day
+ * + 500MB/day cap.
+ */
+export function extract_azure_log_analytics_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    sku: (data.sku as string) || 'PerGB2018',
+    retention_days: (data.retention_days as number) ?? (data.retention_in_days as number) ?? 30,
+    tags: {},
+  };
+}

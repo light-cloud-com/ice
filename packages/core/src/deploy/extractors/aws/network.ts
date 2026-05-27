@@ -8,6 +8,7 @@
  *   - aws.elbv2.loadBalancer         (Network.LoadBalancer)
  *   - aws.ec2.vpc                    (Network.VPC, Network.PrivateNetwork)
  *   - aws.ec2.subnet                 (Network.Subnet)
+ *   - aws.ec2.securityGroup          (Network.SecurityGroup)
  */
 
 import { hasBlockRole } from '@ice/constants';
@@ -152,6 +153,24 @@ export function extract_subnet_properties(
     cidr_block: (data.cidr_block as string) || (data.cidr as string) || '10.0.0.0/24',
     availability_zone: (data.availability_zone as string) || (azSuffix ? `${region}${azSuffix}` : undefined),
     map_public_ip_on_launch: data.map_public_ip_on_launch === true || data.public === true,
+    tags: {},
+  };
+}
+
+/**
+ * Security group. Canvas SecurityGroup blocks carry `ingress` / `egress`
+ * rule arrays with `{protocol, from_port, to_port, cidr_blocks, ...}`
+ * shape — pass them through verbatim; the handler maps to AWS shape.
+ */
+export function extract_security_group_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    description: (data.description as string) || '',
+    ingress: (data.ingress as unknown[]) ?? [],
+    egress: (data.egress as unknown[]) ?? [],
+    revoke_default_egress: data.revoke_default_egress === true,
     tags: {},
   };
 }

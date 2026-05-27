@@ -33,6 +33,7 @@ import { redshift_handler } from './handlers/redshift';
 import { s3_handler } from './handlers/s3';
 import { sagemaker_handler } from './handlers/sagemaker';
 import { secrets_manager_handler } from './handlers/secrets-manager';
+import { security_group_handler } from './handlers/security-group';
 import { sns_handler } from './handlers/sns';
 import { sqs_handler } from './handlers/sqs';
 import { subnet_handler } from './handlers/subnet';
@@ -54,6 +55,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   // More-specific EC2 prefixes must precede `aws.ec2.instance`.
   { prefix: 'aws.ec2.vpc', handler: vpc_handler },
   { prefix: 'aws.ec2.subnet', handler: subnet_handler },
+  { prefix: 'aws.ec2.securityGroup', handler: security_group_handler },
   { prefix: 'aws.ec2.instance', handler: ec2_handler },
   { prefix: 'aws.s3.bucket', handler: s3_handler },
   { prefix: 'aws.lambda.function', handler: lambda_handler },

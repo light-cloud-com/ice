@@ -62,6 +62,7 @@ import {
   extract_elbv2_load_balancer_properties,
   extract_vpc_properties as extract_aws_vpc_properties,
   extract_subnet_properties as extract_aws_subnet_properties,
+  extract_security_group_properties as extract_aws_security_group_properties,
 } from './aws/network';
 import {
   extract_cloud_run_properties,
@@ -130,6 +131,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.elbv2.loadBalancer': extract_elbv2_load_balancer_properties,
   'aws.ec2.vpc': extract_aws_vpc_properties,
   'aws.ec2.subnet': extract_aws_subnet_properties,
+  'aws.ec2.securityGroup': extract_aws_security_group_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

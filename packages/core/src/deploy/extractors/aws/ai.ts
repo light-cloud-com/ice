@@ -2,10 +2,11 @@
  * Property extractors for AWS AI / analytics services.
  *
  * Resources covered:
- *   - aws.opensearch.domain     (AI.VectorDB)
- *   - aws.bedrock.endpoint      (AI.LLMGateway)
- *   - aws.sagemaker.endpoint    (AI.ModelServing)
- *   - aws.redshift.cluster      (Analytics.DataWarehouse)
+ *   - aws.opensearch.domain                  (Analytics.Search; cluster mode)
+ *   - aws.opensearchserverless.collection    (AI.VectorDB; serverless k-NN)
+ *   - aws.bedrock.endpoint                   (AI.LLMGateway)
+ *   - aws.sagemaker.endpoint                 (AI.ModelServing)
+ *   - aws.redshift.cluster                   (Analytics.DataWarehouse)
  *
  * Both Bedrock and SageMaker iceTypes carry the same `llm` role in
  * the shared classifier table, but AWS gives them distinct managed
@@ -34,6 +35,25 @@ export function extract_opensearch_domain_properties(
     ebs_volume_size_gb: (data.ebs_volume_size_gb as number) ?? 10,
     encryption_at_rest: data.encryption_at_rest ?? true,
     node_to_node_encryption: data.node_to_node_encryption ?? true,
+    tags: {},
+  };
+}
+
+/**
+ * OpenSearch Serverless vector collection (AI.VectorDB). Default type
+ * is VECTORSEARCH so canvas blocks without explicit config get k-NN
+ * indexes for free. Standby replicas off by default (single OCU pool
+ * keeps cost low; flip to ENABLED for HA).
+ */
+export function extract_opensearch_serverless_collection_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    collection_type: (data.collection_type as string) || (data.type as string) || 'VECTORSEARCH',
+    description: (data.description as string) || '',
+    standby_replicas: data.standby_replicas === true ? 'ENABLED' : 'DISABLED',
     tags: {},
   };
 }

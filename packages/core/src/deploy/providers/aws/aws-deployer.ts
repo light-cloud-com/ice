@@ -32,6 +32,7 @@ import { elbv2_handler } from './handlers/elbv2';
 import { events_rule_handler } from './handlers/events-rule';
 import { lambda_handler } from './handlers/lambda';
 import { opensearch_handler } from './handlers/opensearch';
+import { opensearch_serverless_handler } from './handlers/opensearch-serverless';
 import { rds_handler } from './handlers/rds';
 import { redshift_handler } from './handlers/redshift';
 import { route53_handler } from './handlers/route53';
@@ -83,6 +84,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.apigateway.restApi', handler: api_gateway_handler },
   { prefix: 'aws.events.rule', handler: events_rule_handler },
   { prefix: 'aws.ecs.service', handler: ecs_handler },
+  { prefix: 'aws.opensearchserverless.collection', handler: opensearch_serverless_handler },
   { prefix: 'aws.opensearch.domain', handler: opensearch_handler },
   { prefix: 'aws.bedrock.endpoint', handler: bedrock_handler },
   { prefix: 'aws.sagemaker.endpoint', handler: sagemaker_handler },

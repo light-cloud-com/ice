@@ -33,6 +33,7 @@ import {
 } from './ancillary';
 import {
   extract_opensearch_domain_properties,
+  extract_opensearch_serverless_collection_properties,
   extract_bedrock_endpoint_properties,
   extract_sagemaker_endpoint_properties,
   extract_redshift_cluster_properties,
@@ -152,6 +153,7 @@ export const PROPERTY_EXTRACTORS: Record<
 
   // ─── AWS — AI / analytics ──────────────────────────────────────────
   'aws.opensearch.domain': extract_opensearch_domain_properties,
+  'aws.opensearchserverless.collection': extract_opensearch_serverless_collection_properties,
   'aws.bedrock.endpoint': extract_bedrock_endpoint_properties,
   'aws.sagemaker.endpoint': extract_sagemaker_endpoint_properties,
   'aws.redshift.cluster': extract_redshift_cluster_properties,

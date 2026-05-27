@@ -207,13 +207,13 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟠 data-explorer (template-only)
     - 🟢 (C) handler · 🟢 (C) extractor · 🔴 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
 - 🟠 **B3 — Extractor module files**
-  - 🔴 `extractors/azure/ai.ts`
+  - 🟢 `extractors/azure/ai.ts`
   - 🟢 `extractors/azure/ancillary.ts`
-  - 🔴 `extractors/azure/compute.ts`
-  - 🔴 `extractors/azure/database.ts`
-  - 🔴 `extractors/azure/messaging.ts`
-  - 🔴 `extractors/azure/network.ts`
-  - 🟠 every entry registered in `dispatch.ts` (key-vault + service-bus done)
+  - 🟢 `extractors/azure/compute.ts`
+  - 🟢 `extractors/azure/database.ts`
+  - 🟢 `extractors/azure/messaging.ts`
+  - 🟢 `extractors/azure/network.ts`
+  - 🟢 every entry registered in `dispatch.ts` (B2 P0 + P1 + P2 all wired)
   - 🔴 `dispatch.test.ts` Azure parity case
 - 🔴 **B4 — Quirks**
   - 🔴 storage account global-uniqueness suffix

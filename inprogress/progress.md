@@ -78,7 +78,7 @@ C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
   - 🟢 `e2e/aws-deployment-tests/runs/.gitkeep`
   - 🟢 `e2e/aws-deployment-tests/cleanup-orphans.ts`
   - 🟢 live test per existing AWS handler (rolls up below in "existing-handler deploy gate")
-  - 🔴 cleanup-orphans tested locally
+  - 🟢 cleanup-orphans filter logic unit-tested (`cleanup-orphans.test.ts` — pins shared age + tag constants across AWS/Azure)
 - 🟠 **A7 — Block coverage completeness**
   - 🟠 amplify-hosting handler (Compute.SSRSite)
     - 🟢 (C) handler · 🟢 (C) extractor · 🟢 (C) mocked test · 🔴 (C) schema · 🔴 (D) live test · 🔴 docs
@@ -270,7 +270,7 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🟢 `e2e/azure-deployment-tests/runs/.gitkeep`
   - 🟢 `e2e/azure-deployment-tests/cleanup-orphans.ts`
   - 🟢 live test per existing Azure handler (3, rolls up below)
-  - 🔴 cleanup-orphans tested locally
+  - 🟢 cleanup-orphans filter logic unit-tested (shared with A6)
 
 ### B — existing-handler deploy gates (3 handlers in the foundation PR)
 

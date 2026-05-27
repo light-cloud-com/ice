@@ -16,6 +16,7 @@
 import { app_insights_handler } from './handlers/app-insights';
 import { app_service_plan_handler } from './handlers/app-service';
 import { container_apps_handler } from './handlers/container-apps';
+import { cosmosdb_handler } from './handlers/cosmosdb';
 import { functions_handler } from './handlers/functions';
 import { key_vault_handler } from './handlers/key-vault';
 import { log_analytics_handler } from './handlers/log-analytics';
@@ -43,6 +44,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.monitor.logAnalytics', handler: log_analytics_handler },
   { prefix: 'azure.insights.appInsights', handler: app_insights_handler },
   { prefix: 'azure.containerapps.app', handler: container_apps_handler },
+  { prefix: 'azure.cosmosdb.account', handler: cosmosdb_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

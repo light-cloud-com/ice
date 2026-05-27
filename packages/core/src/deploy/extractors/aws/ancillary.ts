@@ -7,7 +7,26 @@
  *   - aws.cognito.userPool           (Security.Identity)
  *   - aws.secretsmanager.secret      (Security.Secret)
  *   - aws.cloudwatch.logGroup        (Monitoring.Log)
+ *   - aws.mq.broker                  (Messaging.RabbitMQ)
  */
+
+export function extract_amazon_mq_broker_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    engine_type: (data.engine as string) === 'activemq' ? 'ACTIVEMQ' : 'RABBITMQ',
+    engine_version: (data.engine_version as string) || '3.13',
+    host_instance_type: (data.host_instance_type as string) || 'mq.t3.micro',
+    deployment_mode: data.multi_az === true ? 'CLUSTER_MULTI_AZ' : 'SINGLE_INSTANCE',
+    publicly_accessible: data.publicly_accessible !== false,
+    admin_username: (data.admin_username as string) || '',
+    admin_password: (data.admin_password as string) || '',
+    auto_minor_version_upgrade: data.auto_minor_version_upgrade !== false,
+    tags: {},
+  };
+}
 
 /**
  * SQS queue. FIFO vs Standard is inferred from `data.fifo` (which

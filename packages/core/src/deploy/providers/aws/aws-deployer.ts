@@ -15,6 +15,7 @@
 
 import { create_account_id_resolver } from './account';
 import { acm_handler } from './handlers/acm';
+import { amazon_mq_handler } from './handlers/amazon-mq';
 import { amplify_hosting_handler } from './handlers/amplify-hosting';
 import { api_gateway_handler } from './handlers/api-gateway';
 import { bedrock_handler } from './handlers/bedrock';
@@ -85,6 +86,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AWSResourceHandler }> =
   { prefix: 'aws.route53.recordSet', handler: route53_handler },
   { prefix: 'aws.codebuild.project', handler: codebuild_handler },
   { prefix: 'aws.amplify.app', handler: amplify_hosting_handler },
+  { prefix: 'aws.mq.broker', handler: amazon_mq_handler },
 ];
 
 function resolve_handler(type: string): AWSResourceHandler | undefined {

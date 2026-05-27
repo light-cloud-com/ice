@@ -43,6 +43,7 @@ import {
   extract_cognito_user_pool_properties,
   extract_secrets_manager_secret_properties,
   extract_cloudwatch_log_group_properties,
+  extract_amazon_mq_broker_properties,
 } from './aws/ancillary';
 import {
   extract_ecs_service_properties,
@@ -138,6 +139,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.acm.certificate': extract_aws_acm_certificate_properties,
   'aws.route53.recordSet': extract_aws_route53_record_properties,
   'aws.amplify.app': extract_aws_amplify_app_properties,
+  'aws.mq.broker': extract_amazon_mq_broker_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

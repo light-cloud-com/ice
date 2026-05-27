@@ -294,30 +294,30 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 (D) Azure zero-diff round-trip on a real subscription
   - 🟢 relationships test (6 cases — nested, case-insensitive, dedupe, self-ref skip)
   - 🟢 integration test (existing azure-importer.test.ts passes against new module)
-- 🔴 **C3 — Cost estimation**
-  - 🔴 AWS cost-data coverage inventory
-  - 🔴 Azure cost-data coverage inventory
-  - 🔴 populate AWS prices for Phase A categories
-  - 🔴 populate Azure prices for Phase B categories
-  - 🔴 coverage regression test
+- 🟠 **C3 — Cost estimation**
+  - 🟢 AWS cost-data coverage inventory (regression test enforces aws+azure presence per tier)
+  - 🟢 Azure cost-data coverage inventory (rabbitmq, serverless-function, service-bus all carry Azure variants now)
+  - 🟢 populate AWS prices for Phase A categories (service-bus SQS+SNS analog filled)
+  - 🟢 populate Azure prices for Phase B categories (Functions Consumption→EP1/2/3, Service Bus Premium for RabbitMQ)
+  - 🟢 coverage regression test (`SCALE_PRESETS — provider coverage (C3 regression)`)
 
 ## Phase D — Status flip
 
 - 🔴 **D1 — Bump readiness**
-  - 🔴 `PROVIDER_READINESS.aws = 'stable'`
-  - 🔴 `PROVIDER_READINESS.azure = 'stable'`
-- 🔴 **D2 — User-facing docs**
-  - 🔴 refresh `docs/deploying-to-aws.md`
-  - 🔴 refresh `docs/deploying-to-azure.md`
-  - 🔴 refresh `docs/provider-status.md` matrix
-  - 🔴 README provider callouts
-- 🔴 **D3 — Operator notes**
-  - 🔴 AWS operator notes refresh
-  - 🔴 Azure operator notes refresh
-- 🔴 **D4 — ROADMAP cleanup**
-  - 🔴 ROADMAP "Providers" section refresh
-- 🔴 **D5 — Changelog**
-  - 🔴 CHANGELOG entry
+  - 🔴 `PROVIDER_READINESS.aws = 'stable'` (cardinal-rule blocked — needs deploy-gate sweep)
+  - 🔴 `PROVIDER_READINESS.azure = 'stable'` (cardinal-rule blocked — needs deploy-gate sweep)
+- 🟢 **D2 — User-facing docs**
+  - 🟢 refresh `docs/deploying-to-aws.md` (A1/A2/A4/A5/A7 surfaces + quirks)
+  - 🟢 refresh `docs/deploying-to-azure.md` (35+ handlers + defaults + quirks)
+  - 🟢 refresh `docs/provider-status.md` Azure entry
+  - 🟢 README provider callouts (full AWS + Azure handler category lists)
+- 🟢 **D3 — Operator notes**
+  - 🟢 AWS operator notes (`providers/aws/README.md` rollout-state table already existed)
+  - 🟢 Azure operator notes (`providers/azure/README.md` written this drive)
+- 🟢 **D4 — ROADMAP cleanup**
+  - 🟢 ROADMAP "Providers" section refresh (per-provider handler count + live-test gate language)
+- 🟢 **D5 — Changelog**
+  - 🟢 CHANGELOG entry (Provider parity drive bullet)
 - 🔴 **D6 — Deploy gate sweep**
   - 🔴 every AWS handler's deploy gate ticked at least once by a developer
   - 🔴 every Azure handler's deploy gate ticked at least once by a developer

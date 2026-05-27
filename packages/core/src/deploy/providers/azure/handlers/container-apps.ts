@@ -19,7 +19,7 @@ import { load_azure_sdk } from '../sdk-loader';
 import { err, ok, sdkMissing } from './_result';
 import type { AzureHandlerContext, AzureResourceHandler } from '../types';
 
-const TYPE = 'azure.containerApps.app';
+const TYPE = 'azure.containerapps.app';
 const SDK = '@azure/arm-appcontainers';
 const DEFAULT_ENV_NAME = 'ice-default-env';
 

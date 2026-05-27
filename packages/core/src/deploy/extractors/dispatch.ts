@@ -167,7 +167,7 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.monitor.logAnalytics': extract_azure_log_analytics_properties,
   'azure.insights.appInsights': extract_azure_app_insights_properties,
   'azure.web.appServicePlan': extract_azure_app_service_plan_properties,
-  'azure.containerApps.app': extract_azure_container_apps_properties,
+  'azure.containerapps.app': extract_azure_container_apps_properties,
   'azure.web.functionApp': extract_azure_function_app_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────

@@ -42,7 +42,7 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.servicebus.namespace', handler: service_bus_handler },
   { prefix: 'azure.monitor.logAnalytics', handler: log_analytics_handler },
   { prefix: 'azure.insights.appInsights', handler: app_insights_handler },
-  { prefix: 'azure.containerApps.app', handler: container_apps_handler },
+  { prefix: 'azure.containerapps.app', handler: container_apps_handler },
 ];
 
 function resolve_handler(type: string): AzureResourceHandler | undefined {

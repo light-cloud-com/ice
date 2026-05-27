@@ -19,69 +19,78 @@ describe('get_ice_type', () => {
     ['microsoft.compute/snapshots', 'azure.compute.snapshot'],
     ['microsoft.compute/availabilitysets', 'azure.compute.availability_set'],
     ['microsoft.compute/virtualmachinescalesets', 'azure.compute.scale_set'],
-    // Network
-    ['microsoft.network/virtualnetworks', 'azure.network.virtual_network'],
+    // Network — aligned with deployer's camelCase keys after B2 P1 landed.
+    ['microsoft.network/virtualnetworks', 'azure.network.virtualNetwork'],
     ['microsoft.network/subnets', 'azure.network.subnet'],
-    ['microsoft.network/networksecuritygroups', 'azure.network.security_group'],
+    ['microsoft.network/networksecuritygroups', 'azure.network.networkSecurityGroup'],
     ['microsoft.network/networkinterfaces', 'azure.network.interface'],
     ['microsoft.network/publicipaddresses', 'azure.network.public_ip'],
     ['microsoft.network/loadbalancers', 'azure.network.load_balancer'],
-    ['microsoft.network/applicationgateways', 'azure.network.app_gateway'],
+    ['microsoft.network/applicationgateways', 'azure.network.applicationGateway'],
     ['microsoft.network/virtualnetworkgateways', 'azure.network.vnet_gateway'],
-    ['microsoft.network/dnszones', 'azure.network.dns_zone'],
+    ['microsoft.network/dnszones', 'azure.network.dnsZone'],
     ['microsoft.network/privatednszones', 'azure.network.private_dns_zone'],
-    ['microsoft.network/frontdoors', 'azure.network.front_door'],
+    ['microsoft.network/frontdoors', 'azure.network.frontDoor'],
+    ['microsoft.network/privateendpoints', 'azure.network.privateEndpoint'],
+    ['microsoft.network/webapplicationfirewallpolicies', 'azure.network.webApplicationFirewallPolicy'],
     // Storage
     ['microsoft.storage/storageaccounts', 'azure.storage.account'],
     ['microsoft.storage/storageaccounts/blobservices/containers', 'azure.storage.container'],
-    // Web / App Service
+    // Web / App Service — aligned with deployer's camelCase keys.
     ['microsoft.web/sites', 'azure.web.app'],
-    ['microsoft.web/serverfarms', 'azure.web.app_service_plan'],
+    ['microsoft.web/serverfarms', 'azure.web.appServicePlan'],
     // findings.md #11 — TYPE_MAP key was lowercased so it round-trips
     // through `get_ice_type`'s lowercase normalization. Both input
     // shapes now resolve to the intended iceType.
-    ['microsoft.web/staticsites', 'azure.web.static_site'],
-    // Databases
+    ['microsoft.web/staticsites', 'azure.web.staticSite'],
+    // Databases — flex-server keys match deployer prefixes.
     ['microsoft.sql/servers', 'azure.sql.server'],
     ['microsoft.sql/servers/databases', 'azure.sql.database'],
     ['microsoft.documentdb/databaseaccounts', 'azure.cosmosdb.account'],
-    ['microsoft.dbforpostgresql/servers', 'azure.postgresql.server'],
-    ['microsoft.dbformysql/servers', 'azure.mysql.server'],
-    ['microsoft.cache/redis', 'azure.redis.cache'],
-    // Containers
-    ['microsoft.containerservice/managedclusters', 'azure.aks.cluster'],
-    ['microsoft.containerregistry/registries', 'azure.acr.registry'],
+    ['microsoft.dbforpostgresql/servers', 'azure.postgresqlflex.server'],
+    ['microsoft.dbforpostgresql/flexibleservers', 'azure.postgresqlflex.server'],
+    ['microsoft.dbformysql/servers', 'azure.mysqlflex.server'],
+    ['microsoft.dbformysql/flexibleservers', 'azure.mysqlflex.server'],
+    ['microsoft.cache/redis', 'azure.cache.redis'],
+    // Containers — aligned with deployer prefixes.
+    ['microsoft.containerservice/managedclusters', 'azure.containerservice.managedCluster'],
+    ['microsoft.containerregistry/registries', 'azure.containerregistry.registry'],
     ['microsoft.containerinstance/containergroups', 'azure.aci.container_group'],
-    // Serverless
-    ['microsoft.web/sites/functions', 'azure.functions.function'],
+    ['microsoft.app/containerapps', 'azure.containerapps.app'],
+    // Serverless — aligned with deployer.
+    ['microsoft.web/sites/functions', 'azure.web.functionApp'],
     // Messaging
     ['microsoft.servicebus/namespaces', 'azure.servicebus.namespace'],
     ['microsoft.eventhub/namespaces', 'azure.eventhub.namespace'],
     ['microsoft.eventgrid/topics', 'azure.eventgrid.topic'],
-    // Identity
+    // Identity — aligned with deployer's aadb2c key.
     ['microsoft.managedidentity/userassignedidentities', 'azure.identity.user_assigned'],
+    ['microsoft.azureactivedirectory/b2cdirectories', 'azure.aadb2c.directory'],
     // Key Vault
     ['microsoft.keyvault/vaults', 'azure.keyvault.vault'],
-    // Monitor
-    ['microsoft.insights/components', 'azure.insights.app_insights'],
-    ['microsoft.operationalinsights/workspaces', 'azure.monitor.log_analytics'],
+    // Monitor — aligned with deployer's camelCase keys.
+    ['microsoft.insights/components', 'azure.insights.appInsights'],
+    ['microsoft.operationalinsights/workspaces', 'azure.monitor.logAnalytics'],
     ['microsoft.insights/actiongroups', 'azure.monitor.action_group'],
     ['microsoft.insights/metricalerts', 'azure.monitor.metric_alert'],
     // Resource Management
     ['microsoft.resources/resourcegroups', 'azure.resources.resource_group'],
-    // API Management
-    ['microsoft.apimanagement/service', 'azure.apim.service'],
-    // CDN
-    ['microsoft.cdn/profiles', 'azure.cdn.profile'],
-    ['microsoft.cdn/profiles/endpoints', 'azure.cdn.endpoint'],
+    // API Management — aligned with deployer prefix.
+    ['microsoft.apimanagement/service', 'azure.apimanagement.service'],
+    // CDN — Profiles back Front Door (Standard/Premium AFD profile lives under microsoft.cdn).
+    ['microsoft.cdn/profiles', 'azure.network.frontDoor'],
     // Logic Apps
     ['microsoft.logic/workflows', 'azure.logic.workflow'],
     // Data Factory
     ['microsoft.datafactory/factories', 'azure.datafactory.factory'],
-    // Synapse
+    // Synapse / Data Explorer
     ['microsoft.synapse/workspaces', 'azure.synapse.workspace'],
-    // Machine Learning
-    ['microsoft.machinelearningservices/workspaces', 'azure.ml.workspace'],
+    ['microsoft.kusto/clusters', 'azure.kusto.cluster'],
+    // Machine Learning / Cognitive (OpenAI is a Cognitive Services kind).
+    ['microsoft.machinelearningservices/workspaces', 'azure.machinelearning.workspace'],
+    ['microsoft.cognitiveservices/accounts', 'azure.cognitiveservices.account'],
+    // Search (backs Analytics.Search + AI.VectorDB).
+    ['microsoft.search/searchservices', 'azure.search.service'],
   ];
 
   for (const [azure_type, ice_type] of explicit_mappings) {
@@ -115,9 +124,9 @@ describe('get_ice_type', () => {
   // findings.md #11 — `'microsoft.web/staticSites'` (capital S) used to
   // be dead code because get_ice_type lowercased the input before lookup.
   // The TYPE_MAP key is now lowercase so both `Microsoft.Web/staticSites`
-  // and `microsoft.web/staticsites` resolve to `azure.web.static_site`.
-  it('routes Microsoft.Web/staticSites to azure.web.static_site (case-insensitive)', () => {
-    expect(get_ice_type('Microsoft.Web/staticSites')).toBe('azure.web.static_site');
+  // and `microsoft.web/staticsites` resolve to `azure.web.staticSite`.
+  it('routes Microsoft.Web/staticSites to azure.web.staticSite (case-insensitive)', () => {
+    expect(get_ice_type('Microsoft.Web/staticSites')).toBe('azure.web.staticSite');
     expect(is_type_supported('Microsoft.Web/staticSites')).toBe(true);
   });
 });

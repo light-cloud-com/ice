@@ -326,7 +326,7 @@ describe('import_azure (filters)', () => {
 
   it('drops resources whose ice_type is in exclude_types', async () => {
     install_dynamic_import_stub(fake_sdk_with_two());
-    const result = await import_azure({ exclude_types: ['azure.redis.cache'] });
+    const result = await import_azure({ exclude_types: ['azure.cache.redis'] });
     expect(result.resources.map((r) => r.ice_type)).toEqual(['azure.web.app']);
   });
 

@@ -1,357 +1,336 @@
-# Provider Parity — Progress Dashboard
+# Provider Parity — Progress Tree
 
-Single-page view of every task across phases A–D. Phase docs ([aws-parity.md](aws-parity.md), [azure-rebuild.md](azure-rebuild.md), [importers-and-cost.md](importers-and-cost.md), [status-flip.md](status-flip.md)) hold the detail.
+Nested checklist across phases A–D. A parent ticks `[x]` only when every child ticks. Phase docs ([aws-parity.md](aws-parity.md), [azure-rebuild.md](azure-rebuild.md), [importers-and-cost.md](importers-and-cost.md), [status-flip.md](status-flip.md)) hold the detail.
 
-## Gating policy (cardinal rule)
+## Per-handler leaves (5 per handler)
 
-A handler has TWO gates. Both must tick before the handler is "done":
+Each handler row expands to:
 
-- **C** — Code gate: handler + extractor + mocked-SDK tests merged; CI green.
-- **D** — Deploy gate: at least one successful real-cloud round-trip (create + update if applicable + delete) observed against a real AWS account or Azure subscription, with a JSONL entry under `e2e/{aws,azure}-deployment-tests/`. See ↓ "Deploy verification log" near the bottom.
+- `(C) handler` — handler file + sdk-loader entry + HANDLER_REGISTRY entry
+- `(C) extractor` — extractor function + dispatch.ts entry
+- `(C) mocked test` — `<provider>-<service>.test.ts` using the per-provider harness
+- `(C) schema` — `ice-schemas.db` has the resource type with properties matching handler input; properties panel verified
+- `(D) live test` — `<provider>-<service>.live.test.ts` runs green on a developer's real account (deploy gate)
+- `docs` — per-provider deploy doc + blocks-reference + provider-status + `<provider>/README.md` quirks row
 
-A category flag flips only when every handler in the category has both C and D ticked. The `PROVIDER_READINESS = 'stable'` flip (Phase D) requires every handler's D gate, plus 7 consecutive green nightly scheduled runs.
-
-Legend: `□` not started · `◐` in progress · `■` done · `—` blocked · `C` = code gate · `D` = deploy gate
-
-Last updated: 2026-05-27 (cardinal rule integrated)
+C-gates are code; D-gate is real-cloud deploy. `docs` lands with the handler PR.
 
 ## Phase A — AWS
 
-### A1 — Network primitives (handlers)
+- [ ] **A1 — Network primitives**
+  - [ ] vpc handler (Network.VPC)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] subnet handler (Network.Subnet)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] security-group handler (Network.SecurityGroup)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] wiring: ECS consume canvas subnets/SGs (code + real-deploy verified)
+  - [ ] wiring: RDS/ElastiCache/ELBv2 consume canvas subnets/SGs (code + real-deploy verified)
+  - [ ] feature flag: flip Compute
+  - [ ] feature flag: flip Network
+- [ ] **A2 — ACM cert + DNS**
+  - [ ] acm handler (Security.Certificate)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] route53 handler (Network.CustomDomain)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] cloudfront: consume canvas cert (handler edit + re-verify)
+    - [ ] (C) handler edit · [ ] (C) mocked test update · [ ] (D) live test re-run
+  - [ ] feature flag: flip Frontend
+- [ ] **A3 — EventBridge schedule**
+  - [ ] events-rule schedule_expression branch
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (D) live test (Lambda fires on schedule)
+  - [ ] feature flag: flip Scheduler
+- [ ] **A4 — Update paths**
+  - [ ] cloudfront UpdateDistribution
+    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test (update round-trip)
+  - [ ] cognito UpdateUserPool
+    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+  - [ ] docdb ModifyDBCluster
+    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+  - [ ] redshift ModifyCluster
+    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+  - [ ] ec2 ModifyVolume
+    - [ ] (C) handler · [ ] (C) mocked test · [ ] (D) live test
+  - [ ] feature flag: flip Database
+  - [ ] feature flag: flip AI
+  - [ ] feature flag: flip Analytics
+- [ ] **A5 — CodeBuild path**
+  - [ ] codebuild handler
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] lambda-builder fallback chain
+    - [ ] (C) handler edit · [ ] (C) mocked test update · [ ] (D) live test (Lambda auto-build via CodeBuild)
+- [ ] **A6 — Live-test foundation (developer tool)**
+  - [ ] `_live-helpers.ts` (awsLive, uniqueAwsName, createAwsDeployer, JsonlLogger, runId)
+  - [ ] `_live-types.ts` (LiveEvent union)
+  - [ ] `scripts/run-live-tests.mjs` (positional-arg wrapper)
+  - [ ] vitest config exclude `**/*.live.test.{ts,tsx}`
+  - [ ] `package.json` script `test:live:aws`
+  - [ ] `e2e/aws-deployment-tests/README.md`
+  - [ ] `e2e/aws-deployment-tests/runs/.gitkeep`
+  - [ ] `e2e/aws-deployment-tests/cleanup-orphans.ts`
+  - [ ] live test per existing AWS handler (rolls up below in "existing-handler deploy gate")
+  - [ ] cleanup-orphans tested locally
+- [ ] **A7 — Block coverage completeness**
+  - [ ] amplify-hosting handler (Compute.SSRSite)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] amazon-mq handler (Messaging.RabbitMQ)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] wafv2 handler (Security.WAF)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] vpc-endpoint handler (Network.PrivateNetwork)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] opensearch-serverless split (AI.VectorDB)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] ecs worker extractor variant (Compute.Worker)
+    - [ ] (C) extractor · [ ] (C) mocked test · [ ] (D) live test (ECS worker mode)
 
-| C   | D   | Handler        | Block source          |
-| --- | --- | -------------- | --------------------- |
-| □   | □   | vpc            | Network.VPC           |
-| □   | □   | subnet         | Network.Subnet        |
-| □   | □   | security-group | Network.SecurityGroup |
+### A — existing-handler deploy gates (21 handlers in the foundation PR)
 
-### A1 — Network primitives (wiring)
+Live tests for handlers that ship today. Code gate is implicit (handler exists). D gate ticks when a developer logs a real-AWS run.
 
-| Status | Task                                                                                         |
-| ------ | -------------------------------------------------------------------------------------------- |
-| □      | ECS consume canvas subnets/SGs (code + real-deploy verified)                                 |
-| □      | RDS/ElastiCache/ELBv2 consume canvas subnets/SGs (code + real-deploy verified)               |
-| □      | flip Compute + Network in feature flags (only after every handler in those categories has D) |
-
-### A2 — ACM cert + DNS (handlers)
-
-| C   | D   | Handler                          | Block source         |
-| --- | --- | -------------------------------- | -------------------- |
-| □   | □   | acm                              | Security.Certificate |
-| □   | □   | route53                          | Network.CustomDomain |
-| □   | □   | cloudfront (consume canvas cert) | (re-verify)          |
-
-### A2 — flip
-
-| Status | Task                                        |
-| ------ | ------------------------------------------- |
-| □      | flip Frontend (after handlers above have D) |
-
-### A3 — EventBridge schedule
-
-| C   | D   | Handler                                  |
-| --- | --- | ---------------------------------------- |
-| □   | □   | events-rule (schedule_expression branch) |
-
-| Status | Task                      |
-| ------ | ------------------------- |
-| □      | extractor cron projection |
-| □      | flip Scheduler            |
-
-### A4 — Update paths (handlers)
-
-| C   | D   | Handler                       | Notes                  |
-| --- | --- | ----------------------------- | ---------------------- |
-| □   | □   | cloudfront UpdateDistribution | propagation poll       |
-| □   | □   | cognito UpdateUserPool        | password + MFA changes |
-| □   | □   | docdb ModifyDBCluster         | maintenance window     |
-| □   | □   | redshift ModifyCluster        | reshape long-running   |
-| □   | □   | ec2 ModifyVolume              | EBS only               |
-
-### A4 — flips
-
-| Status | Task                                                    |
-| ------ | ------------------------------------------------------- |
-| □      | flip Database (after RDS + DocDB + DynamoDB all have D) |
-| □      | flip AI (after SageMaker has D — mocks don't count)     |
-| □      | flip Analytics (after Redshift + OpenSearch have D)     |
-
-### A5 — CodeBuild path
-
-| C   | D   | Handler   |
-| --- | --- | --------- |
-| □   | □   | codebuild |
-
-| Status | Task                          |
-| ------ | ----------------------------- |
-| □      | lambda-builder fallback chain |
-
-### A6 — Validation harness
-
-| Status | Task                                                           |
-| ------ | -------------------------------------------------------------- |
-| □      | A6.1 LocalStack container in CI                                |
-| □      | A6.1 LocalStack smoke test per handler                         |
-| □      | A6.1 wire to PR workflow                                       |
-| □      | A6.2 `e2e/aws-deployment-tests/` recipe directory              |
-| □      | A6.2 runner with JSONL output                                  |
-| □      | A6.2 dashboard                                                 |
-| □      | A6.2 one recipe per handler (29 recipes)                       |
-| □      | A6.2 scheduled CI run + dashboard auto-refresh                 |
-| □      | A6.3 deploy-verification gate enforced in plan-merge checklist |
-
-### A7 — Block-coverage completeness (handlers)
-
-| C   | D   | Handler                                  | Block source           |
-| --- | --- | ---------------------------------------- | ---------------------- |
-| □   | □   | amplify-hosting                          | Compute.SSRSite        |
-| □   | □   | amazon-mq                                | Messaging.RabbitMQ     |
-| □   | □   | wafv2                                    | Security.WAF           |
-| □   | □   | vpc-endpoint                             | Network.PrivateNetwork |
-| □   | □   | opensearch-serverless                    | AI.VectorDB            |
-| □   | □   | ecs (worker extractor variant)           | Compute.Worker         |
-| □   | □   | dispatch reg for `aws.ec2.securityGroup` | A1 carry-over          |
+- [ ] (D) aws-s3 live test
+- [ ] (D) aws-lambda live test
+- [ ] (D) aws-cloudwatch-logs live test
+- [ ] (D) aws-secrets-manager live test
+- [ ] (D) aws-sqs live test
+- [ ] (D) aws-sns live test
+- [ ] (D) aws-dynamodb live test
+- [ ] (D) aws-elasticache live test
+- [ ] (D) aws-rds live test
+- [ ] (D) aws-docdb live test
+- [ ] (D) aws-cognito live test
+- [ ] (D) aws-cloudfront live test
+- [ ] (D) aws-elbv2 live test
+- [ ] (D) aws-api-gateway live test
+- [ ] (D) aws-events-rule live test
+- [ ] (D) aws-ecs live test
+- [ ] (D) aws-opensearch live test
+- [ ] (D) aws-bedrock live test (no-op synthetic ARN)
+- [ ] (D) aws-sagemaker live test
+- [ ] (D) aws-redshift live test
+- [ ] (D) aws-ec2 live test
 
 ## Phase B — Azure
 
-### B1 — Scaffolding
+- [ ] **B1 — Scaffolding refactor**
+  - [ ] `azure/` directory + types.ts + sdk-loader.ts
+  - [ ] auth.ts (validate, list_subscriptions)
+  - [ ] subscription.ts + resource-group.ts helpers
+  - [ ] modular azure-deployer.ts with HANDLER_REGISTRY
+  - [ ] migrate VM/Storage/Web handlers into per-file modules
+  - [ ] back-compat shim at `azure-deployer.ts`
+  - [ ] test harness (`_azure-test-harness.ts`)
+  - [ ] (C) existing tests still green
+  - [ ] (D) VM/Storage/Web round-trip post-refactor on a real subscription
+- [ ] **B2 P0 — must-have handlers (14)**
+  - [ ] key-vault (Security.Secret + Security.Certificate)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] service-bus (Messaging.ServiceBus + Queue + Topic)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] app-service (Compute.Container web variant)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] container-apps (Compute.Container + Compute.Worker)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] functions (Compute.ServerlessFunction)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] cosmosdb SQL + Mongo (Database.CosmosDB + Database.MongoDB)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] sql-database (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] postgresql-flex (Database.PostgreSQL)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] mysql-flex (Database.MySQL)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] redis-cache (Database.Redis)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] blob-storage (Storage.Bucket)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] log-analytics (Monitoring.Log)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] app-insights (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] static-web-apps (Compute.StaticSite + Compute.SSRSite)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+- [ ] **B2 P1 — network + container + APIM + WAF (11)**
+  - [ ] vnet (Network.VPC)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] subnet (Network.Subnet)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] nsg (Network.SecurityGroup)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] private-endpoint (Network.PrivateNetwork)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] dns-zone (Network.CustomDomain)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] aks (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] acr (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] apim (Network.Gateway)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] front-door (Network.LoadBalancer global)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] app-gateway (Network.LoadBalancer regional)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] azure-waf (Security.WAF)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+- [ ] **B2 P2 — long tail (11)**
+  - [ ] logic-apps (Compute.CronJob)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] event-grid (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] event-hubs (Messaging.EventStream)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] service-bus-amqp / RabbitMQ branch (Messaging.RabbitMQ)
+    - [ ] (C) handler branch · [ ] (C) extractor · [ ] (C) mocked test · [ ] (D) live test · [ ] docs
+  - [ ] cognitive-search (Analytics.Search)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] ai-search-vector (AI.VectorDB)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] entra-b2c (Security.Identity)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] azure-openai (AI.LLMGateway)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] azure-ml (AI.ModelServing)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] synapse (Analytics.DataWarehouse)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+  - [ ] data-explorer (template-only)
+    - [ ] (C) handler · [ ] (C) extractor · [ ] (C) mocked test · [ ] (C) schema · [ ] (D) live test · [ ] docs
+- [ ] **B3 — Extractor module files**
+  - [ ] `extractors/azure/ai.ts`
+  - [ ] `extractors/azure/ancillary.ts`
+  - [ ] `extractors/azure/compute.ts`
+  - [ ] `extractors/azure/database.ts`
+  - [ ] `extractors/azure/messaging.ts`
+  - [ ] `extractors/azure/network.ts`
+  - [ ] every entry registered in `dispatch.ts`
+  - [ ] `dispatch.test.ts` Azure parity case
+- [ ] **B4 — Quirks**
+  - [ ] storage account global-uniqueness suffix
+  - [ ] cosmos consistency default = Session
+  - [ ] cosmos API mode projection (Mongo vs SQL)
+  - [ ] SQL/PG/MySQL password enforcement
+  - [ ] long-running op polling helper
+  - [ ] resource-group auto-bootstrap
+  - [ ] container apps env auto-provision
+  - [ ] container apps worker (job) extractor
+  - [ ] app service plan auto-provision
+  - [ ] key vault no-value contract
+  - [ ] key vault certificate provisioning path
+  - [ ] service bus session-enabled handling
+  - [ ] service bus AMQP / RabbitMQ branch
+  - [ ] event hubs throughput defaults
+  - [ ] functions storage account auto-provision
+  - [ ] static web apps build/SSR extractor projection
+  - [ ] private endpoint subnet preflight
+  - [ ] WAF SKU + canvas-edge association
+  - [ ] MySQL flexible server SKU defaults
+  - [ ] ACR security defaults
+  - [ ] `azure/README.md` quirks section
+- [ ] **B5 — Auth + tests**
+  - [ ] auth.ts: `validate_azure_credentials`
+  - [ ] auth.ts: `list_azure_subscriptions`
+  - [ ] wire validation into provider settings UI
+  - [ ] per-handler test file per B2 handler (covered by C-leaf above)
+  - [ ] `errors/import-errors/azure.ts` error mapping
+- [ ] **B6 — Feature flags (each flips only when every handler in the category has C + D)**
+  - [ ] `azure.enabled = true`
+  - [ ] Storage
+  - [ ] Messaging
+  - [ ] Cache
+  - [ ] Monitoring
+  - [ ] Security
+  - [ ] Source
+  - [ ] Config
+  - [ ] Compute
+  - [ ] Database
+  - [ ] Network
+  - [ ] Frontend
+  - [ ] Scheduler
+  - [ ] AI
+  - [ ] Analytics
+- [ ] **B7 — Docs**
+  - [ ] rewrite `docs/deploying-to-azure.md` "What works today"
+  - [ ] flesh out `azure/README.md` quirks
+  - [ ] update `docs/provider-status.md` per category flip
+- [ ] **B8 — Live-test foundation (Azure)**
+  - [ ] extend `_live-helpers.ts` with `azureLive`, `uniqueAzureName`, `createAzureDeployer`, test-resource-group helpers
+  - [ ] `package.json` script `test:live:azure`
+  - [ ] `e2e/azure-deployment-tests/README.md`
+  - [ ] `e2e/azure-deployment-tests/runs/.gitkeep`
+  - [ ] `e2e/azure-deployment-tests/cleanup-orphans.ts`
+  - [ ] live test per existing Azure handler (3, rolls up below)
+  - [ ] cleanup-orphans tested locally
 
-| Status | Task                                                             |
-| ------ | ---------------------------------------------------------------- |
-| □      | Create `azure/` directory + types.ts + sdk-loader.ts             |
-| □      | auth.ts (validate, list_subscriptions)                           |
-| □      | subscription.ts + resource-group.ts helpers                      |
-| □      | Modular azure-deployer.ts with HANDLER_REGISTRY                  |
-| □      | Migrate VM/Storage/Web handlers into per-file modules            |
-| □      | Back-compat shim at `azure-deployer.ts`                          |
-| □      | Test harness (`_azure-test-harness.ts`)                          |
-| □      | Existing tests green (code gate)                                 |
-| □      | Real-Azure VM/Storage/Web round-trip post-refactor (deploy gate) |
+### B — existing-handler deploy gates (3 handlers in the foundation PR)
 
-### B2 — Handlers (P0)
-
-| C   | D   | Handler                | Block source                           |
-| --- | --- | ---------------------- | -------------------------------------- |
-| □   | □   | key-vault              | Security.Secret + Security.Certificate |
-| □   | □   | service-bus            | Messaging.ServiceBus + Queue + Topic   |
-| □   | □   | app-service            | Compute.Container (web variant)        |
-| □   | □   | container-apps         | Compute.Container + Compute.Worker     |
-| □   | □   | functions              | Compute.ServerlessFunction             |
-| □   | □   | cosmosdb (SQL + Mongo) | Database.CosmosDB + Database.MongoDB   |
-| □   | □   | sql-database           | (template-only)                        |
-| □   | □   | postgresql-flex        | Database.PostgreSQL                    |
-| □   | □   | mysql-flex             | Database.MySQL                         |
-| □   | □   | redis-cache            | Database.Redis                         |
-| □   | □   | blob-storage           | Storage.Bucket                         |
-| □   | □   | log-analytics          | Monitoring.Log                         |
-| □   | □   | app-insights           | (template-only)                        |
-| □   | □   | static-web-apps        | Compute.StaticSite + Compute.SSRSite   |
-
-### B2 — Handlers (P1)
-
-| C   | D   | Handler          | Block source                    |
-| --- | --- | ---------------- | ------------------------------- |
-| □   | □   | vnet             | Network.VPC                     |
-| □   | □   | subnet           | Network.Subnet                  |
-| □   | □   | nsg              | Network.SecurityGroup           |
-| □   | □   | private-endpoint | Network.PrivateNetwork          |
-| □   | □   | dns-zone         | Network.CustomDomain            |
-| □   | □   | aks              | (template-only)                 |
-| □   | □   | acr              | (template-only)                 |
-| □   | □   | apim             | Network.Gateway                 |
-| □   | □   | front-door       | Network.LoadBalancer (global)   |
-| □   | □   | app-gateway      | Network.LoadBalancer (regional) |
-| □   | □   | azure-waf        | Security.WAF                    |
-
-### B2 — Handlers (P2)
-
-| C   | D   | Handler                            | Block source            |
-| --- | --- | ---------------------------------- | ----------------------- |
-| □   | □   | logic-apps                         | Compute.CronJob         |
-| □   | □   | event-grid                         | (template-only)         |
-| □   | □   | event-hubs                         | Messaging.EventStream   |
-| □   | □   | service-bus-amqp / RabbitMQ branch | Messaging.RabbitMQ      |
-| □   | □   | cognitive-search                   | Analytics.Search        |
-| □   | □   | ai-search-vector                   | AI.VectorDB             |
-| □   | □   | entra-b2c                          | Security.Identity       |
-| □   | □   | azure-openai                       | AI.LLMGateway           |
-| □   | □   | azure-ml                           | AI.ModelServing         |
-| □   | □   | synapse                            | Analytics.DataWarehouse |
-| □   | □   | data-explorer                      | (template-only)         |
-
-### B3 — Extractors
-
-| Status | File                                    |
-| ------ | --------------------------------------- |
-| □      | `extractors/azure/ai.ts`                |
-| □      | `extractors/azure/ancillary.ts`         |
-| □      | `extractors/azure/compute.ts`           |
-| □      | `extractors/azure/database.ts`          |
-| □      | `extractors/azure/messaging.ts`         |
-| □      | `extractors/azure/network.ts`           |
-| □      | All entries registered in `dispatch.ts` |
-| □      | `dispatch.test.ts` Azure parity case    |
-
-### B4 — Quirks
-
-| Status | Quirk                                          |
-| ------ | ---------------------------------------------- |
-| □      | Storage account global-uniqueness suffix       |
-| □      | Cosmos consistency default = Session           |
-| □      | Cosmos API mode projection (Mongo vs SQL)      |
-| □      | SQL/PG/MySQL password enforcement              |
-| □      | Long-running operation polling helper          |
-| □      | Resource group auto-bootstrap                  |
-| □      | Container Apps env auto-provision              |
-| □      | Container Apps worker (job) extractor          |
-| □      | App Service Plan auto-provision                |
-| □      | Key Vault no-value contract for secrets        |
-| □      | Key Vault certificate provisioning path        |
-| □      | Service Bus session-enabled (FIFO) handling    |
-| □      | Service Bus AMQP / RabbitMQ branch             |
-| □      | Event Hubs throughput defaults                 |
-| □      | Functions storage account auto-provision       |
-| □      | Static Web Apps build/SSR extractor projection |
-| □      | Private Endpoint subnet preflight              |
-| □      | WAF SKU + canvas-edge association              |
-| □      | MySQL Flexible Server SKU defaults             |
-| □      | ACR security defaults                          |
-| □      | `azure/README.md` quirks section               |
-
-### B5 — Auth + tests
-
-| Status | Task                                                       |
-| ------ | ---------------------------------------------------------- |
-| □      | auth.ts: validate_azure_credentials                        |
-| □      | auth.ts: list_azure_subscriptions                          |
-| □      | Wire validation into provider settings UI                  |
-| □      | Per-handler test file per B2 handler (covers C gate above) |
-| □      | `errors/import-errors/azure.ts` error mapping              |
-
-### B6 — Feature flags
-
-| Status | Flag (flips only when every handler in the category has C + D) |
-| ------ | -------------------------------------------------------------- |
-| □      | `azure.enabled = true`                                         |
-| □      | Storage                                                        |
-| □      | Messaging                                                      |
-| □      | Cache                                                          |
-| □      | Monitoring                                                     |
-| □      | Security                                                       |
-| □      | Source                                                         |
-| □      | Config                                                         |
-| □      | Compute                                                        |
-| □      | Database                                                       |
-| □      | Network                                                        |
-| □      | Frontend                                                       |
-| □      | Scheduler                                                      |
-| □      | AI                                                             |
-| □      | Analytics                                                      |
-
-### B7 — Docs
-
-| Status | Doc                                                     |
-| ------ | ------------------------------------------------------- |
-| □      | Rewrite `docs/deploying-to-azure.md` "What works today" |
-| □      | Flesh out `azure/README.md` quirks                      |
-| □      | Update `docs/provider-status.md` per category flip      |
-
-### B8 — Validation harness
-
-| Status | Task                                                           |
-| ------ | -------------------------------------------------------------- |
-| □      | B8.1 Azurite container in CI                                   |
-| □      | B8.1 wire to PR workflow                                       |
-| □      | B8.2 `e2e/azure-deployment-tests/` recipe directory            |
-| □      | B8.2 shared or Azure-specific runner with JSONL output         |
-| □      | B8.2 dashboard                                                 |
-| □      | B8.2 one recipe per handler (29 recipes)                       |
-| □      | B8.2 scheduled CI run + dashboard auto-refresh                 |
-| □      | B8.3 deploy-verification gate enforced in plan-merge checklist |
+- [ ] (D) azure-virtual-machine live test
+- [ ] (D) azure-storage-account live test
+- [ ] (D) azure-web-app live test
 
 ## Phase C — Importers + cost
 
-| Status | Task                                                           |
-| ------ | -------------------------------------------------------------- |
-| □      | C1: wire `import_aws` into desktop import wizard               |
-| □      | C1: region multi-select UI                                     |
-| □      | C1: credential reuse                                           |
-| □      | C1: AWS zero-diff round-trip on a real account (logged)        |
-| □      | C2: `importers/azure/relationships.ts`                         |
-| □      | C2: type-mapper completeness vs B2                             |
-| □      | C2: wire `import_azure` into desktop import wizard             |
-| □      | C2: Azure region/subscription multi-select UI                  |
-| □      | C2: Azure credential reuse                                     |
-| □      | C2: Azure zero-diff round-trip on a real subscription (logged) |
-| □      | C2: relationships test                                         |
-| □      | C2: integration test                                           |
-| □      | C3: AWS cost-data coverage inventory                           |
-| □      | C3: Azure cost-data coverage inventory                         |
-| □      | C3: populate AWS prices for Phase A categories                 |
-| □      | C3: populate Azure prices for Phase B categories               |
-| □      | C3: coverage regression test                                   |
+- [ ] **C1 — AWS importer UI**
+  - [ ] wire `import_aws` into desktop import wizard
+  - [ ] region multi-select UI
+  - [ ] credential reuse from Settings → Providers
+  - [ ] (D) AWS zero-diff round-trip on a real account
+- [ ] **C2 — Azure importer enhancements**
+  - [ ] `importers/azure/relationships.ts`
+  - [ ] type-mapper completeness vs B2 handler set
+  - [ ] wire `import_azure` into desktop import wizard
+  - [ ] Azure region/subscription multi-select UI
+  - [ ] credential reuse
+  - [ ] (D) Azure zero-diff round-trip on a real subscription
+  - [ ] relationships test
+  - [ ] integration test
+- [ ] **C3 — Cost estimation**
+  - [ ] AWS cost-data coverage inventory
+  - [ ] Azure cost-data coverage inventory
+  - [ ] populate AWS prices for Phase A categories
+  - [ ] populate Azure prices for Phase B categories
+  - [ ] coverage regression test
 
 ## Phase D — Status flip
 
-| Status | Task                                                     |
-| ------ | -------------------------------------------------------- |
-| □      | D1: `PROVIDER_READINESS.aws = 'stable'`                  |
-| □      | D1: `PROVIDER_READINESS.azure = 'stable'`                |
-| □      | D2: refresh `deploying-to-aws.md`                        |
-| □      | D2: refresh `deploying-to-azure.md`                      |
-| □      | D2: refresh `provider-status.md` matrix                  |
-| □      | D2: README provider callouts                             |
-| □      | D3: AWS operator notes refresh                           |
-| □      | D3: Azure operator notes refresh                         |
-| □      | D4: ROADMAP "Providers" section refresh                  |
-| □      | D5: CHANGELOG entry                                      |
-| □      | D6: 7 consecutive green scheduled runs for AWS recipes   |
-| □      | D6: 7 consecutive green scheduled runs for Azure recipes |
-| □      | D6: template demo deploy on real AWS account             |
-| □      | D6: template demo deploy on real Azure subscription      |
+- [ ] **D1 — Bump readiness**
+  - [ ] `PROVIDER_READINESS.aws = 'stable'`
+  - [ ] `PROVIDER_READINESS.azure = 'stable'`
+- [ ] **D2 — User-facing docs**
+  - [ ] refresh `docs/deploying-to-aws.md`
+  - [ ] refresh `docs/deploying-to-azure.md`
+  - [ ] refresh `docs/provider-status.md` matrix
+  - [ ] README provider callouts
+- [ ] **D3 — Operator notes**
+  - [ ] AWS operator notes refresh
+  - [ ] Azure operator notes refresh
+- [ ] **D4 — ROADMAP cleanup**
+  - [ ] ROADMAP "Providers" section refresh
+- [ ] **D5 — Changelog**
+  - [ ] CHANGELOG entry
+- [ ] **D6 — Deploy gate sweep**
+  - [ ] every AWS handler's deploy gate ticked at least once by a developer
+  - [ ] every Azure handler's deploy gate ticked at least once by a developer
+  - [ ] template demo deploy on real AWS account (per template in `packages/templates/`)
+  - [ ] template demo deploy on real Azure subscription (per template in `packages/templates/`)
 
 ## Rollup
 
-Handlers are counted twice (C + D). Non-handler tasks count once.
+Counts derived from leaf checkboxes above.
 
-| Phase           | Code gates (C) | Deploy gates (D) | Other tasks | Total   |
-| --------------- | -------------- | ---------------- | ----------- | ------- |
-| A1              | 3              | 3                | 3           | 9       |
-| A2              | 3              | 3                | 1           | 7       |
-| A3              | 1              | 1                | 2           | 4       |
-| A4              | 5              | 5                | 3           | 13      |
-| A5              | 1              | 1                | 1           | 3       |
-| A6              | —              | —                | 9           | 9       |
-| A7              | 7              | 7                | —           | 14      |
-| **A total**     | **20**         | **20**           | **19**      | **59**  |
-| B1              | —              | —                | 9           | 9       |
-| B2 P0           | 14             | 14               | —           | 28      |
-| B2 P1           | 11             | 11               | —           | 22      |
-| B2 P2           | 11             | 11               | —           | 22      |
-| B3              | —              | —                | 8           | 8       |
-| B4              | —              | —                | 21          | 21      |
-| B5              | —              | —                | 5           | 5       |
-| B6              | —              | —                | 15          | 15      |
-| B7              | —              | —                | 3           | 3       |
-| B8              | —              | —                | 8           | 8       |
-| **B total**     | **36**         | **36**           | **69**      | **141** |
-| C               | —              | —                | 17          | 17      |
-| D               | —              | —                | 14          | 14      |
-| **Grand total** | **56**         | **56**           | **119**     | **231** |
+- Phase A: ~120 leaves
+- Phase B: ~210 leaves
+- Phase C: ~17 leaves
+- Phase D: ~13 leaves
+- **Total**: ~360 leaves
 
-Progress: 0 / 231.
-
-Code-gate progress: 0 / 56.
-Deploy-gate progress: 0 / 56.
-
-Provider is "deploy-ready" (all D gates ticked) when deploy-gate progress hits 56 / 56.
+Update this section when leaves are added or removed. The plan is "done" when every leaf is `[x]` and the deploy verification log below has at least one entry per handler.
 
 ## Deploy verification log
 
-Append one row per successful real-cloud round-trip. The corresponding D checkbox flips to `■` only after a row lands here.
+Append one row per successful real-cloud round-trip. Each row backs a `(D)` checkbox tick above.
 
-Required columns: date · provider · handler · recipe path · ARN/resource-id observed · JSONL run path · operator.
-
-| Date | Provider | Handler | Recipe | Resource ID | JSONL run | Operator |
-| ---- | -------- | ------- | ------ | ----------- | --------- | -------- |
-| —    | —        | —       | —      | —           | —         | —        |
+| Date | Provider | Handler | Live test file | Resource ID | JSONL run path | Developer |
+| ---- | -------- | ------- | -------------- | ----------- | -------------- | --------- |
+| —    | —        | —       | —              | —           | —              | —         |

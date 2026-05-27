@@ -5,8 +5,9 @@
  * Usage:
  *   node scripts/run-live-tests.mjs <provider> [filter1] [filter2] [...vitest-args]
  *
- * Positional filters are substring-matched against the test file name.
- * Anything starting with `--` or `-` is passed through to vitest.
+ * Positional filters become vitest positional filters (substring-matched
+ * against the test file path). They're prefixed with the provider so
+ * `pnpm test:live:aws s3` matches `aws-s3.live.test.ts`.
  *
  * Examples:
  *   pnpm test:live:aws                  # every aws-*.live.test.ts
@@ -43,16 +44,13 @@ for (const arg of args.slice(1)) {
   }
 }
 
-const baseDir = 'packages/core/src/deploy/providers/__tests__/live';
-const includePatterns =
-  filters.length === 0
-    ? [`${baseDir}/${provider}-*.live.test.ts`]
-    : filters.map((f) => `${baseDir}/${provider}-*${f}*.live.test.ts`);
+// Build positional filters. Vitest matches them as substrings against
+// resolved file paths. Default to the provider prefix so an empty filter
+// list still scopes to one provider's tests.
+const positionals = filters.length === 0 ? [`${provider}-`] : filters.map((f) => `${provider}-${f}`);
 
-const vitestArgs = ['exec', 'vitest', 'run', '--root', '.'];
-for (const pattern of includePatterns) {
-  vitestArgs.push('--include', pattern);
-}
+const vitestArgs = ['exec', 'vitest', 'run', '--config', 'vitest.live.config.ts', '--root', '.'];
+vitestArgs.push(...positionals);
 vitestArgs.push(...passthrough);
 
 const result = spawnSync('pnpm', vitestArgs, { stdio: 'inherit' });

@@ -12,3 +12,5 @@ export { AlibabaDeployer, create_alibaba_deployer } from './alibaba/alibaba-depl
 export type { AlibabaResourceHandler, AlibabaHandlerContext, AlibabaCredentials } from './alibaba/types';
 export { OCIDeployer, create_oci_deployer } from './oci/oci-deployer';
 export type { OCIResourceHandler, OCIHandlerContext, OCICredentials } from './oci/types';
+export { DigitalOceanDeployer, create_digitalocean_deployer } from './digitalocean/digitalocean-deployer';
+export type { DOResourceHandler, DOHandlerContext, DOCredentials } from './digitalocean/types';

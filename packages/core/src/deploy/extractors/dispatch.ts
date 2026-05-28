@@ -165,6 +165,26 @@ import {
 } from './compute';
 import { extract_cloud_sql_properties, extract_firestore_properties, extract_memorystore_properties } from './database';
 import {
+  extract_do_apps_app_properties,
+  extract_do_apps_envvar_properties,
+  extract_do_apps_static_properties,
+  extract_do_container_registry_properties,
+  extract_do_databases_cluster_properties,
+  extract_do_domain_record_properties,
+  extract_do_droplet_properties,
+  extract_do_firewall_properties,
+  extract_do_functions_function_properties,
+  extract_do_functions_namespace_properties,
+  extract_do_kubernetes_cluster_properties,
+  extract_do_loadbalancer_properties,
+  extract_do_monitoring_alertpolicy_properties,
+  extract_do_reserved_ip_properties,
+  extract_do_snapshot_properties,
+  extract_do_spaces_bucket_properties,
+  extract_do_volume_properties,
+  extract_do_vpc_network_properties,
+} from './digitalocean';
+import {
   extract_gcp_artifact_registry_properties,
   extract_gcp_cloud_build_properties,
   extract_gcp_monitoring_properties,
@@ -447,6 +467,26 @@ export const PROPERTY_EXTRACTORS: Record<
   'oci.monitoring.alarm': extract_oci_monitoring_alarm_properties,
   'oci.generativeai.endpoint': extract_oci_generativeai_endpoint_properties,
   'oci.datascience.modeldeployment': extract_oci_datascience_modeldeployment_properties,
+
+  // ─── DigitalOcean — P0 + P1 + P2 handlers ──────────────────────────
+  'digitalocean.droplet.instance': extract_do_droplet_properties,
+  'digitalocean.apps.app': extract_do_apps_app_properties,
+  'digitalocean.databases.cluster': extract_do_databases_cluster_properties,
+  'digitalocean.spaces.bucket': extract_do_spaces_bucket_properties,
+  'digitalocean.loadbalancer.loadbalancer': extract_do_loadbalancer_properties,
+  'digitalocean.apps.envvar': extract_do_apps_envvar_properties,
+  'digitalocean.functions.namespace': extract_do_functions_namespace_properties,
+  'digitalocean.functions.function': extract_do_functions_function_properties,
+  'digitalocean.vpc.network': extract_do_vpc_network_properties,
+  'digitalocean.domain.record': extract_do_domain_record_properties,
+  'digitalocean.firewall.firewall': extract_do_firewall_properties,
+  'digitalocean.kubernetes.cluster': extract_do_kubernetes_cluster_properties,
+  'digitalocean.containerregistry.registry': extract_do_container_registry_properties,
+  'digitalocean.apps.staticSite': extract_do_apps_static_properties,
+  'digitalocean.volume.volume': extract_do_volume_properties,
+  'digitalocean.droplet.snapshot': extract_do_snapshot_properties,
+  'digitalocean.monitoring.alertpolicy': extract_do_monitoring_alertpolicy_properties,
+  'digitalocean.reservedip.reservedip': extract_do_reserved_ip_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

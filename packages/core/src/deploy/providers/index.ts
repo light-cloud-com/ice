@@ -10,3 +10,5 @@ export { KubernetesDeployer, create_kubernetes_deployer } from './kubernetes/kub
 export type { KubernetesResourceHandler, KubernetesHandlerContext } from './kubernetes/types';
 export { AlibabaDeployer, create_alibaba_deployer } from './alibaba/alibaba-deployer';
 export type { AlibabaResourceHandler, AlibabaHandlerContext, AlibabaCredentials } from './alibaba/types';
+export { OCIDeployer, create_oci_deployer } from './oci/oci-deployer';
+export type { OCIResourceHandler, OCIHandlerContext, OCICredentials } from './oci/types';

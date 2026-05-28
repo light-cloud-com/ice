@@ -11,7 +11,7 @@ import { err, isIbmAlreadyExists, isIbmNotFound, ok, sdkMissing } from './_resul
 import type { IBMResourceHandler } from '../types';
 
 const TYPE = 'ibm.codeengine.application';
-const SDK = 'ibm-code-engine-sdk';
+const SDK = '@ibm-cloud/ibm-code-engine-sdk';
 
 export const codeengine_application_handler: IBMResourceHandler = {
   async create(name, properties, ctx) {
@@ -47,7 +47,7 @@ export const codeengine_application_handler: IBMResourceHandler = {
       await ce.updateApp({
         projectId,
         name,
-        app: { image_reference: properties.image as string | undefined },
+        imageReference: properties.image as string | undefined,
       });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {

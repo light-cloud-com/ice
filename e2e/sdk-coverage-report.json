@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-28T10:31:57.325Z",
+  "generated_at": "2026-05-28T11:28:07.286Z",
   "summary": {
     "handlers": 224,
     "packages": 142,
@@ -10,8 +10,8 @@
       "alibaba": 28,
       "oci": 28,
       "digitalocean": 1,
-      "other": 3,
-      "ibm": 4,
+      "ibm": 5,
+      "other": 2,
       "gcp": 16
     }
   },
@@ -2287,15 +2287,9 @@
       "type": "digitalocean.container_registry.registry",
       "sdkPkgs": ["dots-wrapper"],
       "refsByPkg": {
-        "dots-wrapper": [
-          "client.containerRegistry.createContainerRegistry",
-          "client.containerRegistry.deleteContainerRegistry"
-        ]
+        "dots-wrapper": ["client.containerRegistry.configureRegistry", "client.containerRegistry.deleteRegistry"]
       },
-      "sdkRefs": [
-        "client.containerRegistry.createContainerRegistry",
-        "client.containerRegistry.deleteContainerRegistry"
-      ],
+      "sdkRefs": ["client.containerRegistry.configureRegistry", "client.containerRegistry.deleteRegistry"],
       "clientKeys": []
     },
     {
@@ -2305,13 +2299,13 @@
       "refsByPkg": {
         "dots-wrapper": [
           "client.database.createDatabaseCluster",
-          "client.database.deleteDatabaseCluster",
+          "client.database.destroyDatabaseCluster",
           "client.database.resizeDatabaseCluster"
         ]
       },
       "sdkRefs": [
         "client.database.createDatabaseCluster",
-        "client.database.deleteDatabaseCluster",
+        "client.database.destroyDatabaseCluster",
         "client.database.resizeDatabaseCluster"
       ],
       "clientKeys": []
@@ -2380,13 +2374,15 @@
         "dots-wrapper": [
           "client.kubernetes.createKubernetesCluster",
           "client.kubernetes.deleteKubernetesCluster",
-          "client.kubernetes.updateKubernetesCluster"
+          "client.kubernetes.updateKubernetesCluster",
+          "client.kubernetes.upgradeKubernetesCluster"
         ]
       },
       "sdkRefs": [
         "client.kubernetes.createKubernetesCluster",
         "client.kubernetes.deleteKubernetesCluster",
-        "client.kubernetes.updateKubernetesCluster"
+        "client.kubernetes.updateKubernetesCluster",
+        "client.kubernetes.upgradeKubernetesCluster"
       ],
       "clientKeys": []
     },
@@ -2423,9 +2419,9 @@
       "type": "digitalocean.reservedip.reservedip",
       "sdkPkgs": ["dots-wrapper"],
       "refsByPkg": {
-        "dots-wrapper": ["client.reservedIp.createReservedIp", "client.reservedIp.deleteReservedIp"]
+        "dots-wrapper": ["client.floatingIp.createFloatingIp", "client.floatingIp.deleteFloatingIp"]
       },
-      "sdkRefs": ["client.reservedIp.createReservedIp", "client.reservedIp.deleteReservedIp"],
+      "sdkRefs": ["client.floatingIp.createFloatingIp", "client.floatingIp.deleteFloatingIp"],
       "clientKeys": []
     },
     {
@@ -2433,9 +2429,9 @@
       "type": "digitalocean.droplet.snapshot",
       "sdkPkgs": ["dots-wrapper"],
       "refsByPkg": {
-        "dots-wrapper": ["client.dropletAction.snapshotDroplet", "client.snapshot.deleteSnapshot"]
+        "dots-wrapper": ["client.droplet.snapshotDroplet", "client.snapshot.deleteSnapshot"]
       },
-      "sdkRefs": ["client.dropletAction.snapshotDroplet", "client.snapshot.deleteSnapshot"],
+      "sdkRefs": ["client.droplet.snapshotDroplet", "client.snapshot.deleteSnapshot"],
       "clientKeys": []
     },
     {
@@ -2469,7 +2465,7 @@
     {
       "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-application.ts",
       "type": "ibm.codeengine.application",
-      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "sdkPkgs": ["@ibm-cloud/ibm-code-engine-sdk"],
       "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
@@ -2477,7 +2473,7 @@
     {
       "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-function.ts",
       "type": "ibm.codeengine.function",
-      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "sdkPkgs": ["@ibm-cloud/ibm-code-engine-sdk"],
       "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
@@ -2485,7 +2481,7 @@
     {
       "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-job.ts",
       "type": "ibm.codeengine.job",
-      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "sdkPkgs": ["@ibm-cloud/ibm-code-engine-sdk"],
       "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
@@ -4470,7 +4466,7 @@
       }
     },
     {
-      "package": "ibm-code-engine-sdk",
+      "package": "@ibm-cloud/ibm-code-engine-sdk",
       "handlers": [
         "packages/core/src/deploy/providers/ibm/handlers/codeengine-application.ts",
         "packages/core/src/deploy/providers/ibm/handlers/codeengine-function.ts",

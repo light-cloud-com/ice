@@ -78,9 +78,9 @@ describe('Alibaba P0 handler dispatch', () => {
     expect(authorizeSecurityGroup).toHaveBeenCalledOnce();
   });
 
-  it('routes oss.bucket create through OSS putBucket', async () => {
-    const putBucket = vi.fn().mockResolvedValue({ body: {} });
-    const deployer = deployer_with_stubbed_clients({ oss: { putBucket } });
+  it('routes oss.bucket create through OSS putBucketWithOptions', async () => {
+    const putBucketWithOptions = vi.fn().mockResolvedValue({ body: {} });
+    const deployer = deployer_with_stubbed_clients({ oss: { putBucketWithOptions } });
     const result = await deployer.create('alibaba.oss.bucket', 'data-bucket-123', {}, {});
     expect(result.success).toBe(true);
     expect(result.provider_id).toBe('data-bucket-123');
@@ -200,10 +200,10 @@ describe('Alibaba P0 handler dispatch', () => {
     expect(result.provider_id).toBe('c-abc');
   });
 
-  it('routes cr.instance create through CR createInstance', async () => {
-    const createInstance = vi.fn().mockResolvedValue({ body: { instanceId: 'cri-abc' } });
-    const deployer = deployer_with_stubbed_clients({ cr: { createInstance } });
-    const result = await deployer.create('alibaba.cr.instance', 'reg', {}, {});
+  it('routes cr.instance create through CR getInstance (marketplace-provisioned)', async () => {
+    const getInstance = vi.fn().mockResolvedValue({ body: { instanceId: 'cri-abc' } });
+    const deployer = deployer_with_stubbed_clients({ cr: { getInstance } });
+    const result = await deployer.create('alibaba.cr.instance', 'reg', { instance_id: 'cri-abc' }, {});
     expect(result.success).toBe(true);
     expect(result.provider_id).toBe('cri-abc');
   });

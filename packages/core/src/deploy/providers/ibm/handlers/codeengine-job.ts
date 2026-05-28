@@ -7,7 +7,7 @@ import { err, isIbmAlreadyExists, isIbmNotFound, ok, sdkMissing } from './_resul
 import type { IBMResourceHandler } from '../types';
 
 const TYPE = 'ibm.codeengine.job';
-const SDK = 'ibm-code-engine-sdk';
+const SDK = '@ibm-cloud/ibm-code-engine-sdk';
 
 export const codeengine_job_handler: IBMResourceHandler = {
   async create(name, properties, ctx) {

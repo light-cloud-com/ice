@@ -117,12 +117,27 @@ function topLevelKeys(src, openBraceIdx) {
 
 function extractAliasMap(src) {
   const aliasToPkg = new Map();
-  const sdkConst = src.match(/const\s+SDK\s*=\s*['"]([^'"]+)['"]/)?.[1];
+  // Build a map of every named SDK string constant: `const FOO_SDK =
+  // '@aws-sdk/client-foo'` → 'FOO_SDK' → '@aws-sdk/client-foo'. Covers
+  // handlers that load multiple SDKs conditionally (e.g.
+  // aws/handlers/cloudfront.ts loads SDK = client-cloudfront +
+  // ACM_SDK = client-acm in the same file).
+  const sdkConstants = new Map();
+  for (const m of src.matchAll(/const\s+([A-Z_][\w]*)\s*=\s*['"]([^'"]+)['"]/g)) {
+    sdkConstants.set(m[1], m[2]);
+  }
+  // The default `SDK` constant fallback (when loader call passes `SDK`).
+  const sdkConst = sdkConstants.get('SDK');
+  // Walk each `const <alias> = await load_<prov>_sdk(<arg>)` call. The
+  // arg can be a string literal OR any of the SDK_CONSTANTS map entries
+  // (so `load_aws_sdk(ACM_SDK)` resolves via the ACM_SDK constant).
   for (const m of src.matchAll(
-    /const\s+([a-z_][\w]*)\s*=\s*await\s+load_(?:aws|gcp|azure)_sdk\(\s*(?:['"]([^'"]+)['"]|SDK)\s*\)/g,
+    /const\s+([a-z_][\w]*)\s*=\s*await\s+load_(?:aws|gcp|azure)_sdk\(\s*(?:['"]([^'"]+)['"]|([A-Z_][\w]*))\s*\)/g,
   )) {
     const alias = m[1];
-    const pkg = m[2] ?? sdkConst;
+    const literal = m[2];
+    const constName = m[3];
+    const pkg = literal ?? (constName ? sdkConstants.get(constName) ?? sdkConst : sdkConst);
     if (alias && pkg) aliasToPkg.set(alias, pkg);
   }
   return aliasToPkg;
@@ -738,34 +753,51 @@ async function alibabaGetRequestFields(pkg, method) {
   if (alibabaModelFieldsCache.has(cacheKey)) return alibabaModelFieldsCache.get(cacheKey);
   // method `createInstance` → request `CreateInstanceRequest`
   const requestClass = `${method.charAt(0).toUpperCase()}${method.slice(1)}Request`;
-  let dir;
+  let pkgRoot;
   try {
-    const entry = require_core.resolve(`${pkg}/package.json`);
-    dir = join(dirname(entry), 'dist/models');
+    pkgRoot = dirname(require_core.resolve(`${pkg}/package.json`));
   } catch {
     const result = { found: false, reason: `${pkg} not installed` };
     alibabaModelFieldsCache.set(cacheKey, result);
     return result;
   }
-  const file = join(dir, `${requestClass}.d.ts`);
-  let src;
-  try {
-    src = await fs.readFile(file, 'utf8');
-  } catch {
-    const result = { found: false, reason: `${requestClass}.d.ts not found in ${pkg}` };
-    alibabaModelFieldsCache.set(cacheKey, result);
-    return result;
-  }
-  // The request class declaration is `export declare class <Name>Request extends $dara.Model { … }`.
-  // Top-level fields are 2-space-indented declarations directly inside
-  // the class body. Nested classes are also declared in the same file
-  // (e.g. `CreateInstanceRequestSystemDisk`) but their fields don't
-  // belong to the top-level request.
-  const classMatch = src.match(
-    new RegExp(`export\\s+declare\\s+class\\s+${requestClass}\\s+extends\\s+\\$dara\\.Model\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'),
+  // Try two layouts:
+  //   (a) modular SDK (newer): dist/models/<Op>Request.d.ts
+  //   (b) inline SDK (older — OSS, CR-family, etc.):
+  //       request classes declared in dist/client.d.ts
+  // Both use `export declare class <Op>Request extends $tea.Model { … }`
+  // (older $tea Model) OR `extends $dara.Model { … }` (newer Dara).
+  const candidateFiles = [
+    join(pkgRoot, 'dist/models', `${requestClass}.d.ts`),
+    join(pkgRoot, 'dist/client.d.ts'),
+  ];
+  // Some SDKs ship no .d.ts files at all (e.g. @alicloud/mns is pure JS).
+  // We surface that as a distinct reason so it's clear the handler isn't
+  // verifiable rather than potentially buggy.
+  const classRe = new RegExp(
+    `export\\s+declare\\s+class\\s+${requestClass}(?:\\s+extends\\s+\\$(?:dara|tea)\\.Model)?\\s*\\{([\\s\\S]*?)\\n\\}`,
+    'm',
   );
+  let classMatch = null;
+  let chosenFile = null;
+  for (const file of candidateFiles) {
+    try {
+      const src = await fs.readFile(file, 'utf8');
+      const m = src.match(classRe);
+      if (m) {
+        classMatch = m;
+        chosenFile = file;
+        break;
+      }
+    } catch {
+      // try next layout
+    }
+  }
   if (!classMatch) {
-    const result = { found: false, reason: `class ${requestClass} not found in ${file}` };
+    const result = {
+      found: false,
+      reason: `class ${requestClass} not found in ${pkg}/{dist/models,dist/client}.d.ts (SDK may be JS-only)`,
+    };
     alibabaModelFieldsCache.set(cacheKey, result);
     return result;
   }
@@ -1089,8 +1121,19 @@ async function ibmGetRequestFields(pkgSubpath, method) {
     ibmRequestFieldsCache.set(cacheKey, result);
     return result;
   }
+  // IBM SDKs declare the Params interface in 3 shapes:
+  //   (a) inside a `declare namespace XxxV1 { interface CreateXxxParams
+  //       extends DefaultParams { ... } }` block — fields at 8-space.
+  //   (b) without `extends DefaultParams` (Resource Controller's
+  //       CreateResourceInstanceParams declares the body bare).
+  //   (c) `export interface XxxParams extends DefaultParams { ... }` at
+  //       top level — fields at 4-space.
+  // Match all three: `export` optional, `extends ...` optional.
   const m = src.match(
-    new RegExp(`export\\s+interface\\s+${paramsInterface}\\s+extends\\s+[^{]+\\{([\\s\\S]*?)\\n\\s{4}\\}`, 'm'),
+    new RegExp(
+      `(?:export\\s+)?interface\\s+${paramsInterface}(?:\\s+extends\\s+[^{]+)?\\s*\\{([\\s\\S]*?)\\n\\s+\\}`,
+      'm',
+    ),
   );
   if (!m) {
     const result = { found: false, reason: `interface ${paramsInterface} not found in ${pkgSubpath}.d.ts` };
@@ -1099,7 +1142,12 @@ async function ibmGetRequestFields(pkgSubpath, method) {
   }
   const body = m[1];
   const fields = new Set();
+  // Try 8-space indent first (namespace-wrapped form is most common).
   for (const fm of body.matchAll(/^\s{8}([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+  // Fallback to 4-space indent (top-level form).
+  if (fields.size === 0) {
+    for (const fm of body.matchAll(/^\s{4}([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+  }
   const result = { found: true, fields: [...fields], interface: paramsInterface };
   ibmRequestFieldsCache.set(cacheKey, result);
   return result;

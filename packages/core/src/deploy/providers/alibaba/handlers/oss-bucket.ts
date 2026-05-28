@@ -20,11 +20,15 @@ export const oss_bucket_handler: AlibabaResourceHandler = {
     if (!oss) return sdkMissing(name, TYPE, 'create', start, 'Alibaba OSS', SDK);
     try {
       const acl = (properties.acl as string) || 'private';
-      await oss.putBucket({
-        bucket: name,
-        xOssAcl: acl,
-        storageClass: (properties.storage_class as string) || 'Standard',
-      });
+      // putBucketWithOptions takes (bucket, request, headers, runtime).
+      // ACL is a header (x-oss-acl) and storage class lives in the body
+      // under createBucketConfiguration.
+      await oss.putBucketWithOptions(
+        name,
+        { createBucketConfiguration: { storageClass: (properties.storage_class as string) || 'Standard' } },
+        { acl, commonHeaders: {} },
+        { autoretry: false, ignoreSSL: false, maxAttempts: 3 },
+      );
       return ok(name, TYPE, 'create', start, { provider_id: name });
     } catch (error) {
       if (isAlibabaAlreadyExists(error)) return ok(name, TYPE, 'create', start, { provider_id: name });
@@ -38,7 +42,13 @@ export const oss_bucket_handler: AlibabaResourceHandler = {
     if (!oss) return err(name, TYPE, 'update', start, 'Alibaba OSS SDK not available');
     try {
       if (properties.acl) {
-        await oss.putBucketAcl({ bucket: provider_id, xOssAcl: properties.acl as string });
+        // putBucketAclWithOptions takes (bucket, headers, runtime). ACL
+        // goes through x-oss-acl header.
+        await oss.putBucketAclWithOptions(
+          provider_id,
+          { acl: properties.acl as string, commonHeaders: {} },
+          { autoretry: false, ignoreSSL: false, maxAttempts: 3 },
+        );
       }
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
@@ -51,7 +61,7 @@ export const oss_bucket_handler: AlibabaResourceHandler = {
     const oss = await resolveClient(ctx, 'oss');
     if (!oss) return err(name, TYPE, 'delete', start, 'Alibaba OSS SDK not available');
     try {
-      await oss.deleteBucket({ bucket: provider_id });
+      await oss.deleteBucket(provider_id);
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

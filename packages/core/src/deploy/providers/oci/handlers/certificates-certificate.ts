@@ -48,7 +48,14 @@ export const certificates_certificate_handler: OCIResourceHandler = {
     const cm = await resolveClient(ctx, 'certificatesmanagement');
     if (!cm) return err(name, TYPE, 'delete', start, 'OCI Certificates SDK not available');
     try {
-      await cm.deleteCertificate({ certificateId: provider_id });
+      // OCI Certificates uses scheduleCertificateDeletion (soft-delete
+      // with a default 30-day cancellation window) rather than an
+      // immediate delete. Schedule for tomorrow.
+      const tomorrow = new Date(Date.now() + 24 * 3600_000).toISOString();
+      await cm.scheduleCertificateDeletion({
+        certificateId: provider_id,
+        scheduleCertificateDeletionDetails: { timeOfDeletion: tomorrow },
+      });
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isOciNotFound(error)) return ok(name, TYPE, 'delete', start);

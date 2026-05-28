@@ -7,7 +7,7 @@ import { err, isIbmAlreadyExists, isIbmNotFound, ok, sdkMissing } from './_resul
 import type { IBMResourceHandler } from '../types';
 
 const TYPE = 'ibm.codeengine.function';
-const SDK = 'ibm-code-engine-sdk';
+const SDK = '@ibm-cloud/ibm-code-engine-sdk';
 
 export const codeengine_function_handler: IBMResourceHandler = {
   async create(name, properties, ctx) {
@@ -21,7 +21,6 @@ export const codeengine_function_handler: IBMResourceHandler = {
         name,
         codeMain: (properties.handler as string) || 'main',
         runtime: (properties.runtime as string) || 'nodejs-20',
-        codeRuntime: (properties.runtime as string) || 'nodejs-20',
         scaleCpuLimit: (properties.cpu_cores as string) || '1',
         scaleMemoryLimit: (properties.memory as string) || '512M',
       });

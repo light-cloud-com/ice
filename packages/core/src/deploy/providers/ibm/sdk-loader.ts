@@ -28,7 +28,7 @@ export async function load_ibm_sdk(module_name: string): Promise<any | null> {
  */
 const SERVICE_PACKAGES: Record<string, { pkg: string; clientName: string }> = {
   vpc: { pkg: 'ibm-vpc/vpc/v1', clientName: 'VpcV1' },
-  codeengine: { pkg: 'ibm-code-engine-sdk/ibm-cloud-code-engine/v1', clientName: 'IbmCloudCodeEngineV1' },
+  codeengine: { pkg: '@ibm-cloud/ibm-code-engine-sdk/dist/code-engine/v2', clientName: 'CodeEngineV2' },
   resourcecontroller: {
     pkg: '@ibm-cloud/platform-services/resource-controller/v2',
     clientName: 'ResourceControllerV2',

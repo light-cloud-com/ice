@@ -60,7 +60,7 @@
     "dagre": "^0.8.5",
     "devicon": "^2.17.0",
     "immer": "^11.1.4",
-    "lucide-react": "^0.577.0",
+    "lucide-react": "^1.17.0",
     "react-hook-form": "^7.72.0",
     "react-redux": "^9.2.0",
     "react-resizable-panels": "^1.0.10",

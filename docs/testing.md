@@ -11,6 +11,8 @@ pnpm test:e2e           # Playwright E2E against a running web app
 pnpm test:gcp           # GCP integration tests - requires real GCP creds
 pnpm test:scenarios     # Declarative-YAML deployment scenarios - requires real GCP creds
 pnpm test:dashboard     # Interactive GCP test dashboard (http://localhost:15200)
+pnpm verify:sdk         # L1-L4 SDK verifier - static analysis, no creds
+pnpm test:live:<p> <s>  # Per-handler real-cloud round-trip - requires <p> creds
 pnpm typecheck          # TypeScript across all packages
 pnpm lint:check         # ESLint, errors only
 pnpm format:check       # Prettier
@@ -162,9 +164,63 @@ Runs in CI with `|| true` so it doesn't block - security advisories surface but 
 
 This keeps tests fast and pure (no DOM, no act warnings) at the cost of more boilerplate. We've also got `jsdom` configured (`package.json`) and a smaller set of hook tests using a thin custom harness - see `packages/ui/src/features/canvas/hooks/__tests__/use-canvas-drop.test.tsx`. Both approaches are accepted; pick whichever fits the component under test.
 
+## SDK verifier (L1-L4) and live tests
+
+The cardinal rule for any deployer change: **a handler is only "done" once a successful real-cloud deploy round-trip is observed.** Static checks make sure the SDK call shapes are correct _before_ a real call is made; live tests prove the round-trip.
+
+### Static SDK verification
+
+```bash
+pnpm verify:sdk                  # all providers, all layers
+node scripts/verify-sdk-coverage.mjs --provider aws    # L1-L3 only
+node scripts/verify-sdk-commands.mjs --provider azure  # L4 only
+```
+
+| Layer | What it checks                                                                                                                                                                                                              |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1    | Every handler is reachable from the provider's `HANDLER_REGISTRY`                                                                                                                                                           |
+| L2    | Every handler imports a real SDK client (no stub clients)                                                                                                                                                                   |
+| L3    | Every block category mapped to the provider has at least one handler                                                                                                                                                        |
+| L4    | Each handler's create / update / delete _input bodies_ match the SDK's expected command-input shape — catches PascalCase / camelCase drift, path-param vs body-param mistakes, missing required fields, union-type variants |
+
+The verifiers run in CI (`scripts/verify-sdk-*.mjs`) and exit non-zero on uncovered handlers or SDK-shape mismatches. They run against all 8 providers — GCP, AWS, Azure, Alibaba, OCI, DigitalOcean, IBM, Kubernetes. Five of the eight providers report 100 % coverage; the open gaps are tracked in the verifier output.
+
+### Live tests (per-handler real-cloud round-trip)
+
+Every handler under `packages/core/src/deploy/providers/<p>/handlers/` has a paired live test at:
+
+```
+packages/core/src/deploy/providers/__tests__/live/<p>-<service>.live.test.ts
+```
+
+These are excluded from `pnpm test:unit` (the vitest config has `'**/*.live.test.{ts,tsx}'` in the exclude). Run them explicitly:
+
+```bash
+pnpm test:live:aws s3               # single service
+pnpm test:live:aws s3 sqs lambda    # multiple services
+pnpm test:live:azure storage-account
+pnpm test:live:alibaba              # all alibaba handlers
+pnpm test:live:oci
+pnpm test:live:digitalocean
+pnpm test:live:ibm
+pnpm test:live:kubernetes
+```
+
+**Without credentials**, every test in the suite skips with a one-line banner explaining which env vars to export. With credentials, each test runs a `create + delete` round-trip against your own account, tagging every resource with `ice:test-run-id=<runId>` and appending JSONL events to `e2e/<provider>-deployment-tests/runs/<runId>.jsonl`.
+
+**Cleanup of leaked resources** — if a test crashes mid-run, run:
+
+```bash
+tsx e2e/<provider>-deployment-tests/cleanup-orphans.ts
+```
+
+The cleanup script sweeps for `ice:test-run-id=*`-tagged resources older than `ORPHAN_AGE_HOURS` (currently 24) and deletes them. AWS + Azure share the same tag key and age threshold (asserted by `cleanup-orphans.test.ts`).
+
+**These do not run in CI** — they touch real cloud, cost real money, and need provider-specific credentials. They're a developer self-serve tool. The deploy gate ticks when a developer or contributor runs the live test on their own account and pastes the JSONL summary into the PR.
+
 ## Known gaps
 
-- No AWS / Azure integration tests analogous to the GCP dashboard. See [ROADMAP.md](../ROADMAP.md).
+- No AWS / Azure / preview-tier integration tests analogous to the GCP dashboard — live tests cover round-trips but not full scenarios. See [ROADMAP.md](../ROADMAP.md).
 - E2E coverage of the AI chat flow is thin - the SSE stream is mocked in tests.
 
 ## See also

@@ -35,10 +35,16 @@ flowchart LR
 
 You want to install ICE, build a canvas, and deploy something.
 
-| Page                                  | What it covers                                                            |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| [Getting started](getting-started.md) | Install, generate schemas, first run, first deploy, common install issues |
-| [Glossary](glossary.md)               | Block, blueprint, handler, importer, plan, apply, …                       |
+| Page                                                  | What it covers                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Getting started](getting-started.md)                 | Install, generate schemas, first run, first deploy, common install issues |
+| [Glossary](glossary.md)                               | Block, blueprint, handler, importer, plan, apply, …                       |
+| [Provider status](provider-status.md)                 | Per-provider matrix — handler counts, what works, what's gated            |
+| [Deploying to GCP](deploying-to-gcp.md)               | Canonical end-to-end tutorial                                             |
+| [Deploying to AWS](deploying-to-aws.md)               | AWS-specific notes, gated categories, quirks                              |
+| [Deploying to Azure](deploying-to-azure.md)           | Azure-specific notes, per-handler deploy gate                             |
+| [Deploying to Kubernetes](deploying-to-kubernetes.md) | In-cluster + kubeconfig auth, 19-handler set                              |
+| [Blocks reference](blocks-reference.md)               | Per-block per-provider status                                             |
 
 Per-provider readiness lives in code: [`PROVIDER_READINESS`](../packages/constants/src/providers.ts).
 

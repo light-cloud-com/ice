@@ -19,15 +19,20 @@ Direction, not a ticket tracker. v0.1.50, Apache 2.0. Open an issue or PR to cha
 
 ### Providers - `help-wanted`
 
-- AWS + Azure to GCP parity _(top priority - see [`PROVIDER_READINESS`](packages/constants/src/providers.ts))_
-  - **AWS**: 20+ handlers + extractors landed; live deploy gates pending per category before the matching feature flag flips. See `packages/core/src/deploy/providers/aws/README.md` for the rollout-state table.
-  - **Azure**: 35+ handlers + extractors landed (Compute, Database, Storage, Messaging, Network, Observability, Security, AI / Analytics); rebuild migrated VM/Storage/Web into the modular dispatcher in `packages/core/src/deploy/providers/azure/`. See `packages/core/src/deploy/providers/azure/README.md`.
-  - **Both providers** now ship developer-run live tests under `packages/core/src/deploy/providers/__tests__/live/` — `pnpm test:live:aws <service>` / `pnpm test:live:azure <service>` against your own account. Each ticked deploy gate is what unblocks the per-category feature flag.
-- Alibaba Cloud - design-only → deployable
-- Oracle Cloud Infrastructure
-- DigitalOcean - Droplets, App Platform, Managed DBs, Spaces
-- Tencent Cloud
-- Kubernetes (any) - Helm + raw manifest outputs
+All eight target providers now ship a deployer + extractors + L4 SDK command-input verification. The next milestone for each preview-tier provider is per-handler real-cloud deploy gates — see [`PROVIDER_READINESS`](packages/constants/src/providers.ts) and the rollout matrix at [docs/provider-status.md](docs/provider-status.md).
+
+- **GCP** — stable. 38 handlers + 45+ importers.
+- **AWS** — experimental, 38 handlers + extractors landed. Live deploy gates pending per category before the matching feature flag flips. See `packages/core/src/deploy/providers/aws/README.md`.
+- **Azure** — experimental, 38 handlers + extractors landed (Compute, Database, Storage, Messaging, Network, Observability, Security, AI / Analytics) in the modular dispatcher under `packages/core/src/deploy/providers/azure/`. See `packages/core/src/deploy/providers/azure/README.md`.
+- **Alibaba Cloud** — preview, 34 handlers across ECS, ACK, Function Compute, RDS / PolarDB / Redis / MongoDB, OSS, SLB, VPC + VSwitch + SecurityGroup, NAT, SLS, MNS / RocketMQ, CDN, ACR, Cloud Monitor, KMS, Secret Manager, RAM. Live tests + cleanup-orphans wired.
+- **Oracle Cloud Infrastructure** — preview, 33 handlers across Compute, OKE, Functions, Autonomous DB, MySQL HeatWave, PostgreSQL, NoSQL, Object Storage, Block / File Storage, VCN + Subnet + Security List, LBaaS, DNS, Streaming, Notifications, Logging, Monitoring, Vault, Bastion, OCIR.
+- **DigitalOcean** — preview, 19 handlers across Droplets, DOKS, App Platform, Functions, Managed DBs (Postgres / MySQL / Redis / MongoDB), Spaces, Volumes, VPC, Load Balancer, Floating IP, Firewall, DNS, DOCR, Monitoring, Project.
+- **IBM Cloud** — preview, 14 handlers across VPC, Code Engine, IKS / OpenShift, Cloud Functions, Cloudant, Db2, COS, Event Streams (Kafka), Container Registry, Key Protect, Secrets Manager, Activity Tracker, Log Analysis, Monitoring.
+- **Kubernetes** — preview, 19 handlers across Deployment, StatefulSet, DaemonSet, Job, CronJob, Service, Ingress, ConfigMap, Secret, PVC, Namespace, ServiceAccount, Role + RoleBinding, NetworkPolicy, HPA. In-cluster + kubeconfig auth supported.
+
+All eight providers run through the same L1–L4 SDK verifier (`scripts/verify-sdk-coverage.mjs` + `scripts/verify-sdk-commands.mjs`) and ship developer-run live tests under `packages/core/src/deploy/providers/__tests__/live/`. Run `pnpm test:live:<provider> <service>` against your own account; the JSONL audit lands under `e2e/<provider>-deployment-tests/runs/`. Each ticked deploy gate is what unblocks the per-category feature flag.
+
+**Next up for the preview tier:** per-handler deploy gates, then category-level feature flag flips, then importer parity (currently only GCP has a full importer).
 
 Adding a provider is well-scoped contributor work - see the walkthrough in [docs/reference/extending-providers.md](docs/reference/extending-providers.md).
 

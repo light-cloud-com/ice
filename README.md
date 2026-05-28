@@ -37,17 +37,20 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 
 ## Providers at a glance
 
-- 🟢 **Google Cloud - stable(ish).** 20 service handlers, 45+ importers, full create / update / destroy.
-- 🟡 **AWS - in progress.** 20+ service handlers + extractors covering Compute (ECS, Lambda, EC2), Database (RDS / DynamoDB / DocDB / Redshift / ElastiCache), Network (VPC / Subnet / SG / VPC Endpoint / ELBv2 / CloudFront / ACM / Route53), Storage (S3), Messaging (SQS / SNS / EventBridge / Amazon MQ), Security (Secrets Manager / Cognito / WAFv2), AI/Analytics (Bedrock / SageMaker / OpenSearch / OpenSearch Serverless / Redshift), Frontend (CloudFront / Amplify Hosting), Monitoring (CloudWatch Logs), Source (CodeBuild). Staged rollout via feature flags — see [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md).
-- 🟡 **Azure - in progress.** 35+ service handlers + extractors covering Compute (VM, Web App, Functions, Container Apps, Static Web Apps, AKS, ACR), Database (PostgreSQL Flex, MySQL Flex, Cosmos SQL+Mongo, Redis Cache, SQL Server), Storage (Blob), Messaging (Service Bus + AMQP/RabbitMQ branch, Event Hubs, Event Grid, Logic Apps), Network (VNet, Subnet, NSG, Private Endpoint, DNS Zone, App Gateway, Front Door, APIM, WAF), Observability (Log Analytics, App Insights), Security (Key Vault, Entra B2C), AI/Analytics (Cognitive Search, Azure OpenAI, Azure ML, Synapse, Data Explorer). See [`packages/core/src/deploy/providers/azure/README.md`](packages/core/src/deploy/providers/azure/README.md).
-- ⚪ **IBM Cloud - planned.**
-- ⚪ **Kubernetes - planned.**
-- ⚪ **Alibaba Cloud - planned.**
-- ⚪ **Oracle Cloud - planned.**
-- ⚪ **DigitalOcean - planned.**
-- ⚪ **Tencent Cloud - planned.**
+All eight providers ship a working deployer behind feature flags. Real-cloud round-trips have been observed for GCP, AWS, and Azure; the other five carry full handler + extractor + L4 SDK-input verification but are gated on a developer-run live test against their own account before flipping each category to "deployable".
 
-- 🟢 **GitHub - integration.**
+- 🟢 **Google Cloud — stable(ish).** 38 service handlers, 45+ importers, full create / update / destroy.
+- 🟡 **AWS — experimental.** 38 service handlers + extractors covering Compute (ECS, Lambda, EC2), Database (RDS / DynamoDB / DocDB / Redshift / ElastiCache), Network (VPC / Subnet / SG / VPC Endpoint / ELBv2 / CloudFront / ACM / Route53), Storage (S3), Messaging (SQS / SNS / EventBridge / Amazon MQ), Security (Secrets Manager / Cognito / WAFv2), AI/Analytics (Bedrock / SageMaker / OpenSearch / OpenSearch Serverless / Redshift), Frontend (CloudFront / Amplify Hosting), Monitoring (CloudWatch Logs), Source (CodeBuild). See [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md).
+- 🟡 **Azure — experimental.** 38 service handlers + extractors covering Compute (VM, Web App, Functions, Container Apps, Static Web Apps, AKS, ACR), Database (PostgreSQL Flex, MySQL Flex, Cosmos SQL+Mongo, Redis Cache, SQL Server), Storage (Blob), Messaging (Service Bus + AMQP/RabbitMQ branch, Event Hubs, Event Grid, Logic Apps), Network (VNet, Subnet, NSG, Private Endpoint, DNS Zone, App Gateway, Front Door, APIM, WAF), Observability (Log Analytics, App Insights), Security (Key Vault, Entra B2C), AI/Analytics (Cognitive Search, Azure OpenAI, Azure ML, Synapse, Data Explorer). See [`packages/core/src/deploy/providers/azure/README.md`](packages/core/src/deploy/providers/azure/README.md).
+- 🟠 **Alibaba Cloud — preview.** 34 service handlers covering ECS, Container Service (ACK), Function Compute, RDS (MySQL / PostgreSQL), PolarDB, ApsaraDB for Redis, MongoDB, OSS, SLB, VPC + VSwitch + SecurityGroup, NAT Gateway, Log Service (SLS), Message Service / RocketMQ, CDN, Container Registry, Cloud Monitor, KMS, Secret Manager, RAM. Live tests wired; cardinal-rule deploy gate pending per-handler verification.
+- 🟠 **Oracle Cloud Infrastructure — preview.** 33 service handlers covering Compute, OKE, Functions, Autonomous DB, MySQL HeatWave, PostgreSQL, NoSQL, Object Storage, Block Volume, File Storage, VCN + Subnet + Security List, Load Balancer, DNS, Streaming, Notifications, Logging, Monitoring, Vault, Bastion, Container Registry. L4 SDK-input verifier extended.
+- 🟠 **DigitalOcean — preview.** 19 service handlers covering Droplets, Kubernetes (DOKS), App Platform, Functions, Managed Databases (Postgres / MySQL / Redis / MongoDB), Spaces, Volumes, VPC, Load Balancer, Floating IP, Firewall, DNS, Container Registry, Monitoring, Project.
+- 🟠 **IBM Cloud — preview.** 14 service handlers covering VPC, Code Engine, IKS / OpenShift, Cloud Functions, Cloudant, Db2, Cloud Object Storage, Event Streams (Kafka), Container Registry, Key Protect, Secrets Manager, Activity Tracker, Log Analysis, Monitoring.
+- 🟠 **Kubernetes — preview.** 19 service handlers covering Deployment, StatefulSet, DaemonSet, Job, CronJob, Service, Ingress, ConfigMap, Secret, PersistentVolumeClaim, Namespace, ServiceAccount, Role + RoleBinding, NetworkPolicy, HorizontalPodAutoscaler. In-cluster + kubeconfig auth supported.
+
+- 🟢 **GitHub — integration.**
+
+Status legend: 🟢 stable · 🟡 experimental (deploys observed) · 🟠 preview (deployer wired, awaiting deploy gate) · ⚪ planned. The source of truth lives in `PROVIDER_READINESS` in [`packages/constants/src/providers.ts`](packages/constants/src/providers.ts) and the matrix at [docs/provider-status.md](docs/provider-status.md).
 
 ## Docs
 

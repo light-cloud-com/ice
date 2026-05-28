@@ -66,21 +66,21 @@ Some concepts planned for the palette are deferred (authentication, analytics da
 
 ## Concept → cloud mapping
 
-Each concept has one mapped primitive per provider. The mapping lives in `packages/core/src/resources/` and the per-provider handlers in `packages/providers/<cloud>/src/handlers/`. Examples:
+Each concept has one mapped primitive per provider. The mapping lives in `packages/core/src/resources/` and the per-provider handlers in `packages/core/src/deploy/providers/<cloud>/handlers/`. Examples:
 
-| Concept             | GCP                     | AWS             | Azure                        |
-| ------------------- | ----------------------- | --------------- | ---------------------------- |
-| Static Site         | Cloud Storage + CDN     | S3 + CloudFront | Storage Account + CDN        |
-| Scalable Backend    | Cloud Run               | ECS Fargate     | App Service / Container Apps |
-| Serverless Function | Cloud Functions         | Lambda          | Functions                    |
-| Postgres            | Cloud SQL (Postgres)    | RDS (Postgres)  | Database for PostgreSQL      |
-| Object Storage      | Cloud Storage           | S3              | Blob Storage                 |
-| Message Queue       | Pub/Sub                 | SQS             | Service Bus                  |
-| Vector DB           | Vertex AI Vector Search | OpenSearch      | AI Search                    |
-| LLM Gateway         | Vertex AI endpoints     | Bedrock         | Azure OpenAI                 |
-| Observability       | Cloud Logging           | CloudWatch      | Monitor                      |
+| Concept             | GCP                     | AWS             | Azure                        | Alibaba          | OCI            | DigitalOcean | IBM             | Kubernetes        |
+| ------------------- | ----------------------- | --------------- | ---------------------------- | ---------------- | -------------- | ------------ | --------------- | ----------------- |
+| Static Site         | Cloud Storage + CDN     | S3 + CloudFront | Storage Account + CDN        | OSS + CDN        | Object Storage | Spaces + CDN | COS             | Ingress + Service |
+| Scalable Backend    | Cloud Run               | ECS Fargate     | App Service / Container Apps | Function Compute | Functions      | App Platform | Code Engine     | Deployment        |
+| Serverless Function | Cloud Functions         | Lambda          | Functions                    | Function Compute | Functions      | Functions    | Cloud Functions | Job               |
+| Postgres            | Cloud SQL (Postgres)    | RDS (Postgres)  | Database for PostgreSQL      | RDS Postgres     | PostgreSQL     | Managed DB   | Db2 / Cloudant  | StatefulSet       |
+| Object Storage      | Cloud Storage           | S3              | Blob Storage                 | OSS              | Object Storage | Spaces       | COS             | PVC               |
+| Message Queue       | Pub/Sub                 | SQS             | Service Bus                  | MNS / RocketMQ   | Streaming      | (planned)    | Event Streams   | (CRD)             |
+| Vector DB           | Vertex AI Vector Search | OpenSearch      | AI Search                    | (planned)        | (planned)      | (planned)    | (planned)       | StatefulSet       |
+| LLM Gateway         | Vertex AI endpoints     | Bedrock         | Azure OpenAI                 | (planned)        | (planned)      | (planned)    | (planned)       | Service           |
+| Observability       | Cloud Logging           | CloudWatch      | Monitor                      | SLS              | Logging        | Monitoring   | Log Analysis    | (sidecar pattern) |
 
-GCP is the most complete provider today; AWS and Azure are intentionally partial. Provider parity is tracked on the roadmap.
+GCP is stable. AWS + Azure are experimental with real-cloud deploys observed for their enabled categories. Alibaba, OCI, DigitalOcean, IBM, and Kubernetes are in **preview** — handler + extractor + L4 SDK-input verifier shipped, but per-handler deploy gates are still pending. See [provider-status.md](provider-status.md) for the current matrix.
 
 ## Requirements and validation
 

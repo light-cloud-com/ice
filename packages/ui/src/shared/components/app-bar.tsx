@@ -3,32 +3,28 @@
  */
 
 import { isProviderEnabled } from '@ice/constants';
-import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
-import azureIcon from 'devicon/icons/azure/azure-original.svg';
-import digitaloceanIcon from 'devicon/icons/digitalocean/digitalocean-original.svg';
 import githubIcon from 'devicon/icons/github/github-original.svg';
-import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import kubernetesIcon from 'devicon/icons/kubernetes/kubernetes-original.svg';
-import ociIcon from 'devicon/icons/oracle/oracle-original.svg';
 import { Settings, HelpCircle, Sparkles } from 'lucide-react';
-// Alibaba Cloud + IBM are not in devicon — use SimpleIcons SVG slugs
-// served as data URIs (single-color, currentColor-driven so they
-// auto-theme with the bar text color).
-const alibabaIcon =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5.535 9.7H1.475L0 14.343l1.474 4.633h4.06v-2.428l-2.388-.717.876-2.776 2.49.733 1.023 1.05V9.701z m12.928 0h4.062L24 14.343l-1.475 4.633h-4.062v-2.428l2.387-.717-.876-2.776-2.488.733-1.023 1.05V9.7zM7.464 5.024L12 4.027v.762l-3.484.99-.052 13.42 3.536 1.045v.726l-4.536-.997zm9.072 0L12 4.027v.762l3.483.99.053 13.42L12 20.245v.726l4.536-.997z"/></svg>',
-  );
-const ibmIcon =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 4.857v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143zM0 6.429v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143zM0 8v.78h6.857V8H0zm10.285 0v.78h2.572V8h-2.572zm6.001 0v.78h2.571V8h-2.571zM0 9.571v.78h6.857v-.78H0zm10.285 0v.78h6v-.78h-6zM0 11.143v.78h6.857v-.78H0zm10.285 0v.78h6v-.78h-6zM0 12.714v.781h6.857v-.781H0zm10.285 0v.781h6v-.781h-6zM0 14.286v.78h6.857v-.78H0zm10.285 0v.78h2.572v-.78h-2.572zm6.001 0v.78h2.571v-.78h-2.571zM0 15.857v.781h6.857v-.781H0zm8.571 0v.781h8.572v-.781H8.57zm10.286 0v.781H24v-.781h-5.143zM0 17.43v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143z"/></svg>',
-  );
+// Cloud provider logos: official multi-color marks extracted from
+// docs/assets/cloud-providers.svg. Single source of truth so the
+// AppBar, README, and any onboarding material stay in lockstep.
+//
+// Alibaba is mapped to the Tencent Cloud mark (same SVG file) until
+// a first-party Alibaba SVG lands — both are Chinese-cloud peers and
+// share the visual treatment.
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Breadcrumbs } from './breadcrumbs';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
+import awsIcon from '../../assets/icons/providers/aws.svg';
+import azureIcon from '../../assets/icons/providers/azure.svg';
+import digitaloceanIcon from '../../assets/icons/providers/digitalocean.svg';
+import gcpIcon from '../../assets/icons/providers/gcp.svg';
+import ibmIcon from '../../assets/icons/providers/ibm.svg';
+import kubernetesIcon from '../../assets/icons/providers/kubernetes.svg';
+import ociIcon from '../../assets/icons/providers/oracle.svg';
+import alibabaIcon from '../../assets/icons/providers/tencent.svg';
 import { Logo } from '../../assets/logo';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { AnthropicConnectModal } from '../../features/integrations/components/anthropic-connect-modal';

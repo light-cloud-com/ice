@@ -43,6 +43,7 @@ const HANDLER_DIRS = [
   'packages/core/src/deploy/providers/aws/handlers',
   'packages/core/src/deploy/providers/gcp/handlers',
   'packages/core/src/deploy/providers/azure/handlers',
+  'packages/core/src/deploy/providers/kubernetes/handlers',
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -569,6 +570,130 @@ async function gcpGetRequestFields(pkg, method) {
   return gcpRequestCache.get(cacheKey);
 }
 
+// ─── Kubernetes resolver ───────────────────────────────────────────────────
+//
+// K8s handler shape (very uniform across all handlers):
+//
+//   const body = { apiVersion: 'apps/v1', kind: 'Deployment',
+//                  metadata: {…}, spec: {…} };
+//   await apps.createNamespacedDeployment({ namespace, body });
+//
+// The top-level fields of every K8s resource are governed by its
+// V<n><Kind> model class in `@kubernetes/client-node/dist/gen/models/`.
+// We look up the model class by the literal Kind value declared in
+// the body, and verify the body's top-level keys against the class's
+// declared instance properties (`'apiVersion'?: string` etc).
+//
+// Skipped: `createNamespacedCustomObject` calls (CRDs are user-defined
+// types with no model class in client-node).
+
+const K8S_PKG = '@kubernetes/client-node';
+
+const k8sModelDirCache = { dir: null };
+async function k8sLocateModelsDir() {
+  if (k8sModelDirCache.dir !== null) return k8sModelDirCache.dir;
+  let dir = null;
+  try {
+    const entry = require_core.resolve(`${K8S_PKG}/package.json`);
+    dir = join(dirname(entry), 'dist/gen/models');
+  } catch {
+    dir = '';
+  }
+  k8sModelDirCache.dir = dir;
+  return dir;
+}
+
+const k8sModelFieldsCache = new Map();
+async function k8sGetModelFields(kind) {
+  if (k8sModelFieldsCache.has(kind)) return k8sModelFieldsCache.get(kind);
+  const dir = await k8sLocateModelsDir();
+  if (!dir) {
+    k8sModelFieldsCache.set(kind, { found: false, reason: '@kubernetes/client-node not installed' });
+    return k8sModelFieldsCache.get(kind);
+  }
+  // Try V1<Kind> first, fall back to V2<Kind> (HPA) and V1beta1<Kind>.
+  for (const prefix of ['V1', 'V2', 'V1beta1', 'V2beta2', 'V1alpha1']) {
+    const file = join(dir, `${prefix}${kind}.d.ts`);
+    let src;
+    try {
+      src = await fs.readFile(file, 'utf8');
+    } catch {
+      continue;
+    }
+    const fields = new Set();
+    // Match: `'apiVersion'?: string;` — quoted-property declarations.
+    for (const m of src.matchAll(/^\s*'([A-Za-z_][\w]*)'\??\s*:/gm)) fields.add(m[1]);
+    if (fields.size > 0) {
+      const result = { found: true, fields: [...fields], interface: `${prefix}${kind}` };
+      k8sModelFieldsCache.set(kind, result);
+      return result;
+    }
+  }
+  k8sModelFieldsCache.set(kind, { found: false, reason: `no V*${kind}.d.ts model class` });
+  return k8sModelFieldsCache.get(kind);
+}
+
+/**
+ * Find every `Namespaced<Kind>` operation invocation (excluding CRDs)
+ * and pair it with the body literal in scope. Returns one entry per
+ * unique body literal so we don't double-count create + replace using
+ * the same body.
+ */
+function scanKubernetesInvocations(src) {
+  const out = [];
+  const seenBodies = new Set();
+
+  // 1) Object literals whose top-level keys include `apiVersion` AND
+  //    `kind` — these are the K8s resource bodies. We extract their
+  //    kind value and verify their top-level keys.
+  const litRe = /(\{[\s\S]*?)(?=\n\s{6}\})/g; // unused; just for clarity
+
+  // Walk every `kind: '<Kind>'` (or "<Kind>") string in the file. For
+  // each, find the enclosing object literal's open-brace by scanning
+  // backwards to a balanced `{`, then capture top-level keys. Match
+  // only on lines that look like a top-level body property (avoid
+  // nested `kind: 'Deployment'` inside scaleTargetRef etc by checking
+  // that `apiVersion` appears within ~10 lines).
+  const kindRe = /\bkind\s*:\s*['"]([A-Z][A-Za-z0-9]+)['"]/g;
+  let km;
+  while ((km = kindRe.exec(src))) {
+    const kind = km[1];
+    // Skip pseudo-kinds nested deep in specs (we only want the body
+    // literal that ALSO has apiVersion at the same depth).
+    const kindIdx = km.index;
+    // Look for opening `{` of the enclosing object literal. Walk back
+    // counting braces.
+    let depth = 0;
+    let openIdx = -1;
+    for (let i = kindIdx; i >= 0; i--) {
+      const c = src[i];
+      if (c === '}') depth++;
+      else if (c === '{') {
+        if (depth === 0) {
+          openIdx = i;
+          break;
+        }
+        depth--;
+      }
+    }
+    if (openIdx < 0) continue;
+    // Confirm `apiVersion:` is at the same nesting level by looking
+    // for it within the same enclosing literal.
+    const keys = topLevelKeys(src, openIdx);
+    if (!keys.includes('apiVersion') || !keys.includes('kind')) continue;
+    // Top-level K8s resource bodies always carry metadata. Inner refs
+    // (CrossVersionObjectReference, OwnerReference, …) have apiVersion
+    // + kind but no metadata — filter them out here.
+    if (!keys.includes('metadata')) continue;
+    // Dedupe by literal opening position.
+    if (seenBodies.has(openIdx)) continue;
+    seenBodies.add(openIdx);
+    out.push({ provider: 'kubernetes', kind, keys, openIdx });
+  }
+
+  return out;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 function isAwsPkg(p) {
@@ -585,6 +710,7 @@ function providerOfFile(file) {
   if (file.includes('/aws/handlers/')) return 'aws';
   if (file.includes('/azure/handlers/')) return 'azure';
   if (file.includes('/gcp/handlers/')) return 'gcp';
+  if (file.includes('/kubernetes/handlers/')) return 'kubernetes';
   return null;
 }
 
@@ -656,9 +782,9 @@ async function main() {
 
   const summary = {
     handlersScanned: 0,
-    invocations: { aws: 0, azure: 0, gcp: 0 },
-    verified: { aws: 0, azure: 0, gcp: 0 },
-    unverified: { aws: 0, azure: 0, gcp: 0 },
+    invocations: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
+    verified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
+    unverified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
     mismatches: [],
   };
 
@@ -732,6 +858,33 @@ async function main() {
           });
         }
       }
+    } else if (provider === 'kubernetes') {
+      for (const inv of scanKubernetesInvocations(src)) {
+        summary.invocations.kubernetes++;
+        any = true;
+        const result = await k8sGetModelFields(inv.kind);
+        if (!result.found) {
+          summary.unverified.kubernetes++;
+          if (VERBOSE)
+            console.log(`  ${file.replace(ROOT + '/', '')}: kind ${inv.kind} → ${result.reason}`);
+          continue;
+        }
+        const validSet = new Set(result.fields);
+        const unknown = inv.keys.filter((k) => !validSet.has(k));
+        summary.verified.kubernetes++;
+        if (unknown.length) {
+          summary.mismatches.push({
+            provider: 'kubernetes',
+            file: file.replace(ROOT + '/', ''),
+            command: inv.kind,
+            package: K8S_PKG,
+            inputInterface: result.interface,
+            unknown,
+            passed: inv.keys,
+            valid: result.fields,
+          });
+        }
+      }
     } else if (provider === 'gcp') {
       const sdkPkg = await pickGcpSdk(src);
       if (!sdkPkg) continue;
@@ -767,7 +920,7 @@ async function main() {
 
   console.log('=== SDK command-input verification (all providers) ===');
   console.log(`Handlers scanned:    ${summary.handlersScanned}`);
-  for (const p of ['aws', 'azure', 'gcp']) {
+  for (const p of ['aws', 'azure', 'gcp', 'kubernetes']) {
     console.log(
       `  ${p.padEnd(5)} invocations=${summary.invocations[p]
         .toString()

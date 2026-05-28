@@ -1,19 +1,22 @@
 {
-  "handlersScanned": 84,
+  "handlersScanned": 101,
   "invocations": {
     "aws": 143,
     "azure": 75,
-    "gcp": 24
+    "gcp": 24,
+    "kubernetes": 19
   },
   "verified": {
     "aws": 142,
     "azure": 69,
-    "gcp": 18
+    "gcp": 18,
+    "kubernetes": 17
   },
   "unverified": {
     "aws": 1,
     "azure": 6,
-    "gcp": 6
+    "gcp": 6,
+    "kubernetes": 2
   },
   "mismatches": []
 }

@@ -45,7 +45,7 @@ export const maxcompute_project_handler: AlibabaResourceHandler = {
     const mc = await resolveClient(ctx, 'maxcompute');
     if (!mc) return err(name, TYPE, 'delete', start, 'Alibaba MaxCompute SDK not available');
     try {
-      await mc.deleteProject({ projectName: provider_id });
+      await mc.deleteProject(provider_id, {});
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

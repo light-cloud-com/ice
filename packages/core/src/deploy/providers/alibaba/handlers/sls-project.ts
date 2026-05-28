@@ -21,20 +21,15 @@ export const sls_project_handler: AlibabaResourceHandler = {
     if (!sls) return sdkMissing(name, TYPE, 'create', start, 'Alibaba SLS', SDK);
     try {
       await sls.createProject({
-        body: {
-          projectName: name,
-          description: (properties.description as string) || `Log project managed by ice`,
-        },
+        projectName: name,
+        description: (properties.description as string) || `Log project managed by ice`,
       });
       const logstoreName = (properties.logstore_name as string) || `${name}-default`;
       try {
-        await sls.createLogStore({
-          project: name,
-          body: {
-            logstoreName,
-            ttl: (properties.retention_days as number) ?? 30,
-            shardCount: (properties.shards as number) ?? 2,
-          },
+        await sls.createLogStore(name, {
+          logstoreName,
+          ttl: (properties.retention_days as number) ?? 30,
+          shardCount: (properties.shards as number) ?? 2,
         });
       } catch (e) {
         if (!isAlibabaAlreadyExists(e)) throw e;
@@ -57,7 +52,7 @@ export const sls_project_handler: AlibabaResourceHandler = {
     if (!sls) return err(name, TYPE, 'delete', start, 'Alibaba SLS SDK not available');
     try {
       const [project] = provider_id.split('/');
-      await sls.deleteProject({ project });
+      await sls.deleteProject(project, {});
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

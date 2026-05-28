@@ -19,15 +19,15 @@ export const sae_application_handler: AlibabaResourceHandler = {
     if (!sae) return sdkMissing(name, TYPE, 'create', start, 'Alibaba SAE', SDK);
     try {
       const result = await sae.createApplication({
-        AppName: name,
-        NamespaceId: (properties.namespace_id as string) || `${ctx.region}:default`,
-        VSwitchId: properties.vswitch_id as string | undefined,
-        VpcId: properties.vpc_id as string | undefined,
-        PackageType: 'Image',
-        ImageUrl: (properties.image as string) || '',
-        Replicas: (properties.replicas as number) ?? 1,
-        Cpu: (properties.cpu_milli as number) ?? 1000,
-        Memory: (properties.memory_mb as number) ?? 2048,
+        appName: name,
+        namespaceId: (properties.namespace_id as string) || `${ctx.region}:default`,
+        vSwitchId: properties.vswitch_id as string | undefined,
+        vpcId: properties.vpc_id as string | undefined,
+        packageType: 'Image',
+        imageUrl: (properties.image as string) || '',
+        replicas: (properties.replicas as number) ?? 1,
+        cpu: (properties.cpu_milli as number) ?? 1000,
+        memory: (properties.memory_mb as number) ?? 2048,
       });
       const appId = (result?.body?.Data?.AppId ?? result?.body?.appId) as string | undefined;
       if (!appId) return err(name, TYPE, 'create', start, 'CreateApplication returned no AppId');
@@ -44,9 +44,9 @@ export const sae_application_handler: AlibabaResourceHandler = {
     if (!sae) return err(name, TYPE, 'update', start, 'Alibaba SAE SDK not available');
     try {
       await sae.deployApplication({
-        AppId: provider_id,
-        ImageUrl: properties.image as string | undefined,
-        Replicas: properties.replicas as number | undefined,
+        appId: provider_id,
+        imageUrl: properties.image as string | undefined,
+        replicas: properties.replicas as number | undefined,
       });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
@@ -59,7 +59,7 @@ export const sae_application_handler: AlibabaResourceHandler = {
     const sae = await resolveClient(ctx, 'sae');
     if (!sae) return err(name, TYPE, 'delete', start, 'Alibaba SAE SDK not available');
     try {
-      await sae.deleteApplication({ AppId: provider_id });
+      await sae.deleteApplication({ appId: provider_id });
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

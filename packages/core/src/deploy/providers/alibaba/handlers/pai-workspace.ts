@@ -43,7 +43,7 @@ export const pai_workspace_handler: AlibabaResourceHandler = {
     const ws = await resolveClient(ctx, 'paiworkspace');
     if (!ws) return err(name, TYPE, 'delete', start, 'Alibaba PAI Workspace SDK not available');
     try {
-      await ws.deleteWorkspace({ WorkspaceId: provider_id });
+      await ws.deleteWorkspace(provider_id, {});
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

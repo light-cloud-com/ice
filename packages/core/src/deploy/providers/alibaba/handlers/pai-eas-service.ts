@@ -50,7 +50,7 @@ export const pai_eas_service_handler: AlibabaResourceHandler = {
     const pai = await resolveClient(ctx, 'pai');
     if (!pai) return err(name, TYPE, 'delete', start, 'Alibaba PAI-EAS SDK not available');
     try {
-      await pai.deleteService({ ClusterId: 'cn-hangzhou', ServiceName: provider_id });
+      await pai.deleteService(ctx.region, provider_id, {});
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

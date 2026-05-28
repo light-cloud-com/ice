@@ -18,9 +18,9 @@ export const ram_user_handler: AlibabaResourceHandler = {
     if (!ram) return sdkMissing(name, TYPE, 'create', start, 'Alibaba RAM', SDK);
     try {
       await ram.createUser({
-        UserName: name,
-        DisplayName: (properties.display_name as string) || name,
-        Comments: (properties.description as string) || `Managed by ice`,
+        userName: name,
+        displayName: (properties.display_name as string) || name,
+        comments: (properties.description as string) || `Managed by ice`,
       });
       return ok(name, TYPE, 'create', start, { provider_id: name });
     } catch (error) {
@@ -35,8 +35,8 @@ export const ram_user_handler: AlibabaResourceHandler = {
     if (!ram) return err(name, TYPE, 'update', start, 'Alibaba RAM SDK not available');
     try {
       await ram.updateUser({
-        UserName: provider_id,
-        NewDisplayName: (properties.display_name as string) || name,
+        userName: provider_id,
+        newDisplayName: (properties.display_name as string) || name,
       });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
@@ -49,7 +49,7 @@ export const ram_user_handler: AlibabaResourceHandler = {
     const ram = await resolveClient(ctx, 'ram');
     if (!ram) return err(name, TYPE, 'delete', start, 'Alibaba RAM SDK not available');
     try {
-      await ram.deleteUser({ UserName: provider_id });
+      await ram.deleteUser({ userName: provider_id });
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

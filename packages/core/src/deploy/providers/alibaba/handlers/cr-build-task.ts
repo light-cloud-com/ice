@@ -25,14 +25,11 @@ export const cr_build_task_handler: AlibabaResourceHandler = {
       const result = await cr.createRepoBuildRule({
         instanceId: properties.instance_id as string,
         repoId: properties.repo_id as string,
-        body: {
-          buildRuleName: name,
-          dockerfileLocation: (properties.dockerfile_path as string) || '/',
-          dockerfileName: (properties.dockerfile_name as string) || 'Dockerfile',
-          imageTag: (properties.image_tag as string) || 'latest',
-          pushName: (properties.branch as string) || 'main',
-          pushType: 'GIT_BRANCH',
-        },
+        dockerfileLocation: (properties.dockerfile_path as string) || '/',
+        dockerfileName: (properties.dockerfile_name as string) || 'Dockerfile',
+        imageTag: (properties.image_tag as string) || 'latest',
+        pushName: (properties.branch as string) || 'main',
+        pushType: 'GIT_BRANCH',
       });
       const id = (result?.body?.buildRuleId ?? result?.body?.BuildRuleId) as string | undefined;
       if (!id) return err(name, TYPE, 'create', start, 'CreateRepoBuildRule returned no BuildRuleId');

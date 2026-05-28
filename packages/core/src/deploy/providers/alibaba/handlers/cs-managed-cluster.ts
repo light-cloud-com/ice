@@ -21,17 +21,15 @@ export const cs_managed_cluster_handler: AlibabaResourceHandler = {
     if (!cs) return sdkMissing(name, TYPE, 'create', start, 'Alibaba ACK', SDK);
     try {
       const result = await cs.createCluster({
-        body: {
-          name,
-          cluster_type: 'ManagedKubernetes',
-          region_id: ctx.region,
-          kubernetes_version: (properties.version as string) || '1.28.9-aliyun.1',
-          vpcid: properties.vpc_id as string | undefined,
-          vswitch_ids: (properties.vswitch_ids as string[]) ?? [],
-          service_cidr: (properties.service_cidr as string) || '172.21.0.0/20',
-          container_cidr: (properties.pod_cidr as string) || '172.20.0.0/16',
-          num_of_nodes: (properties.node_count as number) ?? 1,
-        },
+        name,
+        clusterType: 'ManagedKubernetes',
+        regionId: ctx.region,
+        kubernetesVersion: (properties.version as string) || '1.28.9-aliyun.1',
+        vpcid: properties.vpc_id as string | undefined,
+        vswitchIds: (properties.vswitch_ids as string[]) ?? [],
+        serviceCidr: (properties.service_cidr as string) || '172.21.0.0/20',
+        containerCidr: (properties.pod_cidr as string) || '172.20.0.0/16',
+        numOfNodes: (properties.node_count as number) ?? 1,
       });
       const id = (result?.body?.clusterId ?? result?.body?.cluster_id) as string | undefined;
       if (!id) return err(name, TYPE, 'create', start, 'CreateCluster returned no ClusterId');
@@ -47,9 +45,8 @@ export const cs_managed_cluster_handler: AlibabaResourceHandler = {
     const cs = await resolveClient(ctx, 'cs');
     if (!cs) return err(name, TYPE, 'update', start, 'Alibaba ACK SDK not available');
     try {
-      await cs.modifyClusterConfiguration({
-        ClusterId: provider_id,
-        body: { customizations: properties.customizations },
+      await cs.modifyCluster(provider_id, {
+        clusterName: name,
       });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
@@ -62,7 +59,7 @@ export const cs_managed_cluster_handler: AlibabaResourceHandler = {
     const cs = await resolveClient(ctx, 'cs');
     if (!cs) return err(name, TYPE, 'delete', start, 'Alibaba ACK SDK not available');
     try {
-      await cs.deleteCluster({ ClusterId: provider_id });
+      await cs.deleteCluster(provider_id, {});
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

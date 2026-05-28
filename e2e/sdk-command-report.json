@@ -1,22 +1,34 @@
 {
-  "handlersScanned": 101,
+  "handlersScanned": 132,
   "invocations": {
     "aws": 143,
     "azure": 75,
     "gcp": 24,
-    "kubernetes": 19
+    "kubernetes": 19,
+    "alibaba": 78,
+    "oci": 0,
+    "digitalocean": 0,
+    "ibm": 0
   },
   "verified": {
     "aws": 142,
     "azure": 69,
     "gcp": 18,
-    "kubernetes": 17
+    "kubernetes": 17,
+    "alibaba": 65,
+    "oci": 0,
+    "digitalocean": 0,
+    "ibm": 0
   },
   "unverified": {
     "aws": 1,
     "azure": 6,
     "gcp": 6,
-    "kubernetes": 2
+    "kubernetes": 2,
+    "alibaba": 13,
+    "oci": 0,
+    "digitalocean": 0,
+    "ibm": 0
   },
   "mismatches": []
 }

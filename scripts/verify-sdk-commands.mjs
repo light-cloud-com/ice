@@ -44,6 +44,10 @@ const HANDLER_DIRS = [
   'packages/core/src/deploy/providers/gcp/handlers',
   'packages/core/src/deploy/providers/azure/handlers',
   'packages/core/src/deploy/providers/kubernetes/handlers',
+  'packages/core/src/deploy/providers/alibaba/handlers',
+  'packages/core/src/deploy/providers/oci/handlers',
+  'packages/core/src/deploy/providers/digitalocean/handlers',
+  'packages/core/src/deploy/providers/ibm/handlers',
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -694,6 +698,123 @@ function scanKubernetesInvocations(src) {
   return out;
 }
 
+// ─── Alibaba resolver ──────────────────────────────────────────────────────
+//
+// Alibaba handler shape (uniform across all Alibaba handlers):
+//
+//   const ecs = await resolveClient(ctx, 'ecs');
+//   await ecs.createInstance({ regionId, instanceName, imageId, … });
+//
+// Each operation maps to a `<Op>Request` class in
+// `@alicloud/<svc>/dist/models/<Op>Request.d.ts`. We extract the class
+// body's top-level fields and verify the object literal keys.
+//
+// Service short-name → npm package mapping comes from
+// `packages/core/src/deploy/providers/alibaba/sdk-loader.ts SERVICE_PACKAGES`.
+
+let alibabaServiceMapCache = null;
+async function loadAlibabaServiceMap() {
+  if (alibabaServiceMapCache) return alibabaServiceMapCache;
+  const map = new Map();
+  try {
+    const src = await fs.readFile(
+      join(ROOT, 'packages/core/src/deploy/providers/alibaba/sdk-loader.ts'),
+      'utf8',
+    );
+    // Match: `  ecs: { pkg: '@alicloud/ecs20140526', endpoint_prefix: 'ecs' },`
+    const re = /^\s*([a-z]+):\s*\{\s*pkg:\s*['"](@alicloud\/[^'"]+)['"]/gm;
+    let m;
+    while ((m = re.exec(src))) map.set(m[1], m[2]);
+  } catch {
+    /* loader not readable */
+  }
+  alibabaServiceMapCache = map;
+  return map;
+}
+
+const alibabaModelFieldsCache = new Map();
+async function alibabaGetRequestFields(pkg, method) {
+  const cacheKey = `${pkg}::${method}`;
+  if (alibabaModelFieldsCache.has(cacheKey)) return alibabaModelFieldsCache.get(cacheKey);
+  // method `createInstance` → request `CreateInstanceRequest`
+  const requestClass = `${method.charAt(0).toUpperCase()}${method.slice(1)}Request`;
+  let dir;
+  try {
+    const entry = require_core.resolve(`${pkg}/package.json`);
+    dir = join(dirname(entry), 'dist/models');
+  } catch {
+    const result = { found: false, reason: `${pkg} not installed` };
+    alibabaModelFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const file = join(dir, `${requestClass}.d.ts`);
+  let src;
+  try {
+    src = await fs.readFile(file, 'utf8');
+  } catch {
+    const result = { found: false, reason: `${requestClass}.d.ts not found in ${pkg}` };
+    alibabaModelFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  // The request class declaration is `export declare class <Name>Request extends $dara.Model { … }`.
+  // Top-level fields are 2-space-indented declarations directly inside
+  // the class body. Nested classes are also declared in the same file
+  // (e.g. `CreateInstanceRequestSystemDisk`) but their fields don't
+  // belong to the top-level request.
+  const classMatch = src.match(
+    new RegExp(`export\\s+declare\\s+class\\s+${requestClass}\\s+extends\\s+\\$dara\\.Model\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'),
+  );
+  if (!classMatch) {
+    const result = { found: false, reason: `class ${requestClass} not found in ${file}` };
+    alibabaModelFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const body = classMatch[1];
+  const fields = new Set();
+  // Match field declarations: `    <name>?: <type>;` — only top-level
+  // (4-space indent inside the class body).
+  for (const m of body.matchAll(/^\s{4}([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(m[1]);
+  const result = { found: true, fields: [...fields], interface: requestClass };
+  alibabaModelFieldsCache.set(cacheKey, result);
+  return result;
+}
+
+/**
+ * Scan Alibaba handler invocations.
+ *
+ *   const <alias> = await resolveClient(ctx, '<service>');
+ *   …
+ *   await <alias>.<method>({ <obj> });
+ *
+ * We track the alias → service mapping then attribute each
+ * `<alias>.<method>(` call to its service short-name.
+ */
+function scanAlibabaInvocations(src) {
+  // Map alias name → service short-name
+  const aliasToService = new Map();
+  for (const m of src.matchAll(
+    /const\s+([a-z_][\w]*)\s*=\s*await\s+resolveClient\(\s*ctx\s*,\s*['"]([a-z]+)['"]\s*\)/g,
+  )) {
+    aliasToService.set(m[1], m[2]);
+  }
+  const out = [];
+  for (const [alias, service] of aliasToService) {
+    const re = new RegExp(`\\b${alias}\\.([a-zA-Z_][\\w]*)\\(\\s*\\{`, 'g');
+    let m;
+    while ((m = re.exec(src))) {
+      const method = m[1];
+      const objStart = m.index + m[0].length - 1;
+      out.push({
+        provider: 'alibaba',
+        service,
+        method,
+        keys: topLevelKeys(src, objStart),
+      });
+    }
+  }
+  return out;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 function isAwsPkg(p) {
@@ -711,6 +832,10 @@ function providerOfFile(file) {
   if (file.includes('/azure/handlers/')) return 'azure';
   if (file.includes('/gcp/handlers/')) return 'gcp';
   if (file.includes('/kubernetes/handlers/')) return 'kubernetes';
+  if (file.includes('/alibaba/handlers/')) return 'alibaba';
+  if (file.includes('/oci/handlers/')) return 'oci';
+  if (file.includes('/digitalocean/handlers/')) return 'digitalocean';
+  if (file.includes('/ibm/handlers/')) return 'ibm';
   return null;
 }
 
@@ -782,9 +907,9 @@ async function main() {
 
   const summary = {
     handlersScanned: 0,
-    invocations: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
-    verified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
-    unverified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0 },
+    invocations: { aws: 0, azure: 0, gcp: 0, kubernetes: 0, alibaba: 0, oci: 0, digitalocean: 0, ibm: 0 },
+    verified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0, alibaba: 0, oci: 0, digitalocean: 0, ibm: 0 },
+    unverified: { aws: 0, azure: 0, gcp: 0, kubernetes: 0, alibaba: 0, oci: 0, digitalocean: 0, ibm: 0 },
     mismatches: [],
   };
 
@@ -885,6 +1010,45 @@ async function main() {
           });
         }
       }
+    } else if (provider === 'alibaba') {
+      const serviceMap = await loadAlibabaServiceMap();
+      for (const inv of scanAlibabaInvocations(src)) {
+        summary.invocations.alibaba++;
+        any = true;
+        const pkg = serviceMap.get(inv.service);
+        if (!pkg) {
+          summary.unverified.alibaba++;
+          if (VERBOSE)
+            console.log(
+              `  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → no @alicloud/* mapping`,
+            );
+          continue;
+        }
+        const result = await alibabaGetRequestFields(pkg, inv.method);
+        if (!result.found) {
+          summary.unverified.alibaba++;
+          if (VERBOSE)
+            console.log(
+              `  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → ${result.reason}`,
+            );
+          continue;
+        }
+        const validSet = new Set(result.fields);
+        const unknown = inv.keys.filter((k) => !validSet.has(k));
+        summary.verified.alibaba++;
+        if (unknown.length) {
+          summary.mismatches.push({
+            provider: 'alibaba',
+            file: file.replace(ROOT + '/', ''),
+            command: `${inv.service}.${inv.method}`,
+            package: pkg,
+            inputInterface: result.interface,
+            unknown,
+            passed: inv.keys,
+            valid: result.fields,
+          });
+        }
+      }
     } else if (provider === 'gcp') {
       const sdkPkg = await pickGcpSdk(src);
       if (!sdkPkg) continue;
@@ -920,9 +1084,9 @@ async function main() {
 
   console.log('=== SDK command-input verification (all providers) ===');
   console.log(`Handlers scanned:    ${summary.handlersScanned}`);
-  for (const p of ['aws', 'azure', 'gcp', 'kubernetes']) {
+  for (const p of ['aws', 'azure', 'gcp', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm']) {
     console.log(
-      `  ${p.padEnd(5)} invocations=${summary.invocations[p]
+      `  ${p.padEnd(12)} invocations=${summary.invocations[p]
         .toString()
         .padStart(3)}  verified=${summary.verified[p].toString().padStart(3)}  unverified=${summary.unverified[p]
         .toString()

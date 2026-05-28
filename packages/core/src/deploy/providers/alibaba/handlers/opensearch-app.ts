@@ -18,13 +18,9 @@ export const opensearch_app_handler: AlibabaResourceHandler = {
     const os = await resolveClient(ctx, 'opensearch');
     if (!os) return sdkMissing(name, TYPE, 'create', start, 'Alibaba OpenSearch', SDK);
     try {
-      const result = await os.createApp({
-        appGroupIdentity: (properties.group_id as string) || name,
-        body: {
-          name,
-          description: (properties.description as string) || `Search app managed by ice`,
-          schema: properties.schema,
-        },
+      const result = await os.createApp((properties.group_id as string) || name, {
+        description: (properties.description as string) || `Search app managed by ice`,
+        domain: properties.schema as unknown as Record<string, unknown> | undefined,
       });
       const id = (result?.body?.result?.id ?? result?.body?.id) as string | undefined;
       if (!id) return err(name, TYPE, 'create', start, 'CreateApp returned no Id');
@@ -45,7 +41,7 @@ export const opensearch_app_handler: AlibabaResourceHandler = {
     const os = await resolveClient(ctx, 'opensearch');
     if (!os) return err(name, TYPE, 'delete', start, 'Alibaba OpenSearch SDK not available');
     try {
-      await os.removeApp({ appGroupIdentity: name, appId: provider_id });
+      await os.removeApp(name, provider_id);
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

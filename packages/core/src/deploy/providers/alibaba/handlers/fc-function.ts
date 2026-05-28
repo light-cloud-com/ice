@@ -21,7 +21,6 @@ export const fc_function_handler: AlibabaResourceHandler = {
     try {
       const code = (properties.code_zip_base64 as string) ?? '';
       await fc.createFunction({
-        functionName: name,
         body: {
           functionName: name,
           runtime: (properties.runtime as string) || 'nodejs20',
@@ -44,8 +43,7 @@ export const fc_function_handler: AlibabaResourceHandler = {
     const fc = await resolveClient(ctx, 'fc');
     if (!fc) return err(name, TYPE, 'update', start, 'Alibaba FC SDK not available');
     try {
-      await fc.updateFunction({
-        functionName: provider_id,
+      await fc.updateFunction(provider_id, {
         body: {
           memorySize: properties.memory_mb as number | undefined,
           timeout: properties.timeout_sec as number | undefined,
@@ -63,7 +61,7 @@ export const fc_function_handler: AlibabaResourceHandler = {
     const fc = await resolveClient(ctx, 'fc');
     if (!fc) return err(name, TYPE, 'delete', start, 'Alibaba FC SDK not available');
     try {
-      await fc.deleteFunction({ functionName: provider_id });
+      await fc.deleteFunction(provider_id);
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isAlibabaNotFound(error)) return ok(name, TYPE, 'delete', start);

@@ -1,12 +1,17 @@
 {
-  "generated_at": "2026-05-28T09:07:33.805Z",
+  "generated_at": "2026-05-28T10:31:57.325Z",
   "summary": {
-    "handlers": 124,
-    "packages": 79,
+    "handlers": 224,
+    "packages": 142,
     "providers": {
       "aws": 32,
       "azure": 29,
-      "other": 2,
+      "kubernetes": 1,
+      "alibaba": 28,
+      "oci": 28,
+      "digitalocean": 1,
+      "other": 3,
+      "ibm": 4,
       "gcp": 16
     }
   },
@@ -1608,6 +1613,14 @@
       "clientKeys": ["web"]
     },
     {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/cert-manager.ts",
+      "type": "k8s.certmanager.certificate",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["custom"]
+    },
+    {
       "file": "packages/core/src/deploy/providers/kubernetes/handlers/configmap.ts",
       "type": "k8s.core.configmap",
       "sdkPkgs": ["@kubernetes/client-node"],
@@ -1656,6 +1669,14 @@
       "clientKeys": ["batch"]
     },
     {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/knative-service.ts",
+      "type": "k8s.serving.service",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["custom"]
+    },
+    {
       "file": "packages/core/src/deploy/providers/kubernetes/handlers/namespace.ts",
       "type": "k8s.core.namespace",
       "sdkPkgs": ["@kubernetes/client-node"],
@@ -1678,6 +1699,22 @@
       "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/poddisruptionbudget.ts",
+      "type": "k8s.policy.poddisruptionbudget",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["policy"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/prometheus-rule.ts",
+      "type": "k8s.monitoring.prometheusrule",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["custom"]
     },
     {
       "file": "packages/core/src/deploy/providers/kubernetes/handlers/secret.ts",
@@ -1710,6 +1747,822 @@
       "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["apps"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/alidns-record.ts",
+      "type": "alibaba.alidns.domainRecord",
+      "sdkPkgs": ["@alicloud/alidns20150109"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/amqp-instance.ts",
+      "type": "alibaba.amqp.instance",
+      "sdkPkgs": ["@alicloud/amqp-open20210309"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/apigateway-api.ts",
+      "type": "alibaba.apigateway.api",
+      "sdkPkgs": ["@alicloud/cloudapi20160714"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/cas-certificate.ts",
+      "type": "alibaba.cas.certificate",
+      "sdkPkgs": ["@alicloud/cas20200407"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/cdn-domain.ts",
+      "type": "alibaba.cdn.domain",
+      "sdkPkgs": ["@alicloud/cdn20180510"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/cr-build-task.ts",
+      "type": "alibaba.cr.buildTask",
+      "sdkPkgs": ["@alicloud/cr20181201"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/cr-instance.ts",
+      "type": "alibaba.cr.instance",
+      "sdkPkgs": ["@alicloud/cr20181201"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/cs-managed-cluster.ts",
+      "type": "alibaba.cs.managedCluster",
+      "sdkPkgs": ["@alicloud/cs20151215"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/dds-db-instance.ts",
+      "type": "alibaba.dds.dbInstance",
+      "sdkPkgs": ["@alicloud/dds20151201"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/eci-container-group.ts",
+      "type": "alibaba.eci.containerGroup",
+      "sdkPkgs": ["@alicloud/eci20180808"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/ecs-instance.ts",
+      "type": "alibaba.ecs.instance",
+      "sdkPkgs": ["@alicloud/ecs20140526"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/ecs-security-group.ts",
+      "type": "alibaba.ecs.securityGroup",
+      "sdkPkgs": ["@alicloud/ecs20140526"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/eventbridge-rule.ts",
+      "type": "alibaba.eventbridge.rule",
+      "sdkPkgs": ["@alicloud/eventbridge20200401"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/fc-function.ts",
+      "type": "alibaba.fc.function",
+      "sdkPkgs": ["@alicloud/fc20230330"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/kms-secret.ts",
+      "type": "alibaba.kms.secret",
+      "sdkPkgs": ["@alicloud/kms20160120"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/kvstore-instance.ts",
+      "type": "alibaba.kvstore.instance",
+      "sdkPkgs": ["@alicloud/r-kvstore20150101"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/maxcompute-project.ts",
+      "type": "alibaba.maxcompute.project",
+      "sdkPkgs": ["@alicloud/maxcompute20220104"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/mns-queue.ts",
+      "type": "alibaba.mns.queue",
+      "sdkPkgs": ["@alicloud/mns"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/mns-topic.ts",
+      "type": "alibaba.mns.topic",
+      "sdkPkgs": ["@alicloud/mns"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/opensearch-app.ts",
+      "type": "alibaba.opensearch.app",
+      "sdkPkgs": ["@alicloud/opensearch20171225"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/oss-bucket.ts",
+      "type": "alibaba.oss.bucket",
+      "sdkPkgs": ["@alicloud/oss20190517"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/pai-eas-service.ts",
+      "type": "alibaba.paieas.service",
+      "sdkPkgs": ["@alicloud/eas20210701"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/pai-workspace.ts",
+      "type": "alibaba.pai.workspace",
+      "sdkPkgs": ["@alicloud/aiworkspace20210204"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/privatelink-endpoint.ts",
+      "type": "alibaba.privatelink.endpoint",
+      "sdkPkgs": ["@alicloud/privatelink20200415"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/ram-user.ts",
+      "type": "alibaba.ram.user",
+      "sdkPkgs": ["@alicloud/ram20150501"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/rds-db-instance.ts",
+      "type": "alibaba.rds.dbInstance",
+      "sdkPkgs": ["@alicloud/rds20140815"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/sae-application.ts",
+      "type": "alibaba.sae.application",
+      "sdkPkgs": ["@alicloud/sae20190506"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/slb-load-balancer.ts",
+      "type": "alibaba.slb.loadBalancer",
+      "sdkPkgs": ["@alicloud/slb20140515"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/sls-project.ts",
+      "type": "alibaba.sls.project",
+      "sdkPkgs": ["@alicloud/sls20201230"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/vpc-vswitch.ts",
+      "type": "alibaba.vpc.vSwitch",
+      "sdkPkgs": ["@alicloud/vpc20160428"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/vpc.ts",
+      "type": "alibaba.vpc.vpc",
+      "sdkPkgs": ["@alicloud/vpc20160428"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/alibaba/handlers/waf-policy.ts",
+      "type": "alibaba.waf.policy",
+      "sdkPkgs": ["@alicloud/waf-openapi20211001"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/analytics-instance.ts",
+      "type": "oci.analytics.instance",
+      "sdkPkgs": ["oci-analytics"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/apigateway-gateway.ts",
+      "type": "oci.apigateway.gateway",
+      "sdkPkgs": ["oci-apigateway"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/artifacts-repository.ts",
+      "type": "oci.artifacts.repository",
+      "sdkPkgs": ["oci-artifacts"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/certificates-certificate.ts",
+      "type": "oci.certificates.certificate",
+      "sdkPkgs": ["oci-certificatesmanagement"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/containerengine-cluster.ts",
+      "type": "oci.containerengine.cluster",
+      "sdkPkgs": ["oci-containerengine"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/containerinstance.ts",
+      "type": "oci.containerinstance.instance",
+      "sdkPkgs": ["oci-containerinstances"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/core-instance.ts",
+      "type": "oci.core.instance",
+      "sdkPkgs": ["oci-core"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/core-nsg.ts",
+      "type": "oci.core.networksecuritygroup",
+      "sdkPkgs": ["oci-core"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/core-privateaccessgateway.ts",
+      "type": "oci.core.privateaccessgateway",
+      "sdkPkgs": ["oci-core"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/core-subnet.ts",
+      "type": "oci.core.subnet",
+      "sdkPkgs": ["oci-core"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/core-vcn.ts",
+      "type": "oci.core.vcn",
+      "sdkPkgs": ["oci-core"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/database-autonomous.ts",
+      "type": "oci.database.autonomousdatabase",
+      "sdkPkgs": ["oci-database"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/datascience-modeldeployment.ts",
+      "type": "oci.datascience.modeldeployment",
+      "sdkPkgs": ["oci-datascience"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/dns-zone.ts",
+      "type": "oci.dns.zone",
+      "sdkPkgs": ["oci-dns"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/functions-function.ts",
+      "type": "oci.functions.function",
+      "sdkPkgs": ["oci-functions"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/generativeai-endpoint.ts",
+      "type": "oci.generativeai.endpoint",
+      "sdkPkgs": ["oci-generativeai"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/identitydomains-user.ts",
+      "type": "oci.identitydomains.user",
+      "sdkPkgs": ["oci-identitydomains"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/loadbalancer.ts",
+      "type": "oci.loadbalancer.loadbalancer",
+      "sdkPkgs": ["oci-loadbalancer"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/logging-loggroup.ts",
+      "type": "oci.logging.loggroup",
+      "sdkPkgs": ["oci-logging"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/monitoring-alarm.ts",
+      "type": "oci.monitoring.alarm",
+      "sdkPkgs": ["oci-monitoring"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/mysql-dbsystem.ts",
+      "type": "oci.mysql.dbsystem",
+      "sdkPkgs": ["oci-mysql"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/nosql-table.ts",
+      "type": "oci.nosql.table",
+      "sdkPkgs": ["oci-nosql"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/objectstorage-bucket.ts",
+      "type": "oci.objectstorage.bucket",
+      "sdkPkgs": ["oci-objectstorage"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/ons-topic.ts",
+      "type": "oci.ons.topic",
+      "sdkPkgs": ["oci-ons"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/psql-dbsystem.ts",
+      "type": "oci.psql.dbsystem",
+      "sdkPkgs": ["oci-psql"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/queue.ts",
+      "type": "oci.queue.queue",
+      "sdkPkgs": ["oci-queue"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/redis-cluster.ts",
+      "type": "oci.redis.cluster",
+      "sdkPkgs": ["oci-redis"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/resourcescheduler.ts",
+      "type": "oci.resourcescheduler.schedule",
+      "sdkPkgs": ["oci-resourcescheduler"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/streaming-stream.ts",
+      "type": "oci.streaming.stream",
+      "sdkPkgs": ["oci-streaming"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/vault-secret.ts",
+      "type": "oci.vault.secret",
+      "sdkPkgs": ["oci-vault"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/handlers/waf-policy.ts",
+      "type": "oci.waf.policy",
+      "sdkPkgs": ["oci-waf"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/apps-app.ts",
+      "type": "digitalocean.apps.app",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.app.createApp", "client.app.deleteApp", "client.app.updateApp"]
+      },
+      "sdkRefs": ["client.app.createApp", "client.app.deleteApp", "client.app.updateApp"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/apps-envvar.ts",
+      "type": "digitalocean.apps.envvar",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.app.getApp", "client.app.updateApp"]
+      },
+      "sdkRefs": ["client.app.getApp", "client.app.updateApp"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/apps-static.ts",
+      "type": "digitalocean.apps.staticSite",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.app.createApp", "client.app.deleteApp", "client.app.updateApp"]
+      },
+      "sdkRefs": ["client.app.createApp", "client.app.deleteApp", "client.app.updateApp"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/container-registry.ts",
+      "type": "digitalocean.container_registry.registry",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": [
+          "client.containerRegistry.createContainerRegistry",
+          "client.containerRegistry.deleteContainerRegistry"
+        ]
+      },
+      "sdkRefs": [
+        "client.containerRegistry.createContainerRegistry",
+        "client.containerRegistry.deleteContainerRegistry"
+      ],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/databases-cluster.ts",
+      "type": "digitalocean.databases.cluster",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": [
+          "client.database.createDatabaseCluster",
+          "client.database.deleteDatabaseCluster",
+          "client.database.resizeDatabaseCluster"
+        ]
+      },
+      "sdkRefs": [
+        "client.database.createDatabaseCluster",
+        "client.database.deleteDatabaseCluster",
+        "client.database.resizeDatabaseCluster"
+      ],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/domain-record.ts",
+      "type": "digitalocean.domain.record",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": [
+          "client.domain.createDomainRecord",
+          "client.domain.deleteDomainRecord",
+          "client.domain.updateDomainRecord"
+        ]
+      },
+      "sdkRefs": [
+        "client.domain.createDomainRecord",
+        "client.domain.deleteDomainRecord",
+        "client.domain.updateDomainRecord"
+      ],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/droplet.ts",
+      "type": "digitalocean.droplet.instance",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.droplet.createDroplet", "client.droplet.deleteDroplet"]
+      },
+      "sdkRefs": ["client.droplet.createDroplet", "client.droplet.deleteDroplet"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/firewall.ts",
+      "type": "digitalocean.firewall.firewall",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.firewall.createFirewall", "client.firewall.deleteFirewall"]
+      },
+      "sdkRefs": ["client.firewall.createFirewall", "client.firewall.deleteFirewall"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/functions-function.ts",
+      "type": "digitalocean.functions.function",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/functions-namespace.ts",
+      "type": "digitalocean.functions.namespace",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.functions.createNamespace", "client.functions.deleteNamespace"]
+      },
+      "sdkRefs": ["client.functions.createNamespace", "client.functions.deleteNamespace"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/kubernetes-cluster.ts",
+      "type": "digitalocean.kubernetes.cluster",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": [
+          "client.kubernetes.createKubernetesCluster",
+          "client.kubernetes.deleteKubernetesCluster",
+          "client.kubernetes.updateKubernetesCluster"
+        ]
+      },
+      "sdkRefs": [
+        "client.kubernetes.createKubernetesCluster",
+        "client.kubernetes.deleteKubernetesCluster",
+        "client.kubernetes.updateKubernetesCluster"
+      ],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/loadbalancer.ts",
+      "type": "digitalocean.loadbalancer.loadbalancer",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": [
+          "client.loadBalancer.createLoadBalancer",
+          "client.loadBalancer.deleteLoadBalancer",
+          "client.loadBalancer.updateLoadBalancer"
+        ]
+      },
+      "sdkRefs": [
+        "client.loadBalancer.createLoadBalancer",
+        "client.loadBalancer.deleteLoadBalancer",
+        "client.loadBalancer.updateLoadBalancer"
+      ],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/monitoring-alertpolicy.ts",
+      "type": "digitalocean.monitoring.alertpolicy",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.monitoring.createAlertPolicy", "client.monitoring.deleteAlertPolicy"]
+      },
+      "sdkRefs": ["client.monitoring.createAlertPolicy", "client.monitoring.deleteAlertPolicy"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/reserved-ip.ts",
+      "type": "digitalocean.reservedip.reservedip",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.reservedIp.createReservedIp", "client.reservedIp.deleteReservedIp"]
+      },
+      "sdkRefs": ["client.reservedIp.createReservedIp", "client.reservedIp.deleteReservedIp"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/snapshot.ts",
+      "type": "digitalocean.droplet.snapshot",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.dropletAction.snapshotDroplet", "client.snapshot.deleteSnapshot"]
+      },
+      "sdkRefs": ["client.dropletAction.snapshotDroplet", "client.snapshot.deleteSnapshot"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/spaces-bucket.ts",
+      "type": "digitalocean.spaces.bucket",
+      "sdkPkgs": ["@aws-sdk/client-s3"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/volume.ts",
+      "type": "digitalocean.volume.volume",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.volume.createVolume", "client.volume.deleteVolume"]
+      },
+      "sdkRefs": ["client.volume.createVolume", "client.volume.deleteVolume"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/handlers/vpc-network.ts",
+      "type": "digitalocean.vpc.network",
+      "sdkPkgs": ["dots-wrapper"],
+      "refsByPkg": {
+        "dots-wrapper": ["client.vpc.createVpc", "client.vpc.deleteVpc", "client.vpc.updateVpc"]
+      },
+      "sdkRefs": ["client.vpc.createVpc", "client.vpc.deleteVpc", "client.vpc.updateVpc"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-application.ts",
+      "type": "ibm.codeengine.application",
+      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-function.ts",
+      "type": "ibm.codeengine.function",
+      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/codeengine-job.ts",
+      "type": "ibm.codeengine.job",
+      "sdkPkgs": ["ibm-code-engine-sdk"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/cos-bucket.ts",
+      "type": "ibm.cos.bucket",
+      "sdkPkgs": ["ibm-cos-sdk"],
+      "refsByPkg": {
+        "ibm-cos-sdk": ["sdk.S3"]
+      },
+      "sdkRefs": ["sdk.S3"],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/databases-instance.ts",
+      "type": null,
+      "sdkPkgs": ["@ibm-cloud/platform-services"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/resource-instance.ts",
+      "type": null,
+      "sdkPkgs": ["@ibm-cloud/platform-services"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/secretsmanager-secret.ts",
+      "type": "ibm.secretsmanager.secret",
+      "sdkPkgs": ["@ibm-cloud/secrets-manager"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/vpc-instance.ts",
+      "type": "ibm.vpc.instance",
+      "sdkPkgs": ["ibm-vpc"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/vpc-loadbalancer.ts",
+      "type": "ibm.vpc.loadbalancer",
+      "sdkPkgs": ["ibm-vpc"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/vpc-securitygroup.ts",
+      "type": "ibm.vpc.securitygroup",
+      "sdkPkgs": ["ibm-vpc"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/vpc-subnet.ts",
+      "type": "ibm.vpc.subnet",
+      "sdkPkgs": ["ibm-vpc"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/handlers/vpc.ts",
+      "type": "ibm.vpc.vpc",
+      "sdkPkgs": ["ibm-vpc"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": []
     },
     {
       "file": "packages/core/src/deploy/providers/aws/sdk-loader.ts",
@@ -1817,6 +2670,27 @@
       "file": "packages/core/src/deploy/providers/kubernetes/sdk-loader.ts",
       "type": null,
       "sdkPkgs": ["@kubernetes/client-node"],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/oci/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": ["oci-common"],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/digitalocean/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": ["dots-wrapper", "@aws-sdk/client-s3"],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/ibm/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": ["ibm-cloud-sdk-core"],
       "sdkRefs": [],
       "clientKeys": []
     }
@@ -2136,7 +3010,9 @@
       "handlers": [
         "packages/core/src/deploy/providers/aws/handlers/lambda-builder.ts",
         "packages/core/src/deploy/providers/aws/handlers/s3.ts",
-        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+        "packages/core/src/deploy/providers/digitalocean/handlers/spaces-bucket.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts",
+        "packages/core/src/deploy/providers/digitalocean/sdk-loader.ts"
       ],
       "npm": {
         "ok": true,
@@ -2800,20 +3676,866 @@
     {
       "package": "@kubernetes/client-node",
       "handlers": [
+        "packages/core/src/deploy/providers/kubernetes/handlers/cert-manager.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/configmap.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/cronjob.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/deployment.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/hpa.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/ingress.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/job.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/knative-service.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/namespace.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/networkpolicy.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/persistentvolumeclaim.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/poddisruptionbudget.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/prometheus-rule.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/secret.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/service.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/serviceaccount.ts",
         "packages/core/src/deploy/providers/kubernetes/handlers/statefulset.ts",
         "packages/core/src/deploy/providers/kubernetes/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/alidns20150109",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/alidns-record.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/amqp-open20210309",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/amqp-instance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@alicloud/cloudapi20160714",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/apigateway-api.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/cas20200407",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/cas-certificate.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/cdn20180510",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/cdn-domain.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/cr20181201",
+      "handlers": [
+        "packages/core/src/deploy/providers/alibaba/handlers/cr-build-task.ts",
+        "packages/core/src/deploy/providers/alibaba/handlers/cr-instance.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/cs20151215",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/cs-managed-cluster.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/dds20151201",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/dds-db-instance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/eci20180808",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/eci-container-group.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/ecs20140526",
+      "handlers": [
+        "packages/core/src/deploy/providers/alibaba/handlers/ecs-instance.ts",
+        "packages/core/src/deploy/providers/alibaba/handlers/ecs-security-group.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/eventbridge20200401",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/eventbridge-rule.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/fc20230330",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/fc-function.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/kms20160120",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/kms-secret.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/r-kvstore20150101",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/kvstore-instance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/maxcompute20220104",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/maxcompute-project.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/mns",
+      "handlers": [
+        "packages/core/src/deploy/providers/alibaba/handlers/mns-queue.ts",
+        "packages/core/src/deploy/providers/alibaba/handlers/mns-topic.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/opensearch20171225",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/opensearch-app.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/oss20190517",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/oss-bucket.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/eas20210701",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/pai-eas-service.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/aiworkspace20210204",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/pai-workspace.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/privatelink20200415",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/privatelink-endpoint.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/ram20150501",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/ram-user.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/rds20140815",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/rds-db-instance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/sae20190506",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/sae-application.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/slb20140515",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/slb-load-balancer.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/sls20201230",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/sls-project.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/vpc20160428",
+      "handlers": [
+        "packages/core/src/deploy/providers/alibaba/handlers/vpc-vswitch.ts",
+        "packages/core/src/deploy/providers/alibaba/handlers/vpc.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@alicloud/waf-openapi20211001",
+      "handlers": ["packages/core/src/deploy/providers/alibaba/handlers/waf-policy.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-analytics",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/analytics-instance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-apigateway",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/apigateway-gateway.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-artifacts",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/artifacts-repository.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-certificatesmanagement",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/certificates-certificate.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-containerengine",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/containerengine-cluster.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-containerinstances",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/containerinstance.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-core",
+      "handlers": [
+        "packages/core/src/deploy/providers/oci/handlers/core-instance.ts",
+        "packages/core/src/deploy/providers/oci/handlers/core-nsg.ts",
+        "packages/core/src/deploy/providers/oci/handlers/core-privateaccessgateway.ts",
+        "packages/core/src/deploy/providers/oci/handlers/core-subnet.ts",
+        "packages/core/src/deploy/providers/oci/handlers/core-vcn.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-database",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/database-autonomous.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-datascience",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/datascience-modeldeployment.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-dns",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/dns-zone.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-functions",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/functions-function.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-generativeai",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/generativeai-endpoint.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-identitydomains",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/identitydomains-user.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-loadbalancer",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/loadbalancer.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-logging",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/logging-loggroup.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-monitoring",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/monitoring-alarm.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-mysql",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/mysql-dbsystem.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-nosql",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/nosql-table.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-objectstorage",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/objectstorage-bucket.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-ons",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/ons-topic.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-psql",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/psql-dbsystem.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-queue",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/queue.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-redis",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/redis-cluster.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-resourcescheduler",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/resourcescheduler.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-streaming",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/streaming-stream.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-vault",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/vault-secret.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-waf",
+      "handlers": ["packages/core/src/deploy/providers/oci/handlers/waf-policy.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "dots-wrapper",
+      "handlers": [
+        "packages/core/src/deploy/providers/digitalocean/handlers/apps-app.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/apps-envvar.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/apps-static.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/container-registry.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/databases-cluster.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/domain-record.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/droplet.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/firewall.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/functions-function.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/functions-namespace.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/kubernetes-cluster.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/loadbalancer.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/monitoring-alertpolicy.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/reserved-ip.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/snapshot.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/volume.ts",
+        "packages/core/src/deploy/providers/digitalocean/handlers/vpc-network.ts",
+        "packages/core/src/deploy/providers/digitalocean/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "ibm-code-engine-sdk",
+      "handlers": [
+        "packages/core/src/deploy/providers/ibm/handlers/codeengine-application.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/codeengine-function.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/codeengine-job.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "ibm-cos-sdk",
+      "handlers": ["packages/core/src/deploy/providers/ibm/handlers/cos-bucket.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@ibm-cloud/platform-services",
+      "handlers": [
+        "packages/core/src/deploy/providers/ibm/handlers/databases-instance.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/resource-instance.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@ibm-cloud/secrets-manager",
+      "handlers": ["packages/core/src/deploy/providers/ibm/handlers/secretsmanager-secret.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "ibm-vpc",
+      "handlers": [
+        "packages/core/src/deploy/providers/ibm/handlers/vpc-instance.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/vpc-loadbalancer.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/vpc-securitygroup.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/vpc-subnet.ts",
+        "packages/core/src/deploy/providers/ibm/handlers/vpc.ts"
       ],
       "npm": {
         "ok": true,
@@ -3049,6 +4771,32 @@
     {
       "package": "@azure/arm-monitor",
       "handlers": ["packages/core/src/deploy/providers/azure/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "oci-common",
+      "handlers": ["packages/core/src/deploy/providers/oci/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "ibm-cloud-sdk-core",
+      "handlers": ["packages/core/src/deploy/providers/ibm/sdk-loader.ts"],
       "npm": {
         "ok": true,
         "version": "(skipped)",

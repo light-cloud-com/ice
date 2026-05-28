@@ -44,6 +44,10 @@ const HANDLER_GLOBS = [
   'packages/core/src/deploy/providers/gcp/handlers',
   'packages/core/src/deploy/providers/azure/handlers',
   'packages/core/src/deploy/providers/kubernetes/handlers',
+  'packages/core/src/deploy/providers/alibaba/handlers',
+  'packages/core/src/deploy/providers/oci/handlers',
+  'packages/core/src/deploy/providers/digitalocean/handlers',
+  'packages/core/src/deploy/providers/ibm/handlers',
 ];
 
 // Per-provider sdk-loader scan — GCP handlers don't declare `const SDK`
@@ -55,6 +59,10 @@ const SDK_LOADERS = [
   'packages/core/src/deploy/providers/gcp/sdk-loader.ts',
   'packages/core/src/deploy/providers/azure/sdk-loader.ts',
   'packages/core/src/deploy/providers/kubernetes/sdk-loader.ts',
+  'packages/core/src/deploy/providers/alibaba/sdk-loader.ts',
+  'packages/core/src/deploy/providers/oci/sdk-loader.ts',
+  'packages/core/src/deploy/providers/digitalocean/sdk-loader.ts',
+  'packages/core/src/deploy/providers/ibm/sdk-loader.ts',
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -83,7 +91,7 @@ async function scanHandler(filePath) {
 
   const sdkPkgs = new Set();
   if (sdkMatch) sdkPkgs.add(sdkMatch[1]);
-  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes)_sdk\(['"]([^'"]+)['"]\)/g)) {
+  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes|alibaba|oci|digitalocean|ibm)_sdk\(['"]([^'"]+)['"]\)/g)) {
     sdkPkgs.add(m[1]);
   }
 
@@ -92,7 +100,7 @@ async function scanHandler(filePath) {
   //   const cf = await load_aws_sdk(SDK)        // SDK = '@aws-sdk/client-cloudfront'
   //   const ec2 = await load_aws_sdk('@aws-sdk/client-ec2')
   const aliasToPkg = new Map();
-  for (const m of src.matchAll(/const\s+([a-z_][\w]*)\s*=\s*await\s+load_(?:aws|gcp|azure)_sdk\(\s*(?:['"]([^'"]+)['"]|SDK)\s*\)/g)) {
+  for (const m of src.matchAll(/const\s+([a-z_][\w]*)\s*=\s*await\s+load_(?:aws|gcp|azure|kubernetes|alibaba|oci|digitalocean|ibm)_sdk\(\s*(?:['"]([^'"]+)['"]|SDK)\s*\)/g)) {
     const alias = m[1];
     const pkg = m[2] ?? sdkMatch?.[1];
     if (alias && pkg) aliasToPkg.set(alias, pkg);
@@ -211,6 +219,21 @@ async function tryImport(pkg) {
       // try next base
     }
   }
+  // Fallback: some SDKs (notably IBM platform-services / vpc /
+  // code-engine / secrets-manager) ship per-service subpath modules
+  // and omit a top-level `main` field. The bare-package require call
+  // throws, but the package IS installed — its `package.json` is on
+  // disk and operators load it via subpaths from sdk-loader.ts. Treat
+  // that case as installed.
+  for (const base of RESOLVE_FROM) {
+    try {
+      const pkgJson = join(base, 'node_modules', pkg, 'package.json');
+      await fs.access(pkgJson);
+      return { ok: true, mod: null, resolvedFrom: base, subpathOnly: true };
+    } catch {
+      // try next base
+    }
+  }
   return { ok: false, error: 'package not found in any monorepo location' };
 }
 
@@ -241,7 +264,7 @@ async function scanLoader(filePath) {
   const pkgs = new Set();
   // Match: load_*_sdk('<pkg>'), load_sdk('<pkg>'), import('<pkg>') —
   // anything that looks like an npm SDK package reference.
-  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes)?_?sdk\(['"]([^'"]+)['"]\)/g)) {
+  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes|alibaba|oci|digitalocean|ibm)?_?sdk\(['"]([^'"]+)['"]\)/g)) {
     pkgs.add(m[1]);
   }
   for (const m of src.matchAll(/load_sdk\(['"]([^'"]+)['"]\)/g)) {
@@ -321,7 +344,23 @@ async function main() {
   const summary = { handlers: allHandlers.length, packages: pkgIndex.size, providers: {} };
 
   for (const [pkg, handlers] of pkgIndex) {
-    const provider = pkg.startsWith('@aws-sdk/') ? 'aws' : pkg.startsWith('@azure/') ? 'azure' : pkg.startsWith('@google-cloud/') ? 'gcp' : 'other';
+    const provider = pkg.startsWith('@aws-sdk/')
+      ? 'aws'
+      : pkg.startsWith('@azure/')
+        ? 'azure'
+        : pkg.startsWith('@google-cloud/')
+          ? 'gcp'
+          : pkg.startsWith('@kubernetes/')
+            ? 'kubernetes'
+            : pkg.startsWith('@alicloud/')
+              ? 'alibaba'
+              : pkg.startsWith('oci-')
+                ? 'oci'
+                : pkg === 'dots-wrapper'
+                  ? 'digitalocean'
+                  : pkg.startsWith('@ibm-cloud/') || pkg === 'ibm-cloud-sdk-core' || pkg === 'ibm-cos-sdk'
+                    ? 'ibm'
+                    : 'other';
     summary.providers[provider] = (summary.providers[provider] ?? 0) + 1;
 
     const npm = npmResults.get(pkg);
@@ -359,9 +398,14 @@ async function main() {
   console.log('=== ICE SDK coverage verification ===');
   console.log(`Handlers scanned: ${summary.handlers}`);
   console.log(`Unique SDK packages: ${summary.packages}`);
-  console.log(`  AWS:   ${summary.providers.aws ?? 0}`);
-  console.log(`  GCP:   ${summary.providers.gcp ?? 0}`);
-  console.log(`  Azure: ${summary.providers.azure ?? 0}`);
+  console.log(`  AWS:          ${summary.providers.aws ?? 0}`);
+  console.log(`  GCP:          ${summary.providers.gcp ?? 0}`);
+  console.log(`  Azure:        ${summary.providers.azure ?? 0}`);
+  console.log(`  Kubernetes:   ${summary.providers.kubernetes ?? 0}`);
+  console.log(`  Alibaba:      ${summary.providers.alibaba ?? 0}`);
+  console.log(`  OCI:          ${summary.providers.oci ?? 0}`);
+  console.log(`  DigitalOcean: ${summary.providers.digitalocean ?? 0}`);
+  console.log(`  IBM:          ${summary.providers.ibm ?? 0}`);
   console.log('');
   console.log('Per-package verification:');
   for (const line of lines) console.log(line);

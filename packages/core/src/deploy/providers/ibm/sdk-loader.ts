@@ -21,16 +21,24 @@ export async function load_ibm_sdk(module_name: string): Promise<any | null> {
   }
 }
 
+/**
+ * IBM Cloud SDK packages use per-service subpath layouts rather than
+ * barrel exports (e.g. `ibm-vpc/vpc/v1` not `ibm-vpc`). The verifier
+ * + sdk-loader both rely on these explicit subpaths.
+ */
 const SERVICE_PACKAGES: Record<string, { pkg: string; clientName: string }> = {
-  vpc: { pkg: '@ibm-cloud/vpc', clientName: 'VpcV1' },
-  codeengine: { pkg: '@ibm-cloud/code-engine', clientName: 'CodeEngineV2' },
-  resourcecontroller: { pkg: '@ibm-cloud/platform-services', clientName: 'ResourceControllerV2' },
-  iam: { pkg: '@ibm-cloud/platform-services', clientName: 'IamIdentityV1' },
-  secretsmanager: { pkg: '@ibm-cloud/secrets-manager', clientName: 'SecretsManagerV2' },
+  vpc: { pkg: 'ibm-vpc/vpc/v1', clientName: 'VpcV1' },
+  codeengine: { pkg: 'ibm-code-engine-sdk/ibm-cloud-code-engine/v1', clientName: 'IbmCloudCodeEngineV1' },
+  resourcecontroller: {
+    pkg: '@ibm-cloud/platform-services/resource-controller/v2',
+    clientName: 'ResourceControllerV2',
+  },
+  iam: { pkg: '@ibm-cloud/platform-services/iam-identity/v1', clientName: 'IamIdentityV1' },
+  secretsmanager: { pkg: '@ibm-cloud/secrets-manager/secrets-manager/v2', clientName: 'SecretsManagerV2' },
   cloudant: { pkg: '@ibm-cloud/cloudant', clientName: 'CloudantV1' },
-  eventnotifications: { pkg: '@ibm-cloud/event-notifications', clientName: 'EventNotificationsV1' },
-  eventstreams: { pkg: '@ibm-cloud/event-streams', clientName: 'AdminrestV1' },
-  cis: { pkg: '@ibm-cloud/networking-services', clientName: 'DnsRecordsV1' },
+  // Event Notifications / Event Streams / CIS Node SDKs not currently
+  // published on the public npm registry; operators bring their own
+  // REST integration. Revisit when IBM ships first-party packages.
 };
 
 export async function build_authenticator(credentials: IBMCredentials): Promise<unknown | null> {

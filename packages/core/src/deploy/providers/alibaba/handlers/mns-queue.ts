@@ -11,7 +11,7 @@ import { err, isAlibabaAlreadyExists, isAlibabaNotFound, ok, sdkMissing } from '
 import type { AlibabaResourceHandler } from '../types';
 
 const TYPE = 'alibaba.mns.queue';
-const SDK = '@alicloud/mns20220119';
+const SDK = '@alicloud/mns';
 
 export const mns_queue_handler: AlibabaResourceHandler = {
   async create(name, properties, ctx) {

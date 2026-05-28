@@ -11,7 +11,7 @@ import { err, isAlibabaAlreadyExists, isAlibabaNotFound, ok, sdkMissing } from '
 import type { AlibabaResourceHandler } from '../types';
 
 const TYPE = 'alibaba.paieas.service';
-const SDK = '@alicloud/pai-eas20210701';
+const SDK = '@alicloud/eas20210701';
 
 export const pai_eas_service_handler: AlibabaResourceHandler = {
   async create(name, properties, ctx) {

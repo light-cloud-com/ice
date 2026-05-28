@@ -9,7 +9,7 @@ import { err, isDoNotFound, ok, sdkMissing } from './_result';
 import type { DOResourceHandler } from '../types';
 
 const TYPE = 'digitalocean.spaces.bucket';
-const SDK = '@aws-sdk/client-s3 (Spaces)';
+const SDK = '@aws-sdk/client-s3';
 
 export const spaces_bucket_handler: DOResourceHandler = {
   async create(name, _properties, ctx) {

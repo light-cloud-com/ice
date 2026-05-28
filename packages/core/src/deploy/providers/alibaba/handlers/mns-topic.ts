@@ -10,7 +10,7 @@ import { err, isAlibabaAlreadyExists, isAlibabaNotFound, ok, sdkMissing } from '
 import type { AlibabaResourceHandler } from '../types';
 
 const TYPE = 'alibaba.mns.topic';
-const SDK = '@alicloud/mns20220119';
+const SDK = '@alicloud/mns';
 
 export const mns_topic_handler: AlibabaResourceHandler = {
   async create(name, properties, ctx) {

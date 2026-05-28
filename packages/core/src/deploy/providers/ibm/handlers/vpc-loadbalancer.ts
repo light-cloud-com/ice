@@ -7,7 +7,7 @@ import { err, isIbmAlreadyExists, isIbmNotFound, ok, sdkMissing } from './_resul
 import type { IBMResourceHandler } from '../types';
 
 const TYPE = 'ibm.vpc.loadbalancer';
-const SDK = '@ibm-cloud/vpc';
+const SDK = 'ibm-vpc';
 
 export const vpc_loadbalancer_handler: IBMResourceHandler = {
   async create(name, properties, ctx) {

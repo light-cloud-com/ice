@@ -10,7 +10,7 @@ import { err, isAlibabaAlreadyExists, isAlibabaNotFound, ok, sdkMissing } from '
 import type { AlibabaResourceHandler } from '../types';
 
 const TYPE = 'alibaba.opensearch.app';
-const SDK = '@alicloud/open-search20171225';
+const SDK = '@alicloud/opensearch20171225';
 
 export const opensearch_app_handler: AlibabaResourceHandler = {
   async create(name, properties, ctx) {

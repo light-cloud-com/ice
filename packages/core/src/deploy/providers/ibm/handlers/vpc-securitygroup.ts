@@ -7,7 +7,7 @@ import { err, isIbmAlreadyExists, isIbmNotFound, ok, sdkMissing } from './_resul
 import type { IBMResourceHandler } from '../types';
 
 const TYPE = 'ibm.vpc.securitygroup';
-const SDK = '@ibm-cloud/vpc';
+const SDK = 'ibm-vpc';
 
 export const vpc_securitygroup_handler: IBMResourceHandler = {
   async create(name, properties, ctx) {

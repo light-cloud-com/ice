@@ -32,7 +32,7 @@ const SERVICE_PACKAGES: Record<string, { pkg: string; endpoint_prefix: string }>
   dds: { pkg: '@alicloud/dds20151201', endpoint_prefix: 'mongodb' },
   kvstore: { pkg: '@alicloud/r-kvstore20150101', endpoint_prefix: 'r-kvstore' },
   oss: { pkg: '@alicloud/oss20190517', endpoint_prefix: 'oss' },
-  mns: { pkg: '@alicloud/mns20220119', endpoint_prefix: 'mns-open' },
+  mns: { pkg: '@alicloud/mns', endpoint_prefix: 'mns-open' },
   fc: { pkg: '@alicloud/fc20230330', endpoint_prefix: 'fcv3' },
   sae: { pkg: '@alicloud/sae20190506', endpoint_prefix: 'sae' },
   eci: { pkg: '@alicloud/eci20180808', endpoint_prefix: 'eci' },
@@ -49,10 +49,11 @@ const SERVICE_PACKAGES: Record<string, { pkg: string; endpoint_prefix: string }>
   cas: { pkg: '@alicloud/cas20200407', endpoint_prefix: 'cas' },
   waf: { pkg: '@alicloud/waf-openapi20211001', endpoint_prefix: 'wafopenapi' },
   sls: { pkg: '@alicloud/sls20201230', endpoint_prefix: 'sls' },
-  amqp: { pkg: '@alicloud/amqp-open20210309', endpoint_prefix: 'amqp-open' },
+  // amqp: @alicloud/amqp-open20210309 — not published on npm; revisit
+  // when an official Node.js SDK ships.
   maxcompute: { pkg: '@alicloud/maxcompute20220104', endpoint_prefix: 'maxcompute' },
-  opensearch: { pkg: '@alicloud/open-search20171225', endpoint_prefix: 'opensearch' },
-  pai: { pkg: '@alicloud/pai-eas20210701', endpoint_prefix: 'pai-eas' },
+  opensearch: { pkg: '@alicloud/opensearch20171225', endpoint_prefix: 'opensearch' },
+  pai: { pkg: '@alicloud/eas20210701', endpoint_prefix: 'pai-eas' },
   paiworkspace: { pkg: '@alicloud/aiworkspace20210204', endpoint_prefix: 'aiworkspacenew' },
 };
 

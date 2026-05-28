@@ -261,7 +261,7 @@ describe('IBM Cloud handler dispatch', () => {
     const deployer = deployer_with({});
     const result = await deployer.create('ibm.vpc.vpc', 'main', {}, {});
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/Install @ibm-cloud\/vpc/);
+    expect(result.error).toMatch(/Install ibm-vpc/);
   });
 
   it('reports unsupported for unknown ibm.* types', async () => {

@@ -8,7 +8,7 @@ export const eventStreamConceptBlueprint: ConceptBlueprint = {
     name: 'Event Stream',
     description: 'Pub/sub fan-out stream. One event, many consumers. Kinesis / Pub/Sub / Event Hubs.',
     icon: 'Radio',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'ibm'],
     nodeDataDefaults: { label: 'Event Stream', retentionHours: 24, partitionCount: 1 },
   }),
   conceptId: 'event-stream',

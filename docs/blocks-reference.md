@@ -64,23 +64,68 @@ The palette (left sidebar in the UI) groups concepts by category:
 
 Some concepts planned for the palette are deferred (authentication, analytics data warehouse, search). See [ROADMAP.md](../ROADMAP.md) for status.
 
-## Concept → cloud mapping
+## Block × provider coverage matrix
 
-Each concept has one mapped primitive per provider. The mapping lives in `packages/core/src/resources/` and the per-provider handlers in `packages/core/src/deploy/providers/<cloud>/handlers/`. Examples:
+Which palette block lands on which provider, derived from the handler set in `packages/core/src/deploy/providers/<cloud>/handlers/` intersected with the per-(category × provider) flag in [`PROVIDER_FLAGS`](../packages/constants/src/feature-flags.ts). A ✓ means the deployer maps that block to a first-party primitive on that provider; a — means no first-party handler (the block is hidden from the palette when that provider is selected).
 
-| Concept             | GCP                     | AWS             | Azure                        | Alibaba          | OCI            | DigitalOcean | IBM             | Kubernetes        |
-| ------------------- | ----------------------- | --------------- | ---------------------------- | ---------------- | -------------- | ------------ | --------------- | ----------------- |
-| Static Site         | Cloud Storage + CDN     | S3 + CloudFront | Storage Account + CDN        | OSS + CDN        | Object Storage | Spaces + CDN | COS             | Ingress + Service |
-| Scalable Backend    | Cloud Run               | ECS Fargate     | App Service / Container Apps | Function Compute | Functions      | App Platform | Code Engine     | Deployment        |
-| Serverless Function | Cloud Functions         | Lambda          | Functions                    | Function Compute | Functions      | Functions    | Cloud Functions | Job               |
-| Postgres            | Cloud SQL (Postgres)    | RDS (Postgres)  | Database for PostgreSQL      | RDS Postgres     | PostgreSQL     | Managed DB   | Db2 / Cloudant  | StatefulSet       |
-| Object Storage      | Cloud Storage           | S3              | Blob Storage                 | OSS              | Object Storage | Spaces       | COS             | PVC               |
-| Message Queue       | Pub/Sub                 | SQS             | Service Bus                  | MNS / RocketMQ   | Streaming      | (planned)    | Event Streams   | (CRD)             |
-| Vector DB           | Vertex AI Vector Search | OpenSearch      | AI Search                    | (planned)        | (planned)      | (planned)    | (planned)       | StatefulSet       |
-| LLM Gateway         | Vertex AI endpoints     | Bedrock         | Azure OpenAI                 | (planned)        | (planned)      | (planned)    | (planned)       | Service           |
-| Observability       | Cloud Logging           | CloudWatch      | Monitor                      | SLS              | Logging        | Monitoring   | Log Analysis    | (sidecar pattern) |
+| Block                           | aws | gcp | azure | k8s | alibaba | oci | digitalocean | ibm |
+| ------------------------------- | :-: | :-: | :---: | :-: | :-----: | :-: | :----------: | :-: |
+| Compute · Static Site           |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  —  |
+| Compute · SSR Site              |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  —  |
+| Compute · Container             |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Compute · Serverless Function   |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Compute · Worker                |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Compute · Cron Job              |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      —       |  ✓  |
+| Database · Postgres             |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Database · MySQL                |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Database · MongoDB              |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Cache · Redis                   |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Storage · Object Bucket         |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Messaging · Queue               |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      —       |  ✓  |
+| Messaging · Event Stream        |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      —       |  ✓  |
+| Messaging · Email               |  ✓  |  ✓  |   ✓   |  —  |    —    |  —  |      —       |  —  |
+| Network · API Gateway           |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      —       |  —  |
+| Network · Custom Domain         |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  —  |
+| Network · Private Network       |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Security · Secret               |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| AI · Vector DB                  |  ✓  |  ✓  |   ✓   |  —  |    ✓    |  —  |      —       |  —  |
+| AI · LLM Gateway                |  ✓  |  ✓  |   ✓   |  —  |    ✓    |  ✓  |      —       |  ✓  |
+| AI · Private AI Service         |  ✓  |  ✓  |   ✓   |  —  |    ✓    |  ✓  |      —       |  ✓  |
+| Monitoring · Log                |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      —       |  ✓  |
+| Source · Repository (build)     |  ✓  |  ✓  |   ✓   |  —  |    ✓    |  —  |      —       |  —  |
+| Config · Environment            |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| Util · Reroute                  |  ✓  |  ✓  |   ✓   |  ✓  |    ✓    |  ✓  |      ✓       |  ✓  |
+| **Coverage** (out of 25 blocks) | 25  | 25  |  25   | 20  |   24    | 22  |      15      | 18  |
 
-GCP is stable. AWS + Azure are experimental with real-cloud deploys observed for their enabled categories. Alibaba, OCI, DigitalOcean, IBM, and Kubernetes are in **preview** — handler + extractor + L4 SDK-input verifier shipped, but per-handler deploy gates are still pending. See [provider-status.md](provider-status.md) for the current matrix.
+### Per-provider primitive mapping (the ✓ cells, spelt out)
+
+| Concept             | GCP                     | AWS                   | Azure                         | Alibaba          | OCI                           | DigitalOcean  | IBM                   | Kubernetes          |
+| ------------------- | ----------------------- | --------------------- | ----------------------------- | ---------------- | ----------------------------- | ------------- | --------------------- | ------------------- |
+| Static Site         | Cloud Storage + CDN     | S3 + CloudFront       | Storage Account + CDN         | OSS + CDN        | Object Storage                | Spaces + CDN  | —                     | Ingress + Service   |
+| SSR Site            | Cloud Run               | Amplify Hosting       | Static Web Apps / App Service | SAE / FC         | Container Instance + API GW   | App Platform  | —                     | Deployment          |
+| Container           | Cloud Run               | ECS Fargate           | Container Apps / Web App      | SAE / ECI        | Container Instance / OKE      | App Platform  | Code Engine           | Deployment          |
+| Serverless Function | Cloud Functions         | Lambda                | Functions                     | Function Compute | Functions                     | Functions     | Code Engine fn        | Knative Service     |
+| Worker              | Cloud Run Jobs          | ECS (worker)          | Container Apps                | SAE              | Container Instance            | App Platform  | Code Engine app       | Deployment          |
+| Cron Job            | Cloud Scheduler         | EventBridge           | Logic Apps recurrence         | EventBridge      | Resource Scheduler            | —             | Code Engine job       | CronJob             |
+| Postgres            | Cloud SQL (Postgres)    | RDS (Postgres)        | Database for PostgreSQL       | RDS Postgres     | PostgreSQL DB System          | Managed DB    | Databases / Db2       | StatefulSet         |
+| MySQL               | Cloud SQL (MySQL)       | RDS (MySQL)           | Database for MySQL            | RDS MySQL        | MySQL HeatWave                | Managed DB    | Databases             | StatefulSet         |
+| MongoDB             | Firestore (doc store)   | DocumentDB            | Cosmos DB (Mongo API)         | DDS              | NoSQL                         | Managed DB    | Databases             | StatefulSet         |
+| Redis               | Memorystore             | ElastiCache           | Cache for Redis               | ApsaraDB Redis   | Redis Cluster                 | Managed DB    | Databases             | StatefulSet         |
+| Object Storage      | Cloud Storage           | S3                    | Blob Storage                  | OSS              | Object Storage                | Spaces        | Cloud Object Storage  | PVC                 |
+| Message Queue       | Pub/Sub                 | SQS                   | Service Bus                   | MNS              | Queue                         | —             | MQ                    | StatefulSet (RMQ)   |
+| Event Stream        | Pub/Sub                 | Kinesis               | Event Hubs                    | AMQP / MNS Topic | Streaming                     | —             | Event Streams (Kafka) | StatefulSet (Kafka) |
+| Email               | SendGrid integration    | SES                   | Communication Services        | —                | —                             | —             | —                     | —                   |
+| API Gateway         | API Gateway             | API Gateway           | APIM                          | API Gateway      | API Gateway                   | —             | —                     | Ingress             |
+| Custom Domain       | Cloud DNS + mapping     | Route 53              | DNS Zone                      | AliDNS           | DNS Zone                      | Domain record | —                     | Ingress             |
+| Private Network     | VPC                     | VPC                   | VNet                          | VPC + VSwitch    | VCN                           | VPC           | VPC                   | Namespace + NetPol  |
+| Secret              | Secret Manager          | Secrets Manager       | Key Vault                     | KMS Secret       | Vault Secret                  | App env vars  | Secrets Manager       | Secret              |
+| Vector DB           | Vertex AI Vector Search | OpenSearch Serverless | Cognitive Search (vector)     | OpenSearch       | —                             | —             | —                     | —                   |
+| LLM Gateway         | Vertex AI endpoints     | Bedrock               | Azure OpenAI                  | PAI-EAS          | Generative AI endpoint        | —             | watsonx               | —                   |
+| Private AI Service  | Vertex AI custom        | SageMaker             | Azure ML                      | PAI workspace    | Data Science model deployment | —             | watsonx deployment    | —                   |
+| Log                 | Cloud Logging           | CloudWatch Logs       | Log Analytics                 | SLS              | Logging                       | —             | Log Analysis          | Prometheus Rule     |
+| Source Repository   | Cloud Build             | CodeBuild             | ACR Tasks                     | CR Build Task    | —                             | —             | —                     | —                   |
+
+GCP is stable. AWS + Azure are experimental with real-cloud deploys observed for their enabled categories. Alibaba, OCI, DigitalOcean, IBM, and Kubernetes are in **preview** — handler + extractor + L4 SDK-input verifier shipped, but per-handler deploy gates are still pending. See [provider-status.md](provider-status.md) for the readiness matrix.
 
 ## Requirements and validation
 

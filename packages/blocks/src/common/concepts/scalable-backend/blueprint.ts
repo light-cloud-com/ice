@@ -15,7 +15,7 @@ export const scalableBackendConceptBlueprint: ConceptBlueprint = {
     name: 'Scalable Backend',
     description: 'HTTP service running in a container. Auto-scales, load balancer built in. REST, GraphQL, gRPC.',
     icon: 'Server',
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: {
       label: 'Backend',
       runtime: 'node20',

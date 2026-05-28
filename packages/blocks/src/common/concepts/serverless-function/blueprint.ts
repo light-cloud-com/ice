@@ -8,7 +8,7 @@ export const serverlessFunctionConceptBlueprint: ConceptBlueprint = {
     name: 'Serverless Function',
     description: 'Event-driven function that scales to zero. Triggered by HTTP, pub/sub, storage events, or schedules.',
     icon: 'Zap',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: {
       label: 'Function',
       runtime: 'node20',

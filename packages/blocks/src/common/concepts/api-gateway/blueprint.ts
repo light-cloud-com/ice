@@ -9,7 +9,7 @@ export const apiGatewayConceptBlueprint: ConceptBlueprint = {
     description:
       'REST/GraphQL gateway. Route, throttle, authenticate, version your APIs. Sits in front of your backends.',
     icon: 'Router',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci'],
     nodeDataDefaults: { label: 'API Gateway', protocol: 'REST' },
   }),
   conceptId: 'api-gateway',

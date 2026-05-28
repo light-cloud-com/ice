@@ -21,7 +21,7 @@ export const publicTrafficConceptBlueprint: ConceptBlueprint = {
   description: 'The internet / outside users. A symbolic source node on the diagram — no infrastructure.',
   icon: 'Globe',
   category: 'networking',
-  providers: ['aws', 'gcp', 'azure'],
+  providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
   nodeData: {
     iceType: 'Network.PublicTraffic',
     behavior: 'source',

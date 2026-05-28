@@ -22,7 +22,7 @@ export const staticSiteConceptBlueprint: ConceptBlueprint = {
       'Frontend hosting with HTTPS, global CDN, and custom domain. React, Vue, Next.js, Astro — any static build.',
     icon: 'Globe',
     // Explicitly list providers so the concept is multi-cloud.
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
     nodeDataDefaults: {
       label: 'Static Site',
       domain: '',

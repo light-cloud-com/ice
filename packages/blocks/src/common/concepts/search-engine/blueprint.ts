@@ -8,7 +8,7 @@ export const searchEngineConceptBlueprint: ConceptBlueprint = {
     name: 'Search',
     description: 'Full-text search and analytics — OpenSearch, Vertex AI Search, Cognitive Search.',
     icon: 'Search',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'alibaba', 'oci'],
     nodeDataDefaults: { label: 'Search' },
   }),
   conceptId: 'search-engine',

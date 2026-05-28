@@ -15,7 +15,7 @@ export const ssrSiteConceptBlueprint: ConceptBlueprint = {
     name: 'SSR Site',
     description: 'Server-rendered site (Next.js, Nuxt, SvelteKit, Remix). Runs in a container, auto-scales.',
     icon: 'Layout',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
     nodeDataDefaults: {
       label: 'SSR Site',
       framework: 'nextjs',

@@ -8,7 +8,7 @@ export const authConceptBlueprint: ConceptBlueprint = {
     name: 'Auth',
     description: 'User authentication and identity. Managed sign-in, sessions, MFA — Cognito, Firebase Auth, Entra ID.',
     icon: 'UserCheck',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: { label: 'Auth', methods: ['email'], mfa: 'optional' },
   }),
   conceptId: 'auth',

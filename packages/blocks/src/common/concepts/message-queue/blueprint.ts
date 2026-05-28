@@ -8,7 +8,7 @@ export const messageQueueConceptBlueprint: ConceptBlueprint = {
     name: 'Message Queue',
     description: 'Point-to-point async queue. Producer drops a job, a Worker picks it up. SQS / Pub/Sub / Service Bus.',
     icon: 'ListOrdered',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'ibm'],
     nodeDataDefaults: { label: 'Queue', visibilityTimeout: 30, maxRetries: 3 },
   }),
   conceptId: 'message-queue',

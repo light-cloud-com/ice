@@ -8,7 +8,7 @@ export const scheduledTaskConceptBlueprint: ConceptBlueprint = {
     name: 'Scheduled Task',
     description: 'Cron job. Runs code on a schedule (every hour, daily at 3am, weekly Monday mornings).',
     icon: 'Clock',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'ibm'],
     nodeDataDefaults: {
       label: 'Scheduled Task',
       schedule: '0 3 * * *',

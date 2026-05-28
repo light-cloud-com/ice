@@ -8,7 +8,7 @@ export const dataWarehouseConceptBlueprint: ConceptBlueprint = {
     name: 'Data Warehouse',
     description: 'Columnar analytics database for large-scale queries — Redshift, BigQuery, Synapse.',
     icon: 'Warehouse',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'alibaba', 'oci'],
     nodeDataDefaults: { label: 'Warehouse' },
   }),
   conceptId: 'data-warehouse',

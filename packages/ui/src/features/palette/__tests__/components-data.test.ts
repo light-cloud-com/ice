@@ -210,11 +210,56 @@ describe('COMPONENTS — provider list', () => {
     }
   });
 
-  it('container/SSR/Worker/Redis additionally declare kubernetes', () => {
+  it('kubernetes is declared on every block with a k8s handler (no AI/Source/Email)', () => {
+    // Per-block matrix in `data/components.ts` lists k8s where a handler
+    // exists (deployment / statefulset / cronjob / service / ingress /
+    // configmap / secret / namespace / pvc / etc.). Excluded: AI.* (no
+    // first-party AI service), Source.Repository (no CodeBuild equiv),
+    // Messaging.Email (no first-party transactional email service).
     const k8sBlocks = COMPONENTS.filter((c) => c.providers.includes('kubernetes')).map((c) => c.type);
-    expect(new Set(k8sBlocks)).toEqual(
-      new Set(['Compute.SSRSite', 'Compute.Container', 'Compute.Worker', 'Database.Redis']),
-    );
+    const expected = new Set([
+      'Compute.StaticSite',
+      'Compute.SSRSite',
+      'Compute.Container',
+      'Compute.ServerlessFunction',
+      'Compute.Worker',
+      'Compute.CronJob',
+      'Database.PostgreSQL',
+      'Database.MySQL',
+      'Database.MongoDB',
+      'Database.Redis',
+      'Storage.Bucket',
+      'Messaging.Queue',
+      'Messaging.EventStream',
+      'Network.Gateway',
+      'Network.CustomDomain',
+      'Network.PrivateNetwork',
+      'Security.Secret',
+      'Monitoring.Log',
+      'Config.Environment',
+      'Util.Reroute',
+    ]);
+    expect(new Set(k8sBlocks)).toEqual(expected);
+  });
+
+  it('preview-tier providers (alibaba/oci/digitalocean/ibm) appear on every block they can deploy', () => {
+    // Sanity check: each preview-tier provider lands on at least one block,
+    // and the per-provider count tracks the handler-existence matrix.
+    const counts: Record<string, number> = {
+      alibaba: 0,
+      oci: 0,
+      digitalocean: 0,
+      ibm: 0,
+    };
+    for (const c of COMPONENTS) {
+      for (const p of c.providers) {
+        if (p in counts) counts[p] += 1;
+      }
+    }
+    expect(counts.alibaba).toBeGreaterThanOrEqual(20); // drops Email
+    expect(counts.oci).toBeGreaterThanOrEqual(18); // drops Email/VectorDB/Source
+    expect(counts.digitalocean).toBeGreaterThanOrEqual(12); // drops scheduler/messaging/AI/Source/Gateway/Monitoring
+    expect(counts.ibm).toBeGreaterThanOrEqual(15); // drops Frontend/Email/Gateway/CustomDomain/VectorDB/Source
   });
 });
 

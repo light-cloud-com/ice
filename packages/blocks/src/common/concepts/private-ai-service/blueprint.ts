@@ -16,7 +16,7 @@ export const privateAiServiceConceptBlueprint: ConceptBlueprint = {
     'Self-hosted LLM on your own infrastructure. GPU compute + vector DB + model server. Data stays in your cloud.',
   icon: 'Brain',
   category: 'ai',
-  providers: ['aws', 'gcp', 'azure'],
+  providers: ['aws', 'gcp', 'azure', 'alibaba', 'oci', 'ibm'],
   nodeData: {
     iceType: 'AI.PrivateAIService',
     behavior: 'singleton',

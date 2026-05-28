@@ -8,7 +8,7 @@ export const secretStoreConceptBlueprint: ConceptBlueprint = {
     name: 'Secret Store',
     description: 'Managed storage for API keys, tokens, passwords. Injected into your services at runtime.',
     icon: 'Lock',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: { label: 'Secrets' },
   }),
   conceptId: 'secret-store',

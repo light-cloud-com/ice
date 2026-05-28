@@ -8,7 +8,7 @@ export const mysqlConceptBlueprint: ConceptBlueprint = {
     name: 'MySQL',
     description: 'Managed MySQL database. Classic relational DB. Great with legacy codebases, WordPress, Drupal.',
     icon: 'Database',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: { label: 'MySQL', version: '8.0', tier: 'small', storageGb: 20, backups: true },
   }),
   conceptId: 'mysql',

@@ -37,10 +37,12 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 
 ## Providers at a glance
 
-🟢 stable · 🟡 experimental · 🟠 preview · ⚪ planned · Source of truth: [`PROVIDER_READINESS`](packages/constants/src/providers.ts) · Full matrix: [docs/provider-status.md](docs/provider-status.md)
+🟢 stable · 🟡 experimental · 🟠 preview · ⚪ planned · Source of truth: [`PROVIDER_READINESS`](packages/constants/src/providers.ts) · Full matrix: [docs/provider-status.md](docs/provider-status.md) · Block coverage: [docs/blocks-reference.md](docs/blocks-reference.md)
+
+The two numbers per row are the **SDK handler count** (cloud primitives wired through `HANDLER_REGISTRY`) and the **palette block coverage** (out of 25 user-facing palette blocks that drop on the canvas).
 
 ```
-🟢 Google Cloud .................................... stable · 38 handlers · 45+ importers
+🟢 Google Cloud .................................... stable · 38 handlers · 25/25 blocks · 45+ importers
    ├─ Compute        Cloud Run · Cloud Functions · GKE
    ├─ Database       Cloud SQL · Firestore · BigQuery · Memorystore
    ├─ Storage        Cloud Storage
@@ -49,7 +51,7 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
    ├─ Network        Load Balancer · API Gateway · Domain Mapping
    └─ Ops            Cloud Logging · Secret Manager · Identity Platform
 
-🟡 AWS ............................................. experimental · 38 handlers
+🟡 AWS ............................................. experimental · 38 handlers · 25/25 blocks
    ├─ Compute        ECS · Lambda · EC2
    ├─ Database       RDS · DynamoDB · DocDB · Redshift · ElastiCache
    ├─ Storage        S3
@@ -60,7 +62,7 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
    ├─ Security       Secrets Manager · Cognito · WAFv2
    └─ Ops            CloudWatch Logs · CodeBuild
 
-🟡 Azure ........................................... experimental · 38 handlers
+🟡 Azure ........................................... experimental · 38 handlers · 25/25 blocks
    ├─ Compute        VM · Web App · Functions · Container Apps · Static Web Apps · AKS · ACR
    ├─ Database       PostgreSQL Flex · MySQL Flex · Cosmos SQL/Mongo · Redis · SQL Server
    ├─ Storage        Blob
@@ -70,47 +72,51 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
    ├─ Security       Key Vault · Entra B2C
    └─ Ops            Log Analytics · App Insights
 
-🟠 Alibaba Cloud ................................... preview · 34 handlers
-   ├─ Compute        ECS · ACK · Function Compute
-   ├─ Database       RDS · PolarDB · ApsaraDB Redis · MongoDB
+🟠 Alibaba Cloud ................................... preview · 34 handlers · 24/25 blocks (no Email)
+   ├─ Compute        ECS · ACK · Function Compute · SAE · ECI
+   ├─ Database       RDS · PolarDB · ApsaraDB Redis · MongoDB (DDS)
    ├─ Storage        OSS
-   ├─ Messaging      MNS · RocketMQ
-   ├─ Network        VPC · VSwitch · SG · NAT · SLB · CDN
-   └─ Ops            SLS · Cloud Monitor · KMS · Secret Manager · RAM · ACR
+   ├─ Messaging      MNS · RocketMQ · AMQP
+   ├─ AI             PAI-EAS · PAI Workspace · OpenSearch (vector)
+   ├─ Network        VPC · VSwitch · SG · NAT · SLB · CDN · API Gateway · AliDNS
+   └─ Ops            SLS · Cloud Monitor · KMS · Secret Manager · RAM · ACR · CR Build
 
-🟠 Oracle Cloud .................................... preview · 33 handlers
-   ├─ Compute        Compute · OKE · Functions
-   ├─ Database       Autonomous DB · MySQL HeatWave · PostgreSQL · NoSQL
+🟠 Oracle Cloud .................................... preview · 33 handlers · 22/25 blocks (no Email, VectorDB, Source)
+   ├─ Compute        Compute · Container Instance · OKE · Functions · Resource Scheduler
+   ├─ Database       Autonomous DB · MySQL HeatWave · PostgreSQL · NoSQL · Redis
    ├─ Storage        Object Storage · Block Volume · File Storage
-   ├─ Messaging      Streaming · Notifications
-   ├─ Network        VCN · Subnet · Security List · LBaaS · DNS
-   └─ Ops            Logging · Monitoring · Vault · Bastion · OCIR
+   ├─ Messaging      Queue · Streaming · Notifications (ONS)
+   ├─ AI             Generative AI · Data Science Model Deployment
+   ├─ Network        VCN · Subnet · NSG · Load Balancer · DNS · API Gateway
+   └─ Ops            Logging · Monitoring · Vault · Bastion · OCIR · WAF
 
-🟠 DigitalOcean .................................... preview · 19 handlers
-   ├─ Compute        Droplets · DOKS · App Platform · Functions
-   ├─ Database       Managed Postgres/MySQL/Redis/MongoDB
-   ├─ Storage        Spaces · Volumes
-   ├─ Network        VPC · Load Balancer · Floating IP · Firewall · DNS
-   └─ Ops            Monitoring · DOCR · Project
-
-🟠 IBM Cloud ....................................... preview · 14 handlers
-   ├─ Compute        VPC · Code Engine · IKS · OpenShift · Cloud Functions
-   ├─ Database       Cloudant · Db2
-   ├─ Storage        Cloud Object Storage
-   ├─ Messaging      Event Streams (Kafka)
-   └─ Ops            Key Protect · Secrets Manager · Activity Tracker · Log Analysis · Monitoring · Container Registry
-
-🟠 Kubernetes ...................................... preview · 19 handlers
-   ├─ Workloads      Deployment · StatefulSet · DaemonSet · Job · CronJob
+🟠 Kubernetes ...................................... preview · 19 handlers · 20/25 blocks (no AI, Email, Source)
+   ├─ Workloads      Deployment · StatefulSet · DaemonSet · Job · CronJob · Knative Service
    ├─ Networking     Service · Ingress · NetworkPolicy
    ├─ Config         ConfigMap · Secret · PersistentVolumeClaim
    ├─ Identity       Namespace · ServiceAccount · Role · RoleBinding
-   └─ Scaling        HorizontalPodAutoscaler
+   └─ Scaling        HorizontalPodAutoscaler · PodDisruptionBudget · Prometheus Rule (CRD)
+
+🟠 IBM Cloud ....................................... preview · 14 handlers · 18/25 blocks (no Frontend, Email, Gateway, CustomDomain, VectorDB, Source)
+   ├─ Compute        VPC Instance · Code Engine (app/fn/job) · IKS · OpenShift
+   ├─ Database       Cloudant · Db2 · Databases (Postgres/MySQL/Mongo/Redis)
+   ├─ Storage        Cloud Object Storage
+   ├─ Messaging      Event Streams (Kafka) · MQ · Event Notifications
+   ├─ AI             watsonx
+   ├─ Network        VPC · Subnet · Security Group · Load Balancer
+   └─ Ops            Secrets Manager · Key Protect · Activity Tracker · Log Analysis · Monitoring
+
+🟠 DigitalOcean .................................... preview · 19 handlers · 15/25 blocks (no Scheduler, Messaging, AI, Source, Gateway, Monitoring.Log)
+   ├─ Compute        Droplets · DOKS · App Platform · Functions
+   ├─ Database       Managed Postgres / MySQL / Redis / MongoDB
+   ├─ Storage        Spaces · Volumes · Snapshots
+   ├─ Network        VPC · Load Balancer · Floating IP · Firewall · DNS
+   └─ Ops            App env vars · Monitoring alerts · DOCR
 
 🟢 GitHub .......................................... integration
 ```
 
-All eight providers ship a working deployer behind feature flags. Real-cloud round-trips have been observed for GCP, AWS, and Azure; the other five carry full handler + extractor + L4 SDK-input verification but stay gated until a developer runs the live test against their own account. Per-category state lives in `PROVIDER_FLAGS` ([`packages/constants/src/feature-flags.ts`](packages/constants/src/feature-flags.ts)) and the per-provider READMEs ([AWS](packages/core/src/deploy/providers/aws/README.md), [Azure](packages/core/src/deploy/providers/azure/README.md)).
+All eight providers ship a working deployer behind feature flags. Real-cloud round-trips have been observed for GCP, AWS, and Azure; the other five carry full handler + extractor + L4 SDK-input verification but stay gated until a developer runs the live test against their own account. Block coverage is computed from `data/components.ts` against the per-(category × provider) flag in [`packages/constants/src/feature-flags.ts`](packages/constants/src/feature-flags.ts); details + per-block mapping live in [docs/blocks-reference.md](docs/blocks-reference.md).
 
 ## Docs
 

@@ -8,7 +8,7 @@ export const redisCacheConceptBlueprint: ConceptBlueprint = {
     name: 'Redis Cache',
     description: 'Managed in-memory cache. Sub-millisecond reads. Sessions, rate limits, pub/sub, job queues.',
     icon: 'Zap',
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: { label: 'Redis', version: '7', tier: 'small', memoryMb: 256 },
   }),
   conceptId: 'redis-cache',

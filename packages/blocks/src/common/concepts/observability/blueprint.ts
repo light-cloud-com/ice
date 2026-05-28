@@ -8,7 +8,7 @@ export const observabilityConceptBlueprint: ConceptBlueprint = {
     name: 'Observability',
     description: 'Logs, metrics, and alerts in one block. CloudWatch / Cloud Logging / App Insights.',
     icon: 'Activity',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'ibm'],
     nodeDataDefaults: { label: 'Observability', retentionDays: 30 },
   }),
   conceptId: 'observability',

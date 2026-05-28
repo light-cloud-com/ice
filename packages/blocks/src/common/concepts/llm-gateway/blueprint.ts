@@ -9,7 +9,7 @@ export const llmGatewayConceptBlueprint: ConceptBlueprint = {
     description:
       'Managed LLM access. GPT-4, Claude, Gemini, Llama — route through a gateway with auth, quotas, logging.',
     icon: 'Brain',
-    providers: ['aws', 'gcp', 'azure'],
+    providers: ['aws', 'gcp', 'azure', 'alibaba', 'oci', 'ibm'],
     nodeDataDefaults: { label: 'LLM', model: 'gpt-4o-mini' },
   }),
   conceptId: 'llm-gateway',

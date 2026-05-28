@@ -9,7 +9,7 @@ export const workerConceptBlueprint: ConceptBlueprint = {
     description:
       'Long-running background job processor. Pulls from a queue, does slow work (video encode, ETL, image processing).',
     icon: 'Cog',
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
+    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'],
     nodeDataDefaults: {
       label: 'Worker',
       runtime: 'node20',

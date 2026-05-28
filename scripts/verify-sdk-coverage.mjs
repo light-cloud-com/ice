@@ -33,8 +33,9 @@
 
 import { promises as fs } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { request } from 'node:https';
+import { createRequire } from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -64,8 +65,14 @@ const NO_NETWORK = args.has('--no-network');
  * Pull SDK metadata out of a handler file. Heuristics:
  *   - `const SDK = '@scope/name'` declares the package name
  *   - `const TYPE = 'provider.service.kind'` declares the resource type
- *   - `new <ns>.<Identifier>` captures SDK class / command refs
+ *   - `new <ns>.<Identifier>` captures SDK class / command refs, scoped
+ *     by the namespace alias (`new s3.PutObjectCommand` → goes only to
+ *     the package the `s3` alias was loaded from)
  *   - `client.<chain>.method(` captures dotted client-method chains
+ *
+ * To attribute refs correctly when a file uses multiple SDKs, we track
+ * the alias → package binding via `const <alias> = await load_*_sdk(...)`
+ * assignments (the standard pattern in every handler).
  */
 async function scanHandler(filePath) {
   const src = await fs.readFile(filePath, 'utf8');
@@ -74,24 +81,47 @@ async function scanHandler(filePath) {
 
   const sdkPkgs = new Set();
   if (sdkMatch) sdkPkgs.add(sdkMatch[1]);
-  // Also capture `load_*_sdk('<pkg>')` calls (some handlers route through helpers).
   for (const m of src.matchAll(/load_(?:aws|gcp|azure)_sdk\(['"]([^'"]+)['"]\)/g)) {
     sdkPkgs.add(m[1]);
   }
 
-  // SDK command refs: `new <ns>.<Class>(`
-  const sdkRefs = new Set();
+  // Build alias → package map. Captures shapes like:
+  //   const s3 = await load_aws_sdk('@aws-sdk/client-s3')
+  //   const cf = await load_aws_sdk(SDK)        // SDK = '@aws-sdk/client-cloudfront'
+  //   const ec2 = await load_aws_sdk('@aws-sdk/client-ec2')
+  const aliasToPkg = new Map();
+  for (const m of src.matchAll(/const\s+([a-z_][\w]*)\s*=\s*await\s+load_(?:aws|gcp|azure)_sdk\(\s*(?:['"]([^'"]+)['"]|SDK)\s*\)/g)) {
+    const alias = m[1];
+    const pkg = m[2] ?? sdkMatch?.[1];
+    if (alias && pkg) aliasToPkg.set(alias, pkg);
+  }
+
+  // SDK refs: `new <ns>.<Class>(` and `<ns>.<Class>` raw use.
+  // Each ref is attributed to the package its namespace alias maps to.
+  const refsByPkg = new Map();
+  function addRef(pkg, ref) {
+    if (!pkg) return;
+    if (!refsByPkg.has(pkg)) refsByPkg.set(pkg, new Set());
+    refsByPkg.get(pkg).add(ref);
+  }
   for (const m of src.matchAll(/new\s+([a-z_][\w]*)\.([A-Z]\w+)\(/g)) {
-    sdkRefs.add(`${m[1]}.${m[2]}`);
+    const [, alias, cls] = m;
+    const pkg = aliasToPkg.get(alias);
+    if (pkg) addRef(pkg, `${alias}.${cls}`);
   }
-  // Client method chains: `client.foo.bar.method(`
-  // For Azure ARM clients these surface as `client.<resource>.beginXxxAndWait(`
-  // For GCP it's `client.<service>.<method>(`.
+
+  // Client method chains: `client.foo.bar.method(`. These can't be
+  // attributed to a single package without instantiation context, so
+  // we attribute them to the file's primary SDK (the `const SDK = ...`
+  // declaration) when there is one.
+  const clientChainRefs = new Set();
   for (const m of src.matchAll(/\bclient\.([a-zA-Z_][\w.]+)\(/g)) {
-    sdkRefs.add(`client.${m[1]}`);
+    clientChainRefs.add(`client.${m[1]}`);
   }
-  // Also `ctx.clients.get('<key>')` — useful for cross-checking which
-  // SDK client slot the handler reads from.
+  if (sdkMatch) {
+    for (const ref of clientChainRefs) addRef(sdkMatch[1], ref);
+  }
+
   const clientKeys = new Set();
   for (const m of src.matchAll(/ctx\.clients\.get\(['"]([^'"]+)['"]\)/g)) {
     clientKeys.add(m[1]);
@@ -101,7 +131,8 @@ async function scanHandler(filePath) {
     file: filePath.replace(ROOT + '/', ''),
     type: typeMatch?.[1] ?? null,
     sdkPkgs: [...sdkPkgs],
-    sdkRefs: [...sdkRefs].sort(),
+    refsByPkg: Object.fromEntries([...refsByPkg].map(([k, v]) => [k, [...v].sort()])),
+    sdkRefs: [...new Set([...refsByPkg.values()].flatMap((s) => [...s]))].sort(),
     clientKeys: [...clientKeys],
   };
 }
@@ -155,13 +186,30 @@ async function verifyNpmPackage(pkg) {
 
 // ─── Runtime verification ──────────────────────────────────────────────────
 
+// Resolve SDK packages from where pnpm actually installs them — the
+// monorepo doesn't hoist into the root node_modules, so the script's
+// own CWD can't find them via plain dynamic import. We try a list of
+// known package-resolution roots in order.
+const RESOLVE_FROM = [
+  ROOT,
+  join(ROOT, 'packages/core'),
+  join(ROOT, 'packages/providers/gcp'),
+  join(ROOT, 'packages/providers/aws'),
+  join(ROOT, 'packages/providers/azure'),
+];
+
 async function tryImport(pkg) {
-  try {
-    const mod = await Function('m', 'return import(m)')(pkg);
-    return { ok: true, mod };
-  } catch (e) {
-    return { ok: false, error: e.message };
+  for (const base of RESOLVE_FROM) {
+    try {
+      const req = createRequire(join(base, 'package.json'));
+      const resolved = req.resolve(pkg);
+      const mod = await import(pathToFileURL(resolved).href);
+      return { ok: true, mod, resolvedFrom: base };
+    } catch {
+      // try next base
+    }
   }
+  return { ok: false, error: 'package not found in any monorepo location' };
 }
 
 /**
@@ -253,9 +301,14 @@ async function main() {
       runtimeResults.set(pkg, { installed: false });
       continue;
     }
-    // Aggregate every ref from every handler that uses this pkg.
+    // Use the per-package scoped refs (from refsByPkg) so we don't
+    // false-positive on cross-SDK refs in files that import multiple
+    // SDKs (e.g. lambda-builder uses both S3 + CodeBuild).
     const allRefs = new Set();
-    for (const h of pkgIndex.get(pkg)) for (const r of h.sdkRefs) allRefs.add(r);
+    for (const h of pkgIndex.get(pkg)) {
+      const scoped = h.refsByPkg?.[pkg];
+      if (scoped) for (const r of scoped) allRefs.add(r);
+    }
     const missing = unresolvedRefs(im.mod, [...allRefs]);
     runtimeResults.set(pkg, { installed: true, missingRefs: missing });
   }

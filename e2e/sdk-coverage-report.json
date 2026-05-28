@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-28T07:47:04.210Z",
+  "generated_at": "2026-05-28T07:53:24.498Z",
   "summary": {
     "handlers": 110,
     "packages": 78,
@@ -15,6 +15,16 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/acm.ts",
       "type": "aws.acm.certificate",
       "sdkPkgs": ["@aws-sdk/client-acm"],
+      "refsByPkg": {
+        "@aws-sdk/client-acm": [
+          "acm.ACMClient",
+          "acm.AddTagsToCertificateCommand",
+          "acm.DeleteCertificateCommand",
+          "acm.DescribeCertificateCommand",
+          "acm.RequestCertificateCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": [
         "acm.ACMClient",
         "acm.AddTagsToCertificateCommand",
@@ -29,6 +39,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/amazon-mq.ts",
       "type": "aws.mq.broker",
       "sdkPkgs": ["@aws-sdk/client-mq"],
+      "refsByPkg": {
+        "@aws-sdk/client-mq": [
+          "client.send",
+          "mq.CreateBrokerCommand",
+          "mq.DeleteBrokerCommand",
+          "mq.UpdateBrokerCommand"
+        ]
+      },
       "sdkRefs": ["client.send", "mq.CreateBrokerCommand", "mq.DeleteBrokerCommand", "mq.UpdateBrokerCommand"],
       "clientKeys": ["mq"]
     },
@@ -36,6 +54,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/amplify-hosting.ts",
       "type": "aws.amplify.app",
       "sdkPkgs": ["@aws-sdk/client-amplify"],
+      "refsByPkg": {
+        "@aws-sdk/client-amplify": [
+          "amplify.CreateAppCommand",
+          "amplify.CreateBranchCommand",
+          "amplify.DeleteAppCommand",
+          "amplify.UpdateAppCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": [
         "amplify.CreateAppCommand",
         "amplify.CreateBranchCommand",
@@ -49,6 +76,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/api-gateway.ts",
       "type": "aws.apigateway.restApi",
       "sdkPkgs": ["@aws-sdk/client-api-gateway"],
+      "refsByPkg": {
+        "@aws-sdk/client-api-gateway": [
+          "api.CreateDeploymentCommand",
+          "api.CreateRestApiCommand",
+          "api.DeleteRestApiCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": ["api.CreateDeploymentCommand", "api.CreateRestApiCommand", "api.DeleteRestApiCommand", "client.send"],
       "clientKeys": ["apigateway"]
     },
@@ -56,6 +91,13 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/bedrock.ts",
       "type": "aws.bedrock.endpoint",
       "sdkPkgs": ["@aws-sdk/client-bedrock"],
+      "refsByPkg": {
+        "@aws-sdk/client-bedrock": [
+          "bedrock.CreateProvisionedModelThroughputCommand",
+          "bedrock.DeleteProvisionedModelThroughputCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": [
         "bedrock.CreateProvisionedModelThroughputCommand",
         "bedrock.DeleteProvisionedModelThroughputCommand",
@@ -67,9 +109,16 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/cloudfront.ts",
       "type": "aws.cloudfront.distribution",
       "sdkPkgs": ["@aws-sdk/client-cloudfront"],
+      "refsByPkg": {
+        "@aws-sdk/client-cloudfront": [
+          "cf.CreateDistributionCommand",
+          "cf.DeleteDistributionCommand",
+          "cf.GetDistributionConfigCommand",
+          "cf.UpdateDistributionCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": [
-        "acm.ACMClient",
-        "acm.RequestCertificateCommand",
         "cf.CreateDistributionCommand",
         "cf.DeleteDistributionCommand",
         "cf.GetDistributionConfigCommand",
@@ -82,6 +131,9 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/cloudwatch-alarm.ts",
       "type": "aws.cloudwatch.alarm",
       "sdkPkgs": ["@aws-sdk/client-cloudwatch"],
+      "refsByPkg": {
+        "@aws-sdk/client-cloudwatch": ["client.send", "cw.DeleteAlarmsCommand", "cw.PutMetricAlarmCommand"]
+      },
       "sdkRefs": ["client.send", "cw.DeleteAlarmsCommand", "cw.PutMetricAlarmCommand"],
       "clientKeys": ["cloudwatch"]
     },
@@ -89,6 +141,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/cloudwatch-logs.ts",
       "type": "aws.cloudwatch.logGroup",
       "sdkPkgs": ["@aws-sdk/client-cloudwatch-logs"],
+      "refsByPkg": {
+        "@aws-sdk/client-cloudwatch-logs": [
+          "client.send",
+          "cwl.CreateLogGroupCommand",
+          "cwl.DeleteLogGroupCommand",
+          "cwl.PutRetentionPolicyCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "cwl.CreateLogGroupCommand",
@@ -101,6 +161,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/codebuild.ts",
       "type": "aws.codebuild.project",
       "sdkPkgs": ["@aws-sdk/client-codebuild"],
+      "refsByPkg": {
+        "@aws-sdk/client-codebuild": [
+          "cb.CreateProjectCommand",
+          "cb.DeleteProjectCommand",
+          "cb.UpdateProjectCommand",
+          "client.send"
+        ]
+      },
       "sdkRefs": ["cb.CreateProjectCommand", "cb.DeleteProjectCommand", "cb.UpdateProjectCommand", "client.send"],
       "clientKeys": ["codebuild"]
     },
@@ -108,6 +176,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/cognito.ts",
       "type": "aws.cognito.userPool",
       "sdkPkgs": ["@aws-sdk/client-cognito-identity-provider"],
+      "refsByPkg": {
+        "@aws-sdk/client-cognito-identity-provider": [
+          "client.send",
+          "cognito.CreateUserPoolCommand",
+          "cognito.DeleteUserPoolCommand",
+          "cognito.UpdateUserPoolCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "cognito.CreateUserPoolCommand",
@@ -120,6 +196,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/docdb.ts",
       "type": "aws.docdb.cluster",
       "sdkPkgs": ["@aws-sdk/client-docdb"],
+      "refsByPkg": {
+        "@aws-sdk/client-docdb": [
+          "client.send",
+          "docdb.CreateDBClusterCommand",
+          "docdb.CreateDBInstanceCommand",
+          "docdb.DeleteDBClusterCommand",
+          "docdb.ModifyDBClusterCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "docdb.CreateDBClusterCommand",
@@ -133,6 +218,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/dynamodb.ts",
       "type": "aws.dynamodb.table",
       "sdkPkgs": ["@aws-sdk/client-dynamodb"],
+      "refsByPkg": {
+        "@aws-sdk/client-dynamodb": [
+          "client.send",
+          "dynamo.CreateTableCommand",
+          "dynamo.DeleteTableCommand",
+          "dynamo.UpdateContinuousBackupsCommand",
+          "dynamo.UpdateTableCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "dynamo.CreateTableCommand",
@@ -146,8 +240,16 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/ec2.ts",
       "type": "aws.ec2.instance",
       "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "refsByPkg": {
+        "@aws-sdk/client-ec2": [
+          "ec2.CreateTagsCommand",
+          "ec2.DescribeInstancesCommand",
+          "ec2.ModifyVolumeCommand",
+          "ec2.RunInstancesCommand",
+          "ec2.TerminateInstancesCommand"
+        ]
+      },
       "sdkRefs": [
-        "client.send",
         "ec2.CreateTagsCommand",
         "ec2.DescribeInstancesCommand",
         "ec2.ModifyVolumeCommand",
@@ -160,6 +262,9 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/ecr.ts",
       "type": "aws.ecr.repository",
       "sdkPkgs": ["@aws-sdk/client-ecr"],
+      "refsByPkg": {
+        "@aws-sdk/client-ecr": ["client.send", "ecr.CreateRepositoryCommand", "ecr.DeleteRepositoryCommand"]
+      },
       "sdkRefs": ["client.send", "ecr.CreateRepositoryCommand", "ecr.DeleteRepositoryCommand"],
       "clientKeys": ["ecr"]
     },
@@ -167,6 +272,17 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/ecs.ts",
       "type": "aws.ecs.service",
       "sdkPkgs": ["@aws-sdk/client-ecs"],
+      "refsByPkg": {
+        "@aws-sdk/client-ecs": [
+          "client.send",
+          "ecs.CreateClusterCommand",
+          "ecs.CreateServiceCommand",
+          "ecs.DeleteServiceCommand",
+          "ecs.DescribeClustersCommand",
+          "ecs.RegisterTaskDefinitionCommand",
+          "ecs.UpdateServiceCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ecs.CreateClusterCommand",
@@ -182,6 +298,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/elasticache.ts",
       "type": "aws.elasticache.cluster",
       "sdkPkgs": ["@aws-sdk/client-elasticache"],
+      "refsByPkg": {
+        "@aws-sdk/client-elasticache": [
+          "client.send",
+          "ec.CreateCacheClusterCommand",
+          "ec.CreateReplicationGroupCommand",
+          "ec.DeleteCacheClusterCommand",
+          "ec.DeleteReplicationGroupCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ec.CreateCacheClusterCommand",
@@ -195,6 +320,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/elbv2.ts",
       "type": "aws.elbv2.loadBalancer",
       "sdkPkgs": ["@aws-sdk/client-elastic-load-balancing-v2"],
+      "refsByPkg": {
+        "@aws-sdk/client-elastic-load-balancing-v2": [
+          "client.send",
+          "elb.CreateLoadBalancerCommand",
+          "elb.CreateTargetGroupCommand",
+          "elb.DeleteLoadBalancerCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "elb.CreateLoadBalancerCommand",
@@ -207,6 +340,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/events-rule.ts",
       "type": "aws.events.rule",
       "sdkPkgs": ["@aws-sdk/client-eventbridge"],
+      "refsByPkg": {
+        "@aws-sdk/client-eventbridge": [
+          "client.send",
+          "ev.DeleteRuleCommand",
+          "ev.PutRuleCommand",
+          "ev.PutTargetsCommand",
+          "ev.RemoveTargetsCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ev.DeleteRuleCommand",
@@ -220,6 +362,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/kinesis.ts",
       "type": "aws.kinesis.stream",
       "sdkPkgs": ["@aws-sdk/client-kinesis"],
+      "refsByPkg": {
+        "@aws-sdk/client-kinesis": [
+          "client.send",
+          "kinesis.CreateStreamCommand",
+          "kinesis.DeleteStreamCommand",
+          "kinesis.IncreaseStreamRetentionPeriodCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "kinesis.CreateStreamCommand",
@@ -232,8 +382,16 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/lambda-builder.ts",
       "type": null,
       "sdkPkgs": ["@aws-sdk/client-s3", "@aws-sdk/client-codebuild"],
+      "refsByPkg": {
+        "@aws-sdk/client-s3": ["s3.CreateBucketCommand", "s3.HeadBucketCommand", "s3.PutObjectCommand"],
+        "@aws-sdk/client-codebuild": [
+          "codebuild.BatchGetBuildsCommand",
+          "codebuild.CreateProjectCommand",
+          "codebuild.DeleteProjectCommand",
+          "codebuild.StartBuildCommand"
+        ]
+      },
       "sdkRefs": [
-        "client.send",
         "codebuild.BatchGetBuildsCommand",
         "codebuild.CreateProjectCommand",
         "codebuild.DeleteProjectCommand",
@@ -248,8 +406,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/lambda.ts",
       "type": "aws.lambda.function",
       "sdkPkgs": ["@aws-sdk/client-lambda"],
+      "refsByPkg": {
+        "@aws-sdk/client-lambda": [
+          "lambda.CreateFunctionCommand",
+          "lambda.DeleteFunctionCommand",
+          "lambda.UpdateFunctionCodeCommand",
+          "lambda.UpdateFunctionConfigurationCommand"
+        ]
+      },
       "sdkRefs": [
-        "client.send",
         "lambda.CreateFunctionCommand",
         "lambda.DeleteFunctionCommand",
         "lambda.UpdateFunctionCodeCommand",
@@ -261,6 +426,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/opensearch-serverless.ts",
       "type": "aws.opensearchserverless.collection",
       "sdkPkgs": ["@aws-sdk/client-opensearchserverless"],
+      "refsByPkg": {
+        "@aws-sdk/client-opensearchserverless": [
+          "client.send",
+          "oss.CreateCollectionCommand",
+          "oss.DeleteCollectionCommand",
+          "oss.UpdateCollectionCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "oss.CreateCollectionCommand",
@@ -273,6 +446,9 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/opensearch.ts",
       "type": "aws.opensearch.domain",
       "sdkPkgs": ["@aws-sdk/client-opensearch"],
+      "refsByPkg": {
+        "@aws-sdk/client-opensearch": ["client.send", "os.CreateDomainCommand", "os.DeleteDomainCommand"]
+      },
       "sdkRefs": ["client.send", "os.CreateDomainCommand", "os.DeleteDomainCommand"],
       "clientKeys": ["opensearch"]
     },
@@ -280,6 +456,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/rds.ts",
       "type": "aws.rds.dbInstance",
       "sdkPkgs": ["@aws-sdk/client-rds"],
+      "refsByPkg": {
+        "@aws-sdk/client-rds": [
+          "client.send",
+          "rds.CreateDBInstanceCommand",
+          "rds.DeleteDBInstanceCommand",
+          "rds.DescribeDBInstancesCommand",
+          "rds.ModifyDBInstanceCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "rds.CreateDBInstanceCommand",
@@ -293,6 +478,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/redshift.ts",
       "type": "aws.redshift.cluster",
       "sdkPkgs": ["@aws-sdk/client-redshift"],
+      "refsByPkg": {
+        "@aws-sdk/client-redshift": [
+          "client.send",
+          "rs.CreateClusterCommand",
+          "rs.DeleteClusterCommand",
+          "rs.ModifyClusterCommand"
+        ]
+      },
       "sdkRefs": ["client.send", "rs.CreateClusterCommand", "rs.DeleteClusterCommand", "rs.ModifyClusterCommand"],
       "clientKeys": ["redshift"]
     },
@@ -300,6 +493,9 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/route53.ts",
       "type": "aws.route53.recordSet",
       "sdkPkgs": ["@aws-sdk/client-route-53"],
+      "refsByPkg": {
+        "@aws-sdk/client-route-53": ["client.send", "r53.ChangeResourceRecordSetsCommand"]
+      },
       "sdkRefs": ["client.send", "r53.ChangeResourceRecordSetsCommand"],
       "clientKeys": ["route53"]
     },
@@ -307,8 +503,19 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/s3.ts",
       "type": "aws.s3.bucket",
       "sdkPkgs": ["@aws-sdk/client-s3"],
+      "refsByPkg": {
+        "@aws-sdk/client-s3": [
+          "s3.CreateBucketCommand",
+          "s3.DeleteBucketCommand",
+          "s3.DeleteObjectsCommand",
+          "s3.ListObjectsV2Command",
+          "s3.PutBucketPolicyCommand",
+          "s3.PutBucketTaggingCommand",
+          "s3.PutBucketWebsiteCommand",
+          "s3.PutPublicAccessBlockCommand"
+        ]
+      },
       "sdkRefs": [
-        "client.send",
         "s3.CreateBucketCommand",
         "s3.DeleteBucketCommand",
         "s3.DeleteObjectsCommand",
@@ -324,6 +531,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/sagemaker.ts",
       "type": "aws.sagemaker.endpoint",
       "sdkPkgs": ["@aws-sdk/client-sagemaker"],
+      "refsByPkg": {
+        "@aws-sdk/client-sagemaker": [
+          "client.send",
+          "sm.CreateEndpointCommand",
+          "sm.CreateEndpointConfigCommand",
+          "sm.DeleteEndpointCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "sm.CreateEndpointCommand",
@@ -336,6 +551,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/secrets-manager.ts",
       "type": "aws.secretsmanager.secret",
       "sdkPkgs": ["@aws-sdk/client-secrets-manager"],
+      "refsByPkg": {
+        "@aws-sdk/client-secrets-manager": [
+          "client.send",
+          "sm.CreateSecretCommand",
+          "sm.DeleteSecretCommand",
+          "sm.UpdateSecretCommand"
+        ]
+      },
       "sdkRefs": ["client.send", "sm.CreateSecretCommand", "sm.DeleteSecretCommand", "sm.UpdateSecretCommand"],
       "clientKeys": ["secrets-manager"]
     },
@@ -343,6 +566,17 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/security-group.ts",
       "type": "aws.ec2.securityGroup",
       "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "refsByPkg": {
+        "@aws-sdk/client-ec2": [
+          "client.send",
+          "ec2.AuthorizeSecurityGroupEgressCommand",
+          "ec2.AuthorizeSecurityGroupIngressCommand",
+          "ec2.CreateSecurityGroupCommand",
+          "ec2.CreateTagsCommand",
+          "ec2.DeleteSecurityGroupCommand",
+          "ec2.RevokeSecurityGroupEgressCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ec2.AuthorizeSecurityGroupEgressCommand",
@@ -358,6 +592,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/sns.ts",
       "type": "aws.sns.topic",
       "sdkPkgs": ["@aws-sdk/client-sns"],
+      "refsByPkg": {
+        "@aws-sdk/client-sns": [
+          "client.send",
+          "sns.CreateTopicCommand",
+          "sns.DeleteTopicCommand",
+          "sns.SetTopicAttributesCommand"
+        ]
+      },
       "sdkRefs": ["client.send", "sns.CreateTopicCommand", "sns.DeleteTopicCommand", "sns.SetTopicAttributesCommand"],
       "clientKeys": ["sns"]
     },
@@ -365,6 +607,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/sqs.ts",
       "type": "aws.sqs.queue",
       "sdkPkgs": ["@aws-sdk/client-sqs"],
+      "refsByPkg": {
+        "@aws-sdk/client-sqs": [
+          "client.send",
+          "sqs.CreateQueueCommand",
+          "sqs.DeleteQueueCommand",
+          "sqs.SetQueueAttributesCommand"
+        ]
+      },
       "sdkRefs": ["client.send", "sqs.CreateQueueCommand", "sqs.DeleteQueueCommand", "sqs.SetQueueAttributesCommand"],
       "clientKeys": ["sqs"]
     },
@@ -372,6 +622,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/subnet.ts",
       "type": "aws.ec2.subnet",
       "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "refsByPkg": {
+        "@aws-sdk/client-ec2": [
+          "client.send",
+          "ec2.CreateSubnetCommand",
+          "ec2.CreateTagsCommand",
+          "ec2.DeleteSubnetCommand",
+          "ec2.ModifySubnetAttributeCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ec2.CreateSubnetCommand",
@@ -385,6 +644,9 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/timestream.ts",
       "type": "aws.timestream.database",
       "sdkPkgs": ["@aws-sdk/client-timestream-write"],
+      "refsByPkg": {
+        "@aws-sdk/client-timestream-write": ["client.send", "ts.CreateDatabaseCommand", "ts.DeleteDatabaseCommand"]
+      },
       "sdkRefs": ["client.send", "ts.CreateDatabaseCommand", "ts.DeleteDatabaseCommand"],
       "clientKeys": ["timestream"]
     },
@@ -392,6 +654,14 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/vpc-endpoint.ts",
       "type": "aws.ec2.vpcEndpoint",
       "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "refsByPkg": {
+        "@aws-sdk/client-ec2": [
+          "client.send",
+          "ec2.CreateTagsCommand",
+          "ec2.CreateVpcEndpointCommand",
+          "ec2.DeleteVpcEndpointsCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ec2.CreateTagsCommand",
@@ -404,6 +674,15 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/vpc.ts",
       "type": "aws.ec2.vpc",
       "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "refsByPkg": {
+        "@aws-sdk/client-ec2": [
+          "client.send",
+          "ec2.CreateTagsCommand",
+          "ec2.CreateVpcCommand",
+          "ec2.DeleteVpcCommand",
+          "ec2.ModifyVpcAttributeCommand"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "ec2.CreateTagsCommand",
@@ -417,6 +696,16 @@
       "file": "packages/core/src/deploy/providers/aws/handlers/wafv2.ts",
       "type": "aws.wafv2.webAcl",
       "sdkPkgs": ["@aws-sdk/client-wafv2"],
+      "refsByPkg": {
+        "@aws-sdk/client-wafv2": [
+          "client.send",
+          "wafv2.CreateWebACLCommand",
+          "wafv2.DeleteWebACLCommand",
+          "wafv2.GetWebACLCommand",
+          "wafv2.UpdateWebACLCommand",
+          "wafv2.WAFV2Client"
+        ]
+      },
       "sdkRefs": [
         "client.send",
         "wafv2.CreateWebACLCommand",
@@ -431,6 +720,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/api-gateway.ts",
       "type": "gcp.apigateway.api",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -438,13 +728,15 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/artifact-registry.ts",
       "type": "gcp.artifactregistry.repository",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createRepository", "client.deleteRepository"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["artifactregistry"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/backend-bucket.ts",
       "type": "gcp.compute.backendBucket",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -452,6 +744,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/bigquery.ts",
       "type": "gcp.bigquery.dataset",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["bigquery"]
     },
@@ -459,6 +752,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-armor.ts",
       "type": "gcp.compute.securityPolicy",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -466,6 +760,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-build-helper.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -473,27 +768,31 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-build.ts",
       "type": "gcp.cloudbuild.trigger",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createBuildTrigger", "client.deleteBuildTrigger"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["cloudbuild"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-dns.ts",
       "type": "gcp.dns.managedZone",
       "sdkPkgs": [],
-      "sdkRefs": ["client.managedZone"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["dns"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-functions.ts",
       "type": "gcp.cloudfunctions.function",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createFunction"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["functions"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-run.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["run.jobs", "run.services"]
     },
@@ -501,13 +800,15 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-scheduler.ts",
       "type": "gcp.cloudscheduler.job",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createJob", "client.deleteJob", "client.updateJob"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["scheduler"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-sql.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -515,6 +816,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["storage"]
     },
@@ -522,20 +824,23 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/compute-firewall.ts",
       "type": "gcp.compute.firewall",
       "sdkPkgs": [],
-      "sdkRefs": ["client.delete", "client.insert"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["firewalls"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/compute-instance.ts",
       "type": "gcp.compute.instance",
       "sdkPkgs": [],
-      "sdkRefs": ["client.delete", "client.insert"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["instances"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/dataflow.ts",
       "type": "gcp.dataflow.job",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -543,6 +848,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/discovery-engine.ts",
       "type": "gcp.discoveryengine.searchEngine",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -550,6 +856,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/domain-mapping.ts",
       "type": "gcp.run.domainMapping",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -557,6 +864,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -564,6 +872,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/firestore.ts",
       "type": "gcp.firestore.database",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -571,20 +880,15 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/gke.ts",
       "type": "gcp.container.cluster",
       "sdkPkgs": [],
-      "sdkRefs": [
-        "client.createCluster",
-        "client.deleteCluster",
-        "client.getOperation",
-        "client.setLabels",
-        "client.setNodePoolSize",
-        "client.updateNodePool"
-      ],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["container"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/identity-platform.ts",
       "type": "gcp.identityplatform.config",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -592,6 +896,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/load-balancer.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -599,6 +904,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/logging.ts",
       "type": "gcp.logging.sink",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["logging"]
     },
@@ -606,6 +912,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/managed-ssl-certificate.ts",
       "type": "gcp.compute.managedSslCertificate",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -613,6 +920,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/memorystore.ts",
       "type": "gcp.redis.instance",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -620,20 +928,23 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/monitoring.ts",
       "type": "gcp.monitoring.alertPolicy",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createAlertPolicy", "client.deleteAlertPolicy"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["monitoring"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/private-service-connect.ts",
       "type": "gcp.compute.privateServiceConnect",
       "sdkPkgs": [],
-      "sdkRefs": ["client.delete", "client.insert"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["forwardingRules"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/pubsub.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": ["pubsub"]
     },
@@ -641,13 +952,15 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/secret-manager.ts",
       "type": "gcp.secretmanager.secret",
       "sdkPkgs": [],
-      "sdkRefs": ["client.createSecret", "client.deleteSecret", "client.updateSecret"],
+      "refsByPkg": {},
+      "sdkRefs": [],
       "clientKeys": ["secretmanager"]
     },
     {
       "file": "packages/core/src/deploy/providers/gcp/handlers/subnet.ts",
       "type": "gcp.compute.subnetwork",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -655,6 +968,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/vertex-ai.ts",
       "type": null,
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -662,6 +976,7 @@
       "file": "packages/core/src/deploy/providers/gcp/handlers/vpc.ts",
       "type": "gcp.compute.network",
       "sdkPkgs": [],
+      "refsByPkg": {},
       "sdkRefs": [],
       "clientKeys": []
     },
@@ -669,6 +984,9 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/acr-task.ts",
       "type": "azure.containerregistry.task",
       "sdkPkgs": ["@azure/arm-containerregistry"],
+      "refsByPkg": {
+        "@azure/arm-containerregistry": ["client.tasks.beginCreateAndWait", "client.tasks.beginDeleteAndWait"]
+      },
       "sdkRefs": ["client.tasks.beginCreateAndWait", "client.tasks.beginDeleteAndWait"],
       "clientKeys": ["acr"]
     },
@@ -676,6 +994,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/acr.ts",
       "type": "azure.containerregistry.registry",
       "sdkPkgs": ["@azure/arm-containerregistry"],
+      "refsByPkg": {
+        "@azure/arm-containerregistry": [
+          "client.registries.beginCreateAndWait",
+          "client.registries.beginDeleteAndWait",
+          "client.registries.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.registries.beginCreateAndWait",
         "client.registries.beginDeleteAndWait",
@@ -687,6 +1012,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/aks.ts",
       "type": "azure.containerservice.managedCluster",
       "sdkPkgs": ["@azure/arm-containerservice"],
+      "refsByPkg": {
+        "@azure/arm-containerservice": [
+          "client.managedClusters.beginCreateOrUpdateAndWait",
+          "client.managedClusters.beginDeleteAndWait",
+          "client.managedClusters.beginUpdateTagsAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.managedClusters.beginCreateOrUpdateAndWait",
         "client.managedClusters.beginDeleteAndWait",
@@ -698,6 +1030,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/apim.ts",
       "type": "azure.apimanagement.service",
       "sdkPkgs": ["@azure/arm-apimanagement"],
+      "refsByPkg": {
+        "@azure/arm-apimanagement": [
+          "client.apiManagementService.beginCreateOrUpdateAndWait",
+          "client.apiManagementService.beginDeleteAndWait",
+          "client.apiManagementService.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.apiManagementService.beginCreateOrUpdateAndWait",
         "client.apiManagementService.beginDeleteAndWait",
@@ -709,6 +1048,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/app-gateway.ts",
       "type": "azure.network.applicationGateway",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": [
+          "client.applicationGateways.beginCreateOrUpdateAndWait",
+          "client.applicationGateways.beginDeleteAndWait",
+          "client.applicationGateways.updateTags"
+        ]
+      },
       "sdkRefs": [
         "client.applicationGateways.beginCreateOrUpdateAndWait",
         "client.applicationGateways.beginDeleteAndWait",
@@ -720,6 +1066,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/app-insights.ts",
       "type": "azure.insights.appInsights",
       "sdkPkgs": ["@azure/arm-appinsights"],
+      "refsByPkg": {
+        "@azure/arm-appinsights": [
+          "client.components.createOrUpdate",
+          "client.components.delete",
+          "client.components.updateTags"
+        ]
+      },
       "sdkRefs": ["client.components.createOrUpdate", "client.components.delete", "client.components.updateTags"],
       "clientKeys": ["app-insights"]
     },
@@ -727,6 +1080,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/app-service.ts",
       "type": "azure.web.appServicePlan",
       "sdkPkgs": ["@azure/arm-appservice"],
+      "refsByPkg": {
+        "@azure/arm-appservice": [
+          "client.appServicePlans.beginCreateOrUpdateAndWait",
+          "client.appServicePlans.delete",
+          "client.appServicePlans.update"
+        ]
+      },
       "sdkRefs": [
         "client.appServicePlans.beginCreateOrUpdateAndWait",
         "client.appServicePlans.delete",
@@ -738,6 +1098,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/azure-ml.ts",
       "type": "azure.machinelearning.workspace",
       "sdkPkgs": ["@azure/arm-machinelearning"],
+      "refsByPkg": {
+        "@azure/arm-machinelearning": [
+          "client.workspaces.beginCreateOrUpdateAndWait",
+          "client.workspaces.beginDeleteAndWait",
+          "client.workspaces.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.workspaces.beginCreateOrUpdateAndWait",
         "client.workspaces.beginDeleteAndWait",
@@ -749,6 +1116,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/azure-openai.ts",
       "type": "azure.cognitiveservices.account",
       "sdkPkgs": ["@azure/arm-cognitiveservices"],
+      "refsByPkg": {
+        "@azure/arm-cognitiveservices": [
+          "client.accounts.beginCreateAndWait",
+          "client.accounts.beginDeleteAndWait",
+          "client.accounts.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.accounts.beginCreateAndWait",
         "client.accounts.beginDeleteAndWait",
@@ -760,6 +1134,12 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/azure-waf.ts",
       "type": "azure.network.webApplicationFirewallPolicy",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": [
+          "client.webApplicationFirewallPolicies.beginDeleteAndWait",
+          "client.webApplicationFirewallPolicies.createOrUpdate"
+        ]
+      },
       "sdkRefs": [
         "client.webApplicationFirewallPolicies.beginDeleteAndWait",
         "client.webApplicationFirewallPolicies.createOrUpdate"
@@ -770,6 +1150,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/cognitive-search.ts",
       "type": "azure.search.service",
       "sdkPkgs": ["@azure/arm-search"],
+      "refsByPkg": {
+        "@azure/arm-search": [
+          "client.services.beginCreateOrUpdateAndWait",
+          "client.services.delete",
+          "client.services.update"
+        ]
+      },
       "sdkRefs": ["client.services.beginCreateOrUpdateAndWait", "client.services.delete", "client.services.update"],
       "clientKeys": ["search"]
     },
@@ -777,6 +1164,15 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/container-apps.ts",
       "type": "azure.containerapps.app",
       "sdkPkgs": ["@azure/arm-appcontainers"],
+      "refsByPkg": {
+        "@azure/arm-appcontainers": [
+          "client.containerApps.beginCreateOrUpdateAndWait",
+          "client.containerApps.beginDeleteAndWait",
+          "client.containerApps.update",
+          "client.managedEnvironments.beginCreateOrUpdateAndWait",
+          "client.managedEnvironments.get"
+        ]
+      },
       "sdkRefs": [
         "client.containerApps.beginCreateOrUpdateAndWait",
         "client.containerApps.beginDeleteAndWait",
@@ -790,6 +1186,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/cosmosdb.ts",
       "type": "azure.cosmosdb.account",
       "sdkPkgs": ["@azure/arm-cosmosdb"],
+      "refsByPkg": {
+        "@azure/arm-cosmosdb": [
+          "client.databaseAccounts.beginCreateOrUpdateAndWait",
+          "client.databaseAccounts.beginDeleteAndWait",
+          "client.databaseAccounts.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.databaseAccounts.beginCreateOrUpdateAndWait",
         "client.databaseAccounts.beginDeleteAndWait",
@@ -801,6 +1204,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/data-explorer.ts",
       "type": "azure.kusto.cluster",
       "sdkPkgs": ["@azure/arm-kusto"],
+      "refsByPkg": {
+        "@azure/arm-kusto": [
+          "client.clusters.beginCreateOrUpdateAndWait",
+          "client.clusters.beginDeleteAndWait",
+          "client.clusters.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.clusters.beginCreateOrUpdateAndWait",
         "client.clusters.beginDeleteAndWait",
@@ -812,6 +1222,9 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/dns-zone.ts",
       "type": "azure.network.dnsZone",
       "sdkPkgs": ["@azure/arm-dns"],
+      "refsByPkg": {
+        "@azure/arm-dns": ["client.zones.beginDeleteAndWait", "client.zones.createOrUpdate", "client.zones.update"]
+      },
       "sdkRefs": ["client.zones.beginDeleteAndWait", "client.zones.createOrUpdate", "client.zones.update"],
       "clientKeys": ["dns"]
     },
@@ -819,6 +1232,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/entra-b2c.ts",
       "type": "azure.aadb2c.directory",
       "sdkPkgs": ["@azure/arm-resources"],
+      "refsByPkg": {
+        "@azure/arm-resources": [
+          "client.resources.beginCreateOrUpdateAndWait",
+          "client.resources.beginDeleteAndWait",
+          "client.resources.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.resources.beginCreateOrUpdateAndWait",
         "client.resources.beginDeleteAndWait",
@@ -830,6 +1250,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/event-grid.ts",
       "type": "azure.eventgrid.topic",
       "sdkPkgs": ["@azure/arm-eventgrid"],
+      "refsByPkg": {
+        "@azure/arm-eventgrid": [
+          "client.topics.beginCreateOrUpdateAndWait",
+          "client.topics.beginDeleteAndWait",
+          "client.topics.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.topics.beginCreateOrUpdateAndWait",
         "client.topics.beginDeleteAndWait",
@@ -841,6 +1268,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/event-hubs.ts",
       "type": "azure.eventhub.namespace",
       "sdkPkgs": ["@azure/arm-eventhub"],
+      "refsByPkg": {
+        "@azure/arm-eventhub": [
+          "client.namespaces.beginCreateOrUpdateAndWait",
+          "client.namespaces.beginDeleteAndWait",
+          "client.namespaces.update"
+        ]
+      },
       "sdkRefs": [
         "client.namespaces.beginCreateOrUpdateAndWait",
         "client.namespaces.beginDeleteAndWait",
@@ -852,6 +1286,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/front-door.ts",
       "type": "azure.network.frontDoor",
       "sdkPkgs": ["@azure/arm-cdn"],
+      "refsByPkg": {
+        "@azure/arm-cdn": [
+          "client.profiles.beginCreateAndWait",
+          "client.profiles.beginDeleteAndWait",
+          "client.profiles.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.profiles.beginCreateAndWait",
         "client.profiles.beginDeleteAndWait",
@@ -863,6 +1304,15 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/functions.ts",
       "type": "azure.web.functionApp",
       "sdkPkgs": ["@azure/arm-appservice"],
+      "refsByPkg": {
+        "@azure/arm-appservice": [
+          "client.storageAccounts.beginCreateAndWait",
+          "client.storageAccounts.getProperties",
+          "client.webApps.beginCreateOrUpdateAndWait",
+          "client.webApps.delete",
+          "client.webApps.update"
+        ]
+      },
       "sdkRefs": [
         "client.storageAccounts.beginCreateAndWait",
         "client.storageAccounts.getProperties",
@@ -876,6 +1326,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/key-vault.ts",
       "type": "azure.keyvault.vault",
       "sdkPkgs": ["@azure/arm-keyvault"],
+      "refsByPkg": {
+        "@azure/arm-keyvault": [
+          "client.vaults.beginCreateOrUpdateAndWait",
+          "client.vaults.delete",
+          "client.vaults.update"
+        ]
+      },
       "sdkRefs": ["client.vaults.beginCreateOrUpdateAndWait", "client.vaults.delete", "client.vaults.update"],
       "clientKeys": ["keyvault"]
     },
@@ -883,6 +1340,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/log-analytics.ts",
       "type": "azure.monitor.logAnalytics",
       "sdkPkgs": ["@azure/arm-operationalinsights"],
+      "refsByPkg": {
+        "@azure/arm-operationalinsights": [
+          "client.workspaces.beginCreateOrUpdateAndWait",
+          "client.workspaces.beginDeleteAndWait",
+          "client.workspaces.update"
+        ]
+      },
       "sdkRefs": [
         "client.workspaces.beginCreateOrUpdateAndWait",
         "client.workspaces.beginDeleteAndWait",
@@ -894,6 +1358,9 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/logic-apps.ts",
       "type": "azure.logic.workflow",
       "sdkPkgs": ["@azure/arm-logic"],
+      "refsByPkg": {
+        "@azure/arm-logic": ["client.workflows.createOrUpdate", "client.workflows.delete", "client.workflows.update"]
+      },
       "sdkRefs": ["client.workflows.createOrUpdate", "client.workflows.delete", "client.workflows.update"],
       "clientKeys": ["logic"]
     },
@@ -901,6 +1368,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/mysql-flex.ts",
       "type": "azure.mysqlflex.server",
       "sdkPkgs": ["@azure/arm-mysql-flexible"],
+      "refsByPkg": {
+        "@azure/arm-mysql-flexible": [
+          "client.servers.beginCreateAndWait",
+          "client.servers.beginDeleteAndWait",
+          "client.servers.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.servers.beginCreateAndWait",
         "client.servers.beginDeleteAndWait",
@@ -912,6 +1386,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/nsg.ts",
       "type": "azure.network.networkSecurityGroup",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": [
+          "client.networkSecurityGroups.beginCreateOrUpdateAndWait",
+          "client.networkSecurityGroups.beginDeleteAndWait",
+          "client.networkSecurityGroups.updateTags"
+        ]
+      },
       "sdkRefs": [
         "client.networkSecurityGroups.beginCreateOrUpdateAndWait",
         "client.networkSecurityGroups.beginDeleteAndWait",
@@ -923,6 +1404,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/postgresql-flex.ts",
       "type": "azure.postgresqlflex.server",
       "sdkPkgs": ["@azure/arm-postgresql-flexible"],
+      "refsByPkg": {
+        "@azure/arm-postgresql-flexible": [
+          "client.servers.beginCreateAndWait",
+          "client.servers.beginDeleteAndWait",
+          "client.servers.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.servers.beginCreateAndWait",
         "client.servers.beginDeleteAndWait",
@@ -934,6 +1422,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/private-endpoint.ts",
       "type": "azure.network.privateEndpoint",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": [
+          "client.privateEndpoints.beginCreateOrUpdateAndWait",
+          "client.privateEndpoints.beginDeleteAndWait",
+          "client.privateEndpoints.updateTags"
+        ]
+      },
       "sdkRefs": [
         "client.privateEndpoints.beginCreateOrUpdateAndWait",
         "client.privateEndpoints.beginDeleteAndWait",
@@ -945,6 +1440,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/redis-cache.ts",
       "type": "azure.cache.redis",
       "sdkPkgs": ["@azure/arm-rediscache"],
+      "refsByPkg": {
+        "@azure/arm-rediscache": [
+          "client.redis.beginCreateAndWait",
+          "client.redis.beginDeleteAndWait",
+          "client.redis.update"
+        ]
+      },
       "sdkRefs": ["client.redis.beginCreateAndWait", "client.redis.beginDeleteAndWait", "client.redis.update"],
       "clientKeys": ["redis"]
     },
@@ -952,6 +1454,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/service-bus.ts",
       "type": "azure.servicebus.namespace",
       "sdkPkgs": ["@azure/arm-servicebus"],
+      "refsByPkg": {
+        "@azure/arm-servicebus": [
+          "client.namespaces.beginCreateOrUpdateAndWait",
+          "client.namespaces.beginDeleteAndWait",
+          "client.namespaces.update"
+        ]
+      },
       "sdkRefs": [
         "client.namespaces.beginCreateOrUpdateAndWait",
         "client.namespaces.beginDeleteAndWait",
@@ -963,6 +1472,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/sql-database.ts",
       "type": "azure.sql.server",
       "sdkPkgs": ["@azure/arm-sql"],
+      "refsByPkg": {
+        "@azure/arm-sql": [
+          "client.servers.beginCreateOrUpdateAndWait",
+          "client.servers.beginDeleteAndWait",
+          "client.servers.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.servers.beginCreateOrUpdateAndWait",
         "client.servers.beginDeleteAndWait",
@@ -974,6 +1490,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/static-web-apps.ts",
       "type": "azure.web.staticSite",
       "sdkPkgs": ["@azure/arm-appservice"],
+      "refsByPkg": {
+        "@azure/arm-appservice": [
+          "client.staticSites.beginCreateOrUpdateStaticSiteAndWait",
+          "client.staticSites.beginDeleteStaticSiteAndWait",
+          "client.staticSites.updateStaticSite"
+        ]
+      },
       "sdkRefs": [
         "client.staticSites.beginCreateOrUpdateStaticSiteAndWait",
         "client.staticSites.beginDeleteStaticSiteAndWait",
@@ -985,6 +1508,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/storage-account.ts",
       "type": "azure.storage.account",
       "sdkPkgs": ["@azure/arm-storage"],
+      "refsByPkg": {
+        "@azure/arm-storage": [
+          "client.storageAccounts.beginCreateAndWait",
+          "client.storageAccounts.delete",
+          "client.storageAccounts.update"
+        ]
+      },
       "sdkRefs": [
         "client.storageAccounts.beginCreateAndWait",
         "client.storageAccounts.delete",
@@ -996,6 +1526,9 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/subnet.ts",
       "type": "azure.network.subnet",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": ["client.subnets.beginCreateOrUpdateAndWait", "client.subnets.beginDeleteAndWait"]
+      },
       "sdkRefs": ["client.subnets.beginCreateOrUpdateAndWait", "client.subnets.beginDeleteAndWait"],
       "clientKeys": ["network"]
     },
@@ -1003,6 +1536,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/synapse.ts",
       "type": "azure.synapse.workspace",
       "sdkPkgs": ["@azure/arm-synapse"],
+      "refsByPkg": {
+        "@azure/arm-synapse": [
+          "client.workspaces.beginCreateOrUpdateAndWait",
+          "client.workspaces.beginDeleteAndWait",
+          "client.workspaces.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.workspaces.beginCreateOrUpdateAndWait",
         "client.workspaces.beginDeleteAndWait",
@@ -1014,6 +1554,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/virtual-machine.ts",
       "type": "azure.compute.virtual_machine",
       "sdkPkgs": ["@azure/arm-compute"],
+      "refsByPkg": {
+        "@azure/arm-compute": [
+          "client.virtualMachines.beginCreateOrUpdateAndWait",
+          "client.virtualMachines.beginDeleteAndWait",
+          "client.virtualMachines.beginUpdateAndWait"
+        ]
+      },
       "sdkRefs": [
         "client.virtualMachines.beginCreateOrUpdateAndWait",
         "client.virtualMachines.beginDeleteAndWait",
@@ -1025,6 +1572,13 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/vnet.ts",
       "type": "azure.network.virtualNetwork",
       "sdkPkgs": ["@azure/arm-network"],
+      "refsByPkg": {
+        "@azure/arm-network": [
+          "client.virtualNetworks.beginCreateOrUpdateAndWait",
+          "client.virtualNetworks.beginDeleteAndWait",
+          "client.virtualNetworks.updateTags"
+        ]
+      },
       "sdkRefs": [
         "client.virtualNetworks.beginCreateOrUpdateAndWait",
         "client.virtualNetworks.beginDeleteAndWait",
@@ -1036,6 +1590,15 @@
       "file": "packages/core/src/deploy/providers/azure/handlers/web-app.ts",
       "type": "azure.web.app",
       "sdkPkgs": ["@azure/arm-appservice"],
+      "refsByPkg": {
+        "@azure/arm-appservice": [
+          "client.appServicePlans.beginCreateOrUpdateAndWait",
+          "client.appServicePlans.get",
+          "client.webApps.beginCreateOrUpdateAndWait",
+          "client.webApps.delete",
+          "client.webApps.update"
+        ]
+      },
       "sdkRefs": [
         "client.appServicePlans.beginCreateOrUpdateAndWait",
         "client.appServicePlans.get",
@@ -1157,10 +1720,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1171,10 +1736,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1185,10 +1752,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1199,10 +1768,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1213,10 +1784,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1227,10 +1800,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1241,10 +1816,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1255,10 +1832,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1270,10 +1849,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1284,10 +1865,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1298,10 +1881,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1312,10 +1897,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1330,10 +1917,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1344,10 +1933,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1358,10 +1949,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1372,10 +1965,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1386,10 +1981,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1400,10 +1997,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1414,10 +2013,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1429,10 +2030,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1443,10 +2046,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1457,10 +2062,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1471,10 +2078,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1485,10 +2094,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1499,10 +2110,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1513,10 +2126,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1527,10 +2142,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1541,10 +2158,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1555,10 +2174,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1569,10 +2190,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1583,10 +2206,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1597,10 +2222,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1055.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1612,10 +2239,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "12.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1626,10 +2255,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "25.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1640,10 +2271,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "10.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1659,10 +2292,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "36.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1673,10 +2308,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "4.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1690,10 +2327,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "18.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1704,10 +2343,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1718,10 +2359,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "8.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1732,10 +2375,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.3.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1746,10 +2391,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1760,10 +2407,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "16.4.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1774,10 +2423,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "8.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1788,10 +2439,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "5.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1802,10 +2455,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "7.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1816,10 +2471,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "14.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1830,10 +2487,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "5.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1844,10 +2503,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "9.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1858,10 +2519,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "5.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1872,10 +2535,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "10.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1886,10 +2551,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "8.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1900,10 +2567,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "3.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1914,10 +2583,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "9.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1928,10 +2599,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "8.2.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1942,10 +2615,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "6.1.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1956,10 +2631,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "10.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1970,10 +2647,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "20.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1984,10 +2663,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "8.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -1998,10 +2679,12 @@
       ],
       "npm": {
         "ok": true,
-        "version": "24.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2009,10 +2692,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "6.12.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2020,10 +2705,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "4.7.1"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2031,10 +2718,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "5.5.1"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2042,10 +2731,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "5.3.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2053,10 +2744,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "5.3.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2064,10 +2757,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "7.19.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2075,10 +2770,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "3.2.1"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2086,10 +2783,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "5.3.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2097,10 +2796,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "6.1.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2108,10 +2809,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "8.3.1"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2119,10 +2822,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "11.2.1"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2130,10 +2835,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "5.3.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2141,10 +2848,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "4.2.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2152,10 +2861,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "8.6.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2163,10 +2874,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "6.8.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2174,10 +2887,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "6.8.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2185,10 +2900,12 @@
       "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "10.6.2"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     },
     {
@@ -2196,10 +2913,12 @@
       "handlers": ["packages/core/src/deploy/providers/azure/sdk-loader.ts"],
       "npm": {
         "ok": true,
-        "version": "7.0.0"
+        "version": "(skipped)",
+        "latest": null
       },
       "runtime": {
-        "installed": false
+        "installed": true,
+        "missingRefs": []
       }
     }
   ]

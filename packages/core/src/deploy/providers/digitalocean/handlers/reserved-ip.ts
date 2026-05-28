@@ -13,7 +13,7 @@ export const reserved_ip_handler: DOResourceHandler = {
     const start = Date.now();
     if (!ctx.client) return sdkMissing(name, TYPE, 'create', start, 'DigitalOcean', SDK);
     try {
-      const result = await ctx.client.reservedIp.createReservedIp({
+      const result = await ctx.client.floatingIp.createFloatingIp({
         region: (properties.region as string) || ctx.region,
         droplet_id: properties.droplet_id ? Number(properties.droplet_id) : undefined,
       });
@@ -32,7 +32,7 @@ export const reserved_ip_handler: DOResourceHandler = {
     const start = Date.now();
     if (!ctx.client) return err(name, TYPE, 'delete', start, 'DO SDK not available');
     try {
-      await ctx.client.reservedIp.deleteReservedIp({ reserved_ip: provider_id });
+      await ctx.client.floatingIp.deleteFloatingIp({ ip: provider_id });
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isDoNotFound(error)) return ok(name, TYPE, 'delete', start);

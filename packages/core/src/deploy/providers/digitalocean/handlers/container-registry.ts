@@ -17,11 +17,13 @@ export const container_registry_handler: DOResourceHandler = {
     const start = Date.now();
     if (!ctx.client) return sdkMissing(name, TYPE, 'create', start, 'DigitalOcean', SDK);
     try {
-      await ctx.client.containerRegistry.createContainerRegistry({
-        name,
-        subscription_tier_slug: (properties.tier as string) || 'basic',
-        region: (properties.region as string) || ctx.region,
-      });
+      // DO Container Registry has no per-account create — operators pick a
+      // name once via the dashboard. The dots-wrapper `configureRegistry`
+      // method only sets the registry's display name; tier / region come
+      // from `subscribeToContainerRegistry` (separate API call, not in
+      // dots-wrapper). Configure to record the name; tier upgrades happen
+      // via the DO API directly.
+      await ctx.client.containerRegistry.configureRegistry({ name });
       return ok(name, TYPE, 'create', start, { provider_id: name });
     } catch (error) {
       if (isDoAlreadyExists(error)) return ok(name, TYPE, 'create', start, { provider_id: name });
@@ -36,7 +38,7 @@ export const container_registry_handler: DOResourceHandler = {
     const start = Date.now();
     if (!ctx.client) return err(name, TYPE, 'delete', start, 'DO SDK not available');
     try {
-      await ctx.client.containerRegistry.deleteContainerRegistry({});
+      await ctx.client.containerRegistry.deleteRegistry();
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isDoNotFound(error)) return ok(name, TYPE, 'delete', start);

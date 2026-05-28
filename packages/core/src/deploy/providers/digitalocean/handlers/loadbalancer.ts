@@ -17,7 +17,6 @@ export const loadbalancer_handler: DOResourceHandler = {
       const result = await ctx.client.loadBalancer.createLoadBalancer({
         name,
         region: (properties.region as string) || ctx.region,
-        size_unit: (properties.size_unit as number) ?? 1,
         vpc_uuid: properties.vpc_uuid as string | undefined,
         droplet_ids: (properties.droplet_ids as number[]) ?? [],
         forwarding_rules: (properties.forwarding_rules as unknown[]) ?? [
@@ -38,7 +37,6 @@ export const loadbalancer_handler: DOResourceHandler = {
     try {
       await ctx.client.loadBalancer.updateLoadBalancer({
         load_balancer_id: provider_id,
-        size_unit: properties.size_unit as number | undefined,
         droplet_ids: properties.droplet_ids as number[] | undefined,
       });
       return ok(name, TYPE, 'update', start, { provider_id });

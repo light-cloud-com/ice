@@ -17,7 +17,7 @@ export const snapshot_handler: DOResourceHandler = {
     if (!ctx.client) return sdkMissing(name, TYPE, 'create', start, 'DigitalOcean', SDK);
     if (!properties.droplet_id) return err(name, TYPE, 'create', start, 'Snapshot requires properties.droplet_id');
     try {
-      const result = await ctx.client.dropletAction.snapshotDroplet({
+      const result = await ctx.client.droplet.snapshotDroplet({
         droplet_id: Number(properties.droplet_id),
         name,
       });

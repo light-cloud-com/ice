@@ -119,9 +119,9 @@ describe('DigitalOcean handler dispatch', () => {
     expect(result.provider_id).toBe('k8s-abc');
   });
 
-  it('routes containerregistry.registry create through createContainerRegistry', async () => {
-    const createContainerRegistry = vi.fn().mockResolvedValue({});
-    const result = await deployer_with({ containerRegistry: { createContainerRegistry } }).create(
+  it('routes containerregistry.registry create through configureRegistry', async () => {
+    const configureRegistry = vi.fn().mockResolvedValue({});
+    const result = await deployer_with({ containerRegistry: { configureRegistry } }).create(
       'digitalocean.containerregistry.registry',
       'docr',
       {},
@@ -145,7 +145,7 @@ describe('DigitalOcean handler dispatch', () => {
 
   it('routes droplet.snapshot create through snapshotDroplet', async () => {
     const snapshotDroplet = vi.fn().mockResolvedValue({ data: { action: { id: 7 } } });
-    const result = await deployer_with({ dropletAction: { snapshotDroplet } }).create(
+    const result = await deployer_with({ droplet: { snapshotDroplet } }).create(
       'digitalocean.droplet.snapshot',
       'snap',
       { droplet_id: 42 },
@@ -167,9 +167,9 @@ describe('DigitalOcean handler dispatch', () => {
     expect(result.provider_id).toBe('alert-abc');
   });
 
-  it('routes reservedip create through createReservedIp', async () => {
-    const createReservedIp = vi.fn().mockResolvedValue({ data: { reserved_ip: { ip: '1.2.3.4' } } });
-    const result = await deployer_with({ reservedIp: { createReservedIp } }).create(
+  it('routes reservedip create through createFloatingIp', async () => {
+    const createFloatingIp = vi.fn().mockResolvedValue({ data: { reserved_ip: { ip: '1.2.3.4' } } });
+    const result = await deployer_with({ floatingIp: { createFloatingIp } }).create(
       'digitalocean.reservedip.reservedip',
       'rip',
       {},

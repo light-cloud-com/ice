@@ -43,8 +43,13 @@ export const kubernetes_cluster_handler: DOResourceHandler = {
       await ctx.client.kubernetes.updateKubernetesCluster({
         kubernetes_cluster_id: provider_id,
         name,
-        version: properties.version as string | undefined,
       });
+      if (properties.version) {
+        await ctx.client.kubernetes.upgradeKubernetesCluster({
+          kubernetes_cluster_id: provider_id,
+          version: properties.version as string,
+        });
+      }
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

@@ -815,6 +815,219 @@ function scanAlibabaInvocations(src) {
   return out;
 }
 
+// ─── OCI resolver ──────────────────────────────────────────────────────────
+//
+// OCI SDK shape:
+//
+//   await compute.launchInstance({ launchInstanceDetails: {…} });
+//
+// Each method maps to a `<Op>Request` interface declared in
+// `oci-<svc>/lib/request/<op>-request.d.ts` (kebab-case file, Pascal
+// interface). Top-level body fields are quoted-property declarations:
+//
+//   "launchInstanceDetails": model.LaunchInstanceDetails;
+//
+// Service short-name → npm package mapping comes from
+// `packages/core/src/deploy/providers/oci/sdk-loader.ts SERVICE_PACKAGES`.
+
+let ociServiceMapCache = null;
+async function loadOciServiceMap() {
+  if (ociServiceMapCache) return ociServiceMapCache;
+  const map = new Map();
+  try {
+    const src = await fs.readFile(
+      join(ROOT, 'packages/core/src/deploy/providers/oci/sdk-loader.ts'),
+      'utf8',
+    );
+    // Match: `  core: { pkg: 'oci-core', clientName: 'ComputeClient' },`
+    const re = /^\s*([a-z]+):\s*\{\s*pkg:\s*['"](oci-[^'"]+)['"]/gm;
+    let m;
+    while ((m = re.exec(src))) map.set(m[1], m[2]);
+  } catch {
+    /* loader not readable */
+  }
+  ociServiceMapCache = map;
+  return map;
+}
+
+function camelToKebab(camel) {
+  return camel.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+const ociRequestFieldsCache = new Map();
+async function ociGetRequestFields(pkg, method) {
+  const cacheKey = `${pkg}::${method}`;
+  if (ociRequestFieldsCache.has(cacheKey)) return ociRequestFieldsCache.get(cacheKey);
+  // method `launchInstance` → request file `launch-instance-request.d.ts`,
+  // interface `LaunchInstanceRequest`.
+  const fileBase = `${camelToKebab(method)}-request.d.ts`;
+  const interfaceName = `${method.charAt(0).toUpperCase()}${method.slice(1)}Request`;
+  let dir;
+  try {
+    const entry = require_core.resolve(`${pkg}/package.json`);
+    dir = join(dirname(entry), 'lib/request');
+  } catch {
+    const result = { found: false, reason: `${pkg} not installed` };
+    ociRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const file = join(dir, fileBase);
+  let src;
+  try {
+    src = await fs.readFile(file, 'utf8');
+  } catch {
+    const result = { found: false, reason: `${fileBase} not found in ${pkg}` };
+    ociRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  // OCI request interfaces look like:
+  //   export interface LaunchInstanceRequest extends common.BaseRequest {
+  //     "launchInstanceDetails": model.LaunchInstanceDetails;
+  //     "opcRetryToken"?: string;
+  //     …
+  //   }
+  const m = src.match(
+    new RegExp(
+      `export\\s+interface\\s+${interfaceName}\\s+extends\\s+[^{]+\\{([\\s\\S]*?)\\n\\}`,
+      'm',
+    ),
+  );
+  if (!m) {
+    const result = { found: false, reason: `interface ${interfaceName} not found in ${file}` };
+    ociRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const body = m[1];
+  const fields = new Set();
+  // Match quoted properties: `    "launchInstanceDetails": …`
+  for (const fm of body.matchAll(/^\s*"([A-Za-z_][\w]*)"\??\s*:/gm)) fields.add(fm[1]);
+  const result = { found: true, fields: [...fields], interface: interfaceName };
+  ociRequestFieldsCache.set(cacheKey, result);
+  return result;
+}
+
+function scanOciInvocations(src) {
+  const aliasToService = new Map();
+  for (const m of src.matchAll(
+    /const\s+([a-z_][\w]*)\s*=\s*await\s+resolveClient\(\s*ctx\s*,\s*['"]([a-z]+)['"]\s*\)/g,
+  )) {
+    aliasToService.set(m[1], m[2]);
+  }
+  const out = [];
+  for (const [alias, service] of aliasToService) {
+    const re = new RegExp(`\\b${alias}\\.([a-zA-Z_][\\w]*)\\(\\s*\\{`, 'g');
+    let m;
+    while ((m = re.exec(src))) {
+      const method = m[1];
+      const objStart = m.index + m[0].length - 1;
+      out.push({
+        provider: 'oci',
+        service,
+        method,
+        keys: topLevelKeys(src, objStart),
+      });
+    }
+  }
+  return out;
+}
+
+// ─── DigitalOcean resolver ─────────────────────────────────────────────────
+//
+// dots-wrapper shape (per published 3.x):
+//
+//   await client.droplet.createDroplet({ name, image, size, region, … });
+//
+// Each method maps to a file under
+// `dots-wrapper/dist/<namespace-kebab>/<method-kebab>/<method-kebab>.d.ts`
+// declaring `I<Method>ApiRequest` interface.
+
+function dotsCamelToKebab(s) {
+  return s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+const dotsRequestFieldsCache = new Map();
+async function dotsGetRequestFields(namespace, method) {
+  const cacheKey = `${namespace}::${method}`;
+  if (dotsRequestFieldsCache.has(cacheKey)) return dotsRequestFieldsCache.get(cacheKey);
+  const namespaceKebab = dotsCamelToKebab(namespace);
+  const methodKebab = dotsCamelToKebab(method);
+  const interfaceName = `I${method.charAt(0).toUpperCase()}${method.slice(1)}ApiRequest`;
+  let dir;
+  try {
+    const entry = require_core.resolve('dots-wrapper/package.json');
+    dir = join(dirname(entry), 'dist', namespaceKebab, methodKebab);
+  } catch {
+    const result = { found: false, reason: 'dots-wrapper not installed' };
+    dotsRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const file = join(dir, `${methodKebab}.d.ts`);
+  let src;
+  try {
+    src = await fs.readFile(file, 'utf8');
+  } catch {
+    const result = {
+      found: false,
+      reason: `${namespaceKebab}/${methodKebab}/${methodKebab}.d.ts not found in dots-wrapper`,
+    };
+    dotsRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const fields = new Set();
+  // Path 1: explicit `I<Method>ApiRequest` interface defined in the
+  // same file. Most dots-wrapper modules declare one.
+  const m = src.match(new RegExp(`export\\s+interface\\s+${interfaceName}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'));
+  if (m) {
+    for (const fm of m[1].matchAll(/^\s*([a-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+  } else {
+    // Path 2: fall back to the destructured params on the last arrow
+    // signature: `export declare const <method>: (...) => ({ a, b, c, }:
+    // <ExternalType>) => Promise<…>`. The keys we want are the inner
+    // destructuring on the second arrow. Useful for handlers that
+    // accept an externally-declared interface like `IFirewall`.
+    const arrowRe = new RegExp(
+      `export\\s+declare\\s+const\\s+${method}\\s*:\\s*[^=]*=>\\s*\\(\\s*\\{([^}]*)\\}`,
+      'm',
+    );
+    const arrow = src.match(arrowRe);
+    if (arrow) {
+      for (const id of arrow[1].split(',')) {
+        const name = id.trim().replace(/[?:].*$/, '').trim();
+        if (/^[a-z_][\w]*$/i.test(name)) fields.add(name);
+      }
+    }
+  }
+  if (fields.size === 0) {
+    const result = { found: false, reason: `no I${method[0].toUpperCase()}${method.slice(1)}ApiRequest or destructured params in ${methodKebab}.d.ts` };
+    dotsRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const result = { found: true, fields: [...fields], interface: interfaceName };
+  dotsRequestFieldsCache.set(cacheKey, result);
+  return result;
+}
+
+function scanDigitalOceanInvocations(src) {
+  // Patterns:
+  //   ctx.client.<namespace>.<method>({ … })
+  //   await ctx.client.<namespace>.<method>({ … })
+  const out = [];
+  const re = /\bctx\.client\.([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)\(\s*\{/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const namespace = m[1];
+    const method = m[2];
+    const objStart = m.index + m[0].length - 1;
+    out.push({
+      provider: 'digitalocean',
+      namespace,
+      method,
+      keys: topLevelKeys(src, objStart),
+    });
+  }
+  return out;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 function isAwsPkg(p) {
@@ -1003,6 +1216,70 @@ async function main() {
             file: file.replace(ROOT + '/', ''),
             command: inv.kind,
             package: K8S_PKG,
+            inputInterface: result.interface,
+            unknown,
+            passed: inv.keys,
+            valid: result.fields,
+          });
+        }
+      }
+    } else if (provider === 'digitalocean') {
+      for (const inv of scanDigitalOceanInvocations(src)) {
+        summary.invocations.digitalocean++;
+        any = true;
+        const result = await dotsGetRequestFields(inv.namespace, inv.method);
+        if (!result.found) {
+          summary.unverified.digitalocean++;
+          if (VERBOSE)
+            console.log(
+              `  ${file.replace(ROOT + '/', '')}: ${inv.namespace}.${inv.method} → ${result.reason}`,
+            );
+          continue;
+        }
+        const validSet = new Set(result.fields);
+        const unknown = inv.keys.filter((k) => !validSet.has(k));
+        summary.verified.digitalocean++;
+        if (unknown.length) {
+          summary.mismatches.push({
+            provider: 'digitalocean',
+            file: file.replace(ROOT + '/', ''),
+            command: `${inv.namespace}.${inv.method}`,
+            package: 'dots-wrapper',
+            inputInterface: result.interface,
+            unknown,
+            passed: inv.keys,
+            valid: result.fields,
+          });
+        }
+      }
+    } else if (provider === 'oci') {
+      const serviceMap = await loadOciServiceMap();
+      for (const inv of scanOciInvocations(src)) {
+        summary.invocations.oci++;
+        any = true;
+        const pkg = serviceMap.get(inv.service);
+        if (!pkg) {
+          summary.unverified.oci++;
+          if (VERBOSE)
+            console.log(`  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → no oci-* mapping`);
+          continue;
+        }
+        const result = await ociGetRequestFields(pkg, inv.method);
+        if (!result.found) {
+          summary.unverified.oci++;
+          if (VERBOSE)
+            console.log(`  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → ${result.reason}`);
+          continue;
+        }
+        const validSet = new Set(result.fields);
+        const unknown = inv.keys.filter((k) => !validSet.has(k));
+        summary.verified.oci++;
+        if (unknown.length) {
+          summary.mismatches.push({
+            provider: 'oci',
+            file: file.replace(ROOT + '/', ''),
+            command: `${inv.service}.${inv.method}`,
+            package: pkg,
             inputInterface: result.interface,
             unknown,
             passed: inv.keys,

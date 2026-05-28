@@ -68,7 +68,7 @@ export const databases_cluster_handler: DOResourceHandler = {
     const start = Date.now();
     if (!ctx.client) return err(name, TYPE, 'delete', start, 'DO SDK not available');
     try {
-      await ctx.client.database.deleteDatabaseCluster({ database_cluster_id: provider_id });
+      await ctx.client.database.destroyDatabaseCluster({ database_cluster_id: provider_id });
       return ok(name, TYPE, 'delete', start);
     } catch (error) {
       if (isDoNotFound(error)) return ok(name, TYPE, 'delete', start);

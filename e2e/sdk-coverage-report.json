@@ -1,0 +1,2206 @@
+{
+  "generated_at": "2026-05-28T07:47:04.210Z",
+  "summary": {
+    "handlers": 110,
+    "packages": 78,
+    "providers": {
+      "aws": 32,
+      "azure": 29,
+      "gcp": 16,
+      "other": 1
+    }
+  },
+  "handlers": [
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/acm.ts",
+      "type": "aws.acm.certificate",
+      "sdkPkgs": ["@aws-sdk/client-acm"],
+      "sdkRefs": [
+        "acm.ACMClient",
+        "acm.AddTagsToCertificateCommand",
+        "acm.DeleteCertificateCommand",
+        "acm.DescribeCertificateCommand",
+        "acm.RequestCertificateCommand",
+        "client.send"
+      ],
+      "clientKeys": ["acm"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/amazon-mq.ts",
+      "type": "aws.mq.broker",
+      "sdkPkgs": ["@aws-sdk/client-mq"],
+      "sdkRefs": ["client.send", "mq.CreateBrokerCommand", "mq.DeleteBrokerCommand", "mq.UpdateBrokerCommand"],
+      "clientKeys": ["mq"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/amplify-hosting.ts",
+      "type": "aws.amplify.app",
+      "sdkPkgs": ["@aws-sdk/client-amplify"],
+      "sdkRefs": [
+        "amplify.CreateAppCommand",
+        "amplify.CreateBranchCommand",
+        "amplify.DeleteAppCommand",
+        "amplify.UpdateAppCommand",
+        "client.send"
+      ],
+      "clientKeys": ["amplify"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/api-gateway.ts",
+      "type": "aws.apigateway.restApi",
+      "sdkPkgs": ["@aws-sdk/client-api-gateway"],
+      "sdkRefs": ["api.CreateDeploymentCommand", "api.CreateRestApiCommand", "api.DeleteRestApiCommand", "client.send"],
+      "clientKeys": ["apigateway"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/bedrock.ts",
+      "type": "aws.bedrock.endpoint",
+      "sdkPkgs": ["@aws-sdk/client-bedrock"],
+      "sdkRefs": [
+        "bedrock.CreateProvisionedModelThroughputCommand",
+        "bedrock.DeleteProvisionedModelThroughputCommand",
+        "client.send"
+      ],
+      "clientKeys": ["bedrock"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/cloudfront.ts",
+      "type": "aws.cloudfront.distribution",
+      "sdkPkgs": ["@aws-sdk/client-cloudfront"],
+      "sdkRefs": [
+        "acm.ACMClient",
+        "acm.RequestCertificateCommand",
+        "cf.CreateDistributionCommand",
+        "cf.DeleteDistributionCommand",
+        "cf.GetDistributionConfigCommand",
+        "cf.UpdateDistributionCommand",
+        "client.send"
+      ],
+      "clientKeys": ["cloudfront"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/cloudwatch-alarm.ts",
+      "type": "aws.cloudwatch.alarm",
+      "sdkPkgs": ["@aws-sdk/client-cloudwatch"],
+      "sdkRefs": ["client.send", "cw.DeleteAlarmsCommand", "cw.PutMetricAlarmCommand"],
+      "clientKeys": ["cloudwatch"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/cloudwatch-logs.ts",
+      "type": "aws.cloudwatch.logGroup",
+      "sdkPkgs": ["@aws-sdk/client-cloudwatch-logs"],
+      "sdkRefs": [
+        "client.send",
+        "cwl.CreateLogGroupCommand",
+        "cwl.DeleteLogGroupCommand",
+        "cwl.PutRetentionPolicyCommand"
+      ],
+      "clientKeys": ["cloudwatch-logs"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/codebuild.ts",
+      "type": "aws.codebuild.project",
+      "sdkPkgs": ["@aws-sdk/client-codebuild"],
+      "sdkRefs": ["cb.CreateProjectCommand", "cb.DeleteProjectCommand", "cb.UpdateProjectCommand", "client.send"],
+      "clientKeys": ["codebuild"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/cognito.ts",
+      "type": "aws.cognito.userPool",
+      "sdkPkgs": ["@aws-sdk/client-cognito-identity-provider"],
+      "sdkRefs": [
+        "client.send",
+        "cognito.CreateUserPoolCommand",
+        "cognito.DeleteUserPoolCommand",
+        "cognito.UpdateUserPoolCommand"
+      ],
+      "clientKeys": ["cognito"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/docdb.ts",
+      "type": "aws.docdb.cluster",
+      "sdkPkgs": ["@aws-sdk/client-docdb"],
+      "sdkRefs": [
+        "client.send",
+        "docdb.CreateDBClusterCommand",
+        "docdb.CreateDBInstanceCommand",
+        "docdb.DeleteDBClusterCommand",
+        "docdb.ModifyDBClusterCommand"
+      ],
+      "clientKeys": ["docdb"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/dynamodb.ts",
+      "type": "aws.dynamodb.table",
+      "sdkPkgs": ["@aws-sdk/client-dynamodb"],
+      "sdkRefs": [
+        "client.send",
+        "dynamo.CreateTableCommand",
+        "dynamo.DeleteTableCommand",
+        "dynamo.UpdateContinuousBackupsCommand",
+        "dynamo.UpdateTableCommand"
+      ],
+      "clientKeys": ["dynamodb"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/ec2.ts",
+      "type": "aws.ec2.instance",
+      "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "sdkRefs": [
+        "client.send",
+        "ec2.CreateTagsCommand",
+        "ec2.DescribeInstancesCommand",
+        "ec2.ModifyVolumeCommand",
+        "ec2.RunInstancesCommand",
+        "ec2.TerminateInstancesCommand"
+      ],
+      "clientKeys": ["ec2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/ecr.ts",
+      "type": "aws.ecr.repository",
+      "sdkPkgs": ["@aws-sdk/client-ecr"],
+      "sdkRefs": ["client.send", "ecr.CreateRepositoryCommand", "ecr.DeleteRepositoryCommand"],
+      "clientKeys": ["ecr"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/ecs.ts",
+      "type": "aws.ecs.service",
+      "sdkPkgs": ["@aws-sdk/client-ecs"],
+      "sdkRefs": [
+        "client.send",
+        "ecs.CreateClusterCommand",
+        "ecs.CreateServiceCommand",
+        "ecs.DeleteServiceCommand",
+        "ecs.DescribeClustersCommand",
+        "ecs.RegisterTaskDefinitionCommand",
+        "ecs.UpdateServiceCommand"
+      ],
+      "clientKeys": ["ecs"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/elasticache.ts",
+      "type": "aws.elasticache.cluster",
+      "sdkPkgs": ["@aws-sdk/client-elasticache"],
+      "sdkRefs": [
+        "client.send",
+        "ec.CreateCacheClusterCommand",
+        "ec.CreateReplicationGroupCommand",
+        "ec.DeleteCacheClusterCommand",
+        "ec.DeleteReplicationGroupCommand"
+      ],
+      "clientKeys": ["elasticache"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/elbv2.ts",
+      "type": "aws.elbv2.loadBalancer",
+      "sdkPkgs": ["@aws-sdk/client-elastic-load-balancing-v2"],
+      "sdkRefs": [
+        "client.send",
+        "elb.CreateLoadBalancerCommand",
+        "elb.CreateTargetGroupCommand",
+        "elb.DeleteLoadBalancerCommand"
+      ],
+      "clientKeys": ["elbv2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/events-rule.ts",
+      "type": "aws.events.rule",
+      "sdkPkgs": ["@aws-sdk/client-eventbridge"],
+      "sdkRefs": [
+        "client.send",
+        "ev.DeleteRuleCommand",
+        "ev.PutRuleCommand",
+        "ev.PutTargetsCommand",
+        "ev.RemoveTargetsCommand"
+      ],
+      "clientKeys": ["eventbridge"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/kinesis.ts",
+      "type": "aws.kinesis.stream",
+      "sdkPkgs": ["@aws-sdk/client-kinesis"],
+      "sdkRefs": [
+        "client.send",
+        "kinesis.CreateStreamCommand",
+        "kinesis.DeleteStreamCommand",
+        "kinesis.IncreaseStreamRetentionPeriodCommand"
+      ],
+      "clientKeys": ["kinesis"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/lambda-builder.ts",
+      "type": null,
+      "sdkPkgs": ["@aws-sdk/client-s3", "@aws-sdk/client-codebuild"],
+      "sdkRefs": [
+        "client.send",
+        "codebuild.BatchGetBuildsCommand",
+        "codebuild.CreateProjectCommand",
+        "codebuild.DeleteProjectCommand",
+        "codebuild.StartBuildCommand",
+        "s3.CreateBucketCommand",
+        "s3.HeadBucketCommand",
+        "s3.PutObjectCommand"
+      ],
+      "clientKeys": ["s3", "codebuild"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/lambda.ts",
+      "type": "aws.lambda.function",
+      "sdkPkgs": ["@aws-sdk/client-lambda"],
+      "sdkRefs": [
+        "client.send",
+        "lambda.CreateFunctionCommand",
+        "lambda.DeleteFunctionCommand",
+        "lambda.UpdateFunctionCodeCommand",
+        "lambda.UpdateFunctionConfigurationCommand"
+      ],
+      "clientKeys": ["lambda"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/opensearch-serverless.ts",
+      "type": "aws.opensearchserverless.collection",
+      "sdkPkgs": ["@aws-sdk/client-opensearchserverless"],
+      "sdkRefs": [
+        "client.send",
+        "oss.CreateCollectionCommand",
+        "oss.DeleteCollectionCommand",
+        "oss.UpdateCollectionCommand"
+      ],
+      "clientKeys": ["opensearch-serverless"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/opensearch.ts",
+      "type": "aws.opensearch.domain",
+      "sdkPkgs": ["@aws-sdk/client-opensearch"],
+      "sdkRefs": ["client.send", "os.CreateDomainCommand", "os.DeleteDomainCommand"],
+      "clientKeys": ["opensearch"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/rds.ts",
+      "type": "aws.rds.dbInstance",
+      "sdkPkgs": ["@aws-sdk/client-rds"],
+      "sdkRefs": [
+        "client.send",
+        "rds.CreateDBInstanceCommand",
+        "rds.DeleteDBInstanceCommand",
+        "rds.DescribeDBInstancesCommand",
+        "rds.ModifyDBInstanceCommand"
+      ],
+      "clientKeys": ["rds"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/redshift.ts",
+      "type": "aws.redshift.cluster",
+      "sdkPkgs": ["@aws-sdk/client-redshift"],
+      "sdkRefs": ["client.send", "rs.CreateClusterCommand", "rs.DeleteClusterCommand", "rs.ModifyClusterCommand"],
+      "clientKeys": ["redshift"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/route53.ts",
+      "type": "aws.route53.recordSet",
+      "sdkPkgs": ["@aws-sdk/client-route-53"],
+      "sdkRefs": ["client.send", "r53.ChangeResourceRecordSetsCommand"],
+      "clientKeys": ["route53"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/s3.ts",
+      "type": "aws.s3.bucket",
+      "sdkPkgs": ["@aws-sdk/client-s3"],
+      "sdkRefs": [
+        "client.send",
+        "s3.CreateBucketCommand",
+        "s3.DeleteBucketCommand",
+        "s3.DeleteObjectsCommand",
+        "s3.ListObjectsV2Command",
+        "s3.PutBucketPolicyCommand",
+        "s3.PutBucketTaggingCommand",
+        "s3.PutBucketWebsiteCommand",
+        "s3.PutPublicAccessBlockCommand"
+      ],
+      "clientKeys": ["s3"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/sagemaker.ts",
+      "type": "aws.sagemaker.endpoint",
+      "sdkPkgs": ["@aws-sdk/client-sagemaker"],
+      "sdkRefs": [
+        "client.send",
+        "sm.CreateEndpointCommand",
+        "sm.CreateEndpointConfigCommand",
+        "sm.DeleteEndpointCommand"
+      ],
+      "clientKeys": ["sagemaker"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/secrets-manager.ts",
+      "type": "aws.secretsmanager.secret",
+      "sdkPkgs": ["@aws-sdk/client-secrets-manager"],
+      "sdkRefs": ["client.send", "sm.CreateSecretCommand", "sm.DeleteSecretCommand", "sm.UpdateSecretCommand"],
+      "clientKeys": ["secrets-manager"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/security-group.ts",
+      "type": "aws.ec2.securityGroup",
+      "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "sdkRefs": [
+        "client.send",
+        "ec2.AuthorizeSecurityGroupEgressCommand",
+        "ec2.AuthorizeSecurityGroupIngressCommand",
+        "ec2.CreateSecurityGroupCommand",
+        "ec2.CreateTagsCommand",
+        "ec2.DeleteSecurityGroupCommand",
+        "ec2.RevokeSecurityGroupEgressCommand"
+      ],
+      "clientKeys": ["ec2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/sns.ts",
+      "type": "aws.sns.topic",
+      "sdkPkgs": ["@aws-sdk/client-sns"],
+      "sdkRefs": ["client.send", "sns.CreateTopicCommand", "sns.DeleteTopicCommand", "sns.SetTopicAttributesCommand"],
+      "clientKeys": ["sns"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/sqs.ts",
+      "type": "aws.sqs.queue",
+      "sdkPkgs": ["@aws-sdk/client-sqs"],
+      "sdkRefs": ["client.send", "sqs.CreateQueueCommand", "sqs.DeleteQueueCommand", "sqs.SetQueueAttributesCommand"],
+      "clientKeys": ["sqs"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/subnet.ts",
+      "type": "aws.ec2.subnet",
+      "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "sdkRefs": [
+        "client.send",
+        "ec2.CreateSubnetCommand",
+        "ec2.CreateTagsCommand",
+        "ec2.DeleteSubnetCommand",
+        "ec2.ModifySubnetAttributeCommand"
+      ],
+      "clientKeys": ["ec2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/timestream.ts",
+      "type": "aws.timestream.database",
+      "sdkPkgs": ["@aws-sdk/client-timestream-write"],
+      "sdkRefs": ["client.send", "ts.CreateDatabaseCommand", "ts.DeleteDatabaseCommand"],
+      "clientKeys": ["timestream"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/vpc-endpoint.ts",
+      "type": "aws.ec2.vpcEndpoint",
+      "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "sdkRefs": [
+        "client.send",
+        "ec2.CreateTagsCommand",
+        "ec2.CreateVpcEndpointCommand",
+        "ec2.DeleteVpcEndpointsCommand"
+      ],
+      "clientKeys": ["ec2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/vpc.ts",
+      "type": "aws.ec2.vpc",
+      "sdkPkgs": ["@aws-sdk/client-ec2"],
+      "sdkRefs": [
+        "client.send",
+        "ec2.CreateTagsCommand",
+        "ec2.CreateVpcCommand",
+        "ec2.DeleteVpcCommand",
+        "ec2.ModifyVpcAttributeCommand"
+      ],
+      "clientKeys": ["ec2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/handlers/wafv2.ts",
+      "type": "aws.wafv2.webAcl",
+      "sdkPkgs": ["@aws-sdk/client-wafv2"],
+      "sdkRefs": [
+        "client.send",
+        "wafv2.CreateWebACLCommand",
+        "wafv2.DeleteWebACLCommand",
+        "wafv2.GetWebACLCommand",
+        "wafv2.UpdateWebACLCommand",
+        "wafv2.WAFV2Client"
+      ],
+      "clientKeys": ["wafv2"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/api-gateway.ts",
+      "type": "gcp.apigateway.api",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/artifact-registry.ts",
+      "type": "gcp.artifactregistry.repository",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createRepository", "client.deleteRepository"],
+      "clientKeys": ["artifactregistry"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/backend-bucket.ts",
+      "type": "gcp.compute.backendBucket",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/bigquery.ts",
+      "type": "gcp.bigquery.dataset",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": ["bigquery"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-armor.ts",
+      "type": "gcp.compute.securityPolicy",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-build-helper.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-build.ts",
+      "type": "gcp.cloudbuild.trigger",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createBuildTrigger", "client.deleteBuildTrigger"],
+      "clientKeys": ["cloudbuild"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-dns.ts",
+      "type": "gcp.dns.managedZone",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.managedZone"],
+      "clientKeys": ["dns"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-functions.ts",
+      "type": "gcp.cloudfunctions.function",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createFunction"],
+      "clientKeys": ["functions"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-run.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": ["run.jobs", "run.services"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-scheduler.ts",
+      "type": "gcp.cloudscheduler.job",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createJob", "client.deleteJob", "client.updateJob"],
+      "clientKeys": ["scheduler"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-sql.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": ["storage"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/compute-firewall.ts",
+      "type": "gcp.compute.firewall",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.delete", "client.insert"],
+      "clientKeys": ["firewalls"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/compute-instance.ts",
+      "type": "gcp.compute.instance",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.delete", "client.insert"],
+      "clientKeys": ["instances"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/dataflow.ts",
+      "type": "gcp.dataflow.job",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/discovery-engine.ts",
+      "type": "gcp.discoveryengine.searchEngine",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/domain-mapping.ts",
+      "type": "gcp.run.domainMapping",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/firestore.ts",
+      "type": "gcp.firestore.database",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/gke.ts",
+      "type": "gcp.container.cluster",
+      "sdkPkgs": [],
+      "sdkRefs": [
+        "client.createCluster",
+        "client.deleteCluster",
+        "client.getOperation",
+        "client.setLabels",
+        "client.setNodePoolSize",
+        "client.updateNodePool"
+      ],
+      "clientKeys": ["container"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/identity-platform.ts",
+      "type": "gcp.identityplatform.config",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/load-balancer.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/logging.ts",
+      "type": "gcp.logging.sink",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": ["logging"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/managed-ssl-certificate.ts",
+      "type": "gcp.compute.managedSslCertificate",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/memorystore.ts",
+      "type": "gcp.redis.instance",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/monitoring.ts",
+      "type": "gcp.monitoring.alertPolicy",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createAlertPolicy", "client.deleteAlertPolicy"],
+      "clientKeys": ["monitoring"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/private-service-connect.ts",
+      "type": "gcp.compute.privateServiceConnect",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.delete", "client.insert"],
+      "clientKeys": ["forwardingRules"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/pubsub.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": ["pubsub"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/secret-manager.ts",
+      "type": "gcp.secretmanager.secret",
+      "sdkPkgs": [],
+      "sdkRefs": ["client.createSecret", "client.deleteSecret", "client.updateSecret"],
+      "clientKeys": ["secretmanager"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/subnet.ts",
+      "type": "gcp.compute.subnetwork",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/vertex-ai.ts",
+      "type": null,
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/handlers/vpc.ts",
+      "type": "gcp.compute.network",
+      "sdkPkgs": [],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/acr-task.ts",
+      "type": "azure.containerregistry.task",
+      "sdkPkgs": ["@azure/arm-containerregistry"],
+      "sdkRefs": ["client.tasks.beginCreateAndWait", "client.tasks.beginDeleteAndWait"],
+      "clientKeys": ["acr"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/acr.ts",
+      "type": "azure.containerregistry.registry",
+      "sdkPkgs": ["@azure/arm-containerregistry"],
+      "sdkRefs": [
+        "client.registries.beginCreateAndWait",
+        "client.registries.beginDeleteAndWait",
+        "client.registries.beginUpdateAndWait"
+      ],
+      "clientKeys": ["acr"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/aks.ts",
+      "type": "azure.containerservice.managedCluster",
+      "sdkPkgs": ["@azure/arm-containerservice"],
+      "sdkRefs": [
+        "client.managedClusters.beginCreateOrUpdateAndWait",
+        "client.managedClusters.beginDeleteAndWait",
+        "client.managedClusters.beginUpdateTagsAndWait"
+      ],
+      "clientKeys": ["aks"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/apim.ts",
+      "type": "azure.apimanagement.service",
+      "sdkPkgs": ["@azure/arm-apimanagement"],
+      "sdkRefs": [
+        "client.apiManagementService.beginCreateOrUpdateAndWait",
+        "client.apiManagementService.beginDeleteAndWait",
+        "client.apiManagementService.beginUpdateAndWait"
+      ],
+      "clientKeys": ["apim"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/app-gateway.ts",
+      "type": "azure.network.applicationGateway",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": [
+        "client.applicationGateways.beginCreateOrUpdateAndWait",
+        "client.applicationGateways.beginDeleteAndWait",
+        "client.applicationGateways.updateTags"
+      ],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/app-insights.ts",
+      "type": "azure.insights.appInsights",
+      "sdkPkgs": ["@azure/arm-appinsights"],
+      "sdkRefs": ["client.components.createOrUpdate", "client.components.delete", "client.components.updateTags"],
+      "clientKeys": ["app-insights"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/app-service.ts",
+      "type": "azure.web.appServicePlan",
+      "sdkPkgs": ["@azure/arm-appservice"],
+      "sdkRefs": [
+        "client.appServicePlans.beginCreateOrUpdateAndWait",
+        "client.appServicePlans.delete",
+        "client.appServicePlans.update"
+      ],
+      "clientKeys": ["web"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/azure-ml.ts",
+      "type": "azure.machinelearning.workspace",
+      "sdkPkgs": ["@azure/arm-machinelearning"],
+      "sdkRefs": [
+        "client.workspaces.beginCreateOrUpdateAndWait",
+        "client.workspaces.beginDeleteAndWait",
+        "client.workspaces.beginUpdateAndWait"
+      ],
+      "clientKeys": ["ml"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/azure-openai.ts",
+      "type": "azure.cognitiveservices.account",
+      "sdkPkgs": ["@azure/arm-cognitiveservices"],
+      "sdkRefs": [
+        "client.accounts.beginCreateAndWait",
+        "client.accounts.beginDeleteAndWait",
+        "client.accounts.beginUpdateAndWait"
+      ],
+      "clientKeys": ["cognitiveservices"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/azure-waf.ts",
+      "type": "azure.network.webApplicationFirewallPolicy",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": [
+        "client.webApplicationFirewallPolicies.beginDeleteAndWait",
+        "client.webApplicationFirewallPolicies.createOrUpdate"
+      ],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/cognitive-search.ts",
+      "type": "azure.search.service",
+      "sdkPkgs": ["@azure/arm-search"],
+      "sdkRefs": ["client.services.beginCreateOrUpdateAndWait", "client.services.delete", "client.services.update"],
+      "clientKeys": ["search"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/container-apps.ts",
+      "type": "azure.containerapps.app",
+      "sdkPkgs": ["@azure/arm-appcontainers"],
+      "sdkRefs": [
+        "client.containerApps.beginCreateOrUpdateAndWait",
+        "client.containerApps.beginDeleteAndWait",
+        "client.containerApps.update",
+        "client.managedEnvironments.beginCreateOrUpdateAndWait",
+        "client.managedEnvironments.get"
+      ],
+      "clientKeys": ["container-apps"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/cosmosdb.ts",
+      "type": "azure.cosmosdb.account",
+      "sdkPkgs": ["@azure/arm-cosmosdb"],
+      "sdkRefs": [
+        "client.databaseAccounts.beginCreateOrUpdateAndWait",
+        "client.databaseAccounts.beginDeleteAndWait",
+        "client.databaseAccounts.beginUpdateAndWait"
+      ],
+      "clientKeys": ["cosmosdb"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/data-explorer.ts",
+      "type": "azure.kusto.cluster",
+      "sdkPkgs": ["@azure/arm-kusto"],
+      "sdkRefs": [
+        "client.clusters.beginCreateOrUpdateAndWait",
+        "client.clusters.beginDeleteAndWait",
+        "client.clusters.beginUpdateAndWait"
+      ],
+      "clientKeys": ["kusto"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/dns-zone.ts",
+      "type": "azure.network.dnsZone",
+      "sdkPkgs": ["@azure/arm-dns"],
+      "sdkRefs": ["client.zones.beginDeleteAndWait", "client.zones.createOrUpdate", "client.zones.update"],
+      "clientKeys": ["dns"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/entra-b2c.ts",
+      "type": "azure.aadb2c.directory",
+      "sdkPkgs": ["@azure/arm-resources"],
+      "sdkRefs": [
+        "client.resources.beginCreateOrUpdateAndWait",
+        "client.resources.beginDeleteAndWait",
+        "client.resources.beginUpdateAndWait"
+      ],
+      "clientKeys": ["resources"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/event-grid.ts",
+      "type": "azure.eventgrid.topic",
+      "sdkPkgs": ["@azure/arm-eventgrid"],
+      "sdkRefs": [
+        "client.topics.beginCreateOrUpdateAndWait",
+        "client.topics.beginDeleteAndWait",
+        "client.topics.beginUpdateAndWait"
+      ],
+      "clientKeys": ["eventgrid"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/event-hubs.ts",
+      "type": "azure.eventhub.namespace",
+      "sdkPkgs": ["@azure/arm-eventhub"],
+      "sdkRefs": [
+        "client.namespaces.beginCreateOrUpdateAndWait",
+        "client.namespaces.beginDeleteAndWait",
+        "client.namespaces.update"
+      ],
+      "clientKeys": ["eventhub"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/front-door.ts",
+      "type": "azure.network.frontDoor",
+      "sdkPkgs": ["@azure/arm-cdn"],
+      "sdkRefs": [
+        "client.profiles.beginCreateAndWait",
+        "client.profiles.beginDeleteAndWait",
+        "client.profiles.beginUpdateAndWait"
+      ],
+      "clientKeys": ["cdn"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/functions.ts",
+      "type": "azure.web.functionApp",
+      "sdkPkgs": ["@azure/arm-appservice"],
+      "sdkRefs": [
+        "client.storageAccounts.beginCreateAndWait",
+        "client.storageAccounts.getProperties",
+        "client.webApps.beginCreateOrUpdateAndWait",
+        "client.webApps.delete",
+        "client.webApps.update"
+      ],
+      "clientKeys": ["storage", "web"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/key-vault.ts",
+      "type": "azure.keyvault.vault",
+      "sdkPkgs": ["@azure/arm-keyvault"],
+      "sdkRefs": ["client.vaults.beginCreateOrUpdateAndWait", "client.vaults.delete", "client.vaults.update"],
+      "clientKeys": ["keyvault"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/log-analytics.ts",
+      "type": "azure.monitor.logAnalytics",
+      "sdkPkgs": ["@azure/arm-operationalinsights"],
+      "sdkRefs": [
+        "client.workspaces.beginCreateOrUpdateAndWait",
+        "client.workspaces.beginDeleteAndWait",
+        "client.workspaces.update"
+      ],
+      "clientKeys": ["log-analytics"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/logic-apps.ts",
+      "type": "azure.logic.workflow",
+      "sdkPkgs": ["@azure/arm-logic"],
+      "sdkRefs": ["client.workflows.createOrUpdate", "client.workflows.delete", "client.workflows.update"],
+      "clientKeys": ["logic"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/mysql-flex.ts",
+      "type": "azure.mysqlflex.server",
+      "sdkPkgs": ["@azure/arm-mysql-flexible"],
+      "sdkRefs": [
+        "client.servers.beginCreateAndWait",
+        "client.servers.beginDeleteAndWait",
+        "client.servers.beginUpdateAndWait"
+      ],
+      "clientKeys": ["mysql-flex"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/nsg.ts",
+      "type": "azure.network.networkSecurityGroup",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": [
+        "client.networkSecurityGroups.beginCreateOrUpdateAndWait",
+        "client.networkSecurityGroups.beginDeleteAndWait",
+        "client.networkSecurityGroups.updateTags"
+      ],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/postgresql-flex.ts",
+      "type": "azure.postgresqlflex.server",
+      "sdkPkgs": ["@azure/arm-postgresql-flexible"],
+      "sdkRefs": [
+        "client.servers.beginCreateAndWait",
+        "client.servers.beginDeleteAndWait",
+        "client.servers.beginUpdateAndWait"
+      ],
+      "clientKeys": ["postgresql-flex"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/private-endpoint.ts",
+      "type": "azure.network.privateEndpoint",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": [
+        "client.privateEndpoints.beginCreateOrUpdateAndWait",
+        "client.privateEndpoints.beginDeleteAndWait",
+        "client.privateEndpoints.updateTags"
+      ],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/redis-cache.ts",
+      "type": "azure.cache.redis",
+      "sdkPkgs": ["@azure/arm-rediscache"],
+      "sdkRefs": ["client.redis.beginCreateAndWait", "client.redis.beginDeleteAndWait", "client.redis.update"],
+      "clientKeys": ["redis"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/service-bus.ts",
+      "type": "azure.servicebus.namespace",
+      "sdkPkgs": ["@azure/arm-servicebus"],
+      "sdkRefs": [
+        "client.namespaces.beginCreateOrUpdateAndWait",
+        "client.namespaces.beginDeleteAndWait",
+        "client.namespaces.update"
+      ],
+      "clientKeys": ["servicebus"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/sql-database.ts",
+      "type": "azure.sql.server",
+      "sdkPkgs": ["@azure/arm-sql"],
+      "sdkRefs": [
+        "client.servers.beginCreateOrUpdateAndWait",
+        "client.servers.beginDeleteAndWait",
+        "client.servers.beginUpdateAndWait"
+      ],
+      "clientKeys": ["sql"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/static-web-apps.ts",
+      "type": "azure.web.staticSite",
+      "sdkPkgs": ["@azure/arm-appservice"],
+      "sdkRefs": [
+        "client.staticSites.beginCreateOrUpdateStaticSiteAndWait",
+        "client.staticSites.beginDeleteStaticSiteAndWait",
+        "client.staticSites.updateStaticSite"
+      ],
+      "clientKeys": ["web"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/storage-account.ts",
+      "type": "azure.storage.account",
+      "sdkPkgs": ["@azure/arm-storage"],
+      "sdkRefs": [
+        "client.storageAccounts.beginCreateAndWait",
+        "client.storageAccounts.delete",
+        "client.storageAccounts.update"
+      ],
+      "clientKeys": ["storage"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/subnet.ts",
+      "type": "azure.network.subnet",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": ["client.subnets.beginCreateOrUpdateAndWait", "client.subnets.beginDeleteAndWait"],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/synapse.ts",
+      "type": "azure.synapse.workspace",
+      "sdkPkgs": ["@azure/arm-synapse"],
+      "sdkRefs": [
+        "client.workspaces.beginCreateOrUpdateAndWait",
+        "client.workspaces.beginDeleteAndWait",
+        "client.workspaces.beginUpdateAndWait"
+      ],
+      "clientKeys": ["synapse"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/virtual-machine.ts",
+      "type": "azure.compute.virtual_machine",
+      "sdkPkgs": ["@azure/arm-compute"],
+      "sdkRefs": [
+        "client.virtualMachines.beginCreateOrUpdateAndWait",
+        "client.virtualMachines.beginDeleteAndWait",
+        "client.virtualMachines.beginUpdateAndWait"
+      ],
+      "clientKeys": ["compute"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/vnet.ts",
+      "type": "azure.network.virtualNetwork",
+      "sdkPkgs": ["@azure/arm-network"],
+      "sdkRefs": [
+        "client.virtualNetworks.beginCreateOrUpdateAndWait",
+        "client.virtualNetworks.beginDeleteAndWait",
+        "client.virtualNetworks.updateTags"
+      ],
+      "clientKeys": ["network"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/handlers/web-app.ts",
+      "type": "azure.web.app",
+      "sdkPkgs": ["@azure/arm-appservice"],
+      "sdkRefs": [
+        "client.appServicePlans.beginCreateOrUpdateAndWait",
+        "client.appServicePlans.get",
+        "client.webApps.beginCreateOrUpdateAndWait",
+        "client.webApps.delete",
+        "client.webApps.update"
+      ],
+      "clientKeys": ["web"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/aws/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": [
+        "@aws-sdk/client-ec2",
+        "@aws-sdk/client-s3",
+        "@aws-sdk/client-lambda",
+        "@aws-sdk/client-cloudwatch-logs",
+        "@aws-sdk/client-secrets-manager",
+        "@aws-sdk/client-sqs",
+        "@aws-sdk/client-sns",
+        "@aws-sdk/client-dynamodb",
+        "@aws-sdk/client-elasticache",
+        "@aws-sdk/client-rds",
+        "@aws-sdk/client-docdb",
+        "@aws-sdk/client-cognito-identity-provider",
+        "@aws-sdk/client-cloudfront",
+        "@aws-sdk/client-elastic-load-balancing-v2",
+        "@aws-sdk/client-api-gateway",
+        "@aws-sdk/client-eventbridge",
+        "@aws-sdk/client-ecs",
+        "@aws-sdk/client-opensearch",
+        "@aws-sdk/client-bedrock",
+        "@aws-sdk/client-sagemaker",
+        "@aws-sdk/client-redshift",
+        "@aws-sdk/client-acm",
+        "@aws-sdk/client-route-53",
+        "@aws-sdk/client-codebuild",
+        "@aws-sdk/client-amplify",
+        "@aws-sdk/client-mq",
+        "@aws-sdk/client-wafv2",
+        "@aws-sdk/client-opensearchserverless",
+        "@aws-sdk/client-kinesis",
+        "@aws-sdk/client-ecr",
+        "@aws-sdk/client-cloudwatch",
+        "@aws-sdk/client-timestream-write"
+      ],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/gcp/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": [
+        "@google-cloud/compute",
+        "@google-cloud/artifact-registry",
+        "@google-cloud/cloudbuild",
+        "@google-cloud/monitoring",
+        "@google-cloud/dns",
+        "@google-cloud/storage",
+        "@google-cloud/run",
+        "@google-cloud/pubsub",
+        "@google-cloud/secret-manager",
+        "@google-cloud/bigquery",
+        "@google-cloud/logging",
+        "@google-cloud/scheduler",
+        "@google-cloud/functions",
+        "@google-cloud/firestore",
+        "@google-cloud/aiplatform",
+        "@google-cloud/container",
+        "google-auth-library"
+      ],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/azure/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": [
+        "@azure/arm-compute",
+        "@azure/arm-storage",
+        "@azure/arm-appservice",
+        "@azure/arm-network",
+        "@azure/arm-resources",
+        "@azure/arm-keyvault",
+        "@azure/arm-servicebus",
+        "@azure/arm-cosmosdb",
+        "@azure/arm-postgresql-flexible",
+        "@azure/arm-mysql-flexible",
+        "@azure/arm-rediscache",
+        "@azure/arm-monitor",
+        "@azure/arm-operationalinsights",
+        "@azure/arm-appinsights",
+        "@azure/arm-appcontainers",
+        "@azure/arm-dns",
+        "@azure/arm-containerservice",
+        "@azure/arm-containerregistry",
+        "@azure/arm-apimanagement",
+        "@azure/arm-cdn",
+        "@azure/arm-logic",
+        "@azure/arm-eventgrid",
+        "@azure/arm-eventhub",
+        "@azure/arm-search",
+        "@azure/arm-cognitiveservices",
+        "@azure/arm-machinelearning",
+        "@azure/arm-synapse",
+        "@azure/arm-kusto",
+        "@azure/arm-sql"
+      ],
+      "sdkRefs": [],
+      "clientKeys": []
+    }
+  ],
+  "packages": [
+    {
+      "package": "@aws-sdk/client-acm",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/acm.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-mq",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/amazon-mq.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-amplify",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/amplify-hosting.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-api-gateway",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/api-gateway.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-bedrock",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/bedrock.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-cloudfront",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/cloudfront.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-cloudwatch",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/cloudwatch-alarm.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-cloudwatch-logs",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/cloudwatch-logs.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-codebuild",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/codebuild.ts",
+        "packages/core/src/deploy/providers/aws/handlers/lambda-builder.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-cognito-identity-provider",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/cognito.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-docdb",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/docdb.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-dynamodb",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/dynamodb.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-ec2",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/ec2.ts",
+        "packages/core/src/deploy/providers/aws/handlers/security-group.ts",
+        "packages/core/src/deploy/providers/aws/handlers/subnet.ts",
+        "packages/core/src/deploy/providers/aws/handlers/vpc-endpoint.ts",
+        "packages/core/src/deploy/providers/aws/handlers/vpc.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-ecr",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/ecr.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-ecs",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/ecs.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-elasticache",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/elasticache.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-elastic-load-balancing-v2",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/elbv2.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-eventbridge",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/events-rule.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-kinesis",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/kinesis.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-s3",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/lambda-builder.ts",
+        "packages/core/src/deploy/providers/aws/handlers/s3.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-lambda",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/lambda.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-opensearchserverless",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/opensearch-serverless.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-opensearch",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/opensearch.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-rds",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/rds.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-redshift",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/redshift.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-route-53",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/route53.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-sagemaker",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/sagemaker.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-secrets-manager",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/secrets-manager.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-sns",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/sns.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-sqs",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/sqs.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-timestream-write",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/timestream.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@aws-sdk/client-wafv2",
+      "handlers": [
+        "packages/core/src/deploy/providers/aws/handlers/wafv2.ts",
+        "packages/core/src/deploy/providers/aws/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1055.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-containerregistry",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/acr-task.ts",
+        "packages/core/src/deploy/providers/azure/handlers/acr.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "12.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-containerservice",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/aks.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "25.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-apimanagement",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/apim.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "10.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-network",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/app-gateway.ts",
+        "packages/core/src/deploy/providers/azure/handlers/azure-waf.ts",
+        "packages/core/src/deploy/providers/azure/handlers/nsg.ts",
+        "packages/core/src/deploy/providers/azure/handlers/private-endpoint.ts",
+        "packages/core/src/deploy/providers/azure/handlers/subnet.ts",
+        "packages/core/src/deploy/providers/azure/handlers/vnet.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "36.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-appinsights",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/app-insights.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "4.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-appservice",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/app-service.ts",
+        "packages/core/src/deploy/providers/azure/handlers/functions.ts",
+        "packages/core/src/deploy/providers/azure/handlers/static-web-apps.ts",
+        "packages/core/src/deploy/providers/azure/handlers/web-app.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "18.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-machinelearning",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/azure-ml.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-cognitiveservices",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/azure-openai.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "8.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-search",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/cognitive-search.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.3.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-appcontainers",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/container-apps.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-cosmosdb",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/cosmosdb.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "16.4.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-kusto",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/data-explorer.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "8.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-dns",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/dns-zone.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "5.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-resources",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/entra-b2c.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "7.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-eventgrid",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/event-grid.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "14.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-eventhub",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/event-hubs.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "5.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-cdn",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/front-door.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "9.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-keyvault",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/key-vault.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "5.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-operationalinsights",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/log-analytics.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "10.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-logic",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/logic-apps.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "8.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-mysql-flexible",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/mysql-flex.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "3.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-postgresql-flexible",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/postgresql-flex.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "9.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-rediscache",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/redis-cache.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "8.2.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-servicebus",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/service-bus.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "6.1.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-sql",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/sql-database.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "10.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-storage",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/storage-account.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "20.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-synapse",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/synapse.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "8.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-compute",
+      "handlers": [
+        "packages/core/src/deploy/providers/azure/handlers/virtual-machine.ts",
+        "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "24.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/compute",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "6.12.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/artifact-registry",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "4.7.1"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/cloudbuild",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "5.5.1"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/monitoring",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "5.3.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/dns",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "5.3.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/storage",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "7.19.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/run",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "3.2.1"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/pubsub",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "5.3.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/secret-manager",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "6.1.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/bigquery",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "8.3.1"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/logging",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "11.2.1"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/scheduler",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "5.3.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/functions",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "4.2.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/firestore",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "8.6.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/aiplatform",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "6.8.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@google-cloud/container",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "6.8.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "google-auth-library",
+      "handlers": ["packages/core/src/deploy/providers/gcp/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "10.6.2"
+      },
+      "runtime": {
+        "installed": false
+      }
+    },
+    {
+      "package": "@azure/arm-monitor",
+      "handlers": ["packages/core/src/deploy/providers/azure/sdk-loader.ts"],
+      "npm": {
+        "ok": true,
+        "version": "7.0.0"
+      },
+      "runtime": {
+        "installed": false
+      }
+    }
+  ]
+}

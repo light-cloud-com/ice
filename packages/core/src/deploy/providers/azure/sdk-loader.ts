@@ -137,8 +137,11 @@ export async function initialize_azure_clients(
   const kusto = await load_azure_sdk('@azure/arm-kusto');
   if (kusto) clients.set('kusto', new kusto.KustoManagementClient(credential, subscription_id));
 
-  const aad = await load_azure_sdk('@azure/arm-aad');
-  if (aad) clients.set('aad', new aad.ActiveDirectoryB2CManagementClient(credential, subscription_id));
+  // Note: Azure B2C / Entra External ID has no dedicated `@azure/arm-*`
+  // SDK package today — the entra-b2c handler routes through the
+  // generic `@azure/arm-resources` ResourceManagementClient instead.
+  // Keeping the slot ID `aad` would dead-end on missing SDK; the
+  // handler now uses the existing `resources` client slot.
 
   const sql = await load_azure_sdk('@azure/arm-sql');
   if (sql) clients.set('sql', new sql.SqlManagementClient(credential, subscription_id));

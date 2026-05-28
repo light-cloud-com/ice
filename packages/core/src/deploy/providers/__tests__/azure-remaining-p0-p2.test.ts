@@ -74,14 +74,15 @@ function setup_mocks() {
             },
           };
         }
-        if (mod === '@azure/arm-aad') {
+        if (mod === '@azure/arm-resources') {
           return {
-            ActiveDirectoryB2CManagementClient: class {
-              b2CTenants = {
-                beginCreateAndWait: mocks.b2c_create,
-                update: vi.fn(),
+            ResourceManagementClient: class {
+              resources = {
+                beginCreateOrUpdateAndWait: mocks.b2c_create,
+                beginUpdateAndWait: vi.fn(),
                 beginDeleteAndWait: mocks.b2c_delete,
               };
+              resourceGroups = { createOrUpdate: vi.fn(), checkExistence: vi.fn().mockResolvedValue({ body: true }) };
             },
           };
         }

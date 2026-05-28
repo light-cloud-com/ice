@@ -1,7 +1,7 @@
 {
   "name": "ice",
   "license": "Apache-2.0",
-  "version": "0.1.867",
+  "version": "0.1.868",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -30,6 +30,9 @@
     "test:int": "vitest run --root . --include '**/*.int.test.{ts,tsx}'",
     "test:live:aws": "node scripts/run-live-tests.mjs aws",
     "test:live:azure": "node scripts/run-live-tests.mjs azure",
+    "verify:sdk": "node scripts/verify-sdk-coverage.mjs",
+    "verify:sdk:strict": "node scripts/verify-sdk-coverage.mjs --strict",
+    "verify:sdk:offline": "node scripts/verify-sdk-coverage.mjs --no-network",
     "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
     "lint": "node tools/lint-packages.mjs --fix",

@@ -37,20 +37,80 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 
 ## Providers at a glance
 
-All eight providers ship a working deployer behind feature flags. Real-cloud round-trips have been observed for GCP, AWS, and Azure; the other five carry full handler + extractor + L4 SDK-input verification but are gated on a developer-run live test against their own account before flipping each category to "deployable".
+🟢 stable · 🟡 experimental · 🟠 preview · ⚪ planned · Source of truth: [`PROVIDER_READINESS`](packages/constants/src/providers.ts) · Full matrix: [docs/provider-status.md](docs/provider-status.md)
 
-- 🟢 **Google Cloud — stable(ish).** 38 service handlers, 45+ importers, full create / update / destroy.
-- 🟡 **AWS — experimental.** 38 service handlers + extractors covering Compute (ECS, Lambda, EC2), Database (RDS / DynamoDB / DocDB / Redshift / ElastiCache), Network (VPC / Subnet / SG / VPC Endpoint / ELBv2 / CloudFront / ACM / Route53), Storage (S3), Messaging (SQS / SNS / EventBridge / Amazon MQ), Security (Secrets Manager / Cognito / WAFv2), AI/Analytics (Bedrock / SageMaker / OpenSearch / OpenSearch Serverless / Redshift), Frontend (CloudFront / Amplify Hosting), Monitoring (CloudWatch Logs), Source (CodeBuild). See [`packages/core/src/deploy/providers/aws/README.md`](packages/core/src/deploy/providers/aws/README.md).
-- 🟡 **Azure — experimental.** 38 service handlers + extractors covering Compute (VM, Web App, Functions, Container Apps, Static Web Apps, AKS, ACR), Database (PostgreSQL Flex, MySQL Flex, Cosmos SQL+Mongo, Redis Cache, SQL Server), Storage (Blob), Messaging (Service Bus + AMQP/RabbitMQ branch, Event Hubs, Event Grid, Logic Apps), Network (VNet, Subnet, NSG, Private Endpoint, DNS Zone, App Gateway, Front Door, APIM, WAF), Observability (Log Analytics, App Insights), Security (Key Vault, Entra B2C), AI/Analytics (Cognitive Search, Azure OpenAI, Azure ML, Synapse, Data Explorer). See [`packages/core/src/deploy/providers/azure/README.md`](packages/core/src/deploy/providers/azure/README.md).
-- 🟠 **Alibaba Cloud — preview.** 34 service handlers covering ECS, Container Service (ACK), Function Compute, RDS (MySQL / PostgreSQL), PolarDB, ApsaraDB for Redis, MongoDB, OSS, SLB, VPC + VSwitch + SecurityGroup, NAT Gateway, Log Service (SLS), Message Service / RocketMQ, CDN, Container Registry, Cloud Monitor, KMS, Secret Manager, RAM. Live tests wired; cardinal-rule deploy gate pending per-handler verification.
-- 🟠 **Oracle Cloud Infrastructure — preview.** 33 service handlers covering Compute, OKE, Functions, Autonomous DB, MySQL HeatWave, PostgreSQL, NoSQL, Object Storage, Block Volume, File Storage, VCN + Subnet + Security List, Load Balancer, DNS, Streaming, Notifications, Logging, Monitoring, Vault, Bastion, Container Registry. L4 SDK-input verifier extended.
-- 🟠 **DigitalOcean — preview.** 19 service handlers covering Droplets, Kubernetes (DOKS), App Platform, Functions, Managed Databases (Postgres / MySQL / Redis / MongoDB), Spaces, Volumes, VPC, Load Balancer, Floating IP, Firewall, DNS, Container Registry, Monitoring, Project.
-- 🟠 **IBM Cloud — preview.** 14 service handlers covering VPC, Code Engine, IKS / OpenShift, Cloud Functions, Cloudant, Db2, Cloud Object Storage, Event Streams (Kafka), Container Registry, Key Protect, Secrets Manager, Activity Tracker, Log Analysis, Monitoring.
-- 🟠 **Kubernetes — preview.** 19 service handlers covering Deployment, StatefulSet, DaemonSet, Job, CronJob, Service, Ingress, ConfigMap, Secret, PersistentVolumeClaim, Namespace, ServiceAccount, Role + RoleBinding, NetworkPolicy, HorizontalPodAutoscaler. In-cluster + kubeconfig auth supported.
+```
+🟢 Google Cloud .................................... stable · 38 handlers · 45+ importers
+   ├─ Compute        Cloud Run · Cloud Functions · GKE
+   ├─ Database       Cloud SQL · Firestore · BigQuery · Memorystore
+   ├─ Storage        Cloud Storage
+   ├─ Messaging      Pub/Sub · Cloud Scheduler
+   ├─ AI             Vertex AI · Discovery Engine
+   ├─ Network        Load Balancer · API Gateway · Domain Mapping
+   └─ Ops            Cloud Logging · Secret Manager · Identity Platform
 
-- 🟢 **GitHub — integration.**
+🟡 AWS ............................................. experimental · 38 handlers
+   ├─ Compute        ECS · Lambda · EC2
+   ├─ Database       RDS · DynamoDB · DocDB · Redshift · ElastiCache
+   ├─ Storage        S3
+   ├─ Messaging      SQS · SNS · EventBridge · Amazon MQ
+   ├─ AI             Bedrock · SageMaker · OpenSearch · OpenSearch Serverless
+   ├─ Network        VPC · Subnet · SG · VPC Endpoint · ELBv2 · ACM · Route53
+   ├─ Frontend       CloudFront · Amplify Hosting
+   ├─ Security       Secrets Manager · Cognito · WAFv2
+   └─ Ops            CloudWatch Logs · CodeBuild
 
-Status legend: 🟢 stable · 🟡 experimental (deploys observed) · 🟠 preview (deployer wired, awaiting deploy gate) · ⚪ planned. The source of truth lives in `PROVIDER_READINESS` in [`packages/constants/src/providers.ts`](packages/constants/src/providers.ts) and the matrix at [docs/provider-status.md](docs/provider-status.md).
+🟡 Azure ........................................... experimental · 38 handlers
+   ├─ Compute        VM · Web App · Functions · Container Apps · Static Web Apps · AKS · ACR
+   ├─ Database       PostgreSQL Flex · MySQL Flex · Cosmos SQL/Mongo · Redis · SQL Server
+   ├─ Storage        Blob
+   ├─ Messaging      Service Bus · Event Hubs · Event Grid · Logic Apps
+   ├─ AI             Cognitive Search · Azure OpenAI · Azure ML · Synapse · Data Explorer
+   ├─ Network        VNet · Subnet · NSG · Private Endpoint · DNS · App Gateway · Front Door · APIM · WAF
+   ├─ Security       Key Vault · Entra B2C
+   └─ Ops            Log Analytics · App Insights
+
+🟠 Alibaba Cloud ................................... preview · 34 handlers
+   ├─ Compute        ECS · ACK · Function Compute
+   ├─ Database       RDS · PolarDB · ApsaraDB Redis · MongoDB
+   ├─ Storage        OSS
+   ├─ Messaging      MNS · RocketMQ
+   ├─ Network        VPC · VSwitch · SG · NAT · SLB · CDN
+   └─ Ops            SLS · Cloud Monitor · KMS · Secret Manager · RAM · ACR
+
+🟠 Oracle Cloud .................................... preview · 33 handlers
+   ├─ Compute        Compute · OKE · Functions
+   ├─ Database       Autonomous DB · MySQL HeatWave · PostgreSQL · NoSQL
+   ├─ Storage        Object Storage · Block Volume · File Storage
+   ├─ Messaging      Streaming · Notifications
+   ├─ Network        VCN · Subnet · Security List · LBaaS · DNS
+   └─ Ops            Logging · Monitoring · Vault · Bastion · OCIR
+
+🟠 DigitalOcean .................................... preview · 19 handlers
+   ├─ Compute        Droplets · DOKS · App Platform · Functions
+   ├─ Database       Managed Postgres/MySQL/Redis/MongoDB
+   ├─ Storage        Spaces · Volumes
+   ├─ Network        VPC · Load Balancer · Floating IP · Firewall · DNS
+   └─ Ops            Monitoring · DOCR · Project
+
+🟠 IBM Cloud ....................................... preview · 14 handlers
+   ├─ Compute        VPC · Code Engine · IKS · OpenShift · Cloud Functions
+   ├─ Database       Cloudant · Db2
+   ├─ Storage        Cloud Object Storage
+   ├─ Messaging      Event Streams (Kafka)
+   └─ Ops            Key Protect · Secrets Manager · Activity Tracker · Log Analysis · Monitoring · Container Registry
+
+🟠 Kubernetes ...................................... preview · 19 handlers
+   ├─ Workloads      Deployment · StatefulSet · DaemonSet · Job · CronJob
+   ├─ Networking     Service · Ingress · NetworkPolicy
+   ├─ Config         ConfigMap · Secret · PersistentVolumeClaim
+   ├─ Identity       Namespace · ServiceAccount · Role · RoleBinding
+   └─ Scaling        HorizontalPodAutoscaler
+
+🟢 GitHub .......................................... integration
+```
+
+All eight providers ship a working deployer behind feature flags. Real-cloud round-trips have been observed for GCP, AWS, and Azure; the other five carry full handler + extractor + L4 SDK-input verification but stay gated until a developer runs the live test against their own account. Per-category state lives in `PROVIDER_FLAGS` ([`packages/constants/src/feature-flags.ts`](packages/constants/src/feature-flags.ts)) and the per-provider READMEs ([AWS](packages/core/src/deploy/providers/aws/README.md), [Azure](packages/core/src/deploy/providers/azure/README.md)).
 
 ## Docs
 

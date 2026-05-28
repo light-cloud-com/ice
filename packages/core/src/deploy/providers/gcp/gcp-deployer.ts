@@ -15,6 +15,8 @@ import { cloud_run_handler } from './handlers/cloud-run';
 import { cloud_scheduler_handler } from './handlers/cloud-scheduler';
 import { cloud_sql_handler } from './handlers/cloud-sql';
 import { cloud_storage_handler } from './handlers/cloud-storage';
+import { compute_firewall_handler } from './handlers/compute-firewall';
+import { compute_instance_handler } from './handlers/compute-instance';
 import { dataflow_handler } from './handlers/dataflow';
 import { discovery_engine_handler } from './handlers/discovery-engine';
 import { domain_mapping_handler } from './handlers/domain-mapping';
@@ -26,6 +28,7 @@ import { load_balancer_handler } from './handlers/load-balancer';
 import { logging_handler } from './handlers/logging';
 import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certificate';
 import { memorystore_handler } from './handlers/memorystore';
+import { private_service_connect_handler } from './handlers/private-service-connect';
 import { pubsub_handler } from './handlers/pubsub';
 import { secret_manager_handler } from './handlers/secret-manager';
 import { subnet_handler } from './handlers/subnet';
@@ -68,6 +71,10 @@ const API_FOR_TYPE: Record<string, string> = {
   // BEFORE the handler runs (which is when we'd otherwise hit the 403).
   'gcp.firebase.hosting': 'firebasehosting.googleapis.com',
   'gcp.firebase.': 'firebase.googleapis.com',
+  'gcp.artifactregistry.': 'artifactregistry.googleapis.com',
+  'gcp.cloudbuild.': 'cloudbuild.googleapis.com',
+  'gcp.monitoring.': 'monitoring.googleapis.com',
+  'gcp.dns.': 'dns.googleapis.com',
 };
 
 // =============================================================================
@@ -110,6 +117,9 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: GCPResourceHandler }> =
   { prefix: 'gcp.compute.network', handler: vpc_handler },
   { prefix: 'gcp.compute.subnetwork', handler: subnet_handler },
   { prefix: 'gcp.compute.securityPolicy', handler: cloud_armor_handler },
+  { prefix: 'gcp.compute.firewall', handler: compute_firewall_handler },
+  { prefix: 'gcp.compute.instance', handler: compute_instance_handler },
+  { prefix: 'gcp.compute.privateServiceConnect', handler: private_service_connect_handler },
   // Compute (load balancer, forwarding rules, fallthrough for everything else)
   { prefix: 'gcp.compute.', handler: load_balancer_handler },
   // Cloud Logging

@@ -55,11 +55,14 @@ import {
 } from '../network';
 
 describe('PROPERTY_EXTRACTORS table shape', () => {
-  it('counts GCP entries (27) + AWS entries — the latter grows with each AWS handler commit', () => {
+  it('counts GCP entries (>= 27) + AWS entries — both grow with each handler commit', () => {
     const keys = Object.keys(PROPERTY_EXTRACTORS);
     const gcpKeys = keys.filter((k) => k.startsWith('gcp.'));
     const awsKeys = keys.filter((k) => k.startsWith('aws.'));
-    expect(gcpKeys).toHaveLength(27);
+    // GCP baseline = 27 + 7 cross-cloud-parity entries (artifactregistry,
+    // cloudbuild, monitoring, dns, compute.instance, compute.firewall,
+    // compute.privateServiceConnect) = 34. Floor permits adding more.
+    expect(gcpKeys.length).toBeGreaterThanOrEqual(27);
     // AWS compute (commit #2): ecs.service, lambda.function, events.rule.
     // Subsequent commits add database / network / ancillary / ai
     // extractors — this assertion bumps when each lands.

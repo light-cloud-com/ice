@@ -76,6 +76,36 @@ export async function initialize_gcp_clients(
   if (compute) {
     clients.set('compute.instances', new compute.InstancesClient(gaxOpts));
     clients.set('compute.globalForwardingRules', new compute.GlobalForwardingRulesClient(gaxOpts));
+    if (compute.FirewallsClient) clients.set('firewalls', new compute.FirewallsClient(gaxOpts));
+    if (compute.InstancesClient) clients.set('instances', new compute.InstancesClient(gaxOpts));
+    if (compute.ForwardingRulesClient) clients.set('forwardingRules', new compute.ForwardingRulesClient(gaxOpts));
+  }
+
+  // Artifact Registry
+  const artifactRegistry = await load_sdk('@google-cloud/artifact-registry');
+  if (artifactRegistry) {
+    const Client = artifactRegistry.v1?.ArtifactRegistryClient ?? artifactRegistry.ArtifactRegistryClient;
+    if (Client) clients.set('artifactregistry', new Client(gaxOpts));
+  }
+
+  // Cloud Build
+  const cloudbuild = await load_sdk('@google-cloud/cloudbuild');
+  if (cloudbuild) {
+    const Client = cloudbuild.v1?.CloudBuildClient ?? cloudbuild.CloudBuildClient;
+    if (Client) clients.set('cloudbuild', new Client(gaxOpts));
+  }
+
+  // Cloud Monitoring (Alert Policies)
+  const monitoring = await load_sdk('@google-cloud/monitoring');
+  if (monitoring) {
+    const Client = monitoring.AlertPolicyServiceClient ?? monitoring.v3?.AlertPolicyServiceClient;
+    if (Client) clients.set('monitoring', new Client(gaxOpts));
+  }
+
+  // Cloud DNS
+  const dns = await load_sdk('@google-cloud/dns');
+  if (dns) {
+    clients.set('dns', new dns.DNS(storageOpts));
   }
 
   // Cloud Storage

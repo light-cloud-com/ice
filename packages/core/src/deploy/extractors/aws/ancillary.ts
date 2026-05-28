@@ -7,8 +7,67 @@
  *   - aws.cognito.userPool           (Security.Identity)
  *   - aws.secretsmanager.secret      (Security.Secret)
  *   - aws.cloudwatch.logGroup        (Monitoring.Log)
+ *   - aws.cloudwatch.alarm           (Monitoring.Alert)
  *   - aws.mq.broker                  (Messaging.RabbitMQ)
+ *   - aws.kinesis.stream             (Messaging.EventStream)
+ *   - aws.ecr.repository             (Compute.ContainerRegistry)
+ *   - aws.timestream.database        (Analytics.TimeSeries — data-explorer)
  */
+
+export function extract_kinesis_stream_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    shard_count: data.shard_count as number | undefined,
+    retention_hours: (data.retention_hours as number) ?? 24,
+    tags: {},
+  };
+}
+
+export function extract_ecr_repository_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    image_tag_mutability: (data.image_tag_mutability as string) || 'MUTABLE',
+    scan_on_push: data.scan_on_push !== false,
+    encryption_type: (data.encryption_type as string) || 'AES256',
+    tags: {},
+  };
+}
+
+export function extract_cloudwatch_alarm_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    metric_name: (data.metric_name as string) || 'CPUUtilization',
+    namespace: (data.namespace as string) || 'AWS/EC2',
+    statistic: (data.statistic as string) || 'Average',
+    period_seconds: (data.period_seconds as number) ?? 300,
+    evaluation_periods: (data.evaluation_periods as number) ?? 1,
+    threshold: (data.threshold as number) ?? 80,
+    comparison_operator: (data.comparison_operator as string) || 'GreaterThanThreshold',
+    actions_enabled: data.actions_enabled !== false,
+    alarm_actions: (data.alarm_actions as string[]) ?? [],
+    tags: {},
+  };
+}
+
+export function extract_timestream_database_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    retention_hours: (data.retention_hours as number) ?? 24,
+    tags: {},
+  };
+}
 
 export function extract_amazon_mq_broker_properties(
   data: Record<string, unknown>,

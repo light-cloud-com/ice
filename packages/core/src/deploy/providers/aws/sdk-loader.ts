@@ -125,6 +125,18 @@ export async function initialize_aws_clients(region: string): Promise<Map<string
   if (opensearchServerless)
     clients.set('opensearch-serverless', new opensearchServerless.OpenSearchServerlessClient({ region }));
 
+  const kinesis = await load_aws_sdk('@aws-sdk/client-kinesis');
+  if (kinesis) clients.set('kinesis', new kinesis.KinesisClient({ region }));
+
+  const ecr = await load_aws_sdk('@aws-sdk/client-ecr');
+  if (ecr) clients.set('ecr', new ecr.ECRClient({ region }));
+
+  const cloudwatch = await load_aws_sdk('@aws-sdk/client-cloudwatch');
+  if (cloudwatch) clients.set('cloudwatch', new cloudwatch.CloudWatchClient({ region }));
+
+  const timestreamWrite = await load_aws_sdk('@aws-sdk/client-timestream-write');
+  if (timestreamWrite) clients.set('timestream', new timestreamWrite.TimestreamWriteClient({ region }));
+
   return clients;
 }
 

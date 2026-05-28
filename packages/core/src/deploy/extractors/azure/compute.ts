@@ -96,3 +96,28 @@ export function extract_azure_static_site_properties(
     tags: {},
   };
 }
+
+/**
+ * ACR Task. Backs Source.Build on Azure. Container image build path —
+ * GitHub repo → Docker → ACR push. Parent registry is wired from a
+ * connected Compute.ContainerRegistry block on canvas.
+ */
+export function extract_azure_acr_task_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
+  return {
+    region,
+    location: (data.location as string) || region,
+    registry_name: (data.registry_name as string) || '',
+    repository: (data.repository as string) || (data.source_location as string) || '',
+    branch: (data.branch as string) || 'main',
+    dockerfile_path: (data.dockerfile_path as string) || 'Dockerfile',
+    context_path: (data.context_path as string) || (data.source_location as string) || '',
+    image_names: (data.image_names as string[]) || [],
+    os: (data.os as string) || 'Linux',
+    arch: (data.arch as string) || 'amd64',
+    cpu: (data.cpu as number) ?? 2,
+    tags: {},
+  };
+}

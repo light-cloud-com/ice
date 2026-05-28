@@ -45,6 +45,10 @@ import {
   extract_secrets_manager_secret_properties,
   extract_cloudwatch_log_group_properties,
   extract_amazon_mq_broker_properties,
+  extract_kinesis_stream_properties,
+  extract_ecr_repository_properties,
+  extract_cloudwatch_alarm_properties,
+  extract_timestream_database_properties,
 } from './aws/ancillary';
 import {
   extract_ecs_service_properties,
@@ -87,12 +91,11 @@ import {
   extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
 } from './azure/ancillary';
-import {
+import { extract_azure_acr_task_properties,
   extract_azure_app_service_plan_properties,
   extract_azure_container_apps_properties,
   extract_azure_function_app_properties,
-  extract_azure_static_site_properties,
-} from './azure/compute';
+  extract_azure_static_site_properties } from './azure/compute';
 import {
   extract_azure_cosmosdb_account_properties,
   extract_azure_mysql_flex_properties,
@@ -125,6 +128,15 @@ import {
   extract_cloud_scheduler_properties,
 } from './compute';
 import { extract_cloud_sql_properties, extract_firestore_properties, extract_memorystore_properties } from './database';
+import {
+  extract_gcp_artifact_registry_properties,
+  extract_gcp_cloud_build_properties,
+  extract_gcp_monitoring_properties,
+  extract_gcp_cloud_dns_properties,
+  extract_gcp_compute_instance_properties,
+  extract_gcp_compute_firewall_properties,
+  extract_gcp_psc_properties,
+} from './gcp/new-services';
 import {
   extract_storage_bucket_properties,
   extract_pubsub_properties,
@@ -167,6 +179,15 @@ export const PROPERTY_EXTRACTORS: Record<
   'gcp.compute.securityPolicy': extract_cloud_armor_properties,
   'gcp.firebase.hosting': extract_firebase_hosting_properties,
 
+  // ─── GCP — new (cross-cloud parity push) ────────────────────────────
+  'gcp.artifactregistry.repository': extract_gcp_artifact_registry_properties,
+  'gcp.cloudbuild.trigger': extract_gcp_cloud_build_properties,
+  'gcp.monitoring.alertPolicy': extract_gcp_monitoring_properties,
+  'gcp.dns.managedZone': extract_gcp_cloud_dns_properties,
+  'gcp.compute.instance': extract_gcp_compute_instance_properties,
+  'gcp.compute.firewall': extract_gcp_compute_firewall_properties,
+  'gcp.compute.privateServiceConnect': extract_gcp_psc_properties,
+
   // ─── AWS — compute ─────────────────────────────────────────────────
   'aws.ecs.service': extract_ecs_service_properties,
   // Worker variant — resolves to the same handler but with the
@@ -196,6 +217,12 @@ export const PROPERTY_EXTRACTORS: Record<
   'aws.mq.broker': extract_amazon_mq_broker_properties,
   'aws.wafv2.webAcl': extract_aws_wafv2_web_acl_properties,
   'aws.ec2.vpcEndpoint': extract_aws_vpc_endpoint_properties,
+
+  // ─── AWS — new (cross-cloud parity push) ────────────────────────────
+  'aws.kinesis.stream': extract_kinesis_stream_properties,
+  'aws.ecr.repository': extract_ecr_repository_properties,
+  'aws.cloudwatch.alarm': extract_cloudwatch_alarm_properties,
+  'aws.timestream.database': extract_timestream_database_properties,
 
   // ─── Azure — ancillary ─────────────────────────────────────────────
   'azure.keyvault.vault': extract_azure_keyvault_vault_properties,
@@ -235,6 +262,9 @@ export const PROPERTY_EXTRACTORS: Record<
   'azure.synapse.workspace': extract_azure_synapse_properties,
   'azure.kusto.cluster': extract_azure_data_explorer_properties,
   'azure.aadb2c.directory': extract_azure_entra_b2c_properties,
+
+  // ─── Azure — new (cross-cloud parity push) ──────────────────────────
+  'azure.containerregistry.task': extract_azure_acr_task_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

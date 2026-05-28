@@ -14,6 +14,7 @@
  */
 
 import { acr_handler } from './handlers/acr';
+import { acr_task_handler } from './handlers/acr-task';
 import { aks_handler } from './handlers/aks';
 import { apim_handler } from './handlers/apim';
 import { app_gateway_handler } from './handlers/app-gateway';
@@ -85,6 +86,8 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AzureResourceHandler }>
   { prefix: 'azure.network.webApplicationFirewallPolicy', handler: azure_waf_handler },
   { prefix: 'azure.apimanagement.service', handler: apim_handler },
   { prefix: 'azure.containerservice.managedCluster', handler: aks_handler },
+  // ACR Task must precede registry (more-specific prefix).
+  { prefix: 'azure.containerregistry.task', handler: acr_task_handler },
   { prefix: 'azure.containerregistry.registry', handler: acr_handler },
   // P2 long-tail.
   { prefix: 'azure.logic.workflow', handler: logic_apps_handler },

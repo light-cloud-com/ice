@@ -164,6 +164,13 @@ export const SERVICE_NAMES = {
   DISCOVERY_ENGINE: 'Discovery Engine',
   GKE: 'GKE',
   DOMAIN_MAPPING: 'Domain Mapping',
+  ARTIFACT_REGISTRY: 'Artifact Registry',
+  CLOUD_BUILD: 'Cloud Build',
+  MONITORING: 'Cloud Monitoring',
+  CLOUD_DNS: 'Cloud DNS',
+  COMPUTE_INSTANCE: 'Compute Engine',
+  COMPUTE_FIREWALL: 'Compute Firewall',
+  COMPUTE_PSC: 'Private Service Connect',
 } as const;
 
 // =============================================================================

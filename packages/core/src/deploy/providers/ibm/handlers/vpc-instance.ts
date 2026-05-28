@@ -43,7 +43,7 @@ export const vpc_instance_handler: IBMResourceHandler = {
     const vpc = await resolveClient(ctx, 'vpc');
     if (!vpc) return err(name, TYPE, 'update', start, 'IBM VPC SDK not available');
     try {
-      await vpc.updateInstance({ id: provider_id, instancePatch: { name } });
+      await vpc.updateInstance({ id: provider_id, name });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

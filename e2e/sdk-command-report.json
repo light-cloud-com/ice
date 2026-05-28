@@ -1,5 +1,5 @@
 {
-  "handlersScanned": 179,
+  "handlersScanned": 190,
   "invocations": {
     "aws": 143,
     "azure": 75,
@@ -8,7 +8,7 @@
     "alibaba": 78,
     "oci": 80,
     "digitalocean": 41,
-    "ibm": 0
+    "ibm": 31
   },
   "verified": {
     "aws": 142,
@@ -18,7 +18,7 @@
     "alibaba": 65,
     "oci": 79,
     "digitalocean": 36,
-    "ibm": 0
+    "ibm": 18
   },
   "unverified": {
     "aws": 1,
@@ -28,7 +28,7 @@
     "alibaba": 13,
     "oci": 1,
     "digitalocean": 5,
-    "ibm": 0
+    "ibm": 13
   },
   "mismatches": []
 }

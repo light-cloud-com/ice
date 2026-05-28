@@ -36,7 +36,7 @@ export const vpc_loadbalancer_handler: IBMResourceHandler = {
     const vpc = await resolveClient(ctx, 'vpc');
     if (!vpc) return err(name, TYPE, 'update', start, 'IBM VPC SDK not available');
     try {
-      await vpc.updateLoadBalancer({ id: provider_id, loadBalancerPatch: { name } });
+      await vpc.updateLoadBalancer({ id: provider_id, name });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

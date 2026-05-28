@@ -1028,6 +1028,108 @@ function scanDigitalOceanInvocations(src) {
   return out;
 }
 
+// ─── IBM resolver ──────────────────────────────────────────────────────────
+//
+// IBM Cloud SDK shape:
+//
+//   await vpc.createVpc({ name, addressPrefixManagement, resourceGroup, … });
+//
+// Each method declares
+//   createVpc(params?: VpcV1.CreateVpcParams): Promise<...>
+// in the per-service v.d.ts file (e.g. ibm-vpc/vpc/v1.d.ts). The
+// params interface is in the same file under the service namespace
+// (`export interface CreateVpcParams extends DefaultParams { … }`).
+
+let ibmServiceMapCache = null;
+async function loadIbmServiceMap() {
+  if (ibmServiceMapCache) return ibmServiceMapCache;
+  const map = new Map();
+  try {
+    const src = await fs.readFile(
+      join(ROOT, 'packages/core/src/deploy/providers/ibm/sdk-loader.ts'),
+      'utf8',
+    );
+    // Match: `  vpc: { pkg: 'ibm-vpc/vpc/v1', clientName: 'VpcV1' },`
+    const re = /^\s*([a-z]+):\s*\{\s*pkg:\s*['"]([^'"]+)['"]/gm;
+    let m;
+    while ((m = re.exec(src))) map.set(m[1], m[2]);
+  } catch {
+    /* loader not readable */
+  }
+  ibmServiceMapCache = map;
+  return map;
+}
+
+const ibmRequestFieldsCache = new Map();
+async function ibmGetRequestFields(pkgSubpath, method) {
+  const cacheKey = `${pkgSubpath}::${method}`;
+  if (ibmRequestFieldsCache.has(cacheKey)) return ibmRequestFieldsCache.get(cacheKey);
+  const paramsInterface = `${method.charAt(0).toUpperCase()}${method.slice(1)}Params`;
+  let file = null;
+  for (const base of [ROOT, join(ROOT, 'packages/core')]) {
+    const candidate = join(base, 'node_modules', `${pkgSubpath}.d.ts`);
+    try {
+      await fs.access(candidate);
+      file = candidate;
+      break;
+    } catch {
+      /* try next */
+    }
+  }
+  if (!file) {
+    const result = { found: false, reason: `${pkgSubpath}.d.ts not found` };
+    ibmRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  let src;
+  try {
+    src = await fs.readFile(file, 'utf8');
+  } catch {
+    const result = { found: false, reason: `cannot read ${file}` };
+    ibmRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const m = src.match(
+    new RegExp(`export\\s+interface\\s+${paramsInterface}\\s+extends\\s+[^{]+\\{([\\s\\S]*?)\\n\\s{4}\\}`, 'm'),
+  );
+  if (!m) {
+    const result = { found: false, reason: `interface ${paramsInterface} not found in ${pkgSubpath}.d.ts` };
+    ibmRequestFieldsCache.set(cacheKey, result);
+    return result;
+  }
+  const body = m[1];
+  const fields = new Set();
+  for (const fm of body.matchAll(/^\s{8}([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+  const result = { found: true, fields: [...fields], interface: paramsInterface };
+  ibmRequestFieldsCache.set(cacheKey, result);
+  return result;
+}
+
+function scanIbmInvocations(src) {
+  const aliasToService = new Map();
+  for (const m of src.matchAll(
+    /const\s+([a-z_][\w]*)\s*=\s*await\s+resolveClient\(\s*ctx\s*,\s*['"]([a-z]+)['"]\s*\)/g,
+  )) {
+    aliasToService.set(m[1], m[2]);
+  }
+  const out = [];
+  for (const [alias, service] of aliasToService) {
+    const re = new RegExp(`\\b${alias}\\.([a-zA-Z_][\\w]*)\\(\\s*\\{`, 'g');
+    let m;
+    while ((m = re.exec(src))) {
+      const method = m[1];
+      const objStart = m.index + m[0].length - 1;
+      out.push({
+        provider: 'ibm',
+        service,
+        method,
+        keys: topLevelKeys(src, objStart),
+      });
+    }
+  }
+  return out;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 function isAwsPkg(p) {
@@ -1216,6 +1318,41 @@ async function main() {
             file: file.replace(ROOT + '/', ''),
             command: inv.kind,
             package: K8S_PKG,
+            inputInterface: result.interface,
+            unknown,
+            passed: inv.keys,
+            valid: result.fields,
+          });
+        }
+      }
+    } else if (provider === 'ibm') {
+      const serviceMap = await loadIbmServiceMap();
+      for (const inv of scanIbmInvocations(src)) {
+        summary.invocations.ibm++;
+        any = true;
+        const pkgSubpath = serviceMap.get(inv.service);
+        if (!pkgSubpath) {
+          summary.unverified.ibm++;
+          if (VERBOSE)
+            console.log(`  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → no IBM subpath mapping`);
+          continue;
+        }
+        const result = await ibmGetRequestFields(pkgSubpath, inv.method);
+        if (!result.found) {
+          summary.unverified.ibm++;
+          if (VERBOSE)
+            console.log(`  ${file.replace(ROOT + '/', '')}: ${inv.service}.${inv.method} → ${result.reason}`);
+          continue;
+        }
+        const validSet = new Set(result.fields);
+        const unknown = inv.keys.filter((k) => !validSet.has(k));
+        summary.verified.ibm++;
+        if (unknown.length) {
+          summary.mismatches.push({
+            provider: 'ibm',
+            file: file.replace(ROOT + '/', ''),
+            command: `${inv.service}.${inv.method}`,
+            package: pkgSubpath,
             inputInterface: result.interface,
             unknown,
             passed: inv.keys,

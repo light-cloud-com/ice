@@ -35,7 +35,7 @@ export const vpc_securitygroup_handler: IBMResourceHandler = {
     const vpc = await resolveClient(ctx, 'vpc');
     if (!vpc) return err(name, TYPE, 'update', start, 'IBM VPC SDK not available');
     try {
-      await vpc.updateSecurityGroup({ id: provider_id, securityGroupPatch: { name } });
+      await vpc.updateSecurityGroup({ id: provider_id, name });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

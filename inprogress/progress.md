@@ -324,6 +324,111 @@ Live tests for handlers that ship today. Code gate is implicit (handler exists).
   - 🔴 template demo deploy on real AWS account (per template in `packages/templates/`)
   - 🔴 template demo deploy on real Azure subscription (per template in `packages/templates/`)
 
+## Phase E — Kubernetes (vanilla via `@kubernetes/client-node`)
+
+- 🔴 **E1 — Scaffolding**
+  - 🔴 `providers/kubernetes/` directory + types + sdk-loader + auth
+  - 🔴 `_kubernetes-test-harness.ts`
+  - 🔴 modular `kubernetes-deployer.ts` with empty HANDLER_REGISTRY
+  - 🔴 dispatch regex updated to allow `k8s.*` prefix
+- 🔴 **E2 P0 — must-have handlers (12)**
+  - 🔴 k8s.apps.deployment (Compute.Container, Compute.BackendAPI, Compute.Worker)
+  - 🔴 k8s.core.service
+  - 🔴 k8s.networking.ingress
+  - 🔴 k8s.batch.cronjob (Compute.CronJob)
+  - 🔴 k8s.apps.statefulset (Database.Postgres/MySQL/Redis/Mongo profiles)
+  - 🔴 k8s.core.persistentvolumeclaim (Storage.Bucket)
+  - 🔴 k8s.core.secret
+  - 🔴 k8s.knative.service (Compute.ServerlessFunction)
+- 🔴 **E2 P1 — important handlers (8)**
+  - 🔴 k8s.core.namespace
+  - 🔴 k8s.networking.networkpolicy
+  - 🔴 k8s.certmanager.certificate (CRD)
+  - 🔴 k8s.monitoring.prometheusrule (CRD)
+  - 🔴 k8s.core.configmap
+  - 🔴 k8s.core.serviceaccount
+  - 🔴 k8s.autoscaling.hpa
+  - 🔴 k8s.batch.job
+- 🔴 **E2 P2 — long tail (5)**
+  - 🔴 k8s.apps.statefulset (rabbitmq, kafka profiles for Messaging blocks)
+  - 🔴 k8s.kserve.inferenceservice (design-only — AI.ModelServing)
+  - 🔴 k8s.image.stream (design-only — Compute.ContainerRegistry on K8s)
+  - 🔴 k8s.networking.gateway (Gateway API)
+  - 🔴 k8s.policy.poddisruptionbudget
+- 🔴 **E3 — Extractor modules**
+- 🔴 **E4 — Quirks** (kubeconfig source, namespace bootstrap, owner references, ingress class, cert-manager integration)
+- 🔴 **E5 — Auth + tests**
+- 🔴 **E6 — Feature flags** (per-category flips when each category's full handler set has deploy gates green)
+- 🔴 **E7 — Docs** (`deploying-to-kubernetes.md`, `providers/kubernetes/README.md`)
+- 🔴 **E8 — Live-test foundation** (`kubernetesLive`, `pnpm test:live:kubernetes`, `e2e/kubernetes-deployment-tests/`)
+- 🔴 **E9 — SDK verification** (`@kubernetes/client-node` type-extraction in `verify-sdk-commands.mjs`)
+
+See `inprogress/kubernetes-deployer.md` for the full plan.
+
+## Phase F — Alibaba Cloud
+
+- 🔴 **F1 — Scaffolding** (`providers/alibaba/`, sdk-loader for `@alicloud/*`, RAM auth, region normalization)
+- 🔴 **F2 P0 — must-have handlers (14)** — ECS, FC, SAE, ECI, RDS, DDS, KVStore, OSS, MNS (queue+topic), VPC, VSwitch, ECS SG, KMS
+- 🔴 **F2 P1 — important handlers (11)** — SLB, AliDNS, PrivateLink, API Gateway, ACK, ACR, OSS static-website + CDN, RAM user, Certificate Manager, WAF v3, SLS
+- 🔴 **F2 P2 — long tail (8)** — AMQP, Datahub, Tablestore, MaxCompute, OpenSearch, PAI-EAS, PAI workspace, CR build task
+- 🔴 **F3 — Extractor modules**
+- 🔴 **F4 — Quirks** (per-region endpoints, OSS global uniqueness, RDS provisioning poll, MNS queue vs topic split, CR two-level hierarchy)
+- 🔴 **F5 — Auth + tests**
+- 🔴 **F6 — Feature flags**
+- 🔴 **F7 — Docs**
+- 🔴 **F8 — Live-test foundation**
+- 🔴 **F9 — SDK verification** (`@alicloud/*` request-class extraction)
+
+See `inprogress/alibaba-deployer.md`.
+
+## Phase G — Oracle Cloud Infrastructure (OCI)
+
+- 🔴 **G1 — Scaffolding** (`providers/oci/`, sdk-loader for `oci-*`, ConfigFile auth, compartment helper, work-request polling)
+- 🔴 **G2 P0 — must-have handlers (14)** — Compute instance, Container Instances, Functions, Resource Scheduler, PSQL, MySQL, ATP, NoSQL, OCI Cache, OS bucket, VCN, Subnet, NSG, Vault Secret
+- 🔴 **G2 P1 — important handlers (10)** — Load Balancer, DNS Zone, API Gateway, Private Access Gateway, OKE, Artifacts Registry, Identity Domains, Certificate, WAF, Logging
+- 🔴 **G2 P2 — long tail (7)** — Queue, Streaming, Notifications, Analytics, Monitoring Alarm, Generative AI Inference Endpoint, Data Science Model Deployment
+- 🔴 **G3 — Extractor modules**
+- 🔴 **G4 — Quirks** (work-request polling, compartment OCIDs, OS namespace caching, ADB password contract, auth-provider selection)
+- 🔴 **G5 — Auth + tests**
+- 🔴 **G6 — Feature flags**
+- 🔴 **G7 — Docs**
+- 🔴 **G8 — Live-test foundation**
+- 🔴 **G9 — SDK verification** (`oci-*` `<Op>Request.d.ts` extraction)
+
+See `inprogress/oci-deployer.md`.
+
+## Phase H — DigitalOcean
+
+- 🔴 **H1 — Scaffolding** (`providers/digitalocean/`, sdk-loader for `dots-wrapper`, PAT auth, Action polling)
+- 🔴 **H2 P0 — must-have handlers (10)** — Droplet, App Platform, Functions, Databases (postgres/mysql/mongo/redis), Spaces (S3-compat), Load Balancer, App env-secret
+- 🔴 **H2 P1 — important handlers (6)** — VPC, Domain DNS, Cloud Firewall, DOKS, DOCR, App Platform static site
+- 🔴 **H2 P2 — long tail (4)** — Volume, Snapshot, Monitoring Alert Policy, Reserved IP
+- 🔴 **H3 — Extractor modules**
+- 🔴 **H4 — Quirks** (region/size slugs, App spec compose, Spaces=S3-via-AWS-SDK, Functions namespace bootstrap, reserved IP region lock)
+- 🔴 **H5 — Auth + tests**
+- 🔴 **H6 — Feature flags**
+- 🔴 **H7 — Docs**
+- 🔴 **H8 — Live-test foundation**
+- 🔴 **H9 — SDK verification** (`dots-wrapper` request-interface extraction; reuse AWS resolver for Spaces)
+
+See `inprogress/digitalocean-deployer.md`.
+
+## Phase I — IBM Cloud
+
+- 🔴 **I1 — Scaffolding** (`providers/ibm/`, sdk-loader for `ibm-cloud-sdk-core` + service SDKs, IAM-API-key auth, resource-controller polling)
+- 🔴 **I2 P0 — must-have handlers (12)** — Code Engine application/function/job, VPC VSI, Databases for X (postgres/mysql/mongo/redis), COS bucket, VPC, Subnet, Secrets Manager Secret
+- 🔴 **I2 P1 — important handlers (9)** — VPC SG, VPC LB, CIS DNS zone, CIS WAF, IKS/OpenShift, Container Registry namespace, App ID, Imported Cert, Activity Tracker logs instance
+- 🔴 **I2 P2 — long tail (6)** — Cloudant, Event Streams, MQ on Cloud, Event Notifications, watsonx.ai, Monitoring Sysdig Alert
+- 🔴 **I3 — Extractor modules**
+- 🔴 **I4 — Quirks** (resource_plan_id lookup, COS bucket location vs instance region, CIS sub-services, Code Engine project bootstrap, App ID instance ↔ tenant)
+- 🔴 **I5 — Auth + tests**
+- 🔴 **I6 — Feature flags**
+- 🔴 **I7 — Docs**
+- 🔴 **I8 — Live-test foundation**
+- 🔴 **I9 — SDK verification** (`<Method>Params` interface extraction in `@ibm-cloud/*` and `ibm-cos-sdk`)
+
+See `inprogress/ibm-deployer.md`.
+
 ## Rollup
 
 Counts derived from leaf checkboxes above.
@@ -332,7 +437,12 @@ Counts derived from leaf checkboxes above.
 - Phase B: ~210 leaves
 - Phase C: ~17 leaves
 - Phase D: ~13 leaves
-- **Total**: ~360 leaves
+- Phase E (Kubernetes): ~55 leaves
+- Phase F (Alibaba): ~75 leaves
+- Phase G (OCI): ~70 leaves
+- Phase H (DigitalOcean): ~50 leaves
+- Phase I (IBM): ~62 leaves
+- **Total**: ~672 leaves
 
 Update this section when leaves are added or removed. The plan is "done" when every leaf is 🟢 and the deploy verification log below has at least one entry per handler.
 

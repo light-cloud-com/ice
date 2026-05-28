@@ -6,13 +6,19 @@ Source of truth for status: `packages/constants/src/providers.ts` (`PROVIDER_REA
 
 ## Phase index
 
-| Phase | Doc                                            | Goal                                                                                                 | Status      |
-| ----- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------- |
-| A     | [aws-parity.md](aws-parity.md)                 | Flip every gated AWS category + every AWS block has a working handler                                | not started |
-| B     | [azure-rebuild.md](azure-rebuild.md)           | Rebuild Azure on the AWS/GCP dispatcher pattern; every Azure block has a working handler + extractor | not started |
-| C     | [importers-and-cost.md](importers-and-cost.md) | Wire `Import → From AWS/Azure` UI flows; populate cost tables                                        | not started |
-| D     | [status-flip.md](status-flip.md)               | Bump `PROVIDER_READINESS.aws`/`.azure` to `stable`; update docs                                      | not started |
-| —     | [progress.md](progress.md)                     | Master progress dashboard (156 tasks)                                                                | live        |
+| Phase | Doc                                                  | Goal                                                                                                 | Status                          |
+| ----- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------- |
+| A     | [aws-parity.md](aws-parity.md)                       | Flip every gated AWS category + every AWS block has a working handler                                | code shipped, deploy gates open |
+| B     | [azure-rebuild.md](azure-rebuild.md)                 | Rebuild Azure on the AWS/GCP dispatcher pattern; every Azure block has a working handler + extractor | code shipped, deploy gates open |
+| C     | [importers-and-cost.md](importers-and-cost.md)       | Wire `Import → From AWS/Azure` UI flows; populate cost tables                                        | partial (cost done)             |
+| D     | [status-flip.md](status-flip.md)                     | Bump `PROVIDER_READINESS.aws`/`.azure` to `stable`; update docs                                      | D1/D6 cardinal-rule blocked     |
+| —     | [multi-provider-plan.md](multi-provider-plan.md)     | Overview of Phases E–I — operator decisions, shared contract, verification strategy                  | live                            |
+| E     | [kubernetes-deployer.md](kubernetes-deployer.md)     | Ship Kubernetes deployer (`@kubernetes/client-node`, vanilla, any cluster) — ~25 handlers            | not started                     |
+| F     | [alibaba-deployer.md](alibaba-deployer.md)           | Ship Alibaba Cloud deployer (`@alicloud/*`) — ~33 handlers                                           | not started                     |
+| G     | [oci-deployer.md](oci-deployer.md)                   | Ship Oracle Cloud (OCI) deployer (`oci-*`) — ~31 handlers                                            | not started                     |
+| H     | [digitalocean-deployer.md](digitalocean-deployer.md) | Ship DigitalOcean deployer (`dots-wrapper`) — ~20 handlers                                           | not started                     |
+| I     | [ibm-deployer.md](ibm-deployer.md)                   | Ship IBM Cloud deployer (`@ibm-cloud/*`) — ~27 handlers                                              | not started                     |
+| —     | [progress.md](progress.md)                           | Master progress dashboard (~672 leaves)                                                              | live                            |
 
 ## Cardinal rule
 
@@ -89,6 +95,9 @@ Each phase doc has a Tasks section with markdown checkboxes (`- [ ]` → `- [x]`
 
 ## Out of scope
 
-- Other providers: Kubernetes, Alibaba, OCI, DigitalOcean, IBM. These remain `design-only` until AWS + Azure ship at `stable`.
 - Provider-to-provider migration plans.
 - Terraform/Pulumi/CDK export parity beyond what `packages/core/src/export/` already does.
+
+## What's next
+
+After the AWS + Azure parity drive (Phases A–D) landed code-side, the multi-provider expansion plan in [multi-provider-plan.md](multi-provider-plan.md) opens Phases E–I covering Kubernetes, Alibaba Cloud, OCI, DigitalOcean, and IBM Cloud. Sequential rollout per operator decision: K8s → Alibaba → OCI → DigitalOcean → IBM. Each phase ships behind its feature flag until its handler set has both gates ticked.

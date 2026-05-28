@@ -9,7 +9,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { GitHubConnectModal } from './github-connect-modal';
 import { useTranslation } from '../../../i18n';
-import { Combobox, type ComboboxOption } from '../../../shared/components/ui/combobox';
+import { Combobox, type ComboboxOption } from '../../../shared/components/ui';
 import { fetchGitHubRepos } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
 

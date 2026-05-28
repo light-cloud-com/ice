@@ -65,7 +65,11 @@
       "gcp": "Google Cloud",
       "aws": "AWS",
       "azure": "Azure",
-      "kubernetes": "Kubernetes"
+      "kubernetes": "Kubernetes",
+      "alibaba": "Alibaba Cloud",
+      "oci": "Oracle Cloud Infrastructure",
+      "digitalocean": "DigitalOcean",
+      "ibm": "IBM Cloud"
     }
   },
   "auth": {
@@ -1776,6 +1780,47 @@
         "tenantLabel": "Tenant ID",
         "clientIdLabel": "Client ID",
         "clientSecretLabel": "Client Secret"
+      },
+      "kubernetes": {
+        "name": "Kubernetes",
+        "description": "Connect to a Kubernetes cluster using a kubeconfig. Works with any conformant K8s API.",
+        "kubeconfigLabel": "Kubeconfig (YAML)",
+        "namespaceLabel": "Default Namespace",
+        "helpLink": "How to get your kubeconfig"
+      },
+      "alibaba": {
+        "name": "Alibaba Cloud",
+        "description": "Connect your Alibaba Cloud account using a RAM AccessKey ID + Secret.",
+        "accessKeyLabel": "AccessKey ID",
+        "secretKeyLabel": "AccessKey Secret",
+        "regionLabel": "Default Region",
+        "helpLink": "Create AccessKey"
+      },
+      "oci": {
+        "name": "Oracle Cloud Infrastructure",
+        "description": "Connect your OCI tenancy using a config file profile + compartment OCID.",
+        "configFileLabel": "Config File Path",
+        "profileLabel": "Profile",
+        "compartmentIdLabel": "Compartment OCID",
+        "regionLabel": "Region",
+        "helpLink": "Set up OCI CLI config"
+      },
+      "digitalocean": {
+        "name": "DigitalOcean",
+        "description": "Connect your DigitalOcean account using a Personal Access Token.",
+        "tokenLabel": "Personal Access Token",
+        "regionLabel": "Default Region",
+        "spacesAccessKeyLabel": "Spaces Access Key (optional)",
+        "spacesSecretKeyLabel": "Spaces Secret Key (optional)",
+        "helpLink": "Generate token"
+      },
+      "ibm": {
+        "name": "IBM Cloud",
+        "description": "Connect your IBM Cloud account using an IAM API key + resource group.",
+        "apiKeyLabel": "IAM API Key",
+        "resourceGroupLabel": "Resource Group ID",
+        "regionLabel": "Region",
+        "helpLink": "Create API key"
       }
     },
     "help": {

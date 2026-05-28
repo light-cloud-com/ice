@@ -8,11 +8,11 @@ import { isProviderEnabled } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Save, Loader2, Github, Sparkles, Check } from 'lucide-react';
+import { Save, Loader2, Sparkles, Check } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
-import { GitHubConnectModal } from '../../../features/integrations/components/github-connect-modal';
+import { GitHubConnectModal, GithubIcon } from '../../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../../features/integrations/components/provider-connect-modal';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
@@ -162,7 +162,7 @@ export function UserSettingsPage() {
             onClick={() => setOpenIntegration('anthropic')}
           />
           <IntegrationRow
-            icon={<Github className="h-5 w-5 text-ice-text-1" />}
+            icon={<GithubIcon w={5} h={5} className="text-ice-text-1" />}
             label={t('integrations.settings.github.label')}
             description={t('integrations.settings.github.description')}
             connectedLabel={t('integrations.connected')}

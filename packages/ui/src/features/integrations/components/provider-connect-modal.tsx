@@ -8,14 +8,8 @@ import { PROVIDER_READINESS, type Provider } from '@ice/constants';
 import { AlertTriangle, Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../../i18n';
-import { getApi } from '../../../shared/api/api-adapter';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '../../../shared/components/ui/dialog';
+import { getApi } from '../../../shared/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../shared/components/ui';
 import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
 import { cn } from '../../../shared/utils/cn';
 

@@ -65,7 +65,11 @@
       "gcp": "Google Cloud",
       "aws": "AWS",
       "azure": "Azure",
-      "kubernetes": "Kubernetes"
+      "kubernetes": "Kubernetes",
+      "alibaba": "阿里云",
+      "oci": "Oracle 云基础设施",
+      "digitalocean": "DigitalOcean",
+      "ibm": "IBM Cloud"
     }
   },
   "auth": {
@@ -1775,6 +1779,47 @@
         "tenantLabel": "租户 ID",
         "clientIdLabel": "客户端 ID",
         "clientSecretLabel": "客户端密钥"
+      },
+      "kubernetes": {
+        "name": "Kubernetes",
+        "description": "使用 kubeconfig 连接 Kubernetes 集群。适用于任何符合规范的 K8s API。",
+        "kubeconfigLabel": "Kubeconfig (YAML)",
+        "namespaceLabel": "默认命名空间",
+        "helpLink": "如何获取 kubeconfig"
+      },
+      "alibaba": {
+        "name": "阿里云",
+        "description": "使用 RAM AccessKey ID 和密钥连接您的阿里云账户。",
+        "accessKeyLabel": "AccessKey ID",
+        "secretKeyLabel": "AccessKey 密钥",
+        "regionLabel": "默认区域",
+        "helpLink": "创建 AccessKey"
+      },
+      "oci": {
+        "name": "Oracle 云基础设施",
+        "description": "使用配置文件配置档和隔间 OCID 连接您的 OCI 租户。",
+        "configFileLabel": "配置文件路径",
+        "profileLabel": "配置档",
+        "compartmentIdLabel": "隔间 OCID",
+        "regionLabel": "区域",
+        "helpLink": "设置 OCI CLI 配置"
+      },
+      "digitalocean": {
+        "name": "DigitalOcean",
+        "description": "使用个人访问令牌连接您的 DigitalOcean 账户。",
+        "tokenLabel": "个人访问令牌",
+        "regionLabel": "默认区域",
+        "spacesAccessKeyLabel": "Spaces Access Key（可选）",
+        "spacesSecretKeyLabel": "Spaces Secret Key（可选）",
+        "helpLink": "生成令牌"
+      },
+      "ibm": {
+        "name": "IBM Cloud",
+        "description": "使用 IAM API 密钥和资源组连接您的 IBM Cloud 账户。",
+        "apiKeyLabel": "IAM API 密钥",
+        "resourceGroupLabel": "资源组 ID",
+        "regionLabel": "区域",
+        "helpLink": "创建 API 密钥"
       }
     },
     "help": {

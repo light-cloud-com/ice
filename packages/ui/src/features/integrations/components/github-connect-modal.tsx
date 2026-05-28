@@ -6,7 +6,8 @@
  * - Tab 2: OAuth Device Flow (browser-based sign-in)
  */
 
-import { Github, Loader2, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
+import githubIcon from 'devicon/icons/github/github-original.svg';
+import { Loader2, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
@@ -16,8 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '../../../shared/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/components/ui/tabs';
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '../../../shared/components/ui';
 import { connectGitHubPAT, startGitHubDeviceFlow, disconnectGitHub } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
@@ -25,6 +29,40 @@ interface GitHubConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/**
+ * Theme-aware GitHub mark.
+ *
+ * Renders the official devicon GitHub SVG as a CSS mask so the icon
+ * color follows the surrounding text color (currentColor → mask fill).
+ * In ICE this resolves to `bg-current` driven by the parent's text
+ * color class: white on dark theme, black on light theme.
+ *
+ * The original logo file is monochrome (single path), so masking is
+ * lossless — no detail is dropped vs the colored multi-shape SVGs
+ * used for AWS / GCP / Azure / DigitalOcean / Kubernetes / Oracle.
+ *
+ * Props mirror the old `<img>` API: `w` + `h` are Tailwind size
+ * scales (`w-${w}` etc.), `className` lets callers override the
+ * fill color (e.g. `text-emerald-500` for the connected state).
+ */
+export const GithubIcon = ({ w, h, className }: { w: number; h: number; className?: string }) => (
+  <span
+    aria-hidden="true"
+    role="img"
+    className={`inline-block w-${w} h-${h} bg-current ${className ?? ''}`}
+    style={{
+      WebkitMaskImage: `url("${githubIcon}")`,
+      maskImage: `url("${githubIcon}")`,
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+    }}
+  />
+);
 
 export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
@@ -37,7 +75,6 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
 
   const isConnected = githubStatus?.status === 'connected';
   const isConnecting = githubStatus?.status === 'connecting';
-
   const handlePATConnect = () => {
     if (!patToken.trim()) return;
     dispatch(connectGitHubPAT(patToken.trim()));
@@ -51,7 +88,6 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
     dispatch(disconnectGitHub());
     setPatToken('');
   };
-
   const handleCopyCode = () => {
     if (deviceFlow?.userCode) {
       navigator.clipboard.writeText(deviceFlow.userCode);
@@ -65,7 +101,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Github className="w-5 h-5" />
+            <GithubIcon w={5} h={5} />
             {t('integrations.github.connectTitle')}
           </DialogTitle>
           <DialogDescription>
@@ -143,7 +179,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                 disabled={!patToken.trim() || isConnecting}
                 className="ice-btn ice-btn-primary w-full"
               >
-                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
+                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <GithubIcon w={4} h={4} />}
                 {t('integrations.github.patConnect')}
               </button>
             </TabsContent>
@@ -152,7 +188,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
             <TabsContent value="device" className="space-y-3">
               {!deviceFlow ? (
                 <button onClick={handleDeviceFlow} disabled={isConnecting} className="ice-btn ice-btn-primary w-full">
-                  {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
+                  {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <GithubIcon w={4} h={4} />}
                   {t('integrations.github.deviceFlowButton')}
                 </button>
               ) : (

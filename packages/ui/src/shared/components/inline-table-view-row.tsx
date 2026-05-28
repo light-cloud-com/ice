@@ -5,7 +5,7 @@
  * rest of the app); hover surfaces endpoint links and a row actions menu.
  */
 
-import { Cloud, Copy, ExternalLink, Eye, Github, Globe, MoreHorizontal, Package, Trash2 } from 'lucide-react';
+import { Cloud, Copy, ExternalLink, Eye, Globe, MoreHorizontal, Package, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import {
   formatRelativeTime,
@@ -18,15 +18,29 @@ import {
   type RowStatus,
 } from './inline-table-view-helpers';
 import { getBrandIcon } from '../../assets/icons/brand-registry';
+import { GithubIcon } from '../../features/integrations/components/github-connect-modal';
 import { t } from '../../i18n';
 import type { CardNode } from '../../store/slices/cards-slice';
 
 // ─── Endpoint icon ──────────────────────────────────────────────────────────
 
+/**
+ * Repo endpoints use the devicon GitHub mark (theme-aware via the
+ * shared `GithubIcon` wrapper) instead of lucide's outlined icon for
+ * brand consistency with the AppBar integrations.
+ *
+ * The wrapper's `w` / `h` API takes Tailwind size scales (`w-${n}`),
+ * not pixels, so we adapt the ENDPOINT_ICON contract (a className-
+ * accepting component) by wrapping GithubIcon with default sizing.
+ */
+const RepoEndpointIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <GithubIcon w={4} h={4} className={className} />
+);
+
 const ENDPOINT_ICON: Record<EndpointKind, React.ComponentType<{ className?: string }>> = {
   live: Globe,
   domain: Globe,
-  repo: Github,
+  repo: RepoEndpointIcon,
   image: Package,
   console: Cloud,
 };
@@ -195,7 +209,7 @@ const RowActions: React.FC<RowActionsProps> = ({
               window.open(live.url, '_blank', 'noopener,noreferrer'),
             )}
           {repo &&
-            item(<Github className="w-3.5 h-3.5" />, t('table.actions.openInGithub'), () =>
+            item(<GithubIcon w={3.5} h={3.5} />, t('table.actions.openInGithub'), () =>
               window.open(repo.url, '_blank', 'noopener,noreferrer'),
             )}
           {console_ &&
@@ -373,7 +387,7 @@ export const InlineTableRow: React.FC<RowProps> = ({
                     title={ep.url}
                   >
                     {ep.kind === 'repo' ? (
-                      <Github className="w-3 h-3" />
+                      <GithubIcon w={3} h={3} />
                     ) : ep.kind === 'image' ? (
                       <Package className="w-3 h-3" />
                     ) : ep.kind === 'console' ? (

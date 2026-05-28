@@ -93,6 +93,7 @@ vi.mock('../../../../features/integrations/components/anthropic-connect-modal', 
 }));
 vi.mock('../../../../features/integrations/components/github-connect-modal', () => ({
   GitHubConnectModal: vi.fn(() => null),
+  GithubIcon: vi.fn(() => null),
 }));
 vi.mock('../../../../features/integrations/components/provider-connect-modal', () => ({
   ProviderConnectModal: vi.fn(() => null),

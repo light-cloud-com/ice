@@ -5,8 +5,25 @@
 import { isProviderEnabled } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
+import digitaloceanIcon from 'devicon/icons/digitalocean/digitalocean-original.svg';
+import githubIcon from 'devicon/icons/github/github-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Settings, Github, HelpCircle, Sparkles } from 'lucide-react';
+import kubernetesIcon from 'devicon/icons/kubernetes/kubernetes-original.svg';
+import ociIcon from 'devicon/icons/oracle/oracle-original.svg';
+import { Settings, HelpCircle, Sparkles } from 'lucide-react';
+// Alibaba Cloud + IBM are not in devicon — use SimpleIcons SVG slugs
+// served as data URIs (single-color, currentColor-driven so they
+// auto-theme with the bar text color).
+const alibabaIcon =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5.535 9.7H1.475L0 14.343l1.474 4.633h4.06v-2.428l-2.388-.717.876-2.776 2.49.733 1.023 1.05V9.701z m12.928 0h4.062L24 14.343l-1.475 4.633h-4.062v-2.428l2.387-.717-.876-2.776-2.488.733-1.023 1.05V9.7zM7.464 5.024L12 4.027v.762l-3.484.99-.052 13.42 3.536 1.045v.726l-4.536-.997zm9.072 0L12 4.027v.762l3.483.99.053 13.42L12 20.245v.726l4.536-.997z"/></svg>',
+  );
+const ibmIcon =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 4.857v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143zM0 6.429v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143zM0 8v.78h6.857V8H0zm10.285 0v.78h2.572V8h-2.572zm6.001 0v.78h2.571V8h-2.571zM0 9.571v.78h6.857v-.78H0zm10.285 0v.78h6v-.78h-6zM0 11.143v.78h6.857v-.78H0zm10.285 0v.78h6v-.78h-6zM0 12.714v.781h6.857v-.781H0zm10.285 0v.781h6v-.781h-6zM0 14.286v.78h6.857v-.78H0zm10.285 0v.78h2.572v-.78h-2.572zm6.001 0v.78h2.571v-.78h-2.571zM0 15.857v.781h6.857v-.781H0zm8.571 0v.781h8.572v-.781H8.57zm10.286 0v.781H24v-.781h-5.143zM0 17.43v.78h6.857v-.78H0zm8.571 0v.78h8.572v-.78H8.57zm10.286 0v.78H24v-.78h-5.143z"/></svg>',
+  );
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +71,11 @@ export const AppBar: React.FC = memo(() => {
   const [showGcp, setShowGcp] = useState(false);
   const [showAws, setShowAws] = useState(false);
   const [showAzure, setShowAzure] = useState(false);
+  const [showKubernetes, setShowKubernetes] = useState(false);
+  const [showAlibaba, setShowAlibaba] = useState(false);
+  const [showOci, setShowOci] = useState(false);
+  const [showDigitalocean, setShowDigitalocean] = useState(false);
+  const [showIbm, setShowIbm] = useState(false);
   const [showAnthropic, setShowAnthropic] = useState(false);
 
   useEffect(() => {
@@ -113,12 +135,56 @@ export const AppBar: React.FC = memo(() => {
                 tip={t('common.providers.azure')}
               />
             )}
-            <BarBtn
+            {isProviderEnabled('alibaba') && (
+              <BarImgBtn
+                id="ice-appbar-btn-alibaba"
+                src={alibabaIcon}
+                onClick={() => setShowAlibaba(true)}
+                tip={t('common.providers.alibaba')}
+                themeAware
+              />
+            )}
+            {isProviderEnabled('oci') && (
+              <BarImgBtn
+                id="ice-appbar-btn-oci"
+                src={ociIcon}
+                onClick={() => setShowOci(true)}
+                tip={t('common.providers.oci')}
+              />
+            )}
+            {isProviderEnabled('digitalocean') && (
+              <BarImgBtn
+                id="ice-appbar-btn-digitalocean"
+                src={digitaloceanIcon}
+                onClick={() => setShowDigitalocean(true)}
+                tip={t('common.providers.digitalocean')}
+              />
+            )}
+            {isProviderEnabled('ibm') && (
+              <BarImgBtn
+                id="ice-appbar-btn-ibm"
+                src={ibmIcon}
+                onClick={() => setShowIbm(true)}
+                tip={t('common.providers.ibm')}
+                themeAware
+              />
+            )}
+            {isProviderEnabled('kubernetes') && (
+              <BarImgBtn
+                id="ice-appbar-btn-kubernetes"
+                src={kubernetesIcon}
+                onClick={() => setShowKubernetes(true)}
+                tip={t('common.providers.kubernetes')}
+              />
+            )}
+            <BarSep />
+            <BarImgBtn
               id="ice-appbar-btn-github"
-              icon={Github}
+              src={githubIcon}
               onClick={() => setShowGitHub(true)}
               tip={t('integrations.github.title')}
-              className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
+              connected={githubStatus === 'connected'}
+              themeAware
             />
             <BarBtn
               id="ice-appbar-btn-anthropic"
@@ -232,6 +298,198 @@ export const AppBar: React.FC = memo(() => {
           ]}
         />
       )}
+      {isProviderEnabled('alibaba') && (
+        <ProviderConnectModal
+          isOpen={showAlibaba}
+          onClose={() => setShowAlibaba(false)}
+          providerId="alibaba"
+          providerName={t('appBar.provider.alibaba.name')}
+          providerIcon={alibabaIcon}
+          description={t('appBar.provider.alibaba.description')}
+          fields={[
+            {
+              name: 'accessKeyId',
+              label: t('appBar.provider.alibaba.accessKeyLabel'),
+              type: 'text',
+              placeholder: 'LTAI...',
+              required: true,
+            },
+            {
+              name: 'accessKeySecret',
+              label: t('appBar.provider.alibaba.secretKeyLabel'),
+              type: 'password',
+              placeholder: '********',
+              required: true,
+            },
+            {
+              name: 'region',
+              label: t('appBar.provider.alibaba.regionLabel'),
+              type: 'text',
+              placeholder: 'cn-hangzhou',
+              required: true,
+              helpLink: {
+                url: 'https://ram.console.aliyun.com/manage/ak',
+                text: t('appBar.provider.alibaba.helpLink'),
+              },
+            },
+          ]}
+        />
+      )}
+      {isProviderEnabled('oci') && (
+        <ProviderConnectModal
+          isOpen={showOci}
+          onClose={() => setShowOci(false)}
+          providerId="oci"
+          providerName={t('appBar.provider.oci.name')}
+          providerIcon={ociIcon}
+          description={t('appBar.provider.oci.description')}
+          fields={[
+            {
+              name: 'configFile',
+              label: t('appBar.provider.oci.configFileLabel'),
+              type: 'text',
+              placeholder: '~/.oci/config',
+              required: false,
+            },
+            {
+              name: 'profile',
+              label: t('appBar.provider.oci.profileLabel'),
+              type: 'text',
+              placeholder: 'DEFAULT',
+              required: false,
+            },
+            {
+              name: 'compartmentId',
+              label: t('appBar.provider.oci.compartmentIdLabel'),
+              type: 'text',
+              placeholder: 'ocid1.compartment.oc1..aaaaa...',
+              required: true,
+            },
+            {
+              name: 'region',
+              label: t('appBar.provider.oci.regionLabel'),
+              type: 'text',
+              placeholder: 'us-ashburn-1',
+              required: true,
+              helpLink: {
+                url: 'https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm',
+                text: t('appBar.provider.oci.helpLink'),
+              },
+            },
+          ]}
+        />
+      )}
+      {isProviderEnabled('digitalocean') && (
+        <ProviderConnectModal
+          isOpen={showDigitalocean}
+          onClose={() => setShowDigitalocean(false)}
+          providerId="digitalocean"
+          providerName={t('appBar.provider.digitalocean.name')}
+          providerIcon={digitaloceanIcon}
+          description={t('appBar.provider.digitalocean.description')}
+          fields={[
+            {
+              name: 'token',
+              label: t('appBar.provider.digitalocean.tokenLabel'),
+              type: 'password',
+              placeholder: 'dop_v1_...',
+              required: true,
+              helpLink: {
+                url: 'https://cloud.digitalocean.com/account/api/tokens',
+                text: t('appBar.provider.digitalocean.helpLink'),
+              },
+            },
+            {
+              name: 'region',
+              label: t('appBar.provider.digitalocean.regionLabel'),
+              type: 'text',
+              placeholder: 'nyc3',
+              required: true,
+            },
+            {
+              name: 'spacesAccessKey',
+              label: t('appBar.provider.digitalocean.spacesAccessKeyLabel'),
+              type: 'text',
+              placeholder: 'Optional — required for Spaces buckets',
+              required: false,
+            },
+            {
+              name: 'spacesSecretKey',
+              label: t('appBar.provider.digitalocean.spacesSecretKeyLabel'),
+              type: 'password',
+              placeholder: '********',
+              required: false,
+            },
+          ]}
+        />
+      )}
+      {isProviderEnabled('ibm') && (
+        <ProviderConnectModal
+          isOpen={showIbm}
+          onClose={() => setShowIbm(false)}
+          providerId="ibm"
+          providerName={t('appBar.provider.ibm.name')}
+          providerIcon={ibmIcon}
+          description={t('appBar.provider.ibm.description')}
+          fields={[
+            {
+              name: 'apiKey',
+              label: t('appBar.provider.ibm.apiKeyLabel'),
+              type: 'password',
+              placeholder: '********',
+              required: true,
+              helpLink: {
+                url: 'https://cloud.ibm.com/iam/apikeys',
+                text: t('appBar.provider.ibm.helpLink'),
+              },
+            },
+            {
+              name: 'resourceGroupId',
+              label: t('appBar.provider.ibm.resourceGroupLabel'),
+              type: 'text',
+              placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+              required: true,
+            },
+            {
+              name: 'region',
+              label: t('appBar.provider.ibm.regionLabel'),
+              type: 'text',
+              placeholder: 'us-south',
+              required: true,
+            },
+          ]}
+        />
+      )}
+      {isProviderEnabled('kubernetes') && (
+        <ProviderConnectModal
+          isOpen={showKubernetes}
+          onClose={() => setShowKubernetes(false)}
+          providerId="kubernetes"
+          providerName={t('appBar.provider.kubernetes.name')}
+          providerIcon={kubernetesIcon}
+          description={t('appBar.provider.kubernetes.description')}
+          fields={[
+            {
+              name: 'kubeconfig',
+              label: t('appBar.provider.kubernetes.kubeconfigLabel'),
+              type: 'textarea',
+              placeholder: 'apiVersion: v1\nkind: Config\nclusters:\n- ...',
+              required: true,
+              helpLink: {
+                url: 'https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/',
+                text: t('appBar.provider.kubernetes.helpLink'),
+              },
+            },
+            {
+              name: 'namespace',
+              label: t('appBar.provider.kubernetes.namespaceLabel'),
+              type: 'text',
+              placeholder: 'ice-deploy',
+              required: false,
+            },
+          ]}
+        />
+      )}
 
       <PromoteModal />
     </>
@@ -272,13 +530,20 @@ const BarBtn: React.FC<{
     </Tooltip>
   );
 };
-const BarImgBtn: React.FC<{ id?: string; src: string; onClick: () => void; tip?: string; connected?: boolean }> = ({
-  id,
-  src,
-  onClick,
-  tip,
-  connected,
-}) => {
+const BarImgBtn: React.FC<{
+  id?: string;
+  src: string;
+  onClick: () => void;
+  tip?: string;
+  connected?: boolean;
+  /**
+   * When true, render the SVG as a CSS mask so the icon takes the
+   * button's text color (white on dark theme, black on light theme).
+   * Use this for monochrome brand marks like GitHub, IBM, and Alibaba
+   * that don't ship a multi-color devicon equivalent.
+   */
+  themeAware?: boolean;
+}> = ({ id, src, onClick, tip, connected, themeAware }) => {
   const btn = (
     <button
       id={id}
@@ -289,7 +554,25 @@ const BarImgBtn: React.FC<{ id?: string; src: string; onClick: () => void; tip?:
         connected && 'ring-1 ring-emerald-500/40 rounded-md',
       )}
     >
-      <img src={src} alt={tip || ''} width={16} height={16} className="w-4 h-4" />
+      {themeAware ? (
+        <span
+          aria-hidden="true"
+          role="img"
+          className="block w-4 h-4 bg-ice-text-1"
+          style={{
+            WebkitMaskImage: `url("${src}")`,
+            maskImage: `url("${src}")`,
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+          }}
+        />
+      ) : (
+        <img src={src} alt={tip || ''} width={16} height={16} className="w-4 h-4" />
+      )}
       {connected && (
         <div
           aria-hidden="true"

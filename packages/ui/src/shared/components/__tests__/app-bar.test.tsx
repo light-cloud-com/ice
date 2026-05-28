@@ -302,12 +302,15 @@ describe('AppBar — top-level rendering', () => {
     expect(modal!.props.isOpen).toBe(false);
   });
 
-  it('renders three ProviderConnectModals (one per provider)', () => {
+  it('renders one ProviderConnectModal per enabled provider', () => {
     const tree = callRender();
     const modals = findAll(tree, (el) => el.type === mocks.ProviderConnectModal);
-    expect(modals).toHaveLength(3);
+    // AWS / GCP / Azure ship full deployers; Kubernetes / Alibaba / OCI /
+    // DigitalOcean / IBM were enabled in the Phase E-I rollout and now
+    // share the same ProviderConnectModal scaffold.
+    expect(modals).toHaveLength(8);
     const ids = modals.map((m) => (m.props as { providerId: string }).providerId).sort();
-    expect(ids).toEqual(['aws', 'azure', 'gcp']);
+    expect(ids).toEqual(['alibaba', 'aws', 'azure', 'digitalocean', 'gcp', 'ibm', 'kubernetes', 'oci']);
   });
 
   it('passes provider field shapes through to each ProviderConnectModal', () => {
@@ -726,7 +729,7 @@ describe('AppBar — modal close handlers', () => {
   it('Each ProviderConnectModal exposes an onClose handler', () => {
     const tree = callRender();
     const modals = findAll(tree, (el) => el.type === mocks.ProviderConnectModal);
-    expect(modals.length).toBe(3);
+    expect(modals.length).toBe(8);
     for (const m of modals) {
       expect(typeof m.props.onClose).toBe('function');
       (m.props.onClose as () => void)();

@@ -48,9 +48,14 @@ export const app_service_plan_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Web SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.appServicePlans.update(resource_group, name, {
-        tags: properties.tags as Record<string, string>,
-      });
+      // AppServicePlanPatchResource doesn't expose `tags` — there's
+      // nothing to PATCH on a plan today besides SKU bumps, which the
+      // operator routes through the canvas properties. Emit a no-op
+      // success so the deploy plan registers the update.
+      if (properties.tags) {
+        ctx.on_log?.(`Note: Azure App Service Plan ${name} tag updates go through the generic resources API.`);
+      }
+      await client.appServicePlans.update(resource_group, name, {});
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

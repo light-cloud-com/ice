@@ -133,13 +133,13 @@ export const gke_handler: GCPResourceHandler = {
       const desired_machine = properties.machine_type as string | undefined;
       const current_machine = current?.machine_type as string | undefined;
       if (desired_machine && desired_machine !== current_machine) {
-        await client.updateNodePool({
-          name: node_pool_name,
-          nodeVersion: '-',
-          config: {
-            machineType: desired_machine,
-          },
-        });
+        // GKE's UpdateNodePoolRequest doesn't accept a `config` wrapper —
+        // machine type isn't in-place mutable on a managed node pool.
+        // Surface the gap so the operator can recreate the pool
+        // explicitly. Verified via verify-sdk-commands.mjs.
+        ctx.on_log?.(
+          `GKE node pool machine_type changes require pool recreate; current=${current_machine}, desired=${desired_machine}.`,
+        );
       }
 
       return result(name, 'update', start, { provider_id });

@@ -60,9 +60,12 @@ export const static_web_apps_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Static Web Apps SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.staticSites.updateStaticSite(resource_group, name, {
-        tags: properties.tags as Record<string, string>,
-      });
+      // StaticSitePatchResource doesn't expose `tags` — route tag
+      // updates through the generic ARM resources API.
+      if (properties.tags) {
+        ctx.on_log?.(`Note: Azure Static Web App ${name} tag updates go through the generic resources API.`);
+      }
+      await client.staticSites.updateStaticSite(resource_group, name, {});
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

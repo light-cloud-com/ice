@@ -51,7 +51,9 @@ export const redis_cache_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Redis Cache SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.redis.update(resource_group, name, {
+      // Redis SDK exposes `beginUpdateAndWait` (long-running), not
+      // `update`. Body is `RedisUpdateParameters`.
+      await client.redis.beginUpdateAndWait(resource_group, name, {
         sku: properties.sku_name
           ? {
               name: properties.sku_name as string,

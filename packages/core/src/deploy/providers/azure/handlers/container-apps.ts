@@ -107,7 +107,9 @@ export const container_apps_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Container Apps SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.containerApps.update(resource_group, name, {
+      // Container Apps SDK exposes `beginUpdateAndWait`, not `update`.
+      // The body is a `ContainerApp` (re-uses the create shape).
+      await client.containerApps.beginUpdateAndWait(resource_group, name, {
         tags: properties.tags as Record<string, string>,
       });
       return ok(name, TYPE, 'update', start, { provider_id });

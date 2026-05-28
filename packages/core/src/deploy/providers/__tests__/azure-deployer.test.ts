@@ -707,16 +707,18 @@ describe('update', () => {
     expect(storage.update).toHaveBeenCalledWith('rg-st', 'sa1', { tags: { t: '1' } });
   });
 
-  it('updates a web_app via webApps.update with mapped app_settings', async () => {
+  it('updates a web_app via webApps.update with mapped app_settings (tags routed elsewhere)', async () => {
     const { d, web } = await deployerWithFullSdk();
     web.update.mockResolvedValue({});
     const provider_id = '/subscriptions/sub-1/resourceGroups/rg-w/providers/Microsoft.Web/sites/wa1';
 
+    // `tags` is intentionally NOT in the call body — SitePatchResource
+    // doesn't expose it, so tag updates go through the generic ARM
+    // resources API instead (see web-app.ts comment).
     await d.update('azure.web.app', 'wa1', provider_id, { app_settings: { K: 'v' }, tags: { t: 'x' } }, {}, {});
 
     expect(web.update).toHaveBeenCalledWith('rg-w', 'wa1', {
       siteConfig: { appSettings: [{ name: 'K', value: 'v' }] },
-      tags: { t: 'x' },
     });
   });
 

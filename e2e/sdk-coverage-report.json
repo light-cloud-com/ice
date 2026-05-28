@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-28T08:14:16.277Z",
+  "generated_at": "2026-05-28T08:32:24.785Z",
   "summary": {
     "handlers": 110,
     "packages": 78,
@@ -1168,7 +1168,7 @@
         "@azure/arm-appcontainers": [
           "client.containerApps.beginCreateOrUpdateAndWait",
           "client.containerApps.beginDeleteAndWait",
-          "client.containerApps.update",
+          "client.containerApps.beginUpdateAndWait",
           "client.managedEnvironments.beginCreateOrUpdateAndWait",
           "client.managedEnvironments.get"
         ]
@@ -1176,7 +1176,7 @@
       "sdkRefs": [
         "client.containerApps.beginCreateOrUpdateAndWait",
         "client.containerApps.beginDeleteAndWait",
-        "client.containerApps.update",
+        "client.containerApps.beginUpdateAndWait",
         "client.managedEnvironments.beginCreateOrUpdateAndWait",
         "client.managedEnvironments.get"
       ],
@@ -1406,13 +1406,13 @@
       "sdkPkgs": ["@azure/arm-postgresql-flexible"],
       "refsByPkg": {
         "@azure/arm-postgresql-flexible": [
-          "client.servers.beginCreateAndWait",
+          "client.servers.beginCreateOrUpdateAndWait",
           "client.servers.beginDeleteAndWait",
           "client.servers.beginUpdateAndWait"
         ]
       },
       "sdkRefs": [
-        "client.servers.beginCreateAndWait",
+        "client.servers.beginCreateOrUpdateAndWait",
         "client.servers.beginDeleteAndWait",
         "client.servers.beginUpdateAndWait"
       ],
@@ -1425,15 +1425,10 @@
       "refsByPkg": {
         "@azure/arm-network": [
           "client.privateEndpoints.beginCreateOrUpdateAndWait",
-          "client.privateEndpoints.beginDeleteAndWait",
-          "client.privateEndpoints.updateTags"
+          "client.privateEndpoints.beginDeleteAndWait"
         ]
       },
-      "sdkRefs": [
-        "client.privateEndpoints.beginCreateOrUpdateAndWait",
-        "client.privateEndpoints.beginDeleteAndWait",
-        "client.privateEndpoints.updateTags"
-      ],
+      "sdkRefs": ["client.privateEndpoints.beginCreateOrUpdateAndWait", "client.privateEndpoints.beginDeleteAndWait"],
       "clientKeys": ["network"]
     },
     {
@@ -1444,10 +1439,14 @@
         "@azure/arm-rediscache": [
           "client.redis.beginCreateAndWait",
           "client.redis.beginDeleteAndWait",
-          "client.redis.update"
+          "client.redis.beginUpdateAndWait"
         ]
       },
-      "sdkRefs": ["client.redis.beginCreateAndWait", "client.redis.beginDeleteAndWait", "client.redis.update"],
+      "sdkRefs": [
+        "client.redis.beginCreateAndWait",
+        "client.redis.beginDeleteAndWait",
+        "client.redis.beginUpdateAndWait"
+      ],
       "clientKeys": ["redis"]
     },
     {

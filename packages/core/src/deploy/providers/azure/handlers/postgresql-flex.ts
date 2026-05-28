@@ -33,7 +33,7 @@ export const postgresql_flex_handler: AzureResourceHandler = {
       const resource_group = (properties.resource_group as string) || ctx.resource_group;
       const location = (properties.location as string) || ctx.location;
 
-      const result = await client.servers.beginCreateAndWait(resource_group, name, {
+      const result = await client.servers.beginCreateOrUpdateAndWait(resource_group, name, {
         location,
         sku: {
           name: (properties.sku_name as string) || 'Standard_B1ms',

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AzureDeployer } from '../azure-deployer';
 
 function setup_mocks() {
-  const beginCreateAndWait = vi.fn().mockResolvedValue({
+  const beginCreateOrUpdateAndWait = vi.fn().mockResolvedValue({
     id: '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/pg1',
   });
   const beginUpdateAndWait = vi.fn().mockResolvedValue({});
@@ -20,7 +20,7 @@ function setup_mocks() {
         if (mod === '@azure/arm-postgresql-flexible') {
           return {
             PostgreSQLManagementFlexibleServerClient: class {
-              servers = { beginCreateAndWait, beginUpdateAndWait, beginDeleteAndWait };
+              servers = { beginCreateOrUpdateAndWait, beginUpdateAndWait, beginDeleteAndWait };
             },
           };
         }
@@ -34,7 +34,7 @@ function setup_mocks() {
     restore: () => {
       (globalThis as { Function: unknown }).Function = original_function;
     },
-    beginCreateAndWait,
+    beginCreateOrUpdateAndWait,
     beginUpdateAndWait,
     beginDeleteAndWait,
   };
@@ -57,8 +57,8 @@ describe('azure.postgresqlflex.server handler', () => {
       {},
     );
     expect(out.success).toBe(true);
-    expect(stub.beginCreateAndWait).toHaveBeenCalled();
-    const [, , body] = stub.beginCreateAndWait.mock.calls[0];
+    expect(stub.beginCreateOrUpdateAndWait).toHaveBeenCalled();
+    const [, , body] = stub.beginCreateOrUpdateAndWait.mock.calls[0];
     expect(body.sku.name).toBe('Standard_B1ms');
     expect(body.sku.tier).toBe('Burstable');
     expect(body.version).toBe('16');

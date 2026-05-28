@@ -1,59 +1,19 @@
 {
-  "handlersScanned": 38,
-  "invocationsScanned": 144,
-  "awsVerified": 143,
-  "awsUnverified": 1,
-  "mismatches": [
-    {
-      "file": "packages/core/src/deploy/providers/aws/handlers/typo-test.ts",
-      "command": "PutObjectCommand",
-      "package": "@aws-sdk/client-s3",
-      "inputInterface": "PutObjectRequest",
-      "unknownKeys": ["Buckt"],
-      "passed": ["Body", "Buckt", "Key"],
-      "validKeys": [
-        "ACL",
-        "Body",
-        "Bucket",
-        "CacheControl",
-        "ContentDisposition",
-        "ContentEncoding",
-        "ContentLanguage",
-        "ContentLength",
-        "ContentMD5",
-        "ContentType",
-        "ChecksumAlgorithm",
-        "ChecksumCRC32",
-        "ChecksumCRC32C",
-        "ChecksumCRC64NVME",
-        "ChecksumSHA1",
-        "ChecksumSHA256",
-        "Expires",
-        "IfMatch",
-        "IfNoneMatch",
-        "GrantFullControl",
-        "GrantRead",
-        "GrantReadACP",
-        "GrantWriteACP",
-        "Key",
-        "WriteOffsetBytes",
-        "Metadata",
-        "ServerSideEncryption",
-        "StorageClass",
-        "WebsiteRedirectLocation",
-        "SSECustomerAlgorithm",
-        "SSECustomerKey",
-        "SSECustomerKeyMD5",
-        "SSEKMSKeyId",
-        "SSEKMSEncryptionContext",
-        "BucketKeyEnabled",
-        "RequestPayer",
-        "Tagging",
-        "ObjectLockMode",
-        "ObjectLockRetainUntilDate",
-        "ObjectLockLegalHoldStatus",
-        "ExpectedBucketOwner"
-      ]
-    }
-  ]
+  "handlersScanned": 84,
+  "invocations": {
+    "aws": 143,
+    "azure": 75,
+    "gcp": 24
+  },
+  "verified": {
+    "aws": 142,
+    "azure": 69,
+    "gcp": 18
+  },
+  "unverified": {
+    "aws": 1,
+    "azure": 6,
+    "gcp": 6
+  },
+  "mismatches": []
 }

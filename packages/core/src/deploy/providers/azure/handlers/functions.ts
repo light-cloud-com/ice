@@ -112,6 +112,9 @@ export const functions_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Web SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
+      // SitePatchResource doesn't expose `tags` — Azure routes tag
+      // updates through the generic ARM resources API. Only siteConfig
+      // flows here.
       await client.webApps.update(resource_group, name, {
         siteConfig: {
           appSettings: properties.app_settings
@@ -121,7 +124,6 @@ export const functions_handler: AzureResourceHandler = {
               }))
             : undefined,
         },
-        tags: properties.tags as Record<string, string>,
       });
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {

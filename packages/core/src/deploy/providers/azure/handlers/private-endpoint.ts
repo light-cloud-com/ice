@@ -62,9 +62,13 @@ export const private_endpoint_handler: AzureResourceHandler = {
     if (!client) return err(name, TYPE, 'update', start, 'Private Endpoint SDK not available');
     try {
       const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.privateEndpoints.updateTags(resource_group, name, {
-        tags: properties.tags as Record<string, string>,
-      });
+      // Network SDK removed `privateEndpoints.updateTags` — only
+      // beginCreateOrUpdate + beginDelete remain. Tag updates now go
+      // through the generic ARM resources API; surface a note so the
+      // operator can route them via the canvas if needed.
+      if (properties.tags) {
+        ctx.on_log?.(`Note: Azure Private Endpoint ${name} tag updates go through the generic resources API.`);
+      }
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

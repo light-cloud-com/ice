@@ -14,3 +14,5 @@ export { OCIDeployer, create_oci_deployer } from './oci/oci-deployer';
 export type { OCIResourceHandler, OCIHandlerContext, OCICredentials } from './oci/types';
 export { DigitalOceanDeployer, create_digitalocean_deployer } from './digitalocean/digitalocean-deployer';
 export type { DOResourceHandler, DOHandlerContext, DOCredentials } from './digitalocean/types';
+export { IBMDeployer, create_ibm_deployer } from './ibm/ibm-deployer';
+export type { IBMResourceHandler, IBMHandlerContext, IBMCredentials } from './ibm/types';

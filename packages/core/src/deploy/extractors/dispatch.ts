@@ -194,6 +194,20 @@ import {
   extract_gcp_psc_properties,
 } from './gcp/new-services';
 import {
+  extract_ibm_codeengine_application_properties,
+  extract_ibm_codeengine_function_properties,
+  extract_ibm_codeengine_job_properties,
+  extract_ibm_cos_bucket_properties,
+  extract_ibm_databases_properties,
+  extract_ibm_rc_properties,
+  extract_ibm_secret_properties,
+  extract_ibm_vpc_instance_properties,
+  extract_ibm_vpc_loadbalancer_properties,
+  extract_ibm_vpc_properties,
+  extract_ibm_vpc_securitygroup_properties,
+  extract_ibm_vpc_subnet_properties,
+} from './ibm';
+import {
   extract_k8s_namespace_properties,
   extract_k8s_secret_properties,
   extract_k8s_configmap_properties,
@@ -487,6 +501,39 @@ export const PROPERTY_EXTRACTORS: Record<
   'digitalocean.droplet.snapshot': extract_do_snapshot_properties,
   'digitalocean.monitoring.alertpolicy': extract_do_monitoring_alertpolicy_properties,
   'digitalocean.reservedip.reservedip': extract_do_reserved_ip_properties,
+
+  // ─── IBM Cloud — P0 handlers ───────────────────────────────────────
+  'ibm.codeengine.application': extract_ibm_codeengine_application_properties,
+  'ibm.codeengine.function': extract_ibm_codeengine_function_properties,
+  'ibm.codeengine.job': extract_ibm_codeengine_job_properties,
+  'ibm.vpc.instance': extract_ibm_vpc_instance_properties,
+  'ibm.databases.postgresql': extract_ibm_databases_properties,
+  'ibm.databases.mysql': extract_ibm_databases_properties,
+  'ibm.databases.mongodb': extract_ibm_databases_properties,
+  'ibm.databases.redis': extract_ibm_databases_properties,
+  'ibm.cos.bucket': extract_ibm_cos_bucket_properties,
+  'ibm.vpc.vpc': extract_ibm_vpc_properties,
+  'ibm.vpc.subnet': extract_ibm_vpc_subnet_properties,
+  'ibm.secretsmanager.secret': extract_ibm_secret_properties,
+
+  // ─── IBM Cloud — P1 handlers ───────────────────────────────────────
+  'ibm.vpc.securitygroup': extract_ibm_vpc_securitygroup_properties,
+  'ibm.vpc.loadbalancer': extract_ibm_vpc_loadbalancer_properties,
+  'ibm.cis.zone': extract_ibm_rc_properties,
+  'ibm.cis.wafrule': extract_ibm_rc_properties,
+  'ibm.containers.cluster': extract_ibm_rc_properties,
+  'ibm.containerregistry.namespace': extract_ibm_rc_properties,
+  'ibm.appid.instance': extract_ibm_rc_properties,
+  'ibm.secretsmanager.importedcert': extract_ibm_rc_properties,
+  'ibm.logging.instance': extract_ibm_rc_properties,
+
+  // ─── IBM Cloud — P2 handlers ───────────────────────────────────────
+  'ibm.cloudant.database': extract_ibm_rc_properties,
+  'ibm.eventstreams.topic': extract_ibm_rc_properties,
+  'ibm.mq.queuemanager': extract_ibm_rc_properties,
+  'ibm.eventnotifications.instance': extract_ibm_rc_properties,
+  'ibm.watsonx.deployment': extract_ibm_rc_properties,
+  'ibm.monitoring.alert': extract_ibm_rc_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

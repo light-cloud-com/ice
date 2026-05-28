@@ -24,19 +24,32 @@ import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
-  console.error('Usage: pnpm test:live:<aws|azure> [filter1] [filter2] [...vitest-args]');
+  console.error(
+    'Usage: pnpm test:live:<aws|azure|kubernetes|alibaba|oci|digitalocean|ibm> [filter1] [filter2] [...vitest-args]',
+  );
   process.exit(1);
 }
 
 const provider = args[0];
-if (provider !== 'aws' && provider !== 'azure' && provider !== 'kubernetes') {
-  console.error(`Unknown provider: ${provider} (expected 'aws', 'azure', or 'kubernetes')`);
+const VALID = ['aws', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean', 'ibm'];
+if (!VALID.includes(provider)) {
+  console.error(`Unknown provider: ${provider} (expected one of: ${VALID.join(', ')})`);
   process.exit(1);
 }
 
 // Kubernetes live tests use `k8s-` filename prefix (shorter than the
-// dispatch type prefix), so map `kubernetes` → `k8s-`.
-const filePrefix = provider === 'kubernetes' ? 'k8s' : provider;
+// dispatch type prefix), so map `kubernetes` → `k8s-`. DigitalOcean
+// uses `do-` for brevity.
+const FILE_PREFIX = {
+  aws: 'aws',
+  azure: 'azure',
+  kubernetes: 'k8s',
+  alibaba: 'alibaba',
+  oci: 'oci',
+  digitalocean: 'do',
+  ibm: 'ibm',
+};
+const filePrefix = FILE_PREFIX[provider];
 
 const filters = [];
 const passthrough = [];

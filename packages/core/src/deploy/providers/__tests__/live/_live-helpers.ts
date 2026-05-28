@@ -1,17 +1,26 @@
 /**
  * Live-test helpers (developer tool, NOT CI).
  *
- * Provides:
- *   - `awsLive` / `azureLive`     skip-aware describe wrappers
- *   - `uniqueAwsName` / `uniqueAzureName`  per-service name generators
- *   - `createAwsDeployer` / `createAzureDeployer`  initialised deployers
- *   - `JsonlLogger`               appends LiveEvents to e2e/.../runs/<runId>.jsonl
- *   - `runId()`                   stable id for the whole vitest invocation
+ * Provides skip-aware describe wrappers + name generators + deployer
+ * factories + JSONL logger for AWS, Azure, Kubernetes, Alibaba, OCI,
+ * DigitalOcean, and IBM Cloud.
  *
  * Required env (or test skips with banner):
- *   AWS:   AWS_REGION + credentials via AWS SDK chain (AWS_PROFILE, etc.)
- *   Azure: AZURE_SUBSCRIPTION_ID + AZURE_LOCATION + credentials via
- *          DefaultAzureCredential chain (az login, service-principal env, etc.)
+ *   AWS:          AWS_REGION + credentials via AWS SDK chain
+ *   Azure:        AZURE_SUBSCRIPTION_ID + AZURE_LOCATION + credentials
+ *                 via DefaultAzureCredential chain
+ *   Kubernetes:   KUBECONFIG (or ~/.kube/config default) +
+ *                 ICE_K8S_TEST_NAMESPACE (optional, default ice-test)
+ *   Alibaba:      ALIBABA_CLOUD_ACCESS_KEY_ID +
+ *                 ALIBABA_CLOUD_ACCESS_KEY_SECRET +
+ *                 ALIBABA_CLOUD_REGION
+ *   OCI:          OCI_COMPARTMENT_ID + OCI_REGION + ~/.oci/config
+ *                 (or OCI_AUTH_MODE=instance-principal etc.)
+ *   DigitalOcean: DIGITALOCEAN_TOKEN + DIGITALOCEAN_REGION
+ *                 (+ DO_SPACES_ACCESS_KEY/DO_SPACES_SECRET_KEY for
+ *                 spaces-bucket tests)
+ *   IBM:          IBMCLOUD_API_KEY + IBMCLOUD_REGION +
+ *                 IBMCLOUD_RESOURCE_GROUP_ID
  *
  * Tag every resource you create with `ice:test-run-id=<runId()>` so
  * `e2e/<provider>-deployment-tests/cleanup-orphans.ts` can sweep leaks.
@@ -23,7 +32,11 @@ import { randomBytes } from 'node:crypto';
 import { describe } from 'vitest';
 import { AWSDeployer, create_aws_deployer } from '../../aws-deployer';
 import { AzureDeployer, create_azure_deployer } from '../../azure-deployer';
+import { AlibabaDeployer, create_alibaba_deployer } from '../../alibaba/alibaba-deployer';
+import { DigitalOceanDeployer, create_digitalocean_deployer } from '../../digitalocean/digitalocean-deployer';
+import { IBMDeployer, create_ibm_deployer } from '../../ibm/ibm-deployer';
 import { KubernetesDeployer, create_kubernetes_deployer } from '../../kubernetes/kubernetes-deployer';
+import { OCIDeployer, create_oci_deployer } from '../../oci/oci-deployer';
 import type { LiveEvent, LiveEventInput, LiveProvider } from './_live-types';
 
 // ─── runId ─────────────────────────────────────────────────────────────────
@@ -52,6 +65,13 @@ const AZURE_BANNER =
   'set AZURE_SUBSCRIPTION_ID + AZURE_LOCATION (and provide credentials via az login, service-principal env, or managed identity)';
 const K8S_BANNER =
   'set KUBECONFIG (or use the default ~/.kube/config) and ensure kubectl reaches the cluster — pnpm test:live:kubernetes';
+const ALIBABA_BANNER =
+  'set ALIBABA_CLOUD_ACCESS_KEY_ID + ALIBABA_CLOUD_ACCESS_KEY_SECRET + ALIBABA_CLOUD_REGION — pnpm test:live:alibaba';
+const OCI_BANNER =
+  'set OCI_COMPARTMENT_ID + OCI_REGION (and provide OCI auth via ~/.oci/config, OCI_AUTH_MODE=instance-principal, etc.) — pnpm test:live:oci';
+const DO_BANNER =
+  'set DIGITALOCEAN_TOKEN + DIGITALOCEAN_REGION (and DO_SPACES_ACCESS_KEY/DO_SPACES_SECRET_KEY for Spaces tests) — pnpm test:live:digitalocean';
+const IBM_BANNER = 'set IBMCLOUD_API_KEY + IBMCLOUD_REGION + IBMCLOUD_RESOURCE_GROUP_ID — pnpm test:live:ibm';
 
 function awsEnvOk(): boolean {
   return !!process.env.AWS_REGION;
@@ -63,6 +83,26 @@ function azureEnvOk(): boolean {
 
 function k8sEnvOk(): boolean {
   return !!process.env.KUBECONFIG || !!process.env.HOME;
+}
+
+function alibabaEnvOk(): boolean {
+  return (
+    !!process.env.ALIBABA_CLOUD_ACCESS_KEY_ID &&
+    !!process.env.ALIBABA_CLOUD_ACCESS_KEY_SECRET &&
+    !!process.env.ALIBABA_CLOUD_REGION
+  );
+}
+
+function ociEnvOk(): boolean {
+  return !!process.env.OCI_COMPARTMENT_ID && !!process.env.OCI_REGION;
+}
+
+function doEnvOk(): boolean {
+  return !!process.env.DIGITALOCEAN_TOKEN && !!process.env.DIGITALOCEAN_REGION;
+}
+
+function ibmEnvOk(): boolean {
+  return !!process.env.IBMCLOUD_API_KEY && !!process.env.IBMCLOUD_REGION && !!process.env.IBMCLOUD_RESOURCE_GROUP_ID;
 }
 
 /**
@@ -90,6 +130,38 @@ export function azureLive(name: string, fn: () => void): void {
 export function kubernetesLive(name: string, fn: () => void): void {
   if (!k8sEnvOk()) {
     describe.skip(`${name} [skipped — ${K8S_BANNER}]`, fn);
+    return;
+  }
+  describe(name, fn);
+}
+
+export function alibabaLive(name: string, fn: () => void): void {
+  if (!alibabaEnvOk()) {
+    describe.skip(`${name} [skipped — ${ALIBABA_BANNER}]`, fn);
+    return;
+  }
+  describe(name, fn);
+}
+
+export function ociLive(name: string, fn: () => void): void {
+  if (!ociEnvOk()) {
+    describe.skip(`${name} [skipped — ${OCI_BANNER}]`, fn);
+    return;
+  }
+  describe(name, fn);
+}
+
+export function digitaloceanLive(name: string, fn: () => void): void {
+  if (!doEnvOk()) {
+    describe.skip(`${name} [skipped — ${DO_BANNER}]`, fn);
+    return;
+  }
+  describe(name, fn);
+}
+
+export function ibmLive(name: string, fn: () => void): void {
+  if (!ibmEnvOk()) {
+    describe.skip(`${name} [skipped — ${IBM_BANNER}]`, fn);
     return;
   }
   describe(name, fn);
@@ -164,6 +236,58 @@ export function uniqueK8sName(kind: string, maxLen = 63): string {
   return trim(compact, maxLen);
 }
 
+/**
+ * Alibaba resource name. Most services accept dashes + 64 chars.
+ *   OSS bucket:    3-63, lowercase + numbers + dashes, no uppercase
+ *   RDS instance:  64
+ *   ECS:           128
+ *   SAE app:       36 (alphanumeric + dashes)
+ *   FC function:   64 (alphanumeric + underscore + dash)
+ *
+ * For OSS, pass maxLen=63 and lowercase outside this helper.
+ */
+export function uniqueAlibabaName(service: string, maxLen = 64): string {
+  return trim(`ice-test-${service}-${RUN_ID}-${RAND_SUFFIX}`, maxLen);
+}
+
+/**
+ * OCI resource displayName — Compute / VCN / Subnet / Buckets all
+ * accept 1-255 chars + most punctuation. Default 64 keeps log output
+ * readable.
+ *
+ *   Object Storage bucket: 1-255, alphanumeric + dash + underscore
+ *   Autonomous DB name:    1-14 chars, alphanumeric only (DB name,
+ *                          distinct from displayName)
+ *   VM displayName:        1-255
+ */
+export function uniqueOciName(service: string, maxLen = 64): string {
+  return trim(`ice-test-${service}-${RUN_ID}-${RAND_SUFFIX}`, maxLen);
+}
+
+/**
+ * DigitalOcean resource name. Most resources accept 64 chars.
+ *   Droplet name:    1-255, alphanumeric + dash + dot
+ *   Database name:   3-63, alphanumeric + dash
+ *   Domain name:     valid DNS, operator-supplied (this helper isn't
+ *                    used for DNS)
+ *   Spaces bucket:   3-63, lowercase + numbers + dash
+ */
+export function uniqueDoName(service: string, maxLen = 63): string {
+  return trim(`ice-test-${service}-${RUN_ID}-${RAND_SUFFIX}`, maxLen);
+}
+
+/**
+ * IBM Cloud resource name. Code Engine + VPC + most managed services
+ * accept 1-63 chars (alphanumeric + dash).
+ *   VPC instance name:   1-63
+ *   Code Engine app:     1-63 (alphanumeric + dash, must start with letter)
+ *   COS bucket:          3-63 (lowercase + numbers + dash; globally unique)
+ *   Secrets Manager:     2-256 chars
+ */
+export function uniqueIbmName(service: string, maxLen = 63): string {
+  return trim(`ice-test-${service}-${RUN_ID}-${RAND_SUFFIX}`, maxLen);
+}
+
 // ─── deployer factories ────────────────────────────────────────────────────
 
 export async function createAwsDeployer(): Promise<AWSDeployer> {
@@ -226,22 +350,96 @@ export async function createKubernetesDeployer(): Promise<KubernetesLiveContext>
   return { deployer, namespace };
 }
 
+export interface AlibabaLiveContext {
+  deployer: AlibabaDeployer;
+  region: string;
+}
+
+export async function createAlibabaDeployer(): Promise<AlibabaLiveContext> {
+  const region = process.env.ALIBABA_CLOUD_REGION!;
+  const deployer = create_alibaba_deployer();
+  await deployer.initialize({ provider: 'alibaba', region });
+  return { deployer, region };
+}
+
+export interface OCILiveContext {
+  deployer: OCIDeployer;
+  region: string;
+  compartmentId: string;
+}
+
+export async function createOCIDeployer(): Promise<OCILiveContext> {
+  const region = process.env.OCI_REGION!;
+  const compartmentId = process.env.OCI_COMPARTMENT_ID!;
+  const deployer = create_oci_deployer();
+  await deployer.initialize({
+    provider: 'oci',
+    region,
+    oci_credentials: {
+      compartment_id: compartmentId,
+      region,
+      config_path: process.env.OCI_CONFIG_FILE,
+      profile: process.env.OCI_CONFIG_PROFILE ?? 'DEFAULT',
+      auth_mode: (process.env.OCI_AUTH_MODE as 'config-file' | 'instance-principal') ?? 'config-file',
+    },
+  } as any);
+  return { deployer, region, compartmentId };
+}
+
+export interface DigitalOceanLiveContext {
+  deployer: DigitalOceanDeployer;
+  region: string;
+}
+
+export async function createDigitalOceanDeployer(): Promise<DigitalOceanLiveContext> {
+  const region = process.env.DIGITALOCEAN_REGION!;
+  const deployer = create_digitalocean_deployer();
+  await deployer.initialize({ provider: 'digitalocean', region } as any);
+  return { deployer, region };
+}
+
+export interface IBMLiveContext {
+  deployer: IBMDeployer;
+  region: string;
+  resourceGroupId: string;
+}
+
+export async function createIBMDeployer(): Promise<IBMLiveContext> {
+  const region = process.env.IBMCLOUD_REGION!;
+  const resourceGroupId = process.env.IBMCLOUD_RESOURCE_GROUP_ID!;
+  const deployer = create_ibm_deployer();
+  await deployer.initialize({ provider: 'ibm', region } as any);
+  return { deployer, region, resourceGroupId };
+}
+
 // ─── JSONL logger ──────────────────────────────────────────────────────────
 
-const E2E_AWS_RUNS = resolve(process.cwd(), 'e2e/aws-deployment-tests/runs');
-const E2E_AZURE_RUNS = resolve(process.cwd(), 'e2e/azure-deployment-tests/runs');
-const E2E_K8S_RUNS = resolve(process.cwd(), 'e2e/kubernetes-deployment-tests/runs');
+const E2E_RUNS_DIRS: Record<LiveProvider, string> = {
+  aws: resolve(process.cwd(), 'e2e/aws-deployment-tests/runs'),
+  azure: resolve(process.cwd(), 'e2e/azure-deployment-tests/runs'),
+  kubernetes: resolve(process.cwd(), 'e2e/kubernetes-deployment-tests/runs'),
+  alibaba: resolve(process.cwd(), 'e2e/alibaba-deployment-tests/runs'),
+  oci: resolve(process.cwd(), 'e2e/oci-deployment-tests/runs'),
+  digitalocean: resolve(process.cwd(), 'e2e/digitalocean-deployment-tests/runs'),
+  ibm: resolve(process.cwd(), 'e2e/ibm-deployment-tests/runs'),
+};
+
+function providerOfHandlerName(handlerName: string): LiveProvider {
+  if (handlerName.startsWith('azure-')) return 'azure';
+  if (handlerName.startsWith('k8s-') || handlerName.startsWith('kubernetes-')) return 'kubernetes';
+  if (handlerName.startsWith('alibaba-')) return 'alibaba';
+  if (handlerName.startsWith('oci-')) return 'oci';
+  if (handlerName.startsWith('digitalocean-') || handlerName.startsWith('do-')) return 'digitalocean';
+  if (handlerName.startsWith('ibm-')) return 'ibm';
+  return 'aws';
+}
 
 export class JsonlLogger {
   private path: string;
 
   constructor(handlerName: string) {
-    const provider: LiveProvider = handlerName.startsWith('azure-')
-      ? 'azure'
-      : handlerName.startsWith('k8s-') || handlerName.startsWith('kubernetes-')
-        ? 'kubernetes'
-        : 'aws';
-    const dir = provider === 'azure' ? E2E_AZURE_RUNS : provider === 'kubernetes' ? E2E_K8S_RUNS : E2E_AWS_RUNS;
+    const provider = providerOfHandlerName(handlerName);
+    const dir = E2E_RUNS_DIRS[provider];
     mkdirSync(dir, { recursive: true });
     this.path = resolve(dir, `${RUN_ID}.jsonl`);
   }

@@ -29,10 +29,14 @@ if (args.length === 0) {
 }
 
 const provider = args[0];
-if (provider !== 'aws' && provider !== 'azure') {
-  console.error(`Unknown provider: ${provider} (expected 'aws' or 'azure')`);
+if (provider !== 'aws' && provider !== 'azure' && provider !== 'kubernetes') {
+  console.error(`Unknown provider: ${provider} (expected 'aws', 'azure', or 'kubernetes')`);
   process.exit(1);
 }
+
+// Kubernetes live tests use `k8s-` filename prefix (shorter than the
+// dispatch type prefix), so map `kubernetes` → `k8s-`.
+const filePrefix = provider === 'kubernetes' ? 'k8s' : provider;
 
 const filters = [];
 const passthrough = [];
@@ -47,7 +51,7 @@ for (const arg of args.slice(1)) {
 // Build positional filters. Vitest matches them as substrings against
 // resolved file paths. Default to the provider prefix so an empty filter
 // list still scopes to one provider's tests.
-const positionals = filters.length === 0 ? [`${provider}-`] : filters.map((f) => `${provider}-${f}`);
+const positionals = filters.length === 0 ? [`${filePrefix}-`] : filters.map((f) => `${filePrefix}-${f}`);
 
 const vitestArgs = ['exec', 'vitest', 'run', '--config', 'vitest.live.config.ts', '--root', '.'];
 vitestArgs.push(...positionals);

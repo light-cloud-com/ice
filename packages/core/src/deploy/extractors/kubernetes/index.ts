@@ -223,3 +223,61 @@ export function extract_k8s_hpa_properties(data: Record<string, unknown>, _regio
     labels: {},
   };
 }
+
+export function extract_k8s_certmanager_certificate_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    namespace: data.namespace as string | undefined,
+    secret_name: data.secret_name as string | undefined,
+    dns_names: (data.dns_names as string[]) ?? (data.domain ? [data.domain as string] : []),
+    duration: (data.duration as string) || '2160h',
+    renew_before: (data.renew_before as string) || '360h',
+    issuer_name: (data.issuer_name as string) || 'letsencrypt-prod',
+    issuer_kind: (data.issuer_kind as string) || 'ClusterIssuer',
+    labels: {},
+  };
+}
+
+export function extract_k8s_knative_service_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    namespace: data.namespace as string | undefined,
+    image: (data.image as string) || '',
+    port: (data.port as number) ?? 8080,
+    env_vars: (data.env_vars as Record<string, string>) ?? {},
+    min_scale: (data.min_scale as number) ?? 0,
+    max_scale: (data.max_scale as number) ?? 10,
+    labels: {},
+  };
+}
+
+export function extract_k8s_prometheus_rule_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    namespace: data.namespace as string | undefined,
+    group_name: data.group_name as string | undefined,
+    alert_name: data.alert_name as string | undefined,
+    expr: (data.expr as string) || 'up == 0',
+    for: (data.for as string) || '5m',
+    severity: (data.severity as string) || 'warning',
+    rules: data.rules as unknown[] | undefined,
+    groups: data.groups as unknown[] | undefined,
+    annotations: data.annotations as Record<string, string> | undefined,
+    labels: {},
+  };
+}
+
+export function extract_k8s_pdb_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+  return {
+    namespace: data.namespace as string | undefined,
+    min_available: (data.min_available as number | string) ?? '50%',
+    match_labels: data.match_labels as Record<string, string> | undefined,
+    labels: {},
+  };
+}

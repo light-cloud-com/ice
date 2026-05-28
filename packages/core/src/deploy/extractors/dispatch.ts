@@ -153,6 +153,10 @@ import {
   extract_k8s_job_properties,
   extract_k8s_serviceaccount_properties,
   extract_k8s_hpa_properties,
+  extract_k8s_certmanager_certificate_properties,
+  extract_k8s_knative_service_properties,
+  extract_k8s_prometheus_rule_properties,
+  extract_k8s_pdb_properties,
 } from './kubernetes';
 import {
   extract_storage_bucket_properties,
@@ -297,6 +301,10 @@ export const PROPERTY_EXTRACTORS: Record<
   'k8s.batch.job': extract_k8s_job_properties,
   'k8s.core.serviceaccount': extract_k8s_serviceaccount_properties,
   'k8s.autoscaling.hpa': extract_k8s_hpa_properties,
+  'k8s.certmanager.certificate': extract_k8s_certmanager_certificate_properties,
+  'k8s.serving.service': extract_k8s_knative_service_properties,
+  'k8s.monitoring.prometheusrule': extract_k8s_prometheus_rule_properties,
+  'k8s.policy.poddisruptionbudget': extract_k8s_pdb_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

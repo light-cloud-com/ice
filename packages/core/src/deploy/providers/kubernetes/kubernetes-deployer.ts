@@ -17,15 +17,19 @@
  * is set. See `auth.ts` + `sdk-loader.ts`.
  */
 
+import { cert_manager_certificate_handler } from './handlers/cert-manager';
 import { configmap_handler } from './handlers/configmap';
 import { cronjob_handler } from './handlers/cronjob';
 import { deployment_handler } from './handlers/deployment';
 import { hpa_handler } from './handlers/hpa';
 import { ingress_handler } from './handlers/ingress';
 import { job_handler } from './handlers/job';
+import { knative_service_handler } from './handlers/knative-service';
 import { namespace_handler } from './handlers/namespace';
 import { networkpolicy_handler } from './handlers/networkpolicy';
 import { persistentvolumeclaim_handler } from './handlers/persistentvolumeclaim';
+import { poddisruptionbudget_handler } from './handlers/poddisruptionbudget';
+import { prometheus_rule_handler } from './handlers/prometheus-rule';
 import { secret_handler } from './handlers/secret';
 import { service_handler } from './handlers/service';
 import { serviceaccount_handler } from './handlers/serviceaccount';
@@ -54,6 +58,11 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: KubernetesResourceHandl
   { prefix: 'k8s.networking.ingress', handler: ingress_handler },
   { prefix: 'k8s.networking.networkpolicy', handler: networkpolicy_handler },
   { prefix: 'k8s.autoscaling.hpa', handler: hpa_handler },
+  // P2 — CRD-backed handlers (require operators in cluster).
+  { prefix: 'k8s.certmanager.certificate', handler: cert_manager_certificate_handler },
+  { prefix: 'k8s.serving.service', handler: knative_service_handler },
+  { prefix: 'k8s.monitoring.prometheusrule', handler: prometheus_rule_handler },
+  { prefix: 'k8s.policy.poddisruptionbudget', handler: poddisruptionbudget_handler },
 ];
 
 function resolve_handler(type: string): KubernetesResourceHandler | undefined {

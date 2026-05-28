@@ -23,6 +23,7 @@ import { randomBytes } from 'node:crypto';
 import { describe } from 'vitest';
 import { AWSDeployer, create_aws_deployer } from '../../aws-deployer';
 import { AzureDeployer, create_azure_deployer } from '../../azure-deployer';
+import { KubernetesDeployer, create_kubernetes_deployer } from '../../kubernetes/kubernetes-deployer';
 import type { LiveEvent, LiveEventInput, LiveProvider } from './_live-types';
 
 // ─── runId ─────────────────────────────────────────────────────────────────
@@ -49,6 +50,8 @@ const AWS_BANNER =
   'set AWS_REGION (and provide AWS credentials via AWS_PROFILE, AWS_ACCESS_KEY_ID/SECRET, SSO, or instance metadata)';
 const AZURE_BANNER =
   'set AZURE_SUBSCRIPTION_ID + AZURE_LOCATION (and provide credentials via az login, service-principal env, or managed identity)';
+const K8S_BANNER =
+  'set KUBECONFIG (or use the default ~/.kube/config) and ensure kubectl reaches the cluster — pnpm test:live:kubernetes';
 
 function awsEnvOk(): boolean {
   return !!process.env.AWS_REGION;
@@ -56,6 +59,10 @@ function awsEnvOk(): boolean {
 
 function azureEnvOk(): boolean {
   return !!process.env.AZURE_SUBSCRIPTION_ID && !!process.env.AZURE_LOCATION;
+}
+
+function k8sEnvOk(): boolean {
+  return !!process.env.KUBECONFIG || !!process.env.HOME;
 }
 
 /**
@@ -75,6 +82,14 @@ export function awsLive(name: string, fn: () => void): void {
 export function azureLive(name: string, fn: () => void): void {
   if (!azureEnvOk()) {
     describe.skip(`${name} [skipped — ${AZURE_BANNER}]`, fn);
+    return;
+  }
+  describe(name, fn);
+}
+
+export function kubernetesLive(name: string, fn: () => void): void {
+  if (!k8sEnvOk()) {
+    describe.skip(`${name} [skipped — ${K8S_BANNER}]`, fn);
     return;
   }
   describe(name, fn);
@@ -138,6 +153,17 @@ export function uniqueAzureStorageName(prefix = 'sa'): string {
   return trim(compact, 24);
 }
 
+/**
+ * Kubernetes resource name. K8s names: 1-253 chars, lowercase
+ * alphanumeric + hyphens, must start/end with alphanumeric.
+ * `service.metadata.name` is more restrictive (63 chars) — pass
+ * maxLen=63 for those.
+ */
+export function uniqueK8sName(kind: string, maxLen = 63): string {
+  const compact = `ice-test-${kind}-${RAND_SUFFIX}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  return trim(compact, maxLen);
+}
+
 // ─── deployer factories ────────────────────────────────────────────────────
 
 export async function createAwsDeployer(): Promise<AWSDeployer> {
@@ -180,17 +206,42 @@ export async function createAzureDeployer(): Promise<AzureLiveContext> {
   return { deployer, subscription, location, resourceGroup };
 }
 
+export interface KubernetesLiveContext {
+  deployer: KubernetesDeployer;
+  namespace: string;
+}
+
+/**
+ * Default test namespace. Operator can override via
+ * `ICE_K8S_TEST_NAMESPACE`. The deployer auto-creates it.
+ */
+export function kubernetesTestNamespace(): string {
+  return process.env.ICE_K8S_TEST_NAMESPACE || 'ice-test';
+}
+
+export async function createKubernetesDeployer(): Promise<KubernetesLiveContext> {
+  const namespace = kubernetesTestNamespace();
+  const deployer = create_kubernetes_deployer();
+  await deployer.initialize({ provider: 'kubernetes', namespaces: [namespace] });
+  return { deployer, namespace };
+}
+
 // ─── JSONL logger ──────────────────────────────────────────────────────────
 
 const E2E_AWS_RUNS = resolve(process.cwd(), 'e2e/aws-deployment-tests/runs');
 const E2E_AZURE_RUNS = resolve(process.cwd(), 'e2e/azure-deployment-tests/runs');
+const E2E_K8S_RUNS = resolve(process.cwd(), 'e2e/kubernetes-deployment-tests/runs');
 
 export class JsonlLogger {
   private path: string;
 
   constructor(handlerName: string) {
-    const provider: LiveProvider = handlerName.startsWith('azure-') ? 'azure' : 'aws';
-    const dir = provider === 'azure' ? E2E_AZURE_RUNS : E2E_AWS_RUNS;
+    const provider: LiveProvider = handlerName.startsWith('azure-')
+      ? 'azure'
+      : handlerName.startsWith('k8s-') || handlerName.startsWith('kubernetes-')
+        ? 'kubernetes'
+        : 'aws';
+    const dir = provider === 'azure' ? E2E_AZURE_RUNS : provider === 'kubernetes' ? E2E_K8S_RUNS : E2E_AWS_RUNS;
     mkdirSync(dir, { recursive: true });
     this.path = resolve(dir, `${RUN_ID}.jsonl`);
   }

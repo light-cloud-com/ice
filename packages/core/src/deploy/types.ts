@@ -145,7 +145,7 @@ export interface NodeProgressEvent {
  */
 export interface DeployOptions {
   /** Cloud provider to deploy to */
-  provider: 'gcp' | 'aws' | 'azure';
+  provider: 'gcp' | 'aws' | 'azure' | 'kubernetes';
   /** GCP project ID (required for GCP) */
   project?: string;
   /** AWS regions (optional, defaults to all) */
@@ -154,6 +154,12 @@ export interface DeployOptions {
   subscriptions?: string[];
   /** Resource groups (Azure) */
   resource_groups?: string[];
+  /** Kubernetes namespaces (Kubernetes) — first entry is the default deploy target. */
+  namespaces?: string[];
+  /** Inline kubeconfig YAML (Kubernetes) — wins over kubeconfig_path. */
+  kubeconfig_raw?: string;
+  /** Path to a kubeconfig file (Kubernetes) — defaults to ~/.kube/config. */
+  kubeconfig_path?: string;
   /** Target specific resources by name/type pattern */
   target?: string[];
   /** Exclude resources by name/type pattern */

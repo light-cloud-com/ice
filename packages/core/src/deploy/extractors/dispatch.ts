@@ -91,11 +91,13 @@ import {
   extract_azure_log_analytics_properties,
   extract_azure_servicebus_namespace_properties,
 } from './azure/ancillary';
-import { extract_azure_acr_task_properties,
+import {
+  extract_azure_acr_task_properties,
   extract_azure_app_service_plan_properties,
   extract_azure_container_apps_properties,
   extract_azure_function_app_properties,
-  extract_azure_static_site_properties } from './azure/compute';
+  extract_azure_static_site_properties,
+} from './azure/compute';
 import {
   extract_azure_cosmosdb_account_properties,
   extract_azure_mysql_flex_properties,
@@ -137,6 +139,21 @@ import {
   extract_gcp_compute_firewall_properties,
   extract_gcp_psc_properties,
 } from './gcp/new-services';
+import {
+  extract_k8s_namespace_properties,
+  extract_k8s_secret_properties,
+  extract_k8s_configmap_properties,
+  extract_k8s_pvc_properties,
+  extract_k8s_service_properties,
+  extract_k8s_deployment_properties,
+  extract_k8s_statefulset_properties,
+  extract_k8s_cronjob_properties,
+  extract_k8s_ingress_properties,
+  extract_k8s_networkpolicy_properties,
+  extract_k8s_job_properties,
+  extract_k8s_serviceaccount_properties,
+  extract_k8s_hpa_properties,
+} from './kubernetes';
 import {
   extract_storage_bucket_properties,
   extract_pubsub_properties,
@@ -265,6 +282,21 @@ export const PROPERTY_EXTRACTORS: Record<
 
   // ─── Azure — new (cross-cloud parity push) ──────────────────────────
   'azure.containerregistry.task': extract_azure_acr_task_properties,
+
+  // ─── Kubernetes — P0 handlers ───────────────────────────────────────
+  'k8s.core.namespace': extract_k8s_namespace_properties,
+  'k8s.core.secret': extract_k8s_secret_properties,
+  'k8s.core.configmap': extract_k8s_configmap_properties,
+  'k8s.core.persistentvolumeclaim': extract_k8s_pvc_properties,
+  'k8s.core.service': extract_k8s_service_properties,
+  'k8s.apps.deployment': extract_k8s_deployment_properties,
+  'k8s.apps.statefulset': extract_k8s_statefulset_properties,
+  'k8s.batch.cronjob': extract_k8s_cronjob_properties,
+  'k8s.networking.ingress': extract_k8s_ingress_properties,
+  'k8s.networking.networkpolicy': extract_k8s_networkpolicy_properties,
+  'k8s.batch.job': extract_k8s_job_properties,
+  'k8s.core.serviceaccount': extract_k8s_serviceaccount_properties,
+  'k8s.autoscaling.hpa': extract_k8s_hpa_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

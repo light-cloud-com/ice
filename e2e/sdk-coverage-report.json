@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-28T08:32:24.785Z",
+  "generated_at": "2026-05-28T09:07:33.805Z",
   "summary": {
-    "handlers": 110,
-    "packages": 78,
+    "handlers": 124,
+    "packages": 79,
     "providers": {
       "aws": 32,
       "azure": 29,
-      "gcp": 16,
-      "other": 1
+      "other": 2,
+      "gcp": 16
     }
   },
   "handlers": [
@@ -1608,6 +1608,110 @@
       "clientKeys": ["web"]
     },
     {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/configmap.ts",
+      "type": "k8s.core.configmap",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/cronjob.ts",
+      "type": "k8s.batch.cronjob",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["batch"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/deployment.ts",
+      "type": "k8s.apps.deployment",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["apps"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/hpa.ts",
+      "type": "k8s.autoscaling.hpa",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["autoscaling"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/ingress.ts",
+      "type": "k8s.networking.ingress",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["networking"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/job.ts",
+      "type": "k8s.batch.job",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["batch"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/namespace.ts",
+      "type": "k8s.core.namespace",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/networkpolicy.ts",
+      "type": "k8s.networking.networkpolicy",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["networking"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/persistentvolumeclaim.ts",
+      "type": "k8s.core.persistentvolumeclaim",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/secret.ts",
+      "type": "k8s.core.secret",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/service.ts",
+      "type": "k8s.core.service",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/serviceaccount.ts",
+      "type": "k8s.core.serviceaccount",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["core"]
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/handlers/statefulset.ts",
+      "type": "k8s.apps.statefulset",
+      "sdkPkgs": ["@kubernetes/client-node"],
+      "refsByPkg": {},
+      "sdkRefs": [],
+      "clientKeys": ["apps"]
+    },
+    {
       "file": "packages/core/src/deploy/providers/aws/sdk-loader.ts",
       "type": null,
       "sdkPkgs": [
@@ -1706,6 +1810,13 @@
         "@azure/arm-kusto",
         "@azure/arm-sql"
       ],
+      "sdkRefs": [],
+      "clientKeys": []
+    },
+    {
+      "file": "packages/core/src/deploy/providers/kubernetes/sdk-loader.ts",
+      "type": null,
+      "sdkPkgs": ["@kubernetes/client-node"],
       "sdkRefs": [],
       "clientKeys": []
     }
@@ -2675,6 +2786,34 @@
       "handlers": [
         "packages/core/src/deploy/providers/azure/handlers/virtual-machine.ts",
         "packages/core/src/deploy/providers/azure/sdk-loader.ts"
+      ],
+      "npm": {
+        "ok": true,
+        "version": "(skipped)",
+        "latest": null
+      },
+      "runtime": {
+        "installed": true,
+        "missingRefs": []
+      }
+    },
+    {
+      "package": "@kubernetes/client-node",
+      "handlers": [
+        "packages/core/src/deploy/providers/kubernetes/handlers/configmap.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/cronjob.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/deployment.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/hpa.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/ingress.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/job.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/namespace.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/networkpolicy.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/persistentvolumeclaim.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/secret.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/service.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/serviceaccount.ts",
+        "packages/core/src/deploy/providers/kubernetes/handlers/statefulset.ts",
+        "packages/core/src/deploy/providers/kubernetes/sdk-loader.ts"
       ],
       "npm": {
         "ok": true,

@@ -43,6 +43,7 @@ const HANDLER_GLOBS = [
   'packages/core/src/deploy/providers/aws/handlers',
   'packages/core/src/deploy/providers/gcp/handlers',
   'packages/core/src/deploy/providers/azure/handlers',
+  'packages/core/src/deploy/providers/kubernetes/handlers',
 ];
 
 // Per-provider sdk-loader scan — GCP handlers don't declare `const SDK`
@@ -53,6 +54,7 @@ const SDK_LOADERS = [
   'packages/core/src/deploy/providers/aws/sdk-loader.ts',
   'packages/core/src/deploy/providers/gcp/sdk-loader.ts',
   'packages/core/src/deploy/providers/azure/sdk-loader.ts',
+  'packages/core/src/deploy/providers/kubernetes/sdk-loader.ts',
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -81,7 +83,7 @@ async function scanHandler(filePath) {
 
   const sdkPkgs = new Set();
   if (sdkMatch) sdkPkgs.add(sdkMatch[1]);
-  for (const m of src.matchAll(/load_(?:aws|gcp|azure)_sdk\(['"]([^'"]+)['"]\)/g)) {
+  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes)_sdk\(['"]([^'"]+)['"]\)/g)) {
     sdkPkgs.add(m[1]);
   }
 
@@ -239,7 +241,7 @@ async function scanLoader(filePath) {
   const pkgs = new Set();
   // Match: load_*_sdk('<pkg>'), load_sdk('<pkg>'), import('<pkg>') —
   // anything that looks like an npm SDK package reference.
-  for (const m of src.matchAll(/load_(?:aws|gcp|azure)?_?sdk\(['"]([^'"]+)['"]\)/g)) {
+  for (const m of src.matchAll(/load_(?:aws|gcp|azure|kubernetes)?_?sdk\(['"]([^'"]+)['"]\)/g)) {
     pkgs.add(m[1]);
   }
   for (const m of src.matchAll(/load_sdk\(['"]([^'"]+)['"]\)/g)) {

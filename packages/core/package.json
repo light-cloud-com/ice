@@ -69,7 +69,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ice/constants": "workspace:*",
     "@aws-sdk/client-acm": "^3.0.0",
     "@aws-sdk/client-amplify": "^3.0.0",
     "@aws-sdk/client-api-gateway": "^3.0.0",
@@ -150,6 +149,8 @@
     "@google-cloud/scheduler": "^5.3.1",
     "@google-cloud/secret-manager": "^6.1.1",
     "@google-cloud/storage": "^7.19.0",
+    "@ice/constants": "workspace:*",
+    "@kubernetes/client-node": "^1.4.0",
     "@viz-js/viz": "^3.25.0",
     "better-sqlite3": "^12.8.0",
     "chalk": "^5.6.2",

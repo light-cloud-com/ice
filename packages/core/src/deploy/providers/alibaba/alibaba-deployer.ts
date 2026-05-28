@@ -15,6 +15,14 @@
  * optional `security_token` field for short-lived sessions.
  */
 
+import { alidns_record_handler } from './handlers/alidns-record';
+import { amqp_instance_handler } from './handlers/amqp-instance';
+import { apigateway_api_handler } from './handlers/apigateway-api';
+import { cas_certificate_handler } from './handlers/cas-certificate';
+import { cdn_domain_handler } from './handlers/cdn-domain';
+import { cr_build_task_handler } from './handlers/cr-build-task';
+import { cr_instance_handler } from './handlers/cr-instance';
+import { cs_managed_cluster_handler } from './handlers/cs-managed-cluster';
 import { dds_db_instance_handler } from './handlers/dds-db-instance';
 import { eci_container_group_handler } from './handlers/eci-container-group';
 import { ecs_instance_handler } from './handlers/ecs-instance';
@@ -23,13 +31,22 @@ import { eventbridge_rule_handler } from './handlers/eventbridge-rule';
 import { fc_function_handler } from './handlers/fc-function';
 import { kms_secret_handler } from './handlers/kms-secret';
 import { kvstore_instance_handler } from './handlers/kvstore-instance';
+import { maxcompute_project_handler } from './handlers/maxcompute-project';
 import { mns_queue_handler } from './handlers/mns-queue';
 import { mns_topic_handler } from './handlers/mns-topic';
+import { opensearch_app_handler } from './handlers/opensearch-app';
 import { oss_bucket_handler } from './handlers/oss-bucket';
+import { pai_eas_service_handler } from './handlers/pai-eas-service';
+import { pai_workspace_handler } from './handlers/pai-workspace';
+import { privatelink_endpoint_handler } from './handlers/privatelink-endpoint';
+import { ram_user_handler } from './handlers/ram-user';
 import { rds_db_instance_handler } from './handlers/rds-db-instance';
 import { sae_application_handler } from './handlers/sae-application';
+import { slb_load_balancer_handler } from './handlers/slb-load-balancer';
+import { sls_project_handler } from './handlers/sls-project';
 import { vpc_handler } from './handlers/vpc';
 import { vpc_vswitch_handler } from './handlers/vpc-vswitch';
+import { waf_policy_handler } from './handlers/waf-policy';
 import { normalize_region } from './region';
 import { initialize_alibaba_clients } from './sdk-loader';
 import type { AlibabaCredentials, AlibabaHandlerContext, AlibabaResourceHandler } from './types';
@@ -52,6 +69,27 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: AlibabaResourceHandler 
   { prefix: 'alibaba.vpc.vpc', handler: vpc_handler },
   { prefix: 'alibaba.vpc.vSwitch', handler: vpc_vswitch_handler },
   { prefix: 'alibaba.kms.secret', handler: kms_secret_handler },
+  // P1 — important (11)
+  { prefix: 'alibaba.slb.loadBalancer', handler: slb_load_balancer_handler },
+  { prefix: 'alibaba.alidns.domainRecord', handler: alidns_record_handler },
+  { prefix: 'alibaba.privatelink.endpoint', handler: privatelink_endpoint_handler },
+  { prefix: 'alibaba.apigateway.api', handler: apigateway_api_handler },
+  { prefix: 'alibaba.cs.managedCluster', handler: cs_managed_cluster_handler },
+  { prefix: 'alibaba.cr.instance', handler: cr_instance_handler },
+  { prefix: 'alibaba.cdn.domain', handler: cdn_domain_handler },
+  { prefix: 'alibaba.ram.user', handler: ram_user_handler },
+  { prefix: 'alibaba.cas.certificate', handler: cas_certificate_handler },
+  { prefix: 'alibaba.waf.policy', handler: waf_policy_handler },
+  { prefix: 'alibaba.sls.project', handler: sls_project_handler },
+  // P2 — long tail (6)
+  { prefix: 'alibaba.amqp.instance', handler: amqp_instance_handler },
+  { prefix: 'alibaba.maxcompute.project', handler: maxcompute_project_handler },
+  { prefix: 'alibaba.opensearch.app', handler: opensearch_app_handler },
+  { prefix: 'alibaba.paieas.service', handler: pai_eas_service_handler },
+  { prefix: 'alibaba.pai.workspace', handler: pai_workspace_handler },
+  { prefix: 'alibaba.cr.buildTask', handler: cr_build_task_handler },
+  // Skipped: alibaba.datahub.topic + alibaba.ots.instance — community
+  // SDKs (no `@alicloud/*` v3 package); revisit when official SDKs ship.
 ];
 
 function resolve_handler(type: string): AlibabaResourceHandler | undefined {

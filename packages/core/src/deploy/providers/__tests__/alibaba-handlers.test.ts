@@ -171,6 +171,80 @@ describe('Alibaba P0 handler dispatch', () => {
     expect(result.provider_id).toBe('api-key');
   });
 
+  it('routes slb.loadBalancer create through SLB createLoadBalancer', async () => {
+    const createLoadBalancer = vi.fn().mockResolvedValue({ body: { loadBalancerId: 'lb-abc' } });
+    const deployer = deployer_with_stubbed_clients({ slb: { createLoadBalancer } });
+    const result = await deployer.create('alibaba.slb.loadBalancer', 'app-lb', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('lb-abc');
+  });
+
+  it('routes alidns.domainRecord create through addDomainRecord', async () => {
+    const addDomainRecord = vi.fn().mockResolvedValue({ body: { recordId: 'rec-abc' } });
+    const deployer = deployer_with_stubbed_clients({ alidns: { addDomainRecord } });
+    const result = await deployer.create(
+      'alibaba.alidns.domainRecord',
+      'www',
+      { domain: 'example.com', value: '1.2.3.4' },
+      {},
+    );
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('rec-abc');
+  });
+
+  it('routes cs.managedCluster create through ACK createCluster', async () => {
+    const createCluster = vi.fn().mockResolvedValue({ body: { clusterId: 'c-abc' } });
+    const deployer = deployer_with_stubbed_clients({ cs: { createCluster } });
+    const result = await deployer.create('alibaba.cs.managedCluster', 'prod', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('c-abc');
+  });
+
+  it('routes cr.instance create through CR createInstance', async () => {
+    const createInstance = vi.fn().mockResolvedValue({ body: { instanceId: 'cri-abc' } });
+    const deployer = deployer_with_stubbed_clients({ cr: { createInstance } });
+    const result = await deployer.create('alibaba.cr.instance', 'reg', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('cri-abc');
+  });
+
+  it('routes cdn.domain create through addCdnDomain', async () => {
+    const addCdnDomain = vi.fn().mockResolvedValue({});
+    const deployer = deployer_with_stubbed_clients({ cdn: { addCdnDomain } });
+    const result = await deployer.create(
+      'alibaba.cdn.domain',
+      'static.example.com',
+      { origin: 'b.oss.aliyuncs.com' },
+      {},
+    );
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('static.example.com');
+  });
+
+  it('routes amqp.instance create through createInstance', async () => {
+    const createInstance = vi.fn().mockResolvedValue({ body: { data: 'amqp-abc' } });
+    const deployer = deployer_with_stubbed_clients({ amqp: { createInstance } });
+    const result = await deployer.create('alibaba.amqp.instance', 'rmq', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('amqp-abc');
+  });
+
+  it('routes maxcompute.project create through createProject', async () => {
+    const createProject = vi.fn().mockResolvedValue({});
+    const deployer = deployer_with_stubbed_clients({ maxcompute: { createProject } });
+    const result = await deployer.create('alibaba.maxcompute.project', 'dwh', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('dwh');
+  });
+
+  it('routes paieas.service create through createService', async () => {
+    const createService = vi.fn().mockResolvedValue({});
+    const deployer = deployer_with_stubbed_clients({ pai: { createService } });
+    const result = await deployer.create('alibaba.paieas.service', 'inference', {}, {});
+    expect(result.success).toBe(true);
+    expect(result.provider_id).toBe('inference');
+  });
+
   it('reports SDK-missing when no client thunk registered', async () => {
     const deployer = deployer_with_stubbed_clients({});
     const result = await deployer.create('alibaba.ecs.instance', 'web', {}, {});

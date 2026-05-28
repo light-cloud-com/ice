@@ -197,3 +197,203 @@ export function extract_alibaba_kms_secret_properties(
     description: data.description as string | undefined,
   };
 }
+
+// ─── P1 extractors ───────────────────────────────────────────────────
+
+export function extract_alibaba_slb_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    spec: (data.spec as string) || 'slb.s1.small',
+    address_type: (data.address_type as string) || 'internet',
+    vswitch_id: data.vswitch_id as string | undefined,
+  };
+}
+
+export function extract_alibaba_alidns_record_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    domain: data.domain as string | undefined,
+    subdomain: (data.subdomain as string) || '@',
+    record_type: (data.record_type as string) || 'A',
+    value: data.value as string | undefined,
+    ttl_sec: (data.ttl_sec as number) ?? 600,
+  };
+}
+
+export function extract_alibaba_privatelink_endpoint_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    vpc_id: data.vpc_id as string | undefined,
+    service_id: data.service_id as string | undefined,
+    service_name: data.service_name as string | undefined,
+  };
+}
+
+export function extract_alibaba_apigateway_api_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    group_id: data.group_id as string | undefined,
+    path: (data.path as string) || '/',
+    method: (data.method as string) || 'POST',
+    backend_url: data.backend_url as string | undefined,
+    timeout_ms: (data.timeout_ms as number) ?? 5000,
+    auth_type: (data.auth_type as string) || 'ANONYMOUS',
+  };
+}
+
+export function extract_alibaba_cs_managed_cluster_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    version: (data.version as string) || '1.28.9-aliyun.1',
+    vpc_id: data.vpc_id as string | undefined,
+    vswitch_ids: (data.vswitch_ids as string[]) ?? [],
+    service_cidr: (data.service_cidr as string) || '172.21.0.0/20',
+    pod_cidr: (data.pod_cidr as string) || '172.20.0.0/16',
+    node_count: (data.node_count as number) ?? 1,
+  };
+}
+
+export function extract_alibaba_cr_instance_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    tier: (data.tier as string) || 'Basic',
+  };
+}
+
+export function extract_alibaba_cdn_domain_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    cdn_type: (data.cdn_type as string) || 'web',
+    origin: data.origin as string | undefined,
+    scope: (data.scope as string) || 'overseas',
+  };
+}
+
+export function extract_alibaba_ram_user_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    display_name: data.display_name as string | undefined,
+    description: data.description as string | undefined,
+  };
+}
+
+export function extract_alibaba_cas_certificate_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    cert_pem: data.cert_pem as string | undefined,
+    key_pem: data.key_pem as string | undefined,
+  };
+}
+
+export function extract_alibaba_waf_policy_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    instance_id: data.instance_id as string | undefined,
+    scene: (data.scene as string) || 'antiscan',
+  };
+}
+
+export function extract_alibaba_sls_project_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    logstore_name: data.logstore_name as string | undefined,
+    retention_days: (data.retention_days as number) ?? 30,
+    shards: (data.shards as number) ?? 2,
+    description: data.description as string | undefined,
+  };
+}
+
+// ─── P2 extractors ───────────────────────────────────────────────────
+
+export function extract_alibaba_amqp_instance_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    instance_type: (data.instance_type as string) || 'professional',
+    max_tps: (data.max_tps as number) || 1000,
+    max_connections: (data.max_connections as number) || 50,
+    queue_capacity: (data.queue_capacity as number) || 50,
+  };
+}
+
+export function extract_alibaba_maxcompute_project_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    description: data.description as string | undefined,
+    default_quota: data.default_quota as string | undefined,
+  };
+}
+
+export function extract_alibaba_opensearch_app_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    group_id: data.group_id as string | undefined,
+    description: data.description as string | undefined,
+    schema: data.schema,
+  };
+}
+
+export function extract_alibaba_pai_eas_service_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    model_path: data.model_path as string | undefined,
+    processor: (data.processor as string) || 'pmml',
+    cpu_cores: (data.cpu_cores as number) ?? 4,
+    memory_mb: (data.memory_mb as number) ?? 4000,
+    replicas: (data.replicas as number) ?? 1,
+  };
+}
+
+export function extract_alibaba_pai_workspace_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    display_name: data.display_name as string | undefined,
+    description: data.description as string | undefined,
+    env_types: (data.env_types as string[]) ?? ['dev', 'prod'],
+  };
+}
+
+export function extract_alibaba_cr_build_task_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
+  return {
+    instance_id: data.instance_id as string | undefined,
+    repo_id: data.repo_id as string | undefined,
+    dockerfile_path: (data.dockerfile_path as string) || '/',
+    dockerfile_name: (data.dockerfile_name as string) || 'Dockerfile',
+    image_tag: (data.image_tag as string) || 'latest',
+    branch: (data.branch as string) || 'main',
+  };
+}

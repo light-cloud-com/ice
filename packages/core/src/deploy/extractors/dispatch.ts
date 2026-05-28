@@ -18,6 +18,14 @@
  */
 
 import {
+  extract_alibaba_alidns_record_properties,
+  extract_alibaba_amqp_instance_properties,
+  extract_alibaba_apigateway_api_properties,
+  extract_alibaba_cas_certificate_properties,
+  extract_alibaba_cdn_domain_properties,
+  extract_alibaba_cr_build_task_properties,
+  extract_alibaba_cr_instance_properties,
+  extract_alibaba_cs_managed_cluster_properties,
   extract_alibaba_dds_db_instance_properties,
   extract_alibaba_eci_container_group_properties,
   extract_alibaba_ecs_instance_properties,
@@ -26,13 +34,22 @@ import {
   extract_alibaba_fc_function_properties,
   extract_alibaba_kms_secret_properties,
   extract_alibaba_kvstore_instance_properties,
+  extract_alibaba_maxcompute_project_properties,
   extract_alibaba_mns_queue_properties,
   extract_alibaba_mns_topic_properties,
+  extract_alibaba_opensearch_app_properties,
   extract_alibaba_oss_bucket_properties,
+  extract_alibaba_pai_eas_service_properties,
+  extract_alibaba_pai_workspace_properties,
+  extract_alibaba_privatelink_endpoint_properties,
+  extract_alibaba_ram_user_properties,
   extract_alibaba_rds_db_instance_properties,
   extract_alibaba_sae_application_properties,
+  extract_alibaba_slb_properties,
+  extract_alibaba_sls_project_properties,
   extract_alibaba_vpc_properties,
   extract_alibaba_vswitch_properties,
+  extract_alibaba_waf_policy_properties,
 } from './alibaba';
 import {
   extract_secret_manager_properties,
@@ -339,6 +356,27 @@ export const PROPERTY_EXTRACTORS: Record<
   'alibaba.vpc.vpc': extract_alibaba_vpc_properties,
   'alibaba.vpc.vSwitch': extract_alibaba_vswitch_properties,
   'alibaba.kms.secret': extract_alibaba_kms_secret_properties,
+
+  // ─── Alibaba Cloud — P1 handlers ───────────────────────────────────
+  'alibaba.slb.loadBalancer': extract_alibaba_slb_properties,
+  'alibaba.alidns.domainRecord': extract_alibaba_alidns_record_properties,
+  'alibaba.privatelink.endpoint': extract_alibaba_privatelink_endpoint_properties,
+  'alibaba.apigateway.api': extract_alibaba_apigateway_api_properties,
+  'alibaba.cs.managedCluster': extract_alibaba_cs_managed_cluster_properties,
+  'alibaba.cr.instance': extract_alibaba_cr_instance_properties,
+  'alibaba.cdn.domain': extract_alibaba_cdn_domain_properties,
+  'alibaba.ram.user': extract_alibaba_ram_user_properties,
+  'alibaba.cas.certificate': extract_alibaba_cas_certificate_properties,
+  'alibaba.waf.policy': extract_alibaba_waf_policy_properties,
+  'alibaba.sls.project': extract_alibaba_sls_project_properties,
+
+  // ─── Alibaba Cloud — P2 handlers ───────────────────────────────────
+  'alibaba.amqp.instance': extract_alibaba_amqp_instance_properties,
+  'alibaba.maxcompute.project': extract_alibaba_maxcompute_project_properties,
+  'alibaba.opensearch.app': extract_alibaba_opensearch_app_properties,
+  'alibaba.paieas.service': extract_alibaba_pai_eas_service_properties,
+  'alibaba.pai.workspace': extract_alibaba_pai_workspace_properties,
+  'alibaba.cr.buildTask': extract_alibaba_cr_build_task_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

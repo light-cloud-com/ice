@@ -18,6 +18,23 @@
  */
 
 import {
+  extract_alibaba_dds_db_instance_properties,
+  extract_alibaba_eci_container_group_properties,
+  extract_alibaba_ecs_instance_properties,
+  extract_alibaba_ecs_security_group_properties,
+  extract_alibaba_eventbridge_rule_properties,
+  extract_alibaba_fc_function_properties,
+  extract_alibaba_kms_secret_properties,
+  extract_alibaba_kvstore_instance_properties,
+  extract_alibaba_mns_queue_properties,
+  extract_alibaba_mns_topic_properties,
+  extract_alibaba_oss_bucket_properties,
+  extract_alibaba_rds_db_instance_properties,
+  extract_alibaba_sae_application_properties,
+  extract_alibaba_vpc_properties,
+  extract_alibaba_vswitch_properties,
+} from './alibaba';
+import {
   extract_secret_manager_properties,
   extract_identity_platform_properties,
   extract_bigquery_properties,
@@ -305,6 +322,23 @@ export const PROPERTY_EXTRACTORS: Record<
   'k8s.serving.service': extract_k8s_knative_service_properties,
   'k8s.monitoring.prometheusrule': extract_k8s_prometheus_rule_properties,
   'k8s.policy.poddisruptionbudget': extract_k8s_pdb_properties,
+
+  // ─── Alibaba Cloud — P0 handlers ───────────────────────────────────
+  'alibaba.ecs.instance': extract_alibaba_ecs_instance_properties,
+  'alibaba.ecs.securityGroup': extract_alibaba_ecs_security_group_properties,
+  'alibaba.sae.application': extract_alibaba_sae_application_properties,
+  'alibaba.fc.function': extract_alibaba_fc_function_properties,
+  'alibaba.eventbridge.rule': extract_alibaba_eventbridge_rule_properties,
+  'alibaba.eci.containerGroup': extract_alibaba_eci_container_group_properties,
+  'alibaba.rds.dbInstance': extract_alibaba_rds_db_instance_properties,
+  'alibaba.dds.dbInstance': extract_alibaba_dds_db_instance_properties,
+  'alibaba.kvstore.instance': extract_alibaba_kvstore_instance_properties,
+  'alibaba.oss.bucket': extract_alibaba_oss_bucket_properties,
+  'alibaba.mns.queue': extract_alibaba_mns_queue_properties,
+  'alibaba.mns.topic': extract_alibaba_mns_topic_properties,
+  'alibaba.vpc.vpc': extract_alibaba_vpc_properties,
+  'alibaba.vpc.vSwitch': extract_alibaba_vswitch_properties,
+  'alibaba.kms.secret': extract_alibaba_kms_secret_properties,
 
   // ─── AWS — ancillary (messaging, auth, secrets, logging) ───────────
   'aws.sqs.queue': extract_sqs_queue_properties,

@@ -145,7 +145,7 @@ export interface NodeProgressEvent {
  */
 export interface DeployOptions {
   /** Cloud provider to deploy to */
-  provider: 'gcp' | 'aws' | 'azure' | 'kubernetes';
+  provider: 'gcp' | 'aws' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm';
   /** GCP project ID (required for GCP) */
   project?: string;
   /** AWS regions (optional, defaults to all) */

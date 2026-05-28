@@ -77,7 +77,7 @@ describe('PROPERTY_EXTRACTORS table shape', () => {
   });
 
   it('every key matches the {provider}.{service}.{kind} shape', () => {
-    const pattern = /^(gcp|aws|azure|k8s)\.[a-z0-9]+\.[a-zA-Z]+$/;
+    const pattern = /^(gcp|aws|azure|k8s|alibaba|oci|digitalocean|ibm)\.[a-z0-9]+\.[a-zA-Z]+$/;
     for (const key of Object.keys(PROPERTY_EXTRACTORS)) {
       expect(key, `key "${key}" should be {provider}.{service}.{kind}`).toMatch(pattern);
     }

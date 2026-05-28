@@ -137,7 +137,6 @@ export const AppBar: React.FC = memo(() => {
                 src={alibabaIcon}
                 onClick={() => setShowAlibaba(true)}
                 tip={t('common.providers.alibaba')}
-                themeAware
               />
             )}
             {isProviderEnabled('oci') && (
@@ -162,7 +161,6 @@ export const AppBar: React.FC = memo(() => {
                 src={ibmIcon}
                 onClick={() => setShowIbm(true)}
                 tip={t('common.providers.ibm')}
-                themeAware
               />
             )}
             {isProviderEnabled('kubernetes') && (

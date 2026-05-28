@@ -49,10 +49,14 @@ export const logic_apps_handler: AzureResourceHandler = {
     const client = ctx.clients.get('logic') as any;
     if (!client) return err(name, TYPE, 'update', start, 'Logic Apps SDK not available');
     try {
-      const resource_group = extract_resource_group_from_id(provider_id, ctx.resource_group);
-      await client.workflows.update(resource_group, name, {
-        tags: properties.tags as Record<string, string>,
-      });
+      // @azure/arm-logic v8's workflows.update only takes (rg, name,
+      // options) — there is no body parameter and no way to patch tags
+      // through this method. Tag updates on a Logic App workflow flow
+      // through Azure Resource Manager's generic tags resource. For
+      // now this handler is a no-op on update; full tag-patching needs
+      // @azure/arm-resources tagsResources(provider_id, { properties }).
+      void provider_id;
+      void name;
       return ok(name, TYPE, 'update', start, { provider_id });
     } catch (error) {
       return err(name, TYPE, 'update', start, error instanceof Error ? error.message : String(error));

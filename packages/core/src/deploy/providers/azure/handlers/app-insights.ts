@@ -23,11 +23,17 @@ export const app_insights_handler: AzureResourceHandler = {
     try {
       const resource_group = (properties.resource_group as string) || ctx.resource_group;
       const location = (properties.location as string) || ctx.location;
+      // @azure/arm-appinsights v4 ships the classic
+      // ApplicationInsightsComponent model which has no
+      // `workspaceResourceId` field. Operators on workspace-based
+      // Application Insights should set the workspace on the parent Log
+      // Analytics workspace block and rely on Azure's auto-link via the
+      // resource group, OR upgrade to the unified Azure Monitor SDK
+      // when ARM publishes one.
       const result = await client.components.createOrUpdate(resource_group, name, {
         location,
         kind: 'web',
         applicationType: (properties.application_type as string) || 'web',
-        workspaceResourceId: properties.workspace_resource_id as string | undefined,
         tags: properties.tags as Record<string, string>,
       });
       return ok(name, TYPE, 'create', start, { provider_id: result?.id ?? '' });

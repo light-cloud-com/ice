@@ -161,8 +161,26 @@ function scanAwsInvocations(src) {
  * { …body })`. The body object is always the last positional arg with
  * a literal `{`.
  */
-function scanAzureInvocations(src, sdkPkg) {
+function scanAzureInvocations(src, sdkPkg, clientKeyToSdk = null) {
   const out = [];
+  // Index `const <varname> = ctx.clients.get('<key>') as any;` per-pos so
+  // we can attribute each `client.*` invocation to its SDK package. The
+  // most-recently-assigned key wins (handlers usually scope `const
+  // client = ...` per-method).
+  const clientKeyAtPos = [];
+  for (const am of src.matchAll(
+    /const\s+\w+\s*=\s*ctx\.clients\.get\(['"]([^'"]+)['"]\)/g,
+  )) {
+    clientKeyAtPos.push({ pos: am.index, key: am[1] });
+  }
+  function clientKeyBefore(pos) {
+    let best = null;
+    for (const entry of clientKeyAtPos) {
+      if (entry.pos < pos) best = entry.key;
+      else break;
+    }
+    return best;
+  }
   // Match: `client.<group>.<method>(`
   // Then walk to the matching `)` capturing the last `{…}` literal.
   const re = /\bclient\.([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)\(/g;
@@ -170,6 +188,13 @@ function scanAzureInvocations(src, sdkPkg) {
   while ((m = re.exec(src))) {
     const [, group, method] = m;
     const start = m.index + m[0].length;
+    // Resolve which @azure/arm-* package this invocation belongs to.
+    // When a clientKeyToSdk map is available and the nearest preceding
+    // `ctx.clients.get(<key>)` matches, prefer that SDK over the file's
+    // default. This routes handlers that use multiple clients (e.g.
+    // functions.ts uses both 'web' + 'storage') correctly.
+    const key = clientKeyBefore(m.index);
+    const invSdkPkg = (clientKeyToSdk && key && clientKeyToSdk.get(key)) || sdkPkg;
     // Walk until matching `)`. We want the FINAL top-level object
     // literal in the arg list (Azure operation methods take
     // `(rg, name, body, options?)`). Track BOTH paren and brace
@@ -198,7 +223,7 @@ function scanAzureInvocations(src, sdkPkg) {
     if (lastBraceOpen < 0) continue;
     out.push({
       provider: 'azure',
-      sdkPkg,
+      sdkPkg: invSdkPkg,
       group,
       method,
       keys: topLevelKeys(src, lastBraceOpen),
@@ -215,6 +240,25 @@ function scanAzureInvocations(src, sdkPkg) {
  */
 function scanGcpInvocations(src, sdkPkg) {
   const out = [];
+  // First pass: index every `const client = ctx.clients.get('<key>')`
+  // assignment by source position. We attribute each later
+  // `client.<method>(` call to the nearest preceding clients.get key
+  // so the resolver can look up resource-specific request types
+  // (compute uses `IInsert<Resource>Request`, not `IInsertRequest`).
+  const clientKeyAtPos = []; // sorted by position
+  for (const m of src.matchAll(
+    /const\s+\w+\s*=\s*ctx\.clients\.get\(['"]([^'"]+)['"]\)/g,
+  )) {
+    clientKeyAtPos.push({ pos: m.index, key: m[1] });
+  }
+  function clientKeyBefore(pos) {
+    let best = null;
+    for (const entry of clientKeyAtPos) {
+      if (entry.pos < pos) best = entry.key;
+      else break;
+    }
+    return best;
+  }
   // Match `client.<chain>(` followed by the first `{`.
   const re = /\bclient\.([a-zA-Z_][\w.]*)\(\s*\{/g;
   let m;
@@ -226,10 +270,32 @@ function scanGcpInvocations(src, sdkPkg) {
       provider: 'gcp',
       sdkPkg,
       method,
+      clientKey: clientKeyBefore(m.index),
       keys: topLevelKeys(src, objStart),
     });
   }
   return out;
+}
+
+/**
+ * Derive a singular PascalCase resource name from a clients-map key.
+ * E.g. 'firewalls' → 'Firewall', 'instances' → 'Instance',
+ * 'forwardingRules' → 'ForwardingRule', 'networkPolicies' →
+ * 'NetworkPolicy'.
+ */
+function gcpResourceFromKey(key) {
+  if (!key) return null;
+  // Drop a `<service>.` prefix if present (loader format
+  // `compute.firewalls` → `firewalls`).
+  const tail = key.split('.').pop();
+  // PascalCase the first letter.
+  const pascal = tail.charAt(0).toUpperCase() + tail.slice(1);
+  // Singularize: ies → y, es → '', s → ''. Keep simple, only the
+  // patterns Compute v1 actually uses.
+  if (pascal.endsWith('ies')) return pascal.slice(0, -3) + 'y';
+  if (pascal.endsWith('ses') || pascal.endsWith('xes')) return pascal.slice(0, -2);
+  if (pascal.endsWith('s')) return pascal.slice(0, -1);
+  return pascal;
 }
 
 async function walkHandlersDir(dir) {
@@ -416,26 +482,53 @@ async function azureLoadModels(pkg) {
 }
 
 function azureCollectInterfaceFields(modelsSrc, name) {
-  const re = new RegExp(
+  // Path 1: classic `export interface Name extends X, Y { ... }`.
+  const interfaceRe = new RegExp(
     `export\\s+interface\\s+${name}\\s*(?:extends\\s+([^{]+))?\\{([\\s\\S]*?)\\n\\}`,
     'm',
   );
-  const m = modelsSrc.match(re);
-  if (!m) return null;
-  const parents = m[1]
-    ? m[1]
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-  const body = m[2];
-  const fields = new Set();
-  for (const fm of body.matchAll(/^\s*([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
-  for (const parent of parents) {
-    const inherited = azureCollectInterfaceFields(modelsSrc, parent);
-    if (inherited) for (const f of inherited.fields) fields.add(f);
+  let m = modelsSrc.match(interfaceRe);
+  if (m) {
+    const parents = m[1] ? m[1].split(',').map((s) => s.trim()).filter(Boolean) : [];
+    const body = m[2];
+    const fields = new Set();
+    for (const fm of body.matchAll(/^\s*([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+    for (const parent of parents) {
+      const inherited = azureCollectInterfaceFields(modelsSrc, parent);
+      if (inherited) for (const f of inherited.fields) fields.add(f);
+    }
+    return { fields, parents };
   }
-  return { fields, parents };
+  // Path 2: type alias with intersection — the modern @azure/arm-* SDKs
+  // declare resources this way to mix in TrackedResource fields:
+  //   export declare type Workspace = TrackedResource & {
+  //     identity?: ManagedIdentity;
+  //     ...
+  //   };
+  const typeAliasRe = new RegExp(
+    `export\\s+declare\\s+type\\s+${name}\\s*=\\s*([^{]+?)\\{([\\s\\S]*?)\\n\\}`,
+    'm',
+  );
+  m = modelsSrc.match(typeAliasRe);
+  if (m) {
+    // The LHS of `{` is the intersection chain: `TrackedResource & ` or
+    // `Foo & Bar & `. Extract each base name (skip `&` and whitespace).
+    const baseChain = m[1];
+    const parents = [];
+    for (const bm of baseChain.matchAll(/([A-Za-z_][\w]*)/g)) {
+      // Skip TypeScript noise (no realistic identifier called these).
+      parents.push(bm[1]);
+    }
+    const body = m[2];
+    const fields = new Set();
+    for (const fm of body.matchAll(/^\s*([A-Za-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+    for (const parent of parents) {
+      const inherited = azureCollectInterfaceFields(modelsSrc, parent);
+      if (inherited) for (const f of inherited.fields) fields.add(f);
+    }
+    return { fields, parents };
+  }
+  return null;
 }
 
 /**
@@ -462,7 +555,7 @@ async function azureCollectFieldsCrossFile(pkg, name, seen = new Set()) {
     for (const f of result.fields) allFields.add(f);
     for (const parent of result.parents) {
       const parentFields = await azureCollectFieldsCrossFile(pkg, parent, seen);
-      for (const f of parentFields) allFields.add(f);
+      if (parentFields) for (const f of parentFields) allFields.add(f);
     }
     break;
   }
@@ -493,16 +586,56 @@ async function azureGetBodyTypeFields(pkg, group, method) {
   }
   if (!m) return { found: false, reason: `method "${method}" not found in any operations file for "${group}"` };
   const params = m[1].split(',').map((p) => p.trim());
+  const PRIMITIVES = new Set(['string', 'number', 'boolean', 'object', 'unknown', 'any', 'void']);
+  const NAMESPACE_PREFIXES = new Set([
+    'msRest',
+    'coreClient',
+    'coreRestPipeline',
+    'coreAuth',
+    'coreHttpClient',
+  ]);
+  /**
+   * Extract the rightmost type identifier from a parameter declaration.
+   * Handles:
+   *   `name: string`          → 'string'
+   *   `name: Models.Foo`      → 'Foo' (skip namespace prefix)
+   *   `name?: msRest.X`       → 'X' but filtered when prefix is msRest-family
+   *   `name: Models.A.B`      → 'B' (rightmost)
+   * Returns null when no type is present or when it's a callback.
+   */
+  function extractBodyType(p) {
+    // Match `name?: <type-expr>`. Type expression: optional namespaces
+    // (dot-joined identifiers) ending in a bare identifier, then
+    // optional generics / array brackets we ignore.
+    const tm = p.match(
+      /^[a-zA-Z_]\w*\??\s*:\s*((?:[A-Za-z_]\w*\.)*)([A-Za-z_]\w*)(?:\s*[<\[,)]|$)/,
+    );
+    if (!tm) return null;
+    const prefix = tm[1].replace(/\.$/, '');
+    const last = tm[2];
+    // Reject namespace-prefixed types from the Azure SDK plumbing layer.
+    if (prefix && NAMESPACE_PREFIXES.has(prefix.split('.')[0])) return null;
+    // Reject callbacks: any param typed `Service*Callback`.
+    if (last.endsWith('Callback')) return null;
+    return last;
+  }
+  // Pick the body type: prefer a non-primitive model interface over
+  // primitives. Last non-primitive match wins (Azure SDK call signatures
+  // put the body just before the optional `options` param).
   let bodyType = null;
+  let primitiveType = null;
   for (const p of params) {
     if (p.includes('OptionalParams')) continue;
-    // Skip namespace-qualified types like `msRest.RestResponse` — we
-    // only want the body parameter interface, which is a direct
-    // identifier.
-    const tm = p.match(/^[a-zA-Z_]\w*\??\s*:\s*([A-Za-z_]\w*)(?:\s*[<,)]|$)/);
-    if (tm && !tm[1].match(/^(msRest|coreClient|coreRestPipeline)$/)) bodyType = tm[1];
+    const t = extractBodyType(p);
+    if (!t) continue;
+    if (PRIMITIVES.has(t)) {
+      primitiveType = t;
+    } else {
+      bodyType = t;
+    }
   }
-  if (!bodyType || ['string', 'number', 'boolean', 'object', 'unknown', 'any'].includes(bodyType))
+  if (!bodyType) bodyType = primitiveType;
+  if (!bodyType || PRIMITIVES.has(bodyType))
     return { found: false, reason: `body type for "${group}.${method}" is primitive, no fields to verify` };
   // Cross-file recursive resolution (follows extends chains across
   // every .d.ts in models/).
@@ -549,8 +682,8 @@ async function gcpLoadProtos(pkg) {
 }
 
 const gcpRequestCache = new Map();
-async function gcpGetRequestFields(pkg, method) {
-  const cacheKey = `${pkg}::${method}`;
+async function gcpGetRequestFields(pkg, method, clientKey = null) {
+  const cacheKey = `${pkg}::${method}::${clientKey ?? ''}`;
   if (gcpRequestCache.has(cacheKey)) return gcpRequestCache.get(cacheKey);
   const src = await gcpLoadProtos(pkg);
   if (!src) {
@@ -561,8 +694,29 @@ async function gcpGetRequestFields(pkg, method) {
   //   createSecret → ICreateSecretRequest
   //   getSecret    → IGetSecretRequest
   //   updateSecret → IUpdateSecretRequest
+  // For Compute v1 the request type is per-resource:
+  //   insert  on firewalls → IInsertFirewallRequest
+  //   delete  on instances → IDeleteInstanceRequest
+  //   list    on forwardingRules → IListForwardingRulesRequest
+  // We try the per-resource candidates first when a client key is
+  // known, then fall back to the generic per-method candidates.
   const pascal = method.charAt(0).toUpperCase() + method.slice(1);
-  const candidates = [`I${pascal}Request`, `${pascal}Request`];
+  const candidates = [];
+  const resource = gcpResourceFromKey(clientKey);
+  if (resource) {
+    // Insert / get / delete: singular Resource. List: plural.
+    candidates.push(`I${pascal}${resource}Request`, `${pascal}${resource}Request`);
+    // List variant uses the plural (`Firewalls`); insert/delete uses
+    // the singular. Try both.
+    if (clientKey) {
+      const plural = clientKey.split('.').pop();
+      const pluralPascal = plural.charAt(0).toUpperCase() + plural.slice(1);
+      if (pluralPascal !== resource) {
+        candidates.push(`I${pascal}${pluralPascal}Request`, `${pascal}${pluralPascal}Request`);
+      }
+    }
+  }
+  candidates.push(`I${pascal}Request`, `${pascal}Request`);
   for (const candidate of candidates) {
     // GCP protos.d.ts often has MULTIPLE versions of the same
     // interface (one per API version: v1, v2, v2beta3, …). Aggregate
@@ -1006,17 +1160,39 @@ async function dotsGetRequestFields(namespace, method) {
     return result;
   }
   const fields = new Set();
+  // Helper: scrape `name?: <type>` / `name: <type>` from an interface
+  // body. Used by all three paths below.
+  function scrapeInterface(interfaceTypeName) {
+    const im = src.match(
+      new RegExp(`export\\s+interface\\s+${interfaceTypeName}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'),
+    );
+    if (!im) return false;
+    for (const fm of im[1].matchAll(/^\s*([a-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
+    return true;
+  }
   // Path 1: explicit `I<Method>ApiRequest` interface defined in the
   // same file. Most dots-wrapper modules declare one.
-  const m = src.match(new RegExp(`export\\s+interface\\s+${interfaceName}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'));
-  if (m) {
-    for (const fm of m[1].matchAll(/^\s*([a-z_][\w]*)\??\s*:/gm)) fields.add(fm[1]);
-  } else {
-    // Path 2: fall back to the destructured params on the last arrow
-    // signature: `export declare const <method>: (...) => ({ a, b, c, }:
-    // <ExternalType>) => Promise<…>`. The keys we want are the inner
-    // destructuring on the second arrow. Useful for handlers that
-    // accept an externally-declared interface like `IFirewall`.
+  let found = scrapeInterface(interfaceName);
+  // Path 2: type alias for unions: `export type <Method>ApiRequest =
+  // ICreateXByDropletApiRequest | ICreateXByRegionApiRequest`. Walk
+  // each branch and merge fields.
+  if (!found) {
+    const aliasName = `${method.charAt(0).toUpperCase()}${method.slice(1)}ApiRequest`;
+    const aliasMatch = src.match(
+      new RegExp(`export\\s+type\\s+${aliasName}\\s*=\\s*([^;]+);`, 'm'),
+    );
+    if (aliasMatch) {
+      for (const branchName of aliasMatch[1].match(/[A-Za-z_]\w*/g) ?? []) {
+        if (scrapeInterface(branchName)) found = true;
+      }
+    }
+  }
+  // Path 3: fall back to the destructured params on the last arrow
+  // signature: `export declare const <method>: (...) => ({ a, b, c, }:
+  // <ExternalType>) => Promise<…>`. The keys we want are the inner
+  // destructuring on the second arrow. Useful for handlers that
+  // accept an externally-declared interface like `IFirewall`.
+  if (!found) {
     const arrowRe = new RegExp(
       `export\\s+declare\\s+const\\s+${method}\\s*:\\s*[^=]*=>\\s*\\(\\s*\\{([^}]*)\\}`,
       'm',
@@ -1216,6 +1392,42 @@ function pickAzureSdk(src, aliasMap) {
   // Fall back to scanning the file for an Azure pkg reference.
   return src.match(/['"](@azure\/arm-[^'"]+)['"]/)?.[1] ?? null;
 }
+
+/**
+ * Read packages/core/src/deploy/providers/azure/sdk-loader.ts and
+ * build a clients-map key → @azure/arm-* package map. Pattern in the
+ * loader:
+ *
+ *   const storage = await load_azure_sdk('@azure/arm-storage');
+ *   if (storage) clients.set('storage', new storage.StorageManagementClient(...));
+ *
+ * Walks linearly: the most recent `load_azure_sdk('@azure/arm-x')`
+ * call attributes every subsequent `clients.set('<key>', ...)` to
+ * that package until the next load_azure_sdk.
+ */
+let azureClientKeyMapCache = null;
+async function loadAzureClientKeyMap() {
+  if (azureClientKeyMapCache) return azureClientKeyMapCache;
+  const map = new Map();
+  try {
+    const src = await fs.readFile(
+      join(ROOT, 'packages/core/src/deploy/providers/azure/sdk-loader.ts'),
+      'utf8',
+    );
+    let activePkg = null;
+    for (const line of src.split('\n')) {
+      const loadMatch = line.match(/load_azure_sdk\(\s*['"](@azure\/[^'"]+)['"]\s*\)/);
+      if (loadMatch) activePkg = loadMatch[1];
+      const setMatch = line.match(/clients\.set\(\s*['"]([^'"]+)['"]\s*,/);
+      if (setMatch && activePkg && !map.has(setMatch[1])) map.set(setMatch[1], activePkg);
+    }
+  } catch {
+    /* no loader */
+  }
+  azureClientKeyMapCache = map;
+  return map;
+}
+
 let gcpClientKeyMapCache = null;
 async function loadGcpClientKeyMap() {
   if (gcpClientKeyMapCache) return gcpClientKeyMapCache;
@@ -1318,10 +1530,11 @@ async function main() {
     } else if (provider === 'azure') {
       const sdkPkg = pickAzureSdk(src, aliasMap);
       if (!sdkPkg) continue;
-      for (const inv of scanAzureInvocations(src, sdkPkg)) {
+      const azureClientKeyMap = await loadAzureClientKeyMap();
+      for (const inv of scanAzureInvocations(src, sdkPkg, azureClientKeyMap)) {
         summary.invocations.azure++;
         any = true;
-        const result = await azureGetBodyTypeFields(sdkPkg, inv.group, inv.method);
+        const result = await azureGetBodyTypeFields(inv.sdkPkg, inv.group, inv.method);
         if (!result.found) {
           summary.unverified.azure++;
           if (VERBOSE)
@@ -1517,7 +1730,7 @@ async function main() {
       for (const inv of scanGcpInvocations(src, sdkPkg)) {
         summary.invocations.gcp++;
         any = true;
-        const result = await gcpGetRequestFields(sdkPkg, inv.method);
+        const result = await gcpGetRequestFields(sdkPkg, inv.method, inv.clientKey);
         if (!result.found) {
           summary.unverified.gcp++;
           if (VERBOSE)

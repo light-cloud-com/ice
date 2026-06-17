@@ -112,6 +112,19 @@
       "continueWithGithub": "Continue with GitHub"
     }
   },
+  "a11y": {
+    "announce": {
+      "connecting": "Connecting to cloud provider…",
+      "planning": "Planning deployment…",
+      "planReady": "Deployment plan ready for review.",
+      "deploying": "Deploying…",
+      "deployingCount": "Deploying {{total}} resources…",
+      "destroying": "Destroying resources…",
+      "deploySucceeded": "Deployment succeeded.",
+      "deployFailed": "Deployment failed.",
+      "deployFailedCount": "Deployment failed — {{failed}} resource(s) failed."
+    }
+  },
   "canvas": {
     "title": "Infrastructure Canvas",
     "emptyState": {

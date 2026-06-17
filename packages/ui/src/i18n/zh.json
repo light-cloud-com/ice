@@ -112,6 +112,19 @@
       "continueWithGithub": "使用 GitHub 继续"
     }
   },
+  "a11y": {
+    "announce": {
+      "connecting": "正在连接云服务提供商…",
+      "planning": "正在规划部署…",
+      "planReady": "部署计划已就绪，可供查看。",
+      "deploying": "正在部署…",
+      "deployingCount": "正在部署 {{total}} 个资源…",
+      "destroying": "正在销毁资源…",
+      "deploySucceeded": "部署成功。",
+      "deployFailed": "部署失败。",
+      "deployFailedCount": "部署失败 — {{failed}} 个资源失败。"
+    }
+  },
   "canvas": {
     "title": "基础设施画布",
     "emptyState": {

@@ -131,6 +131,12 @@ vi.mock('../breadcrumbs', () => ({
   Breadcrumbs: mocks.Breadcrumbs,
 }));
 
+// AX2 — the live-region announcer reads the deploy slice; stub it here (this
+// suite renders the full tree and its mock store has no deploy slice).
+vi.mock('../live-announcer', () => ({
+  LiveAnnouncer: () => null,
+}));
+
 vi.mock('../ui/tooltip', () => ({
   Tooltip: mocks.Tooltip,
   TooltipTrigger: mocks.TooltipTrigger,

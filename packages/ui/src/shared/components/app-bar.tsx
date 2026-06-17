@@ -37,6 +37,7 @@ import {
   checkAnthropicConnection,
   checkGitHubConnection,
 } from '../../store/slices/integrations-slice';
+import { LiveAnnouncer } from './live-announcer';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -88,6 +89,8 @@ export const AppBar: React.FC = memo(() => {
 
   return (
     <>
+      {/* AX2 — one polite live region for deploy lifecycle announcements. */}
+      <LiveAnnouncer />
       <TooltipProvider delayDuration={300}>
         <header
           data-testid="toolbar"

@@ -33,6 +33,9 @@ vi.mock('react', async (importOriginal) => {
       }
       return [initial, vi.fn()];
     }),
+    // The component now installs an Escape-key effect; no-op it for the
+    // function-call (tree-walker) render so it doesn't touch a real fiber.
+    useEffect: vi.fn(),
   };
 });
 
@@ -197,5 +200,36 @@ describe('ControlsHelpModal', () => {
       (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Cmd + C / X / V',
     );
     expect(cmd).toHaveLength(1);
+  });
+
+  it('documents the Shift+A add affordance (CD2)', () => {
+    stateMocks.openValue = true;
+    const tree = ControlsHelpModal({});
+    const shiftA = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Shift + A',
+    );
+    expect(shiftA).toHaveLength(1);
+  });
+
+  it('no longer advertises the dead 1 / 2 view-level keys (IA3)', () => {
+    stateMocks.openValue = true;
+    const tree = ControlsHelpModal({});
+    const oneOrTwo = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        ((el.props as { children?: unknown }).children === '1' ||
+          (el.props as { children?: unknown }).children === '2'),
+    );
+    expect(oneOrTwo).toHaveLength(0);
+  });
+
+  it('marks the panel as a modal dialog (AX3)', () => {
+    stateMocks.openValue = true;
+    const tree = ControlsHelpModal({});
+    const dialog = findByPredicate(tree, (el) => (el.props as { role?: string }).role === 'dialog');
+    expect(dialog).toHaveLength(1);
+    expect((dialog[0].props as { 'aria-modal'?: string })['aria-modal']).toBe('true');
   });
 });

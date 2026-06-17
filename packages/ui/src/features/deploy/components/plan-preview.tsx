@@ -20,7 +20,7 @@ import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import type { DeployPlan } from '../../../store/slices/deploy-slice';
 
-export const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
+export const PlanPreview: React.FC<{ plan: DeployPlan; destination?: string }> = ({ plan, destination }) => {
   const { t } = useTranslation();
   const creates = Array.isArray(plan.creates) ? plan.creates : [];
   const updates = Array.isArray(plan.updates) ? plan.updates : [];
@@ -31,6 +31,11 @@ export const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
   if (total === 0 && skipped.length === 0) {
     return (
       <div className="rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground text-center">
+        {destination && (
+          <div className="text-xs mb-1 text-muted-foreground" data-testid="ice-plan-destination">
+            {t('deploy.plan.destination', { target: destination })}
+          </div>
+        )}
         {t('deploy.plan.noChanges')}
       </div>
     );
@@ -42,6 +47,15 @@ export const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
         <Eye className="w-3.5 h-3.5" />
         {t('deploy.plan.changes', { total })}
       </div>
+      {/* DF2 — make the plan self-describing: what destination it targets. */}
+      {destination && (
+        <div
+          data-testid="ice-plan-destination"
+          className="px-4 py-1.5 bg-muted/20 border-b border-border text-xs text-muted-foreground"
+        >
+          {t('deploy.plan.destination', { target: destination })}
+        </div>
+      )}
       <div className="divide-y divide-border max-h-64 overflow-y-auto">
         {creates.map((r, i) => (
           <ChangeRow key={`c-${i}`} name={r.name} type={r.type} action="create" />

@@ -79,6 +79,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
             <span className="text-ice-2xs text-ice-text-2 leading-tight">{t('canvas.emptyState.more')}</span>
           </button>
         </div>
+        <div className="mt-2 text-ice-2xs text-ice-text-3 text-center">{t('canvas.emptyState.hint')}</div>
       </div>
     </div>
   );

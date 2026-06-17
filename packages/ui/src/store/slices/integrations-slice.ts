@@ -5,7 +5,7 @@
  * and generic integration status for GCP/AWS/Azure/etc.
  */
 
-import { type IntegrationStatus } from '@ice/constants';
+import { ALL_PROVIDERS, isProviderEnabled, type IntegrationStatus } from '@ice/constants';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { getApi } from '../../shared/api/api-adapter';
 
@@ -192,6 +192,36 @@ export const disconnectAnthropic = createAsyncThunk('integrations/disconnectAnth
   await api.provider.disconnect('anthropic');
 });
 
+// ── Cloud providers (EI2) ───────────────────────────────────────────────────
+// The per-provider connect modal manages connection locally; nothing ever
+// wrote the result back to Redux, so the app-bar rings + status dots were dead
+// (even GCP's wired ring could never light up). This bootstrap thunk checks
+// every enabled cloud provider's connection on app load and populates the
+// slice, and `setProviderConnection` lets the modal push live updates on
+// connect/disconnect without a reload.
+export const checkAllProviderConnections = createAsyncThunk(
+  'integrations/checkAllProviderConnections',
+  async (_, { dispatch }) => {
+    const api = getApi();
+    const providers = (ALL_PROVIDERS as readonly string[]).filter((p) => isProviderEnabled(p));
+    await Promise.all(
+      providers.map(async (id) => {
+        try {
+          const connected = await api.provider.isConnected(id);
+          dispatch(
+            integrationsSlice.actions.setProviderConnection({
+              providerId: id,
+              status: connected ? 'connected' : 'disconnected',
+            }),
+          );
+        } catch {
+          // Leave the provider's current status untouched on a check failure.
+        }
+      }),
+    );
+  },
+);
+
 export const fetchGitHubRepos = createAsyncThunk(
   'integrations/fetchGitHubRepos',
   async (page: number | undefined, { rejectWithValue }) => {
@@ -236,6 +266,12 @@ const integrationsSlice = createSlice({
   reducers: {
     setDeviceFlow(state, action: PayloadAction<DeviceFlowState | null>) {
       state.github.deviceFlow = action.payload;
+    },
+    // EI2 — set a provider's connection status (cloud providers, from the
+    // connect modal's connect/disconnect and the bootstrap check thunk).
+    setProviderConnection(state, action: PayloadAction<{ providerId: string; status: IntegrationStatus }>) {
+      const existing = state.integrations[action.payload.providerId] || { status: 'disconnected' };
+      state.integrations[action.payload.providerId] = { ...existing, status: action.payload.status };
     },
   },
   extraReducers: (builder) => {
@@ -338,5 +374,5 @@ const integrationsSlice = createSlice({
   },
 });
 
-export const { setDeviceFlow } = integrationsSlice.actions;
+export const { setDeviceFlow, setProviderConnection } = integrationsSlice.actions;
 export default integrationsSlice.reducer;

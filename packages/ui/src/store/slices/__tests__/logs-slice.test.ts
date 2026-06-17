@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 import logsReducer, {
   appendEntry,
   resumed,
+  retryStream,
   setError,
   setSource,
   setStatus,
@@ -91,6 +92,23 @@ describe('logs-slice', () => {
       // Resolved sets status to `connecting`; the first entry promotes to
       // `streaming` (covered in the next describe block).
       expect(state.byTerminalNodeId[TID]?.status).toBe('connecting');
+    });
+  });
+
+  describe('retryStream — OL5 re-subscribe trigger', () => {
+    it('bumps retryNonce, flips status to connecting, and clears lastError', () => {
+      let state = init();
+      state = logsReducer(state, setError({ terminalNodeId: TID, message: 'Access denied' }));
+      expect(state.byTerminalNodeId[TID].status).toBe('error');
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(0);
+
+      state = logsReducer(state, retryStream({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(1);
+      expect(state.byTerminalNodeId[TID].status).toBe('connecting');
+      expect(state.byTerminalNodeId[TID].lastError).toBeNull();
+
+      state = logsReducer(state, retryStream({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(2);
     });
   });
 

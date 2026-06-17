@@ -16,8 +16,30 @@ export const ApiErrorBanner: React.FC<{
   error: string;
   results: Array<{ error?: string; api_enable_url?: string }>;
   onRetryDeploy: () => void;
-}> = ({ error, results, onRetryDeploy }) => {
+  /**
+   * Active deploy provider. The quota/billing/RAPT/API sub-banners and every
+   * link below are GCP-specific (console.cloud.google.com, GCP IAM, the GCP
+   * orphan-cleanup CTA), so they only render for GCP (DE2). Any other provider
+   * gets the plain error card — no misleading Google links. `undefined` keeps
+   * the legacy GCP behaviour so existing callers/tests are unaffected.
+   */
+  provider?: string;
+}> = ({ error, results, onRetryDeploy, provider }) => {
   const { t } = useTranslation();
+
+  // DE2 — for non-GCP providers, never run the GCP-shaped classification (which
+  // can mis-fire on a generic "quota exceeded" and even surface the GCP cleanup
+  // button). Show the raw error in a neutral card instead.
+  const isGcp = provider === undefined || provider === 'gcp';
+  if (!isGcp) {
+    return (
+      <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <span>{error}</span>
+      </div>
+    );
+  }
+
   // Collect all unique enable URLs from results and error message, then
   // classify the error into one of five priority-cascade kinds. Both the
   // collection loop and the cascade live in `utils/error-classification`

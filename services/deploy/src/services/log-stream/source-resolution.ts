@@ -162,6 +162,22 @@ export async function resolveSource(args: SubscribeArgs): Promise<SourceResoluti
     return { state: 'pre-deploy', sourceNodeId: chosen.nodeId, iceType: chosen.iceType };
   }
 
+  // OL2 — the resolver + streamer speak only GCP Cloud Logging for v1. If the
+  // deployed resource is on another cloud, return an honest
+  // `provider-unsupported` BEFORE the GCP credentials check below — otherwise a
+  // non-GCP source falls through to "Connect a GCP provider…", a misleading IAM
+  // dead-end. Provider is the `resource_type` prefix ICE writes on every
+  // mapping (e.g. 'aws.ecs.service' → 'aws', 'gcp.run.service' → 'gcp').
+  const resourceProvider = String(mapping.resource_type || '').split('.')[0];
+  if (resourceProvider && resourceProvider !== 'gcp') {
+    return {
+      state: 'provider-unsupported',
+      provider: resourceProvider,
+      sourceNodeId: chosen.nodeId,
+      iceType: chosen.iceType,
+    };
+  }
+
   // 5. Build the filter via the LT-2 resolver. projectId from
   // credentials.project_id (the canonical accessor — see
   // deploy.service.ts L362). region from the Environment row.

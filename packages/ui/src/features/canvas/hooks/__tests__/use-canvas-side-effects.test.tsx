@@ -560,13 +560,13 @@ describe('useCanvasSideEffects — overlay-dismiss on AI intent', () => {
 });
 
 describe('useCanvasSideEffects — return shape', () => {
-  it('returns void', () => {
+  it('returns the overlay-dismiss state + dismiss callback', () => {
     let result: unknown = 'not-set';
     const Probe: React.FC = () => {
       result = useCanvasSideEffects(baseArgs());
       return React.createElement('div');
     };
     renderToString(React.createElement(Probe));
-    expect(result).toBeUndefined();
+    expect(result).toEqual({ overlayDismissed: false, dismissOverlay: expect.any(Function) });
   });
 });

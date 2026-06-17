@@ -7,11 +7,14 @@
 import { PROVIDER_READINESS, type Provider } from '@ice/constants';
 import { AlertTriangle, Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../shared/components/ui';
 import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
 import { cn } from '../../../shared/utils/cn';
+import { setProviderConnection } from '../../../store/slices/integrations-slice';
+import type { AppDispatch } from '../../../store';
 
 interface ProviderField {
   name: string;
@@ -42,6 +45,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
   fields,
 }) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
   // GCP OAuth via Google Identity Services
   const gcpOAuth = useGCPOAuth(() => {
     setConnected(true);
+    dispatch(setProviderConnection({ providerId, status: 'connected' }));
     setSuccess(t('providerConnect.success.connectedViaGoogle', { providerName }));
     // Reload project info
     (async () => {
@@ -76,6 +81,8 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
       try {
         const isConn = await getApi().provider.isConnected(providerId);
         setConnected(isConn);
+        // EI2 — keep Redux (app-bar rings + status dots) in sync with reality.
+        dispatch(setProviderConnection({ providerId, status: isConn ? 'connected' : 'disconnected' }));
         if (isConn) {
           const creds = await getApi().provider.getCredentials(providerId);
           setProjectId(creds?.project_id || null);
@@ -104,6 +111,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
       const result = await getApi().provider.connect(providerId, formValues);
       if (result.success) {
         setConnected(true);
+        dispatch(setProviderConnection({ providerId, status: 'connected' }));
         setProjectId(result.project_id || formValues.project_id || null);
         setSuccess(t('providerConnect.success.connected', { providerName }));
         setFormValues({});
@@ -121,6 +129,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
     try {
       await getApi().provider.disconnect(providerId);
       setConnected(false);
+      dispatch(setProviderConnection({ providerId, status: 'disconnected' }));
       setProjectId(null);
       setFormValues({});
       setSuccess(null);

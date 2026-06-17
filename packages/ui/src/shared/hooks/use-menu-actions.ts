@@ -76,16 +76,19 @@ export function useMenuActions() {
           break;
 
         // View Menu
+        // NOTE: zoom/fit are not yet wired to a shared canvas action — zoom is
+        // currently wheel-only and "fit" lives on the project toolbar's local
+        // handler, neither reachable from here. These are intentional no-ops
+        // until the shared zoom/fit actions land (ux-fix-plan Phase 4.4/4.5).
+        // Do NOT re-add a "handled by keyboard shortcuts" comment — no such
+        // shortcut exists.
         case 'menu:zoomIn':
-          // Handled by SvgCanvas keyboard shortcuts
           break;
 
         case 'menu:zoomOut':
-          // Handled by SvgCanvas keyboard shortcuts
           break;
 
         case 'menu:fitToScreen':
-          // Handled by SvgCanvas keyboard shortcuts
           break;
 
         case 'menu:toggleMinimap':

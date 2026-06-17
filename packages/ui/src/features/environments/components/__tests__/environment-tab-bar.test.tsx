@@ -768,10 +768,21 @@ describe('EnvironmentTabBar — modal & context-menu rendering with pre-seeded s
     expect(stateMocks.setters[2]).toHaveBeenCalledWith(null);
   });
 
-  it('context-menu onDelete dispatches deleteEnvironment + closes the menu', () => {
-    __resetUseState([false, null, { envId: 'env-2', x: 0, y: 0 }, {}]);
-    const tree = callRender({ projectId: 'proj-1' });
-    const menu = findFirst(tree, (el) => el.type === mocks.EnvironmentContextMenu)!;
+  it('context-menu onDelete arms first, then deletes + closes on confirm (EI5)', () => {
+    // First click: arms (sets confirmDeleteEnvId, slot 4); no dispatch, no close.
+    __resetUseState([false, null, { envId: 'env-2', x: 0, y: 0 }, {}, null]);
+    let tree = callRender({ projectId: 'proj-1' });
+    let menu = findFirst(tree, (el) => el.type === mocks.EnvironmentContextMenu)!;
+    (menu.props.onDelete as (id: string) => void)('env-2');
+    expect(stateMocks.setters[4]).toHaveBeenCalledWith('env-2');
+    expect(mocks.deleteEnvironment).not.toHaveBeenCalled();
+
+    // Second click, with delete already armed for env-2: deletes + closes menu.
+    mocks.deleteEnvironment.mockClear();
+    __resetUseState([false, null, { envId: 'env-2', x: 0, y: 0 }, {}, 'env-2']);
+    tree = callRender({ projectId: 'proj-1' });
+    menu = findFirst(tree, (el) => el.type === mocks.EnvironmentContextMenu)!;
+    expect((menu.props as { confirmingDelete?: boolean }).confirmingDelete).toBe(true);
     (menu.props.onDelete as (id: string) => void)('env-2');
     expect(stateMocks.setters[2]).toHaveBeenCalledWith(null);
     expect(mocks.deleteEnvironment).toHaveBeenCalledWith({

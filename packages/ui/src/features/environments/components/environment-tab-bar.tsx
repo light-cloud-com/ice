@@ -37,6 +37,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
   const environments = useSelector((s: RootState) => s.environments.byProject[projectId] || []);
   const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[projectId]);
   const loading = useSelector((s: RootState) => s.environments.loading);
+  const fetchError = useSelector((s: RootState) => s.environments.fetchError);
   const activeEnv = environments.find((e) => e.id === activeEnvId);
   const prodEnv = environments.find((e) => e.type === 'production');
   const canPromote = activeEnv && !activeEnv.is_protected && prodEnv;
@@ -44,6 +45,10 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
   const [renameTarget, setRenameTarget] = useState<Environment | null>(null);
   const [contextMenu, setContextMenu] = useState<{ envId: string; x: number; y: number } | null>(null);
   const [envDeployStatus, setEnvDeployStatus] = useState<Record<string, { status: string; url?: string }>>({});
+  // EI5 — the env id whose delete is "armed" (awaiting a confirming second
+  // click). Declared LAST so it doesn't shift the indices of the useState calls
+  // above (the tab-bar unit test addresses state setters positionally).
+  const [confirmDeleteEnvId, setConfirmDeleteEnvId] = useState<string | null>(null);
 
   // Fetch environments on mount
   useEffect(() => {
@@ -135,15 +140,24 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
 
   const handleContextMenu = useCallback((e: React.MouseEvent, envId: string) => {
     e.preventDefault();
+    setConfirmDeleteEnvId(null); // a freshly-opened menu starts unarmed
     setContextMenu({ envId, x: e.clientX, y: e.clientY });
   }, []);
 
+  // EI5 — two-step delete: first click arms (no close), second click deletes.
+  // The env staying visible on a rejected delete is itself the failure signal;
+  // a dedicated error toast can follow once the app has a notification surface.
   const handleDelete = useCallback(
     (envId: string) => {
-      setContextMenu(null);
-      dispatch(deleteEnvironment({ envId, projectId }));
+      if (confirmDeleteEnvId === envId) {
+        setContextMenu(null);
+        setConfirmDeleteEnvId(null);
+        dispatch(deleteEnvironment({ envId, projectId }));
+      } else {
+        setConfirmDeleteEnvId(envId);
+      }
     },
-    [projectId, dispatch],
+    [confirmDeleteEnvId, projectId, dispatch],
   );
 
   const handlePromote = useCallback(
@@ -157,15 +171,21 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     [environments, dispatch],
   );
 
-  // Close context menu on click outside
+  // Close context menu on click outside (also disarms a pending delete confirm)
   useEffect(() => {
     if (!contextMenu) return;
-    const close = () => setContextMenu(null);
+    const close = () => {
+      setContextMenu(null);
+      setConfirmDeleteEnvId(null);
+    };
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
   }, [contextMenu]);
 
-  if (environments.length === 0 && !loading) return null;
+  // EI6 — only fully hide the bar when there are genuinely no environments AND
+  // no load failure. A transient fetch error keeps the bar present with a retry
+  // (so the Deploy button and tabs don't silently vanish on a flaky network).
+  if (environments.length === 0 && !loading && !fetchError) return null;
 
   return (
     <>
@@ -177,6 +197,16 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
           <div className="flex items-center gap-1.5 text-ice-xs text-ice-text-3">
             <Loader2 className="w-3 h-3 animate-spin" />
             {t('environments.tabBar.loading')}
+          </div>
+        ) : fetchError && environments.length === 0 ? (
+          <div className="flex items-center gap-2 text-ice-xs text-red-400">
+            <span>{t('environments.tabBar.loadError')}</span>
+            <button
+              onClick={() => dispatch(fetchEnvironments(projectId))}
+              className="px-2 py-0.5 rounded border border-ice-border text-ice-text-2 hover:bg-ice-hover transition-colors"
+            >
+              {t('environments.tabBar.retry')}
+            </button>
           </div>
         ) : (
           <>
@@ -243,6 +273,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
           y={contextMenu.y}
           environments={environments}
           prodEnv={prodEnv}
+          confirmingDelete={confirmDeleteEnvId === contextMenu.envId}
           onDeploy={(env) => {
             setContextMenu(null);
             handleSwitchEnv(env);
@@ -251,7 +282,10 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
           onPromote={handlePromote}
           onRename={(env) => setRenameTarget(env)}
           onDelete={handleDelete}
-          onClose={() => setContextMenu(null)}
+          onClose={() => {
+            setContextMenu(null);
+            setConfirmDeleteEnvId(null);
+          }}
         />
       )}
 

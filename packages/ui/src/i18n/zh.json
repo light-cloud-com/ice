@@ -120,7 +120,8 @@
       "blankCanvas": "空白画布",
       "pickTemplate": "选择模板...",
       "quickStart": "快速开始",
-      "more": "更多..."
+      "more": "更多...",
+      "hint": "按 Shift+A 或从左侧拖入一个区块即可开始"
     },
     "tooltip": {
       "connections": "个连接",
@@ -215,6 +216,7 @@
       "noSource": "连接一个计算或数据库块以开始流式传输日志。",
       "ambiguous": "存在多个入站连接 — 请在属性面板中选择一个源。",
       "unsupported": "此源类型不输出 Cloud Logging 日志。",
+      "providerUnsupported": "暂不支持 {{provider}} 的实时日志。",
       "permissionDenied": "Cloud Logging 访问被拒绝。请向部署服务账户授予 roles/logging.viewer 权限。",
       "error": "连接错误。正在重试。",
       "connecting": "连接中…",
@@ -525,6 +527,7 @@
         "modeTail": "追踪",
         "modeTailHint": "通过 gRPC 进行亚秒级流式传输。",
         "sourceOverride": "源覆盖",
+        "retry": "重试",
         "noSupportedSource": "未连接受支持的源。请将计算或数据库块连接到此日志终端。",
         "clearOverride": "清除覆盖",
         "selectSource": "— 选择源 —",
@@ -534,6 +537,7 @@
         "pillNoSource": "无源",
         "pillAmbiguous": "源不明确",
         "pillUnsupported": "不支持的源",
+        "pillProviderUnsupported": "不可用",
         "pillAccessDenied": "访问被拒绝",
         "pillError": "错误",
         "pillIdle": "空闲"
@@ -676,6 +680,7 @@
     "plan": {
       "noChanges": "未检测到更改。基础设施已是最新状态。",
       "changes": "计划：{{total}} 项更改",
+      "destination": "部署目标：{{target}}",
       "skip": "跳过",
       "actionCreate": "创建",
       "actionUpdate": "更新",
@@ -1015,6 +1020,9 @@
       "contextPromote": "提升到生产环境",
       "contextRename": "重命名",
       "contextDelete": "删除环境",
+      "contextDeleteConfirm": "再次点击以删除",
+      "loadError": "无法加载环境",
+      "retry": "重试",
       "envNamePlaceholder": "环境名称"
     },
     "renameModal": {
@@ -1223,6 +1231,7 @@
     "deploy": {
       "current": "当前",
       "live": "运行中",
+      "deployed": "已部署",
       "urlLabel": "URL",
       "imageLabel": "镜像",
       "resourceIdLabel": "资源 ID",
@@ -1281,7 +1290,13 @@
       "change": "项更改",
       "changes": "项更改",
       "checkButton": "检查偏差",
-      "checkingButton": "检查中..."
+      "checkingButton": "检查中...",
+      "unverified": "无法与云端核对 — 显示本地存储状态",
+      "unknown": "状态未知",
+      "extra": "已跟踪，但不在您的设计中",
+      "justNow": "刚刚检查",
+      "checkedAgo": "{{ago}}前检查",
+      "stale": "已过期"
     },
     "network": {
       "title": "网络",
@@ -1964,6 +1979,8 @@
   },
   "cost": {
     "title": "成本估算",
+    "estQualifier": "预估",
+    "estProvenance": "根据公开标价估算（2026 年初）— 非实际账单金额",
     "empty": "将资源添加到画布以查看成本估算。从左侧边栏拖动组件开始。",
     "categoryBreakdown": "成本明细",
     "timeProjections": "时间预测",

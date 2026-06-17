@@ -60,6 +60,12 @@ vi.mock('react', async (orig) => {
   };
 });
 
+// EI2 — the modal now dispatches setProviderConnection. The component is
+// invoked as a plain function (tree-walker), so stub useDispatch to a no-op.
+vi.mock('react-redux', () => ({
+  useDispatch: () => () => undefined,
+}));
+
 vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({
     t: (k: string, vars?: Record<string, string>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),

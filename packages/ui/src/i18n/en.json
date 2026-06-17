@@ -120,7 +120,8 @@
       "blankCanvas": "Blank Canvas",
       "pickTemplate": "Pick a template...",
       "quickStart": "Quick start",
-      "more": "More..."
+      "more": "More...",
+      "hint": "Press Shift+A or drag a block from the left to begin"
     },
     "tooltip": {
       "connections": "connections",
@@ -215,6 +216,7 @@
       "noSource": "Connect a compute or database block to start streaming logs.",
       "ambiguous": "Multiple inbound connections — choose a source in the properties panel.",
       "unsupported": "This source type doesn't emit Cloud Logging output.",
+      "providerUnsupported": "Live logs aren't available for {{provider}} yet.",
       "permissionDenied": "Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.",
       "error": "Connection error. Retrying.",
       "connecting": "Connecting…",
@@ -525,6 +527,7 @@
         "modeTail": "Tail",
         "modeTailHint": "Sub-second streaming via gRPC.",
         "sourceOverride": "Source override",
+        "retry": "Retry",
         "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
         "clearOverride": "Clear override",
         "selectSource": "— Select a source —",
@@ -534,6 +537,7 @@
         "pillNoSource": "No source",
         "pillAmbiguous": "Ambiguous source",
         "pillUnsupported": "Unsupported source",
+        "pillProviderUnsupported": "Unavailable",
         "pillAccessDenied": "Access denied",
         "pillError": "Error",
         "pillIdle": "Idle"
@@ -676,6 +680,7 @@
     "plan": {
       "noChanges": "No changes detected. Infrastructure is up to date.",
       "changes": "Plan: {{total}} change(s)",
+      "destination": "Deploying to {{target}}",
       "skip": "skip",
       "actionCreate": "create",
       "actionUpdate": "update",
@@ -1016,6 +1021,9 @@
       "contextPromote": "Promote to production",
       "contextRename": "Rename",
       "contextDelete": "Delete environment",
+      "contextDeleteConfirm": "Click again to delete",
+      "loadError": "Couldn't load environments",
+      "retry": "Retry",
       "envNamePlaceholder": "Environment name"
     },
     "renameModal": {
@@ -1224,6 +1232,7 @@
     "deploy": {
       "current": "Current",
       "live": "Live",
+      "deployed": "Deployed",
       "urlLabel": "URL",
       "imageLabel": "Image",
       "resourceIdLabel": "Resource ID",
@@ -1282,7 +1291,13 @@
       "change": "change",
       "changes": "changes",
       "checkButton": "Check for Drift",
-      "checkingButton": "Checking..."
+      "checkingButton": "Checking...",
+      "unverified": "Couldn't verify against cloud — showing stored state",
+      "unknown": "Status unknown",
+      "extra": "Tracked, but not in your design",
+      "justNow": "Checked just now",
+      "checkedAgo": "Checked {{ago}} ago",
+      "stale": "stale"
     },
     "network": {
       "title": "Network",
@@ -1965,6 +1980,8 @@
   },
   "cost": {
     "title": "Cost Estimation",
+    "estQualifier": "Est.",
+    "estProvenance": "Estimated from public list prices (early 2026) — not actual billed spend",
     "empty": "Add resources to your canvas to see cost estimates. Drag blocks from the left sidebar to get started.",
     "categoryBreakdown": "Cost Breakdown",
     "timeProjections": "Time Projections",

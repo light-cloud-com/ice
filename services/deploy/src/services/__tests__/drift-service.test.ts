@@ -329,8 +329,8 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
 
   it('passes provider_id to deployer.describe (or falls back to resource_name when absent)', async () => {
     findManyMock.mockResolvedValueOnce([
-      { node_id: 'a', resource_type: 't', resource_name: 'res-a', provider_id: 'pid-a' },
-      { node_id: 'b', resource_type: 't', resource_name: 'res-b', provider_id: null },
+      { node_id: 'a', resource_type: 'gcp.t', resource_name: 'res-a', provider_id: 'pid-a' },
+      { node_id: 'b', resource_type: 'gcp.t', resource_name: 'res-b', provider_id: null },
     ]);
     const describe = vi.fn().mockResolvedValue({ exists: true, properties: {} });
     setupDeployerHappyPath(describe);
@@ -344,13 +344,15 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
       { orgId: 'org-1' },
     );
 
-    expect(describe).toHaveBeenNthCalledWith(1, 't', 'res-a', 'pid-a');
+    expect(describe).toHaveBeenNthCalledWith(1, 'gcp.t', 'res-a', 'pid-a');
     // No provider_id → falls back to resource_name as the third arg.
-    expect(describe).toHaveBeenNthCalledWith(2, 't', 'res-b', 'res-b');
+    expect(describe).toHaveBeenNthCalledWith(2, 'gcp.t', 'res-b', 'res-b');
   });
 
   it('falls back to authClient.projectId when scope.project is absent in initialize()', async () => {
-    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'gcp.t', resource_name: 'r', provider_id: 'p' },
+    ]);
     const deployer = fakeDeployer({ describe: async () => ({ exists: true, properties: {} }) });
     getDecryptedCredentialsMock.mockResolvedValueOnce({ project_id: 'proj-1' });
     createDeployerMock.mockResolvedValueOnce(deployer);
@@ -368,8 +370,32 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
     expect(deployer.initialize).toHaveBeenCalledWith(expect.objectContaining({ project: 'fallback-proj' }));
   });
 
+  it('does NOT build a GCP deployer for a non-GCP deployment, even with an orgId (OS6)', async () => {
+    // resource_type prefix is 'aws' → no GCP describe path → must not pretend
+    // to verify. unsupported:true so the UI says "couldn't verify", not green.
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'aws.ecs.service', resource_name: 'svc', provider_id: 'arn:...' },
+    ]);
+    // Note: no getDecryptedCredentials queued — the gate must short-circuit
+    // before any creds fetch (a queued-but-unconsumed Once would leak).
+
+    const result = await checkDrift(
+      'card-1',
+      [{ id: 'n1', type: 'resource', data: { iceType: 'Compute.Container' } }],
+      {
+        orgId: 'org-1',
+      },
+    );
+
+    expect(createDeployerMock).not.toHaveBeenCalled();
+    expect(getDecryptedCredentialsMock).not.toHaveBeenCalled();
+    expect(result.unsupported).toBe(true);
+  });
+
   it('falls back to stored-state path when getDecryptedCredentials returns null', async () => {
-    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'gcp.t', resource_name: 'r', provider_id: 'p' },
+    ]);
     getDecryptedCredentialsMock.mockResolvedValueOnce(null);
 
     const result = await checkDrift('card-1', [{ id: 'n1', type: 'resource', data: { iceType: 'X' } }], {
@@ -382,7 +408,9 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('logs a warning + falls through to stored-state when deployer init throws', async () => {
-    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'gcp.t', resource_name: 'r', provider_id: 'p' },
+    ]);
     getDecryptedCredentialsMock.mockResolvedValueOnce({ project_id: 'proj-1' });
     createDeployerMock.mockRejectedValueOnce(new Error('init blew up'));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -398,7 +426,9 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('always cleans up deployer + scoped auth even when describe throws mid-loop', async () => {
-    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'gcp.t', resource_name: 'r', provider_id: 'p' },
+    ]);
     const deployer = fakeDeployer({
       describe: async () => {
         throw new Error('describe failed');
@@ -427,7 +457,9 @@ describe('checkDrift — GCP describe path (orgId present)', () => {
   });
 
   it('swallows errors from deployer.cleanup() and cleanupProviderAuth() in the finally block', async () => {
-    findManyMock.mockResolvedValueOnce([{ node_id: 'n1', resource_type: 't', resource_name: 'r', provider_id: 'p' }]);
+    findManyMock.mockResolvedValueOnce([
+      { node_id: 'n1', resource_type: 'gcp.t', resource_name: 'r', provider_id: 'p' },
+    ]);
     const deployer = fakeDeployer({
       describe: async () => ({ exists: true, properties: {} }),
       cleanup: vi.fn().mockRejectedValue(new Error('cleanup-fail')),

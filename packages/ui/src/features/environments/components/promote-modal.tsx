@@ -16,6 +16,7 @@ export const PromoteModal: React.FC = () => {
   const pendingDiff = useSelector((s: RootState) => s.environments.pendingDiff);
   const pendingPromote = useSelector((s: RootState) => s.environments.pendingPromote);
   const promoting = useSelector((s: RootState) => s.environments.promoting);
+  const promoteError = useSelector((s: RootState) => s.environments.promoteError);
   const allEnvs = useSelector((s: RootState) => s.environments.byProject);
 
   if (!pendingDiff || !pendingPromote) return null;
@@ -38,13 +39,20 @@ export const PromoteModal: React.FC = () => {
   const noChanges = totalChanges === 0;
 
   const handlePromote = async () => {
-    await dispatch(
-      promoteEnvironment({
-        sourceEnvId: pendingPromote.sourceEnvId,
-        targetEnvId: pendingPromote.targetEnvId,
-      }),
-    );
-    if (projectId) dispatch(fetchEnvironments(projectId));
+    try {
+      // EI3 — unwrap so a rejected promotion does NOT fall through to a refetch
+      // that masks the failure. On success the slice clears pendingDiff (modal
+      // closes); on failure it sets promoteError (rendered below, modal stays).
+      await dispatch(
+        promoteEnvironment({
+          sourceEnvId: pendingPromote.sourceEnvId,
+          targetEnvId: pendingPromote.targetEnvId,
+        }),
+      ).unwrap();
+      if (projectId) dispatch(fetchEnvironments(projectId));
+    } catch {
+      // Surfaced via state.promoteError; keep the modal open so the user sees it.
+    }
   };
 
   const handleClose = () => dispatch(clearPendingDiff());
@@ -112,6 +120,16 @@ export const PromoteModal: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Promotion error (EI3) — keeps the modal open so prod state is unambiguous */}
+        {promoteError && (
+          <div
+            data-testid="promote-error"
+            className="mx-5 mb-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-ice-xs text-red-400"
+          >
+            {promoteError}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-ice-border">

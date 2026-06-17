@@ -54,6 +54,11 @@ export type SourceResolution =
       candidates: Array<{ nodeId: string; iceType: string; label?: string }>;
     }
   | { state: 'unsupported-source'; sourceNodeId: string; iceType: string }
+  // OL2 — the deployed resource is on a cloud whose live logs aren't wired up
+  // yet (the resolver/streamer are GCP-only for v1). Distinct from
+  // `unsupported-source` (iceType not supported) and `permission-denied` (GCP
+  // creds missing) so the client can say "not available for <provider> yet".
+  | { state: 'provider-unsupported'; provider: string; sourceNodeId: string; iceType: string }
   | { state: 'permission-denied'; message: string }
   | { state: 'none' };
 

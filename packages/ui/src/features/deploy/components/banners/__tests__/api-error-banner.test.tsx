@@ -157,6 +157,7 @@ type BannerProps = {
   error: string;
   results: Array<{ error?: string; api_enable_url?: string }>;
   onRetryDeploy: () => void;
+  provider?: string;
 };
 
 const renderBanner = (props: BannerProps): React.ReactElement =>
@@ -195,6 +196,32 @@ beforeEach(() => {
 });
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
+
+describe('ApiErrorBanner — provider neutrality (DE2)', () => {
+  it('renders a plain error card (no GCP banners/links) for a non-GCP provider', () => {
+    // Even if the error would classify as a GCP quota, a non-GCP provider must
+    // never see the GCP cascade — classification is skipped entirely.
+    mocks.classifyDeployErrorSpy.mockReturnValue('quota');
+    const tree = renderBanner(makeProps({ error: 'quota exceeded', provider: 'aws' }));
+    const stubs = findByPredicate(
+      tree,
+      (el) => (el.props as Record<string, unknown>)?.['data-test-id'] === 'quota-stub',
+    );
+    expect(stubs.length).toBe(0);
+    expect(findLinks(tree).length).toBe(0);
+    expect(mocks.classifyDeployErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the GCP cascade when provider is "gcp"', () => {
+    mocks.classifyDeployErrorSpy.mockReturnValue('quota');
+    const tree = renderBanner(makeProps({ error: 'quota', provider: 'gcp' }));
+    const stubs = findByPredicate(
+      tree,
+      (el) => (el.props as Record<string, unknown>)?.['data-test-id'] === 'quota-stub',
+    );
+    expect(stubs.length).toBe(1);
+  });
+});
 
 describe('ApiErrorBanner — quota branch', () => {
   it('renders QuotaErrorBanner when classifyDeployError returns "quota"', () => {

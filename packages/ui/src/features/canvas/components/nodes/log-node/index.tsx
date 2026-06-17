@@ -53,6 +53,9 @@ function placeholderText(status: LogStreamStatus, lastError: string | null): str
       return t('canvas.logNode.ambiguous');
     case 'unsupported':
       return t('canvas.logNode.unsupported');
+    case 'provider-unsupported':
+      // `lastError` carries the provider id (set by logs-slice on this state).
+      return t('canvas.logNode.providerUnsupported', { provider: lastError || 'this provider' });
     case 'permission-denied':
       return lastError || t('canvas.logNode.permissionDenied');
     case 'error':

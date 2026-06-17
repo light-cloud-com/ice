@@ -108,6 +108,7 @@ const miniDeploy = createSlice({
   name: 'deploy',
   initialState: {
     driftByNode: {},
+    driftMeta: { checkedAt: null, unsupported: false },
     driftCheckLoading: false,
   } as MiniDeployState,
   reducers: {

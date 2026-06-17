@@ -94,6 +94,15 @@ export function useCanvasEffects(args: UseCanvasEffectsArgs): void {
     const svg = svgRef.current;
     if (!svg) return;
     const handler = (e: WheelEvent) => {
+      // OL1 — let a log node own wheel events over itself so scrolling its
+      // buffer doesn't zoom the whole canvas. The node's own onWheel handler
+      // does the virtual scroll; the canvas just stays out of the way. (React's
+      // stopPropagation on the node can't stop this native ancestor listener,
+      // so the guard has to live here.)
+      const target = e.target as Element | null;
+      if (target?.closest?.('.svg-log-node')) {
+        return;
+      }
       e.preventDefault();
       setConnTooltip(null);
 

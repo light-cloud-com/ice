@@ -5,7 +5,7 @@
  * Flow: Configure → Plan → Review → Deploy → Results
  */
 
-import { Rocket } from 'lucide-react';
+import { Rocket, DollarSign } from 'lucide-react';
 import React, { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ApiErrorBanner } from './banners/api-error-banner';
@@ -34,6 +34,7 @@ import {
   resetDeploy,
   appendLog,
 } from '../../../store/slices/deploy-slice';
+import { parseCostRange } from '../../cost/utils/cost-calculator';
 import { useDeployActions } from '../hooks/use-deploy-actions';
 import { useDeployEffects } from '../hooks/use-deploy-effects';
 import { useDestroyAction } from '../hooks/use-destroy-action';
@@ -108,6 +109,27 @@ export const DeployPanel: React.FC = () => {
   // Keep gcpNodes alias for backward compat within this component
   const gcpNodes = providerNodes;
 
+  // DE1 — surface remediation + AI-diagnose for partial async failures too, not
+  // only when a top-level `deploy.error` string exists. The async
+  // complete→hydrate path leaves `deploy.error` null even when some resources
+  // failed, so derive a summary from the failed rows and gate on either signal.
+  const failedResults = deploy.results.filter((r) => !r.success);
+  const hasFailure = deploy.error != null || failedResults.length > 0;
+  const effectiveError =
+    deploy.error ??
+    (failedResults.length > 0
+      ? `${failedResults.length} resource(s) failed: ${failedResults.map((r) => `${r.type}/${r.name}`).join(', ')}`
+      : '');
+
+  // DF3 — surface an estimated monthly cost at the commit moment. Reuses the
+  // same per-node estimate + parser the status bar/cost panel use, so the
+  // number matches. Labeled "est." (see Phase 1 OS5) — it's a design-time
+  // estimate from list prices, not billed spend.
+  const estMonthlyCost = (activeCard?.nodes ?? []).reduce(
+    (sum, n) => sum + parseCostRange((n.data?.estimatedCost as string) || ''),
+    0,
+  );
+
   const header = (
     <PanelHeader
       icon={<Rocket aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
@@ -160,6 +182,19 @@ export const DeployPanel: React.FC = () => {
               )}
             </span>
           </div>
+          {/* DF3 — estimated monthly cost at the commit moment */}
+          {estMonthlyCost > 0 && (
+            <div
+              data-testid="ice-deploy-cost-estimate"
+              className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
+            >
+              <DollarSign aria-hidden="true" className="w-3 h-3" />
+              <span>
+                ~${Math.round(estMonthlyCost)}
+                {t('statusBar.moEst')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Previously deployed resources */}
@@ -179,17 +214,34 @@ export const DeployPanel: React.FC = () => {
           />
         )}
 
-        {/* Plan preview */}
-        {deploy.plan && <PlanPreview plan={deploy.plan} />}
+        {/* Plan preview — echo the destination so the plan is self-describing (DF2) */}
+        {deploy.plan && (
+          <PlanPreview
+            plan={deploy.plan}
+            destination={[
+              PROVIDER_LABELS[deploy.provider] || deploy.provider,
+              deploy.gcpProject,
+              deploy.region,
+              deploy.environment,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          />
+        )}
 
         {/* Pre-deploy security + cost analysis (AI-Native #3) */}
         {preDeployAnalysis && <PreDeployWarnings analysis={preDeployAnalysis} />}
 
-        {/* Error */}
-        {deploy.error && (
+        {/* Error — shown for a top-level error OR any failed result row (DE1) */}
+        {hasFailure && (
           <>
-            <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
-            <DeployDiagnosis error={deploy.error} results={deploy.results} />
+            <ApiErrorBanner
+              error={effectiveError}
+              results={deploy.results}
+              onRetryDeploy={handleDeploy}
+              provider={deploy.provider}
+            />
+            <DeployDiagnosis error={effectiveError} results={deploy.results} />
           </>
         )}
 
@@ -214,7 +266,7 @@ export const DeployPanel: React.FC = () => {
               the prior summary should still be visible. */}
         {deploy.results.length > 0 && deploy.status !== 'deploying' && deploy.status !== 'destroying' && (
           <div id="ice-deploy-results">
-            <ResultsSummary results={deploy.results} />
+            <ResultsSummary results={deploy.results} provider={deploy.provider} />
           </div>
         )}
       </div>

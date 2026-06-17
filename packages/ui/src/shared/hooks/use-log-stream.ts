@@ -150,6 +150,11 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
   const entries = slot?.entries ?? EMPTY_ENTRIES;
   const source = slot?.source ?? null;
   const lastError = slot?.lastError ?? null;
+  // OL5 — a primitive projection of the slot's retry counter. Bumped by
+  // `retryStream` (the Retry button); included in the subscribe-effect deps so
+  // a bump tears down a dead stream and re-subscribes. Extracting the number
+  // (not the slot object) keeps the dep value-stable across entry appends.
+  const retryNonce = slot?.retryNonce ?? 0;
 
   useEffect(() => {
     // Wait for both cardId and environmentId — without them the POST
@@ -310,7 +315,7 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
     // type, the fingerprint changes and the effect re-subscribes with
     // the fresh candidate list (instead of the backend reading a stale
     // Prisma row from before the canvas's 2s save debounce fired).
-  }, [cardId, environmentId, terminalNodeId, mode, sourceNodeIdOverride, candidateFingerprint, dispatch]);
+  }, [cardId, environmentId, terminalNodeId, mode, sourceNodeIdOverride, candidateFingerprint, retryNonce, dispatch]);
 
   return { status, entries, source, lastError };
 }

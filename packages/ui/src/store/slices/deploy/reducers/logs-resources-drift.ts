@@ -15,7 +15,7 @@
  * @see rf-dslice-9
  */
 
-import type { DeployedResource, DeployState, NodeDriftInfo } from '../types';
+import type { DeployedResource, DeployState, DriftMeta, NodeDriftInfo } from '../types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const logsResourcesDriftReducers = {
@@ -39,8 +39,14 @@ export const logsResourcesDriftReducers = {
     }
     state.driftCheckLoading = false;
   },
+  // Check-level authority/staleness (OS3/OS4) — set alongside setDriftResults
+  // so the indicator can tell a verified "in sync" from a stored-state guess.
+  setDriftMeta: (state: DeployState, action: PayloadAction<DriftMeta>) => {
+    state.driftMeta = action.payload;
+  },
   clearDrift: (state: DeployState) => {
     state.driftByNode = {};
     state.driftCheckLoading = false;
+    state.driftMeta = { checkedAt: null, unsupported: false };
   },
 } as const;

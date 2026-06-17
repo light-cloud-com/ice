@@ -35,6 +35,7 @@ function makeState(overrides: Partial<DeployState> = {}): DeployState {
     history: [],
     deployedResources: [],
     driftByNode: {},
+    driftMeta: { checkedAt: null, unsupported: false },
     driftCheckLoading: false,
     requirements: [],
     requirementsLoading: false,

@@ -26,6 +26,10 @@ const mocks = vi.hoisted(() => ({
   hoverValue: false as boolean,
   setHoverSpy: vi.fn(),
   getServiceName: vi.fn((_iceType: string, _provider: string) => null as string | null),
+  // Value returned by the mocked `useContext` (shared by useIsNodeOrphan +
+  // useNodeValidation). A Set keeps orphan inert; tests can swap in a Map to
+  // exercise the validation badge (Map has both `.has` and `.get`).
+  ctxValue: new Set<string>() as Set<string> | Map<string, unknown>,
 }));
 
 vi.mock('../../../../../concept-info', () => ({
@@ -48,15 +52,18 @@ vi.mock('react', async (importOriginal) => {
       return [initial, vi.fn()];
     }),
     useCallback: vi.fn(<T,>(fn: T, _deps: unknown[]) => fn),
-    // `CardShell` reads the orphan-nodes context via `useIsNodeOrphan`.
-    // Because the test invokes the component as a plain function (not
-    // through a React renderer), the real `useContext` blows up — return
-    // a fresh empty Set so the orphan branch is inert in these tests.
-    useContext: vi.fn(() => new Set<string>()),
+    // `CardShell` reads the orphan + validation contexts via useContext.
+    // Because the test invokes the component as a plain function (not through a
+    // React renderer), the real `useContext` blows up — return a controllable
+    // value (Set by default) so both branches are inert unless a test opts in.
+    useContext: vi.fn(() => mocks.ctxValue),
   };
 });
 
 import { CardShell } from '../card-shell';
+import { NodeDeployOverlay } from '../node-deploy-overlay';
+import { StatusDot } from '../status-dot';
+import { ValidationBadge } from '../validation-badge';
 import type { LucideIcon } from 'lucide-react';
 
 type ReactNodeLike = React.ReactNode;
@@ -111,6 +118,7 @@ beforeEach(() => {
   mocks.ConceptInfoTrigger.mockClear();
   mocks.getServiceName.mockReset();
   mocks.getServiceName.mockReturnValue(null);
+  mocks.ctxValue = new Set<string>();
 });
 
 describe('CardShell', () => {
@@ -231,6 +239,54 @@ describe('CardShell', () => {
       (el) => el.type === 'span' && (el.props as { style?: Record<string, string | number> }).style?.fontSize === 10,
     );
     expect(footerSpans.length).toBeGreaterThan(0);
+  });
+
+  // CNV1 — the in-flight step + failure reason now surface on the node itself.
+  it('threads deploy_progress to NodeDeployOverlay when deploying', () => {
+    const progress = { step_label: 'Creating bucket', step_index: 3, step_total: 6 };
+    const tree = renderInner({ node: makeNode({ data: { deploy_status: 'deploying', deploy_progress: progress } }) });
+    const overlay = findByPredicate(tree, (el) => el.type === NodeDeployOverlay)[0];
+    expect(overlay).toBeDefined();
+    expect((overlay.props as { deployStatus: string }).deployStatus).toBe('deploying');
+    expect((overlay.props as { deployProgress: unknown }).deployProgress).toEqual(progress);
+  });
+
+  it('threads deploy_error to NodeDeployOverlay on failure', () => {
+    const tree = renderInner({ node: makeNode({ data: { deploy_status: 'error', deploy_error: 'quota exceeded' } }) });
+    const overlay = findByPredicate(tree, (el) => el.type === NodeDeployOverlay)[0];
+    expect((overlay.props as { deployError: string }).deployError).toBe('quota exceeded');
+  });
+
+  // CNV2 — validation issues surface as a corner badge, read via context.
+  it('renders a ValidationBadge when the node has an error from the validation context', () => {
+    mocks.ctxValue = new Map<string, unknown>([['n1', { severity: 'error', count: 3 }]]);
+    const tree = renderInner({ node: makeNode({ id: 'n1' }) });
+    const badge = findByPredicate(tree, (el) => el.type === ValidationBadge)[0];
+    expect(badge).toBeDefined();
+    expect((badge.props as { severity: string; count: number }).severity).toBe('error');
+    expect((badge.props as { count: number }).count).toBe(3);
+  });
+
+  it('does NOT render a ValidationBadge for an info-only issue', () => {
+    mocks.ctxValue = new Map<string, unknown>([['n1', { severity: 'info', count: 1 }]]);
+    const tree = renderInner({ node: makeNode({ id: 'n1' }) });
+    expect(findByPredicate(tree, (el) => el.type === ValidationBadge)).toHaveLength(0);
+  });
+
+  it('renders no ValidationBadge when the node has no validation entry', () => {
+    const tree = renderInner({ node: makeNode({ id: 'n1' }) });
+    expect(findByPredicate(tree, (el) => el.type === ValidationBadge)).toHaveLength(0);
+  });
+
+  // CNV3 — the footer status dot pulses while a deploy is in flight.
+  it('pulses the footer StatusDot while deploying, but not when active', () => {
+    const deployingTree = renderInner({ node: makeNode({ data: { deploy_status: 'deploying' } }) });
+    const deployingDot = findByPredicate(deployingTree, (el) => el.type === StatusDot)[0];
+    expect((deployingDot.props as { pulse: boolean }).pulse).toBe(true);
+
+    const activeTree = renderInner({ node: makeNode({ data: { deploy_status: 'active' } }) });
+    const activeDot = findByPredicate(activeTree, (el) => el.type === StatusDot)[0];
+    expect((activeDot.props as { pulse: boolean }).pulse).toBe(false);
   });
 
   it('renders the icon prop with size=16 + the accent color', () => {

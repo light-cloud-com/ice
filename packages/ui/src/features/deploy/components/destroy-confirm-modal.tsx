@@ -21,7 +21,11 @@ export const DestroyConfirmModal: React.FC<{
   onConfirm: (destroyEverything: boolean) => void;
 }> = ({ cardName, resources, onCancel, onConfirm }) => {
   const [typed, setTyped] = React.useState('');
-  const [destroyEverything, setDestroyEverything] = React.useState(resources.length === 0);
+  // DE3 — default to the SAFE single-deploy scope, even when nothing is tracked.
+  // "Destroy everything" (which walks all history incl. failed/partial deploys
+  // and deletes every ICE-managed resource it finds) must be an explicit opt-in,
+  // never the default — the empty-tracked-list case shows guidance to enable it.
+  const [destroyEverything, setDestroyEverything] = React.useState(false);
   const canConfirm = typed.trim() === cardName;
 
   React.useEffect(() => {

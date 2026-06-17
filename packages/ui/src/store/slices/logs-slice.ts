@@ -31,6 +31,7 @@ export type SourceResolution =
   | { state: 'pre-deploy'; sourceNodeId: string; iceType: string }
   | { state: 'ambiguous'; candidates: Array<{ nodeId: string; iceType: string; label?: string }> }
   | { state: 'unsupported-source'; sourceNodeId: string; iceType: string }
+  | { state: 'provider-unsupported'; provider: string; sourceNodeId: string; iceType: string }
   | { state: 'permission-denied'; message: string }
   | { state: 'none' };
 
@@ -42,6 +43,7 @@ export type LogStreamStatus =
   | 'streaming'
   | 'pre-deploy'
   | 'unsupported'
+  | 'provider-unsupported'
   | 'permission-denied'
   | 'ambiguous'
   | 'no-source'
@@ -54,6 +56,9 @@ export interface LogStreamState {
   source: SourceResolution | null;
   entries: LogEntry[];
   lastError: string | null;
+  /** OL5 — bumped by `retryStream` to force `use-log-stream` to re-subscribe
+   *  (a recovery path for `error`/`permission-denied` that doesn't need a reload). */
+  retryNonce: number;
 }
 
 export interface LogsState {
@@ -78,6 +83,7 @@ function defaultStreamState(mode: LogStreamMode = 'polling'): LogStreamState {
     source: null,
     entries: [],
     lastError: null,
+    retryNonce: 0,
   };
 }
 
@@ -99,6 +105,8 @@ function statusForSource(source: SourceResolution): LogStreamStatus {
       return 'ambiguous';
     case 'unsupported-source':
       return 'unsupported';
+    case 'provider-unsupported':
+      return 'provider-unsupported';
     case 'permission-denied':
       return 'permission-denied';
     case 'none':
@@ -151,6 +159,9 @@ const logsSlice = createSlice({
       // carries its own `message` and we want to show it as the placeholder.
       if (source.state === 'permission-denied') {
         slot.lastError = source.message;
+      } else if (source.state === 'provider-unsupported') {
+        // Carry the provider id so the placeholder/pill can name it (OL2).
+        slot.lastError = source.provider;
       } else if (slot.lastError && source.state === 'resolved') {
         slot.lastError = null;
       }
@@ -199,6 +210,20 @@ const logsSlice = createSlice({
     },
 
     /**
+     * OL5 — user-triggered re-subscribe. Bumping `retryNonce` changes a
+     * `use-log-stream` effect dependency, which tears down the dead stream and
+     * starts a fresh subscribe (e.g. after the user fixes an IAM grant), with
+     * no page reload. Optimistically clears the error + flips to `connecting`
+     * so the UI reflects the retry immediately.
+     */
+    retryStream(state, action: PayloadAction<{ terminalNodeId: string }>) {
+      const slot = ensureSlot(state, action.payload.terminalNodeId);
+      slot.retryNonce += 1;
+      slot.status = 'connecting';
+      slot.lastError = null;
+    },
+
+    /**
      * `resumed` — frontend handler for the backend `logs:resumed` socket
      * event, which fires after a transient stream error is recovered
      * (e.g. tail-reconnect retry). Co-located with `appendEntry`'s
@@ -233,6 +258,7 @@ export const {
   clearEntries,
   setMode,
   setError,
+  retryStream,
   resumed,
   teardown,
 } = logsSlice.actions;

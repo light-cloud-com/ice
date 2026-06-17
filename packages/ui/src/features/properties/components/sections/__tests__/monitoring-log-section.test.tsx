@@ -70,6 +70,7 @@ vi.mock('../../../../../store/slices/cards-slice', () => ({
 // `selectLogStream` looks up by terminalNodeId on the byTerminalNodeId map.
 vi.mock('../../../../../store/slices/logs-slice', () => ({
   selectLogStream: (state: typeof mocks.state, terminalNodeId: string) => state.logs.byTerminalNodeId[terminalNodeId],
+  retryStream: (payload: { terminalNodeId: string }) => ({ type: 'logs/retryStream', payload }),
 }));
 
 import { MonitoringLogSection } from '../monitoring-log-section';
@@ -481,6 +482,41 @@ describe('MonitoringLogSection', () => {
       };
       const tree = renderSection('log-1');
       expect(findByTestid(tree, 'monitoring-log-error')).toBeUndefined();
+    });
+
+    it('renders a Retry button on permission-denied that dispatches retryStream (OL5)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'permission-denied',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: 'denied',
+      };
+      const tree = renderSection('log-1');
+      const retry = findByTestid(tree, 'monitoring-log-retry');
+      expect(retry).toBeDefined();
+      (retry!.props as { onClick: () => void }).onClick();
+      const dispatched = mocks.dispatchSpy.mock.calls.map((c: unknown[]) => c[0]) as Array<{
+        type?: string;
+        payload?: { terminalNodeId?: string };
+      }>;
+      expect(dispatched.some((a) => a?.type === 'logs/retryStream' && a?.payload?.terminalNodeId === 'log-1')).toBe(
+        true,
+      );
+    });
+
+    it('does NOT render the Retry button when streaming', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+      };
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-retry')).toBeUndefined();
     });
 
     it('does NOT render the error message when lastError is null', () => {

@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   checkGitHubConnection: vi.fn(() => ({ type: 'integrations/checkGitHubConnection' })),
   checkAnthropicConnection: vi.fn(() => ({ type: 'integrations/checkAnthropicConnection' })),
+  checkAllProviderConnections: vi.fn(() => ({ type: 'integrations/checkAllProviderConnections' })),
   startTour: vi.fn(),
   tours: [
     { id: 'canvas-tour', title: 'tour.canvas.title', steps: [] },
@@ -119,6 +120,7 @@ vi.mock('../../../i18n', () => ({
 vi.mock('../../../store/slices/integrations-slice', () => ({
   checkGitHubConnection: mocks.checkGitHubConnection,
   checkAnthropicConnection: mocks.checkAnthropicConnection,
+  checkAllProviderConnections: mocks.checkAllProviderConnections,
 }));
 
 vi.mock('../../utils/cn', () => ({

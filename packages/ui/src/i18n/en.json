@@ -528,6 +528,7 @@
         "modeTailHint": "Sub-second streaming via gRPC.",
         "sourceOverride": "Source override",
         "retry": "Retry",
+        "clear": "Clear",
         "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
         "clearOverride": "Clear override",
         "selectSource": "— Select a source —",

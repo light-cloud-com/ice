@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { t } from '../../../../i18n';
 import { selectActiveCard, updateCardNodeData, type CardNode } from '../../../../store/slices/cards-slice';
 import {
+  clearEntries,
   retryStream,
   selectLogStream,
   type LogStreamMode,
@@ -217,6 +218,18 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
           />
           {pill.label}
         </span>
+
+        {/* OL3 — clear the buffer (the clearEntries reducer existed but was
+            wired to nothing). Shown only when there are entries to clear. */}
+        {(streamState?.entries?.length ?? 0) > 0 && (
+          <button
+            data-testid="monitoring-log-clear"
+            onClick={() => dispatch(clearEntries({ terminalNodeId: nodeId }))}
+            className="ml-auto rounded border border-ice-border px-1.5 py-0.5 text-ice-2xs font-medium text-ice-text-2 hover:bg-ice-hover transition-colors"
+          >
+            {t('canvas.properties.log.clear')}
+          </button>
+        )}
       </div>
 
       {/* Caveats — rendered verbatim from the resolver. */}

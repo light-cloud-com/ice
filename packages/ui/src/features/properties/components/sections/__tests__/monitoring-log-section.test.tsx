@@ -71,6 +71,7 @@ vi.mock('../../../../../store/slices/cards-slice', () => ({
 vi.mock('../../../../../store/slices/logs-slice', () => ({
   selectLogStream: (state: typeof mocks.state, terminalNodeId: string) => state.logs.byTerminalNodeId[terminalNodeId],
   retryStream: (payload: { terminalNodeId: string }) => ({ type: 'logs/retryStream', payload }),
+  clearEntries: (payload: { terminalNodeId: string }) => ({ type: 'logs/clearEntries', payload }),
 }));
 
 import { MonitoringLogSection } from '../monitoring-log-section';
@@ -517,6 +518,41 @@ describe('MonitoringLogSection', () => {
       };
       const tree = renderSection('log-1');
       expect(findByTestid(tree, 'monitoring-log-retry')).toBeUndefined();
+    });
+
+    it('renders a Clear button that dispatches clearEntries when entries exist (OL3)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [{ insertId: 'e1' }],
+        lastError: null,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      const clear = findByTestid(tree, 'monitoring-log-clear');
+      expect(clear).toBeDefined();
+      (clear!.props as { onClick: () => void }).onClick();
+      const dispatched = mocks.dispatchSpy.mock.calls.map((c: unknown[]) => c[0]) as Array<{
+        type?: string;
+        payload?: { terminalNodeId?: string };
+      }>;
+      expect(dispatched.some((a) => a?.type === 'logs/clearEntries' && a?.payload?.terminalNodeId === 'log-1')).toBe(
+        true,
+      );
+    });
+
+    it('hides the Clear button when there are no entries', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+      };
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-clear')).toBeUndefined();
     });
 
     it('does NOT render the error message when lastError is null', () => {

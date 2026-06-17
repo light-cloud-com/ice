@@ -59,6 +59,9 @@ export interface LogStreamState {
   /** OL5 — bumped by `retryStream` to force `use-log-stream` to re-subscribe
    *  (a recovery path for `error`/`permission-denied` that doesn't need a reload). */
   retryNonce: number;
+  /** OL4 — how many entries have scrolled off the top of the 200-line cap, so
+   *  the UI can say "N older lines dropped" instead of silently losing them. */
+  droppedCount: number;
 }
 
 export interface LogsState {
@@ -84,6 +87,7 @@ function defaultStreamState(mode: LogStreamMode = 'polling'): LogStreamState {
     entries: [],
     lastError: null,
     retryNonce: 0,
+    droppedCount: 0,
   };
 }
 
@@ -181,7 +185,9 @@ const logsSlice = createSlice({
 
       slot.entries.push(entry);
       if (slot.entries.length > MAX_ENTRIES) {
-        slot.entries.splice(0, slot.entries.length - MAX_ENTRIES);
+        const overflow = slot.entries.length - MAX_ENTRIES;
+        slot.entries.splice(0, overflow);
+        slot.droppedCount += overflow; // OL4 — track what scrolled off, don't drop silently
       }
 
       // First entry promotes the status from `connecting` (set by
@@ -195,7 +201,10 @@ const logsSlice = createSlice({
 
     clearEntries(state, action: PayloadAction<{ terminalNodeId: string }>) {
       const slot = state.byTerminalNodeId[action.payload.terminalNodeId];
-      if (slot) slot.entries = [];
+      if (slot) {
+        slot.entries = [];
+        slot.droppedCount = 0;
+      }
     },
 
     setMode(state, action: PayloadAction<{ terminalNodeId: string; mode: LogStreamMode }>) {

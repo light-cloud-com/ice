@@ -232,6 +232,14 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
         )}
       </div>
 
+      {/* OL4 — the 200-line buffer drops the oldest entries; say so instead of
+          silently losing them. */}
+      {(streamState?.droppedCount ?? 0) > 0 && (
+        <p data-testid="monitoring-log-dropped" className="mb-2 text-ice-2xs text-ice-text-3 leading-snug">
+          {t('canvas.properties.log.dropped', { count: streamState!.droppedCount })}
+        </p>
+      )}
+
       {/* Caveats — rendered verbatim from the resolver. */}
       {caveats.length > 0 && (
         <div className="mb-2 space-y-1">

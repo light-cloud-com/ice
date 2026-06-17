@@ -529,6 +529,7 @@
         "sourceOverride": "Source override",
         "retry": "Retry",
         "clear": "Clear",
+        "dropped": "{{count}} older line(s) dropped — buffer is capped at 200.",
         "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
         "clearOverride": "Clear override",
         "selectSource": "— Select a source —",

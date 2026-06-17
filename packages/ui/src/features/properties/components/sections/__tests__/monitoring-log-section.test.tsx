@@ -555,6 +555,34 @@ describe('MonitoringLogSection', () => {
       expect(findByTestid(tree, 'monitoring-log-clear')).toBeUndefined();
     });
 
+    it('shows the dropped-lines note when droppedCount > 0 (OL4)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+        droppedCount: 42,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-dropped')).toBeDefined();
+    });
+
+    it('hides the dropped-lines note when nothing has dropped', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+        droppedCount: 0,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-dropped')).toBeUndefined();
+    });
+
     it('does NOT render the error message when lastError is null', () => {
       seedLogNode();
       mocks.state.logs.byTerminalNodeId['log-1'] = {

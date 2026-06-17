@@ -529,6 +529,7 @@
         "sourceOverride": "源覆盖",
         "retry": "重试",
         "clear": "清除",
+        "dropped": "已丢弃 {{count}} 条较早的日志 — 缓冲区上限为 200 行。",
         "noSupportedSource": "未连接受支持的源。请将计算或数据库块连接到此日志终端。",
         "clearOverride": "清除覆盖",
         "selectSource": "— 选择源 —",

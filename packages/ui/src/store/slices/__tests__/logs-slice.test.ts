@@ -147,6 +147,20 @@ describe('logs-slice', () => {
       // Oldest dropped: ids 0..49 should be gone, ids 50..249 kept.
       expect(entries[0].insertId).toBe('id-50');
       expect(entries[entries.length - 1].insertId).toBe('id-249');
+      // OL4 — the 50 dropped entries are counted (not silently lost).
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(50);
+    });
+
+    it('clearEntries resets droppedCount (OL4)', () => {
+      let state = init();
+      state = logsReducer(state, setSubscription({ terminalNodeId: TID, subscriptionId: 'sub-1', mode: 'polling' }));
+      for (let i = 0; i < 205; i++) {
+        state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry(`x-${i}`) }));
+      }
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(5);
+      state = logsReducer(state, { type: 'logs/clearEntries', payload: { terminalNodeId: TID } });
+      expect(state.byTerminalNodeId[TID]!.entries.length).toBe(0);
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(0);
     });
   });
 

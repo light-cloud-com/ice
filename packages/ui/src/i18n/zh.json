@@ -125,6 +125,18 @@
       "deployFailedCount": "部署失败 — {{failed}} 个资源失败。"
     }
   },
+  "deployStatus": {
+    "deployed": "已部署",
+    "failed": "失败",
+    "deploying": "部署中",
+    "destroying": "销毁中",
+    "planning": "规划中",
+    "planReady": "计划就绪",
+    "queued": "排队中",
+    "connecting": "连接中",
+    "cancelled": "已取消",
+    "notDeployed": "未部署"
+  },
   "canvas": {
     "title": "基础设施画布",
     "emptyState": {

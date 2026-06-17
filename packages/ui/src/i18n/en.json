@@ -125,6 +125,18 @@
       "deployFailedCount": "Deployment failed — {{failed}} resource(s) failed."
     }
   },
+  "deployStatus": {
+    "deployed": "Deployed",
+    "failed": "Failed",
+    "deploying": "Deploying",
+    "destroying": "Destroying",
+    "planning": "Planning",
+    "planReady": "Plan ready",
+    "queued": "Queued",
+    "connecting": "Connecting",
+    "cancelled": "Cancelled",
+    "notDeployed": "Not deployed"
+  },
   "canvas": {
     "title": "Infrastructure Canvas",
     "emptyState": {

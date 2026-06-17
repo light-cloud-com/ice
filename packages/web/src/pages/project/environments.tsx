@@ -8,6 +8,7 @@ import { useTranslation } from '@ui/i18n';
 import { getApi } from '@ui/shared/api/api-adapter';
 import { IceSelect } from '@ui/shared/components/ui/ice-select';
 import { cn } from '@ui/shared/utils/cn';
+import { deployStatusMeta } from '@ui/shared/utils/deploy-status';
 import { setActiveCard, importToActiveCard, createCard } from '@ui/store/slices/cards-slice';
 import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import {
@@ -117,20 +118,10 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
     setCreating(false);
   };
 
-  const statusDot = (envId: string) => {
-    const s = deployStatus[envId]?.status;
-    if (s === 'success') return 'bg-emerald-500';
-    if (s === 'deploying') return 'bg-blue-500 animate-pulse';
-    if (s === 'failed') return 'bg-red-500';
-    if (s === 'planning' || s === 'queued') return 'bg-amber-500 animate-pulse';
-    return 'bg-ice-text-3/30';
-  };
-
-  const statusLabel = (envId: string) => {
-    const s = deployStatus[envId]?.status;
-    if (!s) return 'Not deployed';
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  };
+  // IA4 — one canonical vocabulary + colour map, shared with the status bar
+  // and the Deployments list.
+  const statusDot = (envId: string) => deployStatusMeta(deployStatus[envId]?.status).dotClass;
+  const statusLabel = (envId: string) => t(deployStatusMeta(deployStatus[envId]?.status).labelKey);
 
   if (loading && environments.length === 0) {
     return (

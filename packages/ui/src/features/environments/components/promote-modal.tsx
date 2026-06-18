@@ -77,6 +77,13 @@ export const PromoteModal: React.FC = () => {
               ? t('environments.promote.identicalMessage')
               : `${totalChanges} ${totalChanges !== 1 ? t('environments.promote.changes') : t('environments.promote.change')} ${t('environments.promote.changesWillBeApplied')} ${targetName}.`}
           </p>
+          {/* EI7 — make clear promotion updates the DESIGN, not live infra; the
+              old "will be applied to <env>" copy read as a live deployment. */}
+          {!noChanges && (
+            <p className="text-ice-2xs text-amber-500/90 mt-1.5">
+              {t('environments.promote.designOnlyNote', { target: targetName })}
+            </p>
+          )}
         </div>
 
         {/* Diff list */}

@@ -159,6 +159,12 @@ describe('PromoteModal — no-changes case', () => {
     expect(collectText(tree)).toContain('t:environments.promote.inSync');
   });
 
+  // EI7 — the design-only note only applies when there are changes to promote.
+  it('omits the design-only note when there are no changes', () => {
+    const tree = callRender();
+    expect(collectText(tree)).not.toContain('t:environments.promote.designOnlyNote');
+  });
+
   it('does not render the Promote button when noChanges', () => {
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
@@ -203,6 +209,12 @@ describe('PromoteModal — diff case', () => {
     const tree = callRender();
     const text = collectText(tree);
     expect(text).toContain('region, tier');
+  });
+
+  // EI7 — clarify that promotion updates the design, not live infrastructure.
+  it('shows the design-only clarification note', () => {
+    const tree = callRender();
+    expect(collectText(tree)).toContain('t:environments.promote.designOnlyNote');
   });
 
   it('shows the unchangedCount when > 0', () => {

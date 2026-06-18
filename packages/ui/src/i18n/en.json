@@ -1445,6 +1445,7 @@
     "contextRename": "Rename",
     "contextMoveTo": "Move to",
     "contextMoveRoot": "Root",
+    "contextOpen": "Open",
     "contextDelete": "Delete",
     "subCanvas": "Architecture",
     "subTable": "Table",

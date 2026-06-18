@@ -26,6 +26,7 @@ import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
 import { TourRunner } from '@ui/features/tour/components/tour-runner';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
+import { TeamPage } from '@ui/features/account/components/team-page';
 import { AppBar } from '@ui/shared/components/app-bar';
 import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
 import { ErrorBoundary } from '@ui/shared/components/error-boundary';
@@ -269,6 +270,22 @@ const App: React.FC = () => (
               element={
                 <ErrorBoundary name="TemplateGallery">
                   <TemplateGalleryShell />
+                </ErrorBoundary>
+              }
+            />
+            {/* IA8 — the /team breadcrumb is advertised (Breadcrumbs TOP_ROUTES)
+                and TeamPage is built + tested, but the route was never wired, so
+                /team fell through to the catch-all and 404'd. */}
+            <Route
+              path="/team"
+              element={
+                <ErrorBoundary name="TeamPage">
+                  <div className="h-full flex flex-col bg-background">
+                    <AppBar />
+                    <div className="flex-1 overflow-y-auto">
+                      <TeamPage />
+                    </div>
+                  </div>
                 </ErrorBoundary>
               }
             />

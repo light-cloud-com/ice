@@ -192,6 +192,10 @@ vi.mock('@/pages/app-settings', () => ({
   AppSettings: () => <div data-stub="AppSettings" />,
 }));
 
+vi.mock('@ui/features/account/components/team-page', () => ({
+  TeamPage: () => <div data-stub="TeamPage" />,
+}));
+
 vi.mock('@/pages/folder-view', () => ({
   FolderView: ({
     folderId,
@@ -334,7 +338,7 @@ describe('App — top-level shell', () => {
     expect(router).toHaveLength(1);
   });
 
-  it('registers four routes', () => {
+  it('registers the settings / templates / team / catch-all routes', () => {
     const tree = renderApp();
     const routes = findByPredicate(
       tree,
@@ -342,14 +346,15 @@ describe('App — top-level shell', () => {
         typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
         (el.props as { ['data-stub']: string })['data-stub'] === 'Route',
     );
-    expect(routes).toHaveLength(3);
+    expect(routes).toHaveLength(4);
     const paths = routes.map((r) => (r.props as { ['data-path']: string })['data-path']);
-    expect(paths).toEqual(['/settings', '/templates', '/*']);
+    // IA8 — /team is now a real route (was missing, fell through to the 404).
+    expect(paths).toEqual(['/settings', '/templates', '/team', '/*']);
   });
 
   it('wraps each route in an ErrorBoundary with a name', () => {
     const tree = renderApp();
-    // ErrorBoundary names: App (root), AppSettings, TemplateGallery, Canvas
+    // ErrorBoundary names: App (root), AppSettings, TemplateGallery, TeamPage, Canvas
     const boundaries = findByPredicate(
       tree,
       (el) =>
@@ -357,7 +362,7 @@ describe('App — top-level shell', () => {
         (el.props as { ['data-stub']: string })['data-stub'] === 'ErrorBoundary',
     );
     const names = boundaries.map((b) => (b.props as { ['data-name']: string })['data-name']);
-    expect(names).toEqual(expect.arrayContaining(['App', 'AppSettings', 'TemplateGallery', 'Canvas']));
+    expect(names).toEqual(expect.arrayContaining(['App', 'AppSettings', 'TemplateGallery', 'TeamPage', 'Canvas']));
   });
 });
 

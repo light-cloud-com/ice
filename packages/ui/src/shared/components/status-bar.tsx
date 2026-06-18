@@ -29,6 +29,7 @@ import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
 import { deriveRollup, deriveRollupPercentage } from '../../store/slices/deploy-slice';
+import { deployStatusMeta } from '../utils/deploy-status';
 import { openValidation } from '../../store/slices/ui-slice';
 import { useSystemStats } from '../hooks/use-system-stats';
 import type { RootState } from '../../store';
@@ -208,50 +209,37 @@ const DeployStatusIndicator: React.FC = () => {
   const deployProgress = deriveRollupPercentage(rollup);
 
   if (deployStatus === 'idle') return null;
+  const cfg = DEPLOY_INDICATOR[deployStatus];
+  if (!cfg) return null;
+  const Icon = cfg.icon;
+  // IA4 — canonical label vocabulary, shared with the env + deployments surfaces
+  // (e.g. `error` now reads "Failed", consistent with the other surfaces).
+  const label = t(deployStatusMeta(deployStatus).labelKey);
 
   return (
     <>
       <StatusDivider />
       <div className="flex items-center gap-1.5">
-        {deployStatus === 'authenticating' && (
-          <>
-            <Loader2 className="w-3 h-3 animate-spin text-ice-yellow" />
-            <span className="text-ice-yellow">{t('statusBar.connecting')}</span>
-          </>
-        )}
-        {deployStatus === 'deploying' && (
-          <>
-            <Loader2 className="w-3 h-3 animate-spin text-ice-green" />
-            <span className="text-ice-green">{t('statusBar.deploying', { pct: deployProgress })}</span>
-          </>
-        )}
-        {deployStatus === 'planning' && (
-          <>
-            <Loader2 className="w-3 h-3 animate-spin text-ice-accent" />
-            <span className="text-ice-accent">{t('statusBar.planning')}</span>
-          </>
-        )}
-        {deployStatus === 'success' && (
-          <>
-            <CheckCircle className="w-3 h-3 text-ice-green" />
-            <span className="text-ice-green">{t('statusBar.deployed')}</span>
-          </>
-        )}
-        {deployStatus === 'error' && (
-          <>
-            <XCircle className="w-3 h-3 text-ice-red" />
-            <span className="text-ice-red">{t('statusBar.deployFailed')}</span>
-          </>
-        )}
-        {deployStatus === 'planned' && (
-          <>
-            <Rocket className="w-3 h-3 text-ice-yellow" />
-            <span className="text-ice-yellow">{t('statusBar.planReady')}</span>
-          </>
-        )}
+        <Icon className={`w-3 h-3 ${cfg.spin ? 'animate-spin ' : ''}${cfg.color}`} />
+        <span className={cfg.color}>
+          {label}
+          {deployStatus === 'deploying' ? ` ${deployProgress}%` : ''}
+        </span>
       </div>
     </>
   );
+};
+
+// Per-status icon + ice-token colour for the status-bar deploy pill. The label
+// itself comes from the canonical `deployStatusMeta` (IA4).
+const DEPLOY_INDICATOR: Record<string, { icon: React.ElementType; spin?: boolean; color: string }> = {
+  authenticating: { icon: Loader2, spin: true, color: 'text-ice-yellow' },
+  deploying: { icon: Loader2, spin: true, color: 'text-ice-green' },
+  destroying: { icon: Loader2, spin: true, color: 'text-ice-red' },
+  planning: { icon: Loader2, spin: true, color: 'text-ice-accent' },
+  success: { icon: CheckCircle, color: 'text-ice-green' },
+  error: { icon: XCircle, color: 'text-ice-red' },
+  planned: { icon: Rocket, color: 'text-ice-yellow' },
 };
 
 const StatusDivider: React.FC = () => <div className="w-px h-3 bg-ice-border" />;

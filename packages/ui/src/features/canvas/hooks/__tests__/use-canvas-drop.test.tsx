@@ -483,6 +483,9 @@ describe('useCanvasDrop — block drop without blueprint (fallthrough)', () => {
     expect(a1.payload.data.iceType).toBe('Resource.Unknown');
     // Label sourced from application/ice-block-name fallback chain.
     expect(a1.payload.data.label).toBe('Fallback Label');
+    // PE6 — name is seeded too (from label) so the node isn't born missing a
+    // required name; matches the blueprint path.
+    expect(a1.payload.data.name).toBe('Fallback Label');
     // logBlueprint did NOT fire (no blueprint).
     expect(mocks.logBlueprintSpy).not.toHaveBeenCalled();
   });

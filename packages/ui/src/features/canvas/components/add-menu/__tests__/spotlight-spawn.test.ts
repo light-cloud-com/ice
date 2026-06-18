@@ -55,6 +55,11 @@ describe('buildSpotlightFallbackData (CD5)', () => {
     expect(data.iceType).toBe('Compute.Container');
   });
 
+  it('seeds name (not just label) so the node is not born missing a required name (PE6)', () => {
+    const data = buildSpotlightFallbackData(cmd, 'aws', false);
+    expect(data.name).toBe('My Block');
+  });
+
   it('flags providerUnsupported when gate-blocked (matches the drag path)', () => {
     const data = buildSpotlightFallbackData(cmd, 'aws', true);
     expect(data.providerUnsupported).toBe(true);

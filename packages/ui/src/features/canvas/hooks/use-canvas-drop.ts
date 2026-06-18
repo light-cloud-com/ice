@@ -215,6 +215,9 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
           ? !isIceTypeEnabledForProvider(iceType, deployProvider)
           : false;
       const newNodeData = {
+        // PE6 — seed `name` (not just `label`) so the fallback node isn't born
+        // with a hidden "Name is required" error, matching the blueprint path.
+        name: label,
         label,
         iceType,
         behavior: 'singleton',

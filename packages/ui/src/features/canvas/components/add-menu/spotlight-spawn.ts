@@ -50,6 +50,10 @@ export function buildSpotlightFallbackData(
   gateBlocked: boolean,
 ): Record<string, unknown> {
   return {
+    // PE6 — seed `name` (not just `label`) so the fallback node isn't born with
+    // a hidden "Name is required" error, matching the blueprint path which
+    // seeds `data.name` from the block's display name.
+    name: cmd.name,
     label: cmd.name,
     iceType: cmd.iceType,
     behavior: 'singleton',

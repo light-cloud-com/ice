@@ -27,7 +27,7 @@ import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { TooltipProvider } from '../../../shared/components/ui/tooltip';
-import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { useResolvePathContext } from '../../../shared/hooks/use-resolve-path-context';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
 import { getCategoryMap, CATEGORY_ORDER } from '../data/categories';
@@ -54,9 +54,8 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   // Localized concept blocks — same locale-reactivity contract.
   const components = useMemo(() => getComponents(t), [t]);
 
-  // Get the current project's locked provider (if set)
-  const segments = pathname.split('/').filter(Boolean);
-  const resolved = useResolvePath(segments);
+  // Get the current project's locked provider (if set) — IA7: shared resolution.
+  const resolved = useResolvePathContext();
   const [projectProvider, setProjectProvider] = useState<string | null>(null);
 
   useEffect(() => {

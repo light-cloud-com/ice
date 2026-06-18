@@ -86,8 +86,8 @@ vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
-vi.mock('../../../../shared/hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolved,
+vi.mock('../../../../shared/hooks/use-resolve-path-context', () => ({
+  useResolvePathContext: () => mocks.resolved,
 }));
 
 vi.mock('../../hooks/use-project-browser-data', () => ({

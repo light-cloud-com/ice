@@ -152,8 +152,10 @@ vi.mock('@ui/shared/hooks/use-menu-actions', () => ({
   useMenuActions: () => mocks.menuActionsInvoked(),
 }));
 
-vi.mock('@ui/shared/hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolvedPath,
+vi.mock('@ui/shared/hooks/use-resolve-path-context', () => ({
+  // IA7 — provider is a passthrough in tests; consumers read the shared result.
+  ResolvePathProvider: ({ children }: { children: React.ReactNode }) => children,
+  useResolvePathContext: () => mocks.resolvedPath,
 }));
 
 vi.mock('@ui/store/slices/account-slice', () => ({

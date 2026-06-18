@@ -9,13 +9,8 @@ import { ChevronRight, Home } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
-import { useResolvePath } from '../hooks/use-resolve-path';
+import { useResolvePathContext, TOP_ROUTES } from '../hooks/use-resolve-path-context';
 import type { RootState } from '../../store';
-
-const TOP_ROUTES: Record<string, string> = {
-  settings: 'Settings',
-  team: 'Team',
-};
 
 export const Breadcrumbs: React.FC = () => {
   const { pathname } = useLocation();
@@ -23,7 +18,9 @@ export const Breadcrumbs: React.FC = () => {
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
 
   const isTopRoute = segments.length === 1 && TOP_ROUTES[segments[0]];
-  const resolved = useResolvePath(isTopRoute ? [] : segments);
+  // IA7 — the resolution (with the same top-route gate) is now shared at the
+  // shell; read it instead of firing a duplicate set of resolution POSTs.
+  const resolved = useResolvePathContext();
 
   // Build crumbs from resolved data, or fall back to URL segments
   const crumbs: { label: string; path: string }[] = [];

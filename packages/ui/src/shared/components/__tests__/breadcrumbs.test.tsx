@@ -33,8 +33,9 @@ vi.mock('react-router-dom', () => ({
   ),
 }));
 
-vi.mock('../../hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolved,
+vi.mock('../../hooks/use-resolve-path-context', () => ({
+  useResolvePathContext: () => mocks.resolved,
+  TOP_ROUTES: { settings: 'Settings', team: 'Team' },
 }));
 
 import { Breadcrumbs } from '../breadcrumbs';

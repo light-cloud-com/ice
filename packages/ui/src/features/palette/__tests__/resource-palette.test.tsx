@@ -120,8 +120,8 @@ vi.mock('react-router-dom', () => ({
   useLocation: () => ({ pathname: mocks.pathname }),
 }));
 
-vi.mock('../../../shared/hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolved,
+vi.mock('../../../shared/hooks/use-resolve-path-context', () => ({
+  useResolvePathContext: () => mocks.resolved,
 }));
 
 vi.mock('../../../shared/api/axios-instance', () => ({

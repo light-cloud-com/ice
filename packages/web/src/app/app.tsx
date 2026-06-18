@@ -32,7 +32,7 @@ import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
 import { ErrorBoundary } from '@ui/shared/components/error-boundary';
 import { MainLayout } from '@ui/shared/components/main-layout';
 import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
-import { useResolvePath } from '@ui/shared/hooks/use-resolve-path';
+import { ResolvePathProvider, useResolvePathContext } from '@ui/shared/hooks/use-resolve-path-context';
 import { fetchProfile } from '@ui/store/slices/account-slice';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { openDeployPanel } from '@ui/store/slices/deploy-slice';
@@ -93,7 +93,7 @@ const DynamicContent: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const segments = pathname.split('/').filter(Boolean);
-  const resolved = useResolvePath(segments);
+  const resolved = useResolvePathContext(); // IA7 — shared shell-level resolution
   const activeCard = useSelector(selectActiveCard);
 
   // Cross-tab deploy visibility — subscribe to the active card's deploy
@@ -245,59 +245,65 @@ const App: React.FC = () => (
     <ErrorBoundary name="App">
       <DevAccentPicker>
         <BrowserRouter>
-          {/* TourRunner: mounted as a sibling of Routes so the popover/overlay
+          {/* IA7 — resolve the URL path ONCE at the shell and share it; the four
+              consumers (DynamicContent, Breadcrumbs, ProjectBrowser,
+              ResourcePalette) read it via useResolvePathContext instead of each
+              firing the same resolution POSTs. */}
+          <ResolvePathProvider>
+            {/* TourRunner: mounted as a sibling of Routes so the popover/overlay
               portals at document.body regardless of which route is active.
               Inside BrowserRouter (needs useNavigate / useLocation), inside
               LocaleProvider (popover uses i18n), inside Provider (slice
               dispatch). See blueprint §2.1. */}
-          <TourRunner />
-          <Routes>
-            <Route
-              path="/settings"
-              element={
-                <ErrorBoundary name="AppSettings">
-                  <div className="h-full flex flex-col bg-background">
-                    <AppBar />
-                    <div className="flex-1 overflow-y-auto">
-                      <AppSettings />
+            <TourRunner />
+            <Routes>
+              <Route
+                path="/settings"
+                element={
+                  <ErrorBoundary name="AppSettings">
+                    <div className="h-full flex flex-col bg-background">
+                      <AppBar />
+                      <div className="flex-1 overflow-y-auto">
+                        <AppSettings />
+                      </div>
                     </div>
-                  </div>
-                </ErrorBoundary>
-              }
-            />
-            <Route
-              path="/templates"
-              element={
-                <ErrorBoundary name="TemplateGallery">
-                  <TemplateGalleryShell />
-                </ErrorBoundary>
-              }
-            />
-            {/* IA8 — the /team breadcrumb is advertised (Breadcrumbs TOP_ROUTES)
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/templates"
+                element={
+                  <ErrorBoundary name="TemplateGallery">
+                    <TemplateGalleryShell />
+                  </ErrorBoundary>
+                }
+              />
+              {/* IA8 — the /team breadcrumb is advertised (Breadcrumbs TOP_ROUTES)
                 and TeamPage is built + tested, but the route was never wired, so
                 /team fell through to the catch-all and 404'd. */}
-            <Route
-              path="/team"
-              element={
-                <ErrorBoundary name="TeamPage">
-                  <div className="h-full flex flex-col bg-background">
-                    <AppBar />
-                    <div className="flex-1 overflow-y-auto">
-                      <TeamPage />
+              <Route
+                path="/team"
+                element={
+                  <ErrorBoundary name="TeamPage">
+                    <div className="h-full flex flex-col bg-background">
+                      <AppBar />
+                      <div className="flex-1 overflow-y-auto">
+                        <TeamPage />
+                      </div>
                     </div>
-                  </div>
-                </ErrorBoundary>
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                <ErrorBoundary name="Canvas">
-                  <DynamicContent />
-                </ErrorBoundary>
-              }
-            />
-          </Routes>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <ErrorBoundary name="Canvas">
+                    <DynamicContent />
+                  </ErrorBoundary>
+                }
+              />
+            </Routes>
+          </ResolvePathProvider>
         </BrowserRouter>
       </DevAccentPicker>
     </ErrorBoundary>

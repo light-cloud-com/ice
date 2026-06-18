@@ -12,11 +12,11 @@
 import { Folder, FolderOpen, Loader2, FolderPlus, FilePlus } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { TreeItem } from './tree-item';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
-import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { useResolvePathContext } from '../../../shared/hooks/use-resolve-path-context';
 import { createEmptyProjectAndNavigate } from '../../wizard/utils/create-empty-project';
 import { useProjectBrowserActions } from '../hooks/use-project-browser-actions';
 import { useProjectBrowserData } from '../hooks/use-project-browser-data';
@@ -25,11 +25,10 @@ import type { RootState } from '../../../store';
 export function ProjectBrowser() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
 
-  // Resolve which node is active from the current URL
-  const resolved = useResolvePath(pathname.split('/').filter(Boolean));
+  // Resolve which node is active from the current URL — IA7: shared resolution.
+  const resolved = useResolvePathContext();
   const activeNodeId = resolved.id;
   const activeSubpage = resolved.type === 'project' ? resolved.subpage || 'canvas' : null;
 

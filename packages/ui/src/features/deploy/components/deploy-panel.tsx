@@ -73,11 +73,12 @@ export const DeployPanel: React.FC = () => {
   // handleClose live in `useDeployActions`. The hook returns them as an
   // object with the same dispatch ordering and retry-after-auth re-dispatch
   // semantics as the inline source.
-  const { fetchRequirements, handleVerifyRequirement, handlePlan, handleDeploy, handleClose } = useDeployActions({
-    activeCard: activeCard ?? null,
-    deploy,
-    pendingRetryRef,
-  });
+  const { fetchRequirements, handleVerifyRequirement, handlePlan, handleDeploy, handleClose, handleAuthenticate } =
+    useDeployActions({
+      activeCard: activeCard ?? null,
+      deploy,
+      pendingRetryRef,
+    });
 
   // ─── Side-effects ─────────────────────────────────────────────────────
   //
@@ -211,7 +212,7 @@ export const DeployPanel: React.FC = () => {
         )}
 
         {/* Authenticating */}
-        {deploy.status === 'authenticating' && <AuthBanner />}
+        {deploy.status === 'authenticating' && <AuthBanner onReopen={() => handleAuthenticate()} />}
 
         {/* Phase 8 — block requirements (DNS, verification, cert, GitHub repo, etc.) */}
         {(deploy.requirements.length > 0 || deploy.requirementsLoading) && (

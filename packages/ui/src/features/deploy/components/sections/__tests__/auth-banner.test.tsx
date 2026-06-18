@@ -26,10 +26,14 @@ const mocks = vi.hoisted(() => ({
   Loader2: vi.fn((props: { className?: string }) =>
     React.createElement('span', { 'data-icon': 'Loader2', className: props.className }, 'Loader2'),
   ),
+  ExternalLink: vi.fn((props: { className?: string }) =>
+    React.createElement('span', { 'data-icon': 'ExternalLink', className: props.className }, 'ExternalLink'),
+  ),
 }));
 
 vi.mock('lucide-react', () => ({
   Loader2: mocks.Loader2,
+  ExternalLink: mocks.ExternalLink,
 }));
 
 // `useTranslation` mock — identity `t(key) => key` for exact-string assertions.
@@ -109,7 +113,8 @@ function collectText(tree: React.ReactNode): string {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const renderBanner = (): React.ReactElement => (AuthBanner as unknown as () => React.ReactElement)();
+const renderBanner = (props: { onReopen?: () => void } = {}): React.ReactElement =>
+  (AuthBanner as unknown as (p: { onReopen?: () => void }) => React.ReactElement)(props);
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
@@ -219,5 +224,33 @@ describe('AuthBanner — translation keys (text-only sweep)', () => {
     // The Loader2 stub renders `'Loader2'` as a span child, so we filter.
     const authKeys = leafTexts.filter((s) => s.startsWith('deploy.auth.'));
     expect(new Set(authKeys)).toEqual(new Set(['deploy.auth.connecting', 'deploy.auth.browserPrompt']));
+  });
+});
+
+// ─── DF9 — reopen sign-in affordance ────────────────────────────────────────
+
+describe('AuthBanner — reopen sign-in (DF9)', () => {
+  it('does not render the reopen button when no onReopen is supplied', () => {
+    const tree = renderBanner();
+    expect(collectText(tree)).not.toContain('deploy.auth.reopen');
+    const buttons = findByPredicate(tree, (el) => el.type === 'button');
+    expect(buttons).toHaveLength(0);
+  });
+
+  it('renders the noWindow hint + reopen button when onReopen is supplied', () => {
+    const tree = renderBanner({ onReopen: vi.fn() });
+    const text = collectText(tree);
+    expect(text).toContain('deploy.auth.noWindow');
+    expect(text).toContain('deploy.auth.reopen');
+    const buttons = findByPredicate(tree, (el) => el.type === 'button');
+    expect(buttons).toHaveLength(1);
+  });
+
+  it('invokes onReopen when the button is clicked', () => {
+    const onReopen = vi.fn();
+    const tree = renderBanner({ onReopen });
+    const button = findByPredicate(tree, (el) => el.type === 'button')[0];
+    (button.props as { onClick: () => void }).onClick();
+    expect(onReopen).toHaveBeenCalledTimes(1);
   });
 });

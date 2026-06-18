@@ -713,7 +713,9 @@
     },
     "auth": {
       "connecting": "正在连接 GCP...",
-      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。"
+      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。",
+      "noWindow": "没有看到窗口？它可能被拦截或已关闭。",
+      "reopen": "重新打开登录窗口"
     },
     "plan": {
       "noChanges": "未检测到更改。基础设施已是最新状态。",

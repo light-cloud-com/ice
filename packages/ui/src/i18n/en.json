@@ -713,7 +713,9 @@
     },
     "auth": {
       "connecting": "Connecting to GCP...",
-      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
+      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue.",
+      "noWindow": "Didn't see the window? It may have been blocked or closed.",
+      "reopen": "Reopen sign-in window"
     },
     "plan": {
       "noChanges": "No changes detected. Infrastructure is up to date.",

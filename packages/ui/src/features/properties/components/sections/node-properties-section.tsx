@@ -304,9 +304,28 @@ export const NodePropertiesSection: React.FC<{
           setPropsTab(visibleTabs[0].id);
         }
 
+        // PE2 — the per-field config validation lives in propertyIssuesMap;
+        // surface its error/warning counts as a badge on the Config tab so the
+        // signal isn't trapped there when the user is on another tab.
+        let configErrors = 0;
+        let configWarnings = 0;
+        propertyIssuesMap?.forEach((issue) => {
+          if (issue.severity === 'error') configErrors += 1;
+          else if (issue.severity === 'warning') configWarnings += 1;
+        });
+        const issueCounts =
+          configErrors > 0 || configWarnings > 0
+            ? { config: { errors: configErrors, warnings: configWarnings } }
+            : undefined;
+
         return (
           <>
-            <PropertiesTabBar visibleTabs={visibleTabs} activeTab={activeTab} onSelect={setPropsTab} />
+            <PropertiesTabBar
+              visibleTabs={visibleTabs}
+              activeTab={activeTab}
+              onSelect={setPropsTab}
+              issueCounts={issueCounts}
+            />
 
             {/* ════ DEPLOY TAB ════ */}
             {activeTab === 'deploy' && hasDeployment && (

@@ -150,6 +150,10 @@
       "hint": "Press Shift+A or drag a block from the left to begin",
       "dismiss": "Dismiss quick start"
     },
+    "spotlight": {
+      "recent": "Recent",
+      "catalog": "All blocks"
+    },
     "tooltip": {
       "connections": "connections",
       "protocol": "Protocol",

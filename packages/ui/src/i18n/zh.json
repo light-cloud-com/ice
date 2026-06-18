@@ -150,6 +150,10 @@
       "hint": "按 Shift+A 或从左侧拖入一个区块即可开始",
       "dismiss": "关闭快速开始"
     },
+    "spotlight": {
+      "recent": "最近使用",
+      "catalog": "所有区块"
+    },
     "tooltip": {
       "connections": "个连接",
       "protocol": "协议",

@@ -143,7 +143,7 @@ export function renderPropertyField(
     return (
       <div key={prop.name} className="py-1">
         <div className="flex items-center justify-between gap-2">
-          <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+          <PropertyLabel label={prop.label} tooltip={prop.tooltip} required={prop.required} />
           <IceSelect
             value={strVal}
             width="160px"
@@ -266,7 +266,7 @@ export function renderPropertyField(
   if (prop.type === 'boolean') {
     return (
       <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
-        <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+        <PropertyLabel label={prop.label} tooltip={prop.tooltip} required={prop.required} />
         <button
           onClick={() => onChange(prop.name, value != null ? !value : !prop.default)}
           className={cn(
@@ -287,7 +287,7 @@ export function renderPropertyField(
   if (prop.type === 'number') {
     return (
       <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
-        <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+        <PropertyLabel label={prop.label} tooltip={prop.tooltip} required={prop.required} />
         <input
           type="number"
           value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
@@ -299,7 +299,7 @@ export function renderPropertyField(
   }
   return (
     <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
-      <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+      <PropertyLabel label={prop.label} tooltip={prop.tooltip} required={prop.required} />
       <input
         type="text"
         value={value != null ? String(value) : ''}

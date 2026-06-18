@@ -630,11 +630,28 @@ export const StepperField: React.FC<{
 
 // ─── Tooltip label ────────────────────────────────────────────────────────
 
-export const PropertyLabel: React.FC<{ label: string; tooltip?: string }> = ({ label, tooltip }) => {
+export const PropertyLabel: React.FC<{ label: string; tooltip?: string; required?: boolean }> = ({
+  label,
+  tooltip,
+  required,
+}) => {
   const [showTooltip, setShowTooltip] = React.useState(false);
   return (
     <span className="text-ice-xs text-ice-text-3 shrink-0 inline-flex items-center gap-1">
       {label}
+      {required && (
+        // PE1 — required fields were indistinguishable from optional ones, so a
+        // user only learned a field was mandatory at deploy-failure time. The
+        // flag is on every prop's schema; surface it as a red asterisk with an
+        // AT-reachable name.
+        <span
+          className="text-ice-red"
+          aria-label={t('canvas.properties.fields.required')}
+          title={t('canvas.properties.fields.required')}
+        >
+          *
+        </span>
+      )}
       {tooltip && (
         <span
           className="relative inline-flex"

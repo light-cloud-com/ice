@@ -544,7 +544,8 @@
         "actionTypeBlockDescription": "invoke a block on the canvas",
         "actionTypeHttpLabel": "Send HTTP request",
         "actionTypeHttpDescription": "hit an external URL",
-        "customValuePrefix": "Custom: {{value}} {{unit}}"
+        "customValuePrefix": "Custom: {{value}} {{unit}}",
+        "required": "Required"
       },
       "log": {
         "sectionTitle": "Logs",

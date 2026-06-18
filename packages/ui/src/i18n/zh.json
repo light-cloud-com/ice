@@ -544,7 +544,8 @@
         "actionTypeBlockDescription": "调用画布上的一个块",
         "actionTypeHttpLabel": "发送 HTTP 请求",
         "actionTypeHttpDescription": "访问外部 URL",
-        "customValuePrefix": "自定义:{{value}} {{unit}}"
+        "customValuePrefix": "自定义:{{value}} {{unit}}",
+        "required": "必填"
       },
       "log": {
         "sectionTitle": "日志",

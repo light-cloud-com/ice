@@ -184,6 +184,28 @@ describe('renderPropertyField', () => {
     expect((textInputs[0].props as { placeholder?: string }).placeholder).toBe('enter name');
   });
 
+  // PE1 — required props were indistinguishable from optional ones. Each render
+  // branch must thread prop.required into PropertyLabel (which draws the asterisk).
+  it('threads prop.required=true into PropertyLabel (text branch)', () => {
+    const tree = renderPropertyField(mkProp({ type: 'string', required: true }), 'v', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect(labels.length).toBeGreaterThanOrEqual(1);
+    expect((labels[0].props as { required?: boolean }).required).toBe(true);
+  });
+
+  it('threads prop.required=false into PropertyLabel for an optional field', () => {
+    const tree = renderPropertyField(mkProp({ type: 'string', required: false }), 'v', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect((labels[0].props as { required?: boolean }).required).toBe(false);
+  });
+
+  it('threads required through the IceSelect (optionDetails) branch', () => {
+    const prop = mkProp({ type: 'select', required: true, optionDetails: [{ value: 'a', label: 'A' }] });
+    const tree = renderPropertyField(prop, 'a', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect((labels[0].props as { required?: boolean }).required).toBe(true);
+  });
+
   it('renders CustomValueInput underneath the IceSelect when value === "custom" AND prop.customInput is set', () => {
     const onChange = vi.fn();
     const prop = mkProp({

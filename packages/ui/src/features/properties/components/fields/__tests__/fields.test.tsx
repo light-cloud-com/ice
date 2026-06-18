@@ -481,6 +481,21 @@ describe('PropertyLabel', () => {
     // Initial state — tooltip text is NOT in the DOM (showTooltip starts false)
     expect(html).not.toContain('A range like 10.0.0.0/16');
   });
+
+  // PE1 — a required field shows a red asterisk with an accessible name so the
+  // user knows it's mandatory before a deploy fails on it.
+  it('marks a required field with an asterisk + accessible name', () => {
+    const html = renderToString(React.createElement(PropertyLabel, { label: 'VPC ID', required: true }));
+    expect(html).toContain('VPC ID');
+    expect(html).toContain('*');
+    // aria-label/title resolve via i18n (default locale → "Required").
+    expect(html).toContain('aria-label="Required"');
+  });
+
+  it('omits the required asterisk for an optional field', () => {
+    const html = renderToString(React.createElement(PropertyLabel, { label: 'VPC ID' }));
+    expect(html).not.toContain('aria-label="Required"');
+  });
 });
 
 describe('CustomValueInput', () => {

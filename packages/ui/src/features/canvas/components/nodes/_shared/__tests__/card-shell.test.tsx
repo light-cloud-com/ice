@@ -289,6 +289,51 @@ describe('CardShell', () => {
     expect((activeDot.props as { pulse: boolean }).pulse).toBe(false);
   });
 
+  // CNV7/AX5 — the zoomed-out poster status indicator is no longer a colour-only,
+  // mouse-`title`-only dot: it carries a shape glyph + an AT-reachable aria-label.
+  describe('poster-view status indicator (lod < 3)', () => {
+    const findPosterStatus = (tree: React.ReactNode) =>
+      findByPredicate(tree, (el) => el.type === 'span' && (el.props as { role?: string }).role === 'img')[0];
+
+    it('renders a labelled glyph (not a bare dot) for a deployed node', () => {
+      const tree = renderInner({ lod: 1, node: makeNode({ data: { deploy_status: 'deployed' } }) });
+      const el = findPosterStatus(tree);
+      expect(el).toBeDefined();
+      const props = el.props as { 'aria-label': string; children: string; title: string };
+      expect(props['aria-label']).toBe('Deployed');
+      expect(props.title).toBe('Deployed');
+      expect(props.children).toBe('✓');
+    });
+
+    it('uses distinct glyphs for in-flight vs failed so they differ without colour', () => {
+      const deploying = findPosterStatus(
+        renderInner({ lod: 1, node: makeNode({ data: { deploy_status: 'deploying' } }) }),
+      );
+      const failed = findPosterStatus(renderInner({ lod: 1, node: makeNode({ data: { deploy_status: 'error' } }) }));
+      expect((deploying.props as { children: string }).children).toBe('…');
+      expect((failed.props as { children: string }).children).toBe('✕');
+      expect((deploying.props as { children: string }).children).not.toBe(
+        (failed.props as { children: string }).children,
+      );
+    });
+
+    it('pulses the glyph while work is in flight, but not when terminal', () => {
+      const deploying = findPosterStatus(
+        renderInner({ lod: 1, node: makeNode({ data: { deploy_status: 'deploying' } }) }),
+      );
+      const deployed = findPosterStatus(
+        renderInner({ lod: 1, node: makeNode({ data: { deploy_status: 'deployed' } }) }),
+      );
+      expect((deploying.props as { className?: string }).className).toContain('animate-pulse');
+      expect((deployed.props as { className?: string }).className ?? '').not.toContain('animate-pulse');
+    });
+
+    it('renders no status indicator when the node has no deploy_status', () => {
+      const tree = renderInner({ lod: 1, node: makeNode({ data: {} }) });
+      expect(findPosterStatus(tree)).toBeUndefined();
+    });
+  });
+
   it('renders the icon prop with size=16 + the accent color', () => {
     const tree = renderInner({ accentColor: '#abcdef' });
     const icons = findByType(tree, FakeIcon);

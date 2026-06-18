@@ -35,6 +35,7 @@ import { ConnectionDragGlow } from './connection-drag-glow';
 import { NodeDeployOverlay } from './node-deploy-overlay';
 import { useNodeValidation } from './node-validation-context';
 import { useIsNodeOrphan } from './orphan-context';
+import { posterStatusGlyph } from './poster-status';
 import { ProviderPill } from './provider-pill';
 import { StatusDot } from './status-dot';
 import { TypedSockets } from './typed-sockets';
@@ -180,6 +181,8 @@ export const CardShell: React.FC<CardShellProps> = ({
 
   const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
+  // CNV7/AX5 — non-colour, AT-reachable status cue for the poster view.
+  const posterStatus = posterStatusGlyph(deployStatus);
 
   const rawIsSource = connectionDragState === 'source';
   const rawIsValidTarget = connectionDragState === 'valid-target';
@@ -378,16 +381,28 @@ export const CardShell: React.FC<CardShellProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ProviderPill provider={provider} />
               {deployStatus && (
+                // CNV7/AX5 — pair the hue with a shape glyph + an `aria-label`
+                // (not a mouse-only `title`), so deploying / done / failed are
+                // distinguishable without colour and reachable by AT.
                 <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: statusColor,
-                    opacity: 0.9,
-                  }}
+                  role="img"
+                  aria-label={statusLabel}
                   title={statusLabel}
-                />
+                  className={posterStatus.pulse ? 'motion-safe:animate-pulse' : undefined}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 12,
+                    height: 12,
+                    fontSize: 11,
+                    lineHeight: 1,
+                    fontWeight: 700,
+                    color: statusColor,
+                  }}
+                >
+                  {posterStatus.glyph}
+                </span>
               )}
             </div>
           </div>

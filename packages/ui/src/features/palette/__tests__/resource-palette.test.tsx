@@ -231,7 +231,9 @@ vi.mock('../data/categories', () => ({
     ]),
 }));
 
-vi.mock('../data/components', () => ({
+vi.mock('../data/components', async (importOriginal) => ({
+  // Keep the real `componentMatchesQuery` (CD3) — only the inventory is stubbed.
+  ...(await importOriginal<typeof import('../data/components')>()),
   getComponents: () => [
     {
       type: 'Compute.A',

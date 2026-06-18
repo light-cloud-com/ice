@@ -79,7 +79,7 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-import { SvgLogNode } from '..';
+import { SvgLogNode, formatCopyTimestamp, formatLogCopyLine } from '..';
 import type { CanvasNode } from '../../../svg-canvas';
 
 const MockLogContent = mocks.LogContent;
@@ -456,7 +456,8 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
         stopPropagation: () => {},
       } as unknown as React.MouseEvent);
       expect(writes).toHaveLength(1);
-      expect(writes[0]).toBe('12:34:56 [INFO] hello\n12:34:57 [ERROR] bye');
+      // OL7 — copy carries the FULL date+time (display column only shows HH:MM:SS).
+      expect(writes[0]).toBe('2025-04-27 12:34:56 [INFO] hello\n2025-04-27 12:34:57 [ERROR] bye');
     } finally {
       Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true, writable: true });
     }
@@ -482,7 +483,7 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     }
   });
 
-  it('handleCopyLine writes single-line + sets copied + clears after 1s', () => {
+  it('handleCopyLine writes single-line (full ts) + sets copied on success + clears after 1s', async () => {
     const writes: string[] = [];
     const original = (globalThis as unknown as { navigator?: unknown }).navigator;
     Object.defineProperty(globalThis, 'navigator', {
@@ -504,15 +505,23 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
       const onCopyLine = (
         lc.props as {
           onCopyLine: (
-            log: { id: string; timestamp: string; level: string; message: string },
+            log: { id: string; timestamp: string; tsFull?: string; level: string; message: string },
             e: React.MouseEvent,
           ) => void;
         }
       ).onCopyLine;
-      onCopyLine({ id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' }, {
-        stopPropagation: () => {},
-      } as unknown as React.MouseEvent);
-      expect(writes).toEqual(['12:34:56 [INFO] hi']);
+      onCopyLine(
+        { id: 'l1', timestamp: '12:34:56', tsFull: '2025-04-27T12:34:56.000Z', level: 'info', message: 'hi' },
+        {
+          stopPropagation: () => {},
+        } as unknown as React.MouseEvent,
+      );
+      // OL7 — copy uses the full timestamp (write is synchronous).
+      expect(writes).toEqual(['2025-04-27 12:34:56 [INFO] hi']);
+      // OL8 — the "copied" flash is gated on the clipboard write succeeding, so
+      // it fires on a microtask, not synchronously. Flush the writeText→then→
+      // catch→then chain (several hops).
+      for (let i = 0; i < 5; i += 1) await Promise.resolve();
       // Slot 4 is copiedLine.
       expect(mocks.state.stateSetters[4]).toHaveBeenCalledWith('l1');
       mocks.state.stateSetters[4].mockClear();
@@ -521,6 +530,50 @@ describe('SvgLogNode — fold/copy/wheel handlers', () => {
     } finally {
       Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true, writable: true });
       vi.useRealTimers();
+    }
+  });
+
+  // OL8 — a failed clipboard write must NOT show the false-positive "copied" flash.
+  it('handleCopyLine does NOT flash copied when the clipboard write rejects', async () => {
+    const original = (globalThis as unknown as { navigator?: unknown }).navigator;
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { clipboard: { writeText: () => Promise.reject(new Error('denied')) } },
+      configurable: true,
+      writable: true,
+    });
+    try {
+      const tree = renderLN();
+      const lc = findByType(tree, MockLogContent)[0];
+      const onCopyLine = (lc.props as { onCopyLine: (log: Record<string, unknown>, e: React.MouseEvent) => void })
+        .onCopyLine;
+      onCopyLine({ id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' }, {
+        stopPropagation: () => {},
+      } as unknown as React.MouseEvent);
+      for (let i = 0; i < 5; i += 1) await Promise.resolve();
+      expect(mocks.state.stateSetters[4]).not.toHaveBeenCalledWith('l1');
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true, writable: true });
+    }
+  });
+
+  // OL8 — when the clipboard API is unavailable, copy is a no-op (no false flash).
+  it('handleCopyLine is a no-op when navigator.clipboard is unavailable', async () => {
+    const original = (globalThis as unknown as { navigator?: unknown }).navigator;
+    Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true, writable: true });
+    try {
+      const tree = renderLN();
+      const lc = findByType(tree, MockLogContent)[0];
+      const onCopyLine = (lc.props as { onCopyLine: (log: Record<string, unknown>, e: React.MouseEvent) => void })
+        .onCopyLine;
+      expect(() =>
+        onCopyLine({ id: 'l1', timestamp: '12:34:56', level: 'info', message: 'hi' }, {
+          stopPropagation: () => {},
+        } as unknown as React.MouseEvent),
+      ).not.toThrow();
+      for (let i = 0; i < 5; i += 1) await Promise.resolve();
+      expect(mocks.state.stateSetters[4]).not.toHaveBeenCalledWith('l1');
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true, writable: true });
     }
   });
 
@@ -689,5 +742,28 @@ describe('SvgLogNode — FoldedBadge in folded mode', () => {
     const tree = renderLN();
     const badge = findByType(tree, MockFoldedBadge)[0];
     expect((badge.props as { logCount: number }).logCount).toBe(2);
+  });
+});
+
+// ─── OL7 copy helpers (pure) ────────────────────────────────────────────────
+
+describe('formatCopyTimestamp (OL7)', () => {
+  it('renders the full date + time, dropping the millis/Z', () => {
+    expect(formatCopyTimestamp('2025-04-27T12:34:56.789Z')).toBe('2025-04-27 12:34:56');
+  });
+  it('returns empty for missing/garbage input', () => {
+    expect(formatCopyTimestamp(undefined)).toBe('');
+    expect(formatCopyTimestamp('')).toBe('');
+  });
+});
+
+describe('formatLogCopyLine (OL7)', () => {
+  it('uses the full timestamp when present', () => {
+    expect(
+      formatLogCopyLine({ timestamp: '12:34:56', tsFull: '2025-04-27T12:34:56.000Z', level: 'error', message: 'boom' }),
+    ).toBe('2025-04-27 12:34:56 [ERROR] boom');
+  });
+  it('falls back to the display timestamp when no full ts (e.g. placeholder row)', () => {
+    expect(formatLogCopyLine({ timestamp: '12:34:56', level: 'info', message: 'hi' })).toBe('12:34:56 [INFO] hi');
   });
 });

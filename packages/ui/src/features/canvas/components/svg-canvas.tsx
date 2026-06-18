@@ -500,15 +500,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       <CanvasContextMenu />
 
       {/* Shift+A spotlight add-block menu + the key listener that opens it. */}
-      <SpotlightMount screenToCanvas={screenToCanvas} />
+      <SpotlightMount screenToCanvas={screenToCanvas} canvasLocked={canvasLocked} />
     </div>
   );
 };
 
-const SpotlightMount: React.FC<{ screenToCanvas: (cx: number, cy: number) => { x: number; y: number } }> = ({
-  screenToCanvas,
-}) => {
-  useSpotlightShortcut({ screenToCanvas });
+const SpotlightMount: React.FC<{
+  screenToCanvas: (cx: number, cy: number) => { x: number; y: number };
+  canvasLocked: boolean;
+}> = ({ screenToCanvas, canvasLocked }) => {
+  // CD6 — a locked canvas disables the right-click "Add Block" path; gate the
+  // Shift+A shortcut the same way so the lock isn't silently defeated.
+  useSpotlightShortcut({ screenToCanvas, enabled: !canvasLocked });
   useGroupShortcut();
   return <Spotlight />;
 };

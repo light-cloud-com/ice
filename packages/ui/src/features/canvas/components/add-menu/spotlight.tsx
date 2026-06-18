@@ -19,6 +19,7 @@ import { isIceTypeEnabledForProvider } from '@ice/constants';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { rank, type RankableItem } from './fuzzy-match';
+import { resolveSpotlightProvider, buildSpotlightFallbackData } from './spotlight-spawn';
 import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
 import { useTranslation } from '../../../../i18n';
 import { addNodeToCard, expandBlueprintToCard, type CardNode } from '../../../../store/slices/cards-slice';
@@ -96,9 +97,14 @@ export const Spotlight: React.FC = () => {
 
   const spawn = (cmd: SpotlightCommand): void => {
     const blockType = cmd.iceType;
-    const paletteProvider: Provider | undefined = cmd.origin.providers[0];
-    const effectiveProvider = paletteProvider ?? deployProvider;
-    const gateBlocked = !!effectiveProvider && !isIceTypeEnabledForProvider(blockType, effectiveProvider);
+    // CD1 — prefer the active deploy provider when this block supports it, so
+    // Shift+A spawns the same blueprint the drag path would (was: always [0]).
+    const { effectiveProvider, gateBlocked } = resolveSpotlightProvider(
+      blockType,
+      cmd.origin.providers,
+      deployProvider,
+      isIceTypeEnabledForProvider,
+    );
     const blueprint = gateBlocked ? undefined : getBlueprint(blockType, effectiveProvider);
 
     if (blueprint) {
@@ -127,20 +133,15 @@ export const Spotlight: React.FC = () => {
     } else {
       // Fall through to a bare resource node so the user still gets a
       // visible placeholder when the blueprint is missing for the active
-      // provider. Mirrors the palette drop fallback.
+      // provider. Mirrors the palette drop fallback — CD5: carries
+      // `providerUnsupported` so the warning badge + deploy validator flag it.
       const newNode: CardNode = {
         id: `node-${Date.now()}`,
         type: 'resource',
         position: { x: canvasPos.x, y: canvasPos.y },
         width: 200,
         height: 120,
-        data: {
-          label: cmd.name,
-          iceType: blockType,
-          behavior: 'singleton',
-          folded: false,
-          provider: deployProvider,
-        },
+        data: buildSpotlightFallbackData({ name: cmd.name, iceType: blockType }, effectiveProvider, gateBlocked),
       };
       dispatch(addNodeToCard(newNode));
     }

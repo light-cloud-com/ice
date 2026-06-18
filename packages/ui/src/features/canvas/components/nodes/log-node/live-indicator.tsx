@@ -28,10 +28,21 @@ function specFor(status: LogStreamStatus): IndicatorSpec {
     case 'permission-denied':
     case 'error':
       return { tone: 'red', label: t('canvas.status.error'), pulse: false };
+    // OL6 — these non-streaming states used to collapse to a single grey "IDLE",
+    // so surveying the board you couldn't tell "waiting on a deploy" from "no
+    // source connected" from "pick a source" without opening the panel. Give
+    // each a distinct label (tones kept grey to match the panel's `pillFor`, so
+    // the canvas dot and the panel pill still agree).
     case 'pre-deploy':
+      return { tone: 'grey', label: t('canvas.status.preDeploy'), pulse: false };
     case 'no-source':
+      return { tone: 'grey', label: t('canvas.status.noSource'), pulse: false };
     case 'ambiguous':
+      return { tone: 'grey', label: t('canvas.status.ambiguous'), pulse: false };
     case 'unsupported':
+      return { tone: 'grey', label: t('canvas.status.unsupported'), pulse: false };
+    case 'provider-unsupported':
+      return { tone: 'grey', label: t('canvas.status.providerUnsupported'), pulse: false };
     case 'idle':
     default:
       return { tone: 'grey', label: t('canvas.status.idle'), pulse: false };

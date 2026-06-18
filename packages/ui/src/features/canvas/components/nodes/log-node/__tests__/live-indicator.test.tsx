@@ -90,13 +90,27 @@ describe('LiveIndicator', () => {
     expect((findLabel(tree)!.props as { children: string }).children).toBe('ERROR');
   });
 
-  it('grey + IDLE for pre-deploy / no-source / ambiguous / unsupported / idle', () => {
-    for (const s of ['pre-deploy', 'no-source', 'ambiguous', 'unsupported', 'idle'] as LogStreamStatus[]) {
+  // OL6 — non-streaming source states stay grey (to match the panel's pillFor)
+  // but now carry a DISTINCT label instead of all collapsing to "IDLE".
+  it('grey + distinct label per non-streaming source state', () => {
+    const cases: Array<[LogStreamStatus, string]> = [
+      ['pre-deploy', 'WAITING'],
+      ['no-source', 'NO SOURCE'],
+      ['ambiguous', 'CHOOSE SRC'],
+      ['unsupported', 'UNSUPPORTED'],
+      ['provider-unsupported', 'UNAVAILABLE'],
+      ['idle', 'IDLE'],
+    ];
+    const seen = new Set<string>();
+    for (const [s, expected] of cases) {
       const tree = renderLI(s);
-      const dot = findDot(tree)!;
-      expect((dot.props as { style: { background: string } }).style.background).toBe('#94a3b8');
-      expect((findLabel(tree)!.props as { children: string }).children).toBe('IDLE');
+      expect((findDot(tree)!.props as { style: { background: string } }).style.background).toBe('#94a3b8');
+      const label = (findLabel(tree)!.props as { children: string }).children;
+      expect(label).toBe(expected);
+      seen.add(label);
     }
+    // The five source states + idle are mutually distinguishable.
+    expect(seen.size).toBe(cases.length);
   });
 
   it('default (unknown status) → grey + IDLE', () => {

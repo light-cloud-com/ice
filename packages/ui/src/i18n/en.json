@@ -154,6 +154,13 @@
       "recent": "Recent",
       "catalog": "All blocks"
     },
+    "socketLegend": {
+      "title": "Connection sockets",
+      "traffic": "Data & traffic",
+      "config": "Config (env, secrets)",
+      "repository": "Source repository",
+      "domain": "Domain / DNS"
+    },
     "tooltip": {
       "connections": "connections",
       "protocol": "Protocol",

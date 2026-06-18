@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { SocketLegend } from './socket-legend';
 import { useTranslation } from '../../../i18n';
 
 export const ControlsHelpModal: React.FC = () => {
@@ -144,6 +145,11 @@ export const ControlsHelpModal: React.FC = () => {
                   </div>
                 </div>
               ))}
+
+              {/* CCL6 — decode the socket shape/colour language for the user. */}
+              <div className="pt-2" style={{ borderTop: '1px solid var(--ice-border)' }}>
+                <SocketLegend />
+              </div>
             </div>
           </div>
         </>

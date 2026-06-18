@@ -154,6 +154,13 @@
       "recent": "最近使用",
       "catalog": "所有区块"
     },
+    "socketLegend": {
+      "title": "连接端口",
+      "traffic": "数据与流量",
+      "config": "配置（环境变量、密钥）",
+      "repository": "源代码仓库",
+      "domain": "域名 / DNS"
+    },
     "tooltip": {
       "connections": "个连接",
       "protocol": "协议",

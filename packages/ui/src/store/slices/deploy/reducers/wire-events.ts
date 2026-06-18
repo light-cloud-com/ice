@@ -29,7 +29,6 @@
  * @see rf-dslice-7
  */
 
-import { t } from '../../../../i18n';
 import type { DeployResourceResult, DeployState } from '../types';
 import type { DeployCompleteEvent, DeployNodeProgressEvent, DeployNodeStatusEvent } from '@ice/types';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -159,6 +158,11 @@ export const wireEventsReducers = {
       state.status = 'error';
     }
     state.currentDeployCardId = undefined;
-    state.logs.push(t('deploy.slice.completed', { seconds: '0.0' }));
+    // DF8 — the `complete` wire event carries no duration, so this reducer used
+    // to log "Deploy completed in 0.0s" — a fabricated time that contradicted
+    // the real-duration line the hydrate reducer pushes moments later (from the
+    // DB record). The status above already flips instantly; the authoritative
+    // completion log line (with the real duration) comes from `hydrate`, so
+    // don't emit a fake-duration line here.
   },
 } as const;

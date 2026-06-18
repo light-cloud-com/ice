@@ -11,7 +11,9 @@
  * node remounts the input fresh, instead of carrying the previous value.
  */
 
+import type { Provider } from '@ice/blocks';
 import React from 'react';
+import { ConceptInfoTrigger } from '../../../concept-info';
 import type { CardNode } from '../../../../store/slices/cards-slice';
 import type { ResourceDef } from '../../hooks/use-resource-map';
 
@@ -67,6 +69,18 @@ export const NodeIdentityCard: React.FC<NodeIdentityCardProps> = ({
             {provider}
           </span>
         )}
+        {/* PE4 — the concept "i" explainer (Overview / Compiles-To / docs) was
+            reachable only from the tiny canvas node. The panel is exactly where
+            a user pauses to understand a block, so mount it here too. It
+            self-gates via `hasConceptInfo(iceType)`, so it no-ops for blocks
+            without registered content. */}
+        <span className="ml-auto">
+          <ConceptInfoTrigger
+            iceType={iceType}
+            displayName={resourceDef?.display_name || label || iceType}
+            currentProvider={provider ? (provider as Provider) : undefined}
+          />
+        </span>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { NodeIdentityCard } from '../node-identity-card';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import type { CardNode } from '../../../../../store/slices/cards-slice';
 import type { ResourceDef } from '../../../hooks/use-resource-map';
 
@@ -152,6 +153,42 @@ describe('NodeIdentityCard — rendering', () => {
       (el) => typeof el.props.className === 'string' && el.props.className.includes('text-blue-400'),
     );
     expect(chips.length).toBe(0);
+  });
+
+  // PE4 — the concept "i" explainer is now reachable from the panel, not just
+  // the canvas node. (It self-gates via hasConceptInfo at render time, so it's
+  // mounted unconditionally; here we assert the wiring + props.)
+  it('mounts the concept-info explainer trigger with iceType/displayName/provider', () => {
+    const tree = callRender({
+      selectedNode: makeNode(),
+      iconUrl: '',
+      label: 'My DB',
+      iceType: 'Database.PostgreSQL',
+      provider: 'aws',
+      resourceDef: { display_name: 'Amazon RDS', properties: [] } as unknown as ResourceDef,
+      onUpdateName: vi.fn(),
+    });
+    const trigger = findByPredicate(tree, (el) => el.type === ConceptInfoTrigger);
+    expect(trigger).toBeDefined();
+    expect(trigger?.props.iceType).toBe('Database.PostgreSQL');
+    expect(trigger?.props.displayName).toBe('Amazon RDS');
+    expect(trigger?.props.currentProvider).toBe('aws');
+  });
+
+  it('falls back to label then iceType for the explainer displayName', () => {
+    const treeLabel = callRender({
+      selectedNode: makeNode(),
+      iconUrl: '',
+      label: 'Friendly Name',
+      iceType: 'Compute.Foo',
+      provider: '',
+      resourceDef: undefined,
+      onUpdateName: vi.fn(),
+    });
+    const t1 = findByPredicate(treeLabel, (el) => el.type === ConceptInfoTrigger);
+    expect(t1?.props.displayName).toBe('Friendly Name');
+    // provider empty → currentProvider is undefined (not an empty string)
+    expect(t1?.props.currentProvider).toBeUndefined();
   });
 });
 

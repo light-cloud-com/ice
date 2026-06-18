@@ -265,7 +265,12 @@ export const NodePropertiesSection: React.FC<{
           Surfaces missing connections, missing required props, and
           implicit handler choices BEFORE the user clicks deploy. Pure
           client-side; no network calls. */}
-      <DesignRequirements node={selectedNode} allNodes={activeCard.nodes} edges={activeCard.edges} />
+      <DesignRequirements
+        node={selectedNode}
+        allNodes={activeCard.nodes}
+        edges={activeCard.edges}
+        nodeIssues={validationIssues.filter((i) => i.nodeId === selectedNode.id && i.severity !== 'info')}
+      />
 
       {/* ── Group color picker — ONLY for synthetic decoration groups,
           i.e. nodes whose `iceType` follows the `Group.*` convention

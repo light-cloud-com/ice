@@ -63,4 +63,35 @@ describe('ConnectionRejectionOverlay', () => {
     expect(bodies).toHaveLength(1);
     expect((bodies[0].props as { children?: unknown }).children).toBe("Gateway can't connect directly to MySQL");
   });
+
+  const body = (tree: React.ReactNode) =>
+    [...walk(tree)].find(
+      (el) =>
+        el.type === 'div' && (el.props as { 'data-testid'?: string })['data-testid'] === 'connection-rejection-tooltip',
+    )!;
+  const fo = (tree: React.ReactNode) => [...walk(tree)].find((el) => el.type === 'foreignObject')!;
+
+  // CCL2 — the overlay lives inside the scaled SVG, so it counter-scales by
+  // 1/zoom to keep a constant on-screen size (it used to shrink when zoomed out).
+  it('counter-scales by 1/zoom while staying centred', () => {
+    const tree = render({ rejection: { x: 500, y: 200, message: 'nope' }, zoom: 0.5 });
+    const p = fo(tree).props as { x: number; width: number };
+    expect(p.width).toBe(480); // 240 / 0.5
+    expect(p.x + p.width / 2).toBe(500); // still centred on rejection.x
+    const style = (body(tree).props as { style: { transform: string; width: number } }).style;
+    expect(style.transform).toBe('scale(2)');
+    expect(style.width).toBe(240); // natural width; the scale fills the foreignObject
+  });
+
+  it('clamps the inverse-zoom so a tiny zoom does not blow up unboundedly', () => {
+    const tree = render({ rejection: { x: 0, y: 0, message: 'nope' }, zoom: 0.01 });
+    // invZoom clamped at 1/0.1 = 10 → width 2400, not 24000.
+    expect((fo(tree).props as { width: number }).width).toBe(2400);
+  });
+
+  it('defaults to no scaling when zoom is omitted', () => {
+    const tree = render({ rejection: { x: 100, y: 100, message: 'nope' } });
+    expect((fo(tree).props as { width: number }).width).toBe(240);
+    expect((body(tree).props as { style: { transform: string } }).style.transform).toBe('scale(1)');
+  });
 });

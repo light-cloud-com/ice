@@ -94,8 +94,23 @@ export function useDestroyAction(args: UseDestroyActionArgs): UseDestroyActionRe
                 `Destroyed ${res.deleted?.length || 0} resource${(res.deleted?.length || 0) === 1 ? '' : 's'} across all historical deploys.`,
               ),
             );
-            for (const f of res.failed || []) {
+            const destroyFailures = res.failed || [];
+            for (const f of destroyFailures) {
               dispatch(appendLog(`Failed to delete ${f.type}/${f.name}: ${f.error}`));
+            }
+            // DE5 — a PARTIAL destroy (some deleted, some failed) used to fall
+            // through to resetDeploy() below, which wipes the log — so the
+            // just-logged failures vanished and the user saw a clean slate as
+            // if everything was destroyed. Surface the failures as an error and
+            // keep the logs + overlay (the failed resources still exist) so the
+            // user can see what's left and retry, instead of silently wiping.
+            if (destroyFailures.length > 0) {
+              dispatch(
+                deployError(
+                  `${destroyFailures.length} resource${destroyFailures.length === 1 ? '' : 's'} could not be destroyed — see the log for details.`,
+                ),
+              );
+              return;
             }
           }
         } else {

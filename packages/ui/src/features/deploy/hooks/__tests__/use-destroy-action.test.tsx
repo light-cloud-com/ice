@@ -408,6 +408,33 @@ describe('handleDestroyConfirm — destroyAll path error', () => {
     expect(types).not.toContain('deploy/resetDeploy');
   });
 
+  // DE5 — a partial destroy (some deleted, some failed) must NOT fall through
+  // to resetDeploy (which wiped the failure logs); it surfaces an error + keeps
+  // the logs/overlay so the failure stays visible.
+  it('on partial destroy (some failed), surfaces an error and skips the log-wiping cleanup', async () => {
+    const store = makeStore();
+    mockDeployApi.destroyAll.mockResolvedValueOnce({
+      success: true,
+      deleted: [{ id: 'r1' }],
+      failed: [{ type: 'gcp.sql.instance', name: 'db', error: 'still has dependents' }],
+    });
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const { actions } = captureHook({ activeCard: ACTIVE_CARD, store });
+    dispatchSpy.mockClear();
+
+    await actions.handleDestroyConfirm(true);
+
+    const types = dispatchSpy.mock.calls.map((c) => asAction(c[0]).type);
+    // summary log + failure log + error; NO cleanup (logs preserved).
+    expect(types).toEqual(['deploy/startDestroying', 'deploy/appendLog', 'deploy/appendLog', 'deploy/deployError']);
+    expect(types).not.toContain('deploy/resetDeploy');
+    expect(types).not.toContain('cards/clearCardDeployOverlay');
+    expect(types).not.toContain('deploy/setDeployedResources');
+    const errorAction = asAction<string>(dispatchSpy.mock.calls[dispatchSpy.mock.calls.length - 1][0]);
+    expect(errorAction.type).toBe('deploy/deployError');
+    expect(errorAction.payload).toContain('1 resource could not be destroyed');
+  });
+
   it('on success: false && !deleted with no error, falls back to "Destroy failed with no details"', async () => {
     const store = makeStore();
     mockDeployApi.destroyAll.mockResolvedValueOnce({ success: false });
@@ -444,12 +471,14 @@ describe('handleDestroyConfirm — destroyAll path error', () => {
     ]);
   });
 
-  it('on success: false but deleted present, falls through to cleanup (the success-or-deleted branch)', async () => {
+  it('on success: false but deleted present (and no failures), falls through to cleanup (the success-or-deleted branch)', async () => {
     const store = makeStore();
+    // DE5 — with NO failures, a deleted-present result still runs the cleanup.
+    // (The with-failures case is covered separately above: error + no wipe.)
     mockDeployApi.destroyAll.mockResolvedValueOnce({
       success: false,
       deleted: [{ id: 'r1' }],
-      failed: [{ type: 'cloudrun', name: 'svc-a', error: 'partial' }],
+      failed: [],
     });
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const { actions } = captureHook({ activeCard: ACTIVE_CARD, store });
@@ -458,10 +487,9 @@ describe('handleDestroyConfirm — destroyAll path error', () => {
     await actions.handleDestroyConfirm(true);
 
     const types = dispatchSpy.mock.calls.map((c) => asAction(c[0]).type);
-    // Important: NO deployError, but full cleanup.
+    // Important: NO deployError, but full cleanup (one appendLog — the summary).
     expect(types).toEqual([
       'deploy/startDestroying',
-      'deploy/appendLog',
       'deploy/appendLog',
       'cards/clearCardDeployOverlay',
       'deploy/setDeployedResources',

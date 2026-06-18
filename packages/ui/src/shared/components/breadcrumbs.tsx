@@ -32,7 +32,12 @@ export const Breadcrumbs: React.FC = () => {
     crumbs.push({ label: TOP_ROUTES[segments[0]], path: pathname });
   } else if (resolved.breadcrumbs.length > 0) {
     crumbs.push(...resolved.breadcrumbs);
-  } else if (!resolved.loading && segments.length > 0) {
+  } else if (segments.length > 0) {
+    // IA9 — fall back to URL-derived crumbs even WHILE the resolver is loading.
+    // Gating this on `!resolved.loading` collapsed the trail to just Home on
+    // every navigation, flickering the user's sense of location; the URL
+    // segments already reflect where they are, so show a best-guess trail until
+    // the resolved labels arrive.
     // Fallback: build crumbs from URL segments (skip org slug)
     const start = selectedOrg ? 1 : 0;
     for (let i = start; i < segments.length; i++) {

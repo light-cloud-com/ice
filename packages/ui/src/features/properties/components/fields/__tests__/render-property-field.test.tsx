@@ -419,7 +419,7 @@ describe('PropertyFields', () => {
     expect(sections).toHaveLength(0);
   });
 
-  it('filters out tier === "advanced" properties from visible list', () => {
+  it('keeps tier === "advanced" properties out of the main visible Section', () => {
     const properties = [
       mkProp({ name: 'shown1', tier: 'essential' }),
       mkProp({ name: 'hidden', tier: 'advanced' }),
@@ -430,12 +430,42 @@ describe('PropertyFields', () => {
       nodeData: {},
       onFieldChange: vi.fn(),
     }) as React.ReactElement;
+    // The advanced row lives inside the (unexecuted) AdvancedDisclosure child,
+    // so the directly-rendered rows are still only the visible ones.
     const wrappers = findByPredicate(
       tree,
       (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
     );
     const keys = wrappers.map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
     expect(keys).toEqual(['shown1', 'shown2']);
+  });
+
+  // PE5 — advanced props are no longer dropped; they get a collapsed disclosure.
+  it('routes advanced-tier props into an AdvancedDisclosure', () => {
+    const properties = [
+      mkProp({ name: 'shown', tier: 'essential' }),
+      mkProp({ name: 'adv1', tier: 'advanced' }),
+      mkProp({ name: 'adv2', tier: 'advanced' }),
+    ];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const disclosure = findByDisplayName(tree, 'AdvancedDisclosure');
+    expect(disclosure).toHaveLength(1);
+    const advancedNames = (disclosure[0].props as { advanced: HighLevelProperty[] }).advanced.map((p) => p.name);
+    expect(advancedNames).toEqual(['adv1', 'adv2']);
+  });
+
+  it('renders no AdvancedDisclosure when there are no advanced props', () => {
+    const properties = [mkProp({ name: 'shown', tier: 'essential' })];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    expect(findByDisplayName(tree, 'AdvancedDisclosure')).toHaveLength(0);
   });
 
   it('treats no-tier properties as visible (essential default)', () => {

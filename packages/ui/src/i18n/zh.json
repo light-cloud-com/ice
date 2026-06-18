@@ -545,7 +545,8 @@
         "actionTypeHttpLabel": "发送 HTTP 请求",
         "actionTypeHttpDescription": "访问外部 URL",
         "customValuePrefix": "自定义:{{value}} {{unit}}",
-        "required": "必填"
+        "required": "必填",
+        "advanced": "高级"
       },
       "log": {
         "sectionTitle": "日志",

@@ -545,7 +545,8 @@
         "actionTypeHttpLabel": "Send HTTP request",
         "actionTypeHttpDescription": "hit an external URL",
         "customValuePrefix": "Custom: {{value}} {{unit}}",
-        "required": "Required"
+        "required": "Required",
+        "advanced": "Advanced"
       },
       "log": {
         "sectionTitle": "Logs",

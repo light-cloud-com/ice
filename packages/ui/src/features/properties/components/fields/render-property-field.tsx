@@ -21,16 +21,17 @@
  *     `'custom'` and `prop.customInput` is configured.
  *
  *   `PropertyFields` — orchestrator. Provider-filters `optionDetails` by the
- *     node's cloud provider, hides `tier === 'advanced'` properties (essential
- *     + detailed only — advanced is intentionally hidden), iterates with
- *     `renderPropertyField`, and surfaces `propertyIssues` as inline error /
- *     amber messages. Wraps each field with `data-prop-key={prop.name}`
- *     (E2E selector — preserved verbatim).
+ *     node's cloud provider, renders essential + detailed props in the main
+ *     Section and routes `tier === 'advanced'` props into a collapsed
+ *     `AdvancedDisclosure` (PE5), iterates with `renderPropertyField`, and
+ *     surfaces `propertyIssues` as inline error / amber messages. Wraps each
+ *     field with `data-prop-key={prop.name}` (E2E selector — preserved verbatim).
  *
  * Extracted from `properties-panel.tsx` lines 66–124 (types) + 286–415
  * (`renderPropertyField`) + 417–468 (`PropertyFields`) in rf-props-9.
  */
 
+import { ChevronRight } from 'lucide-react';
 import React from 'react';
 import {
   Section,
@@ -324,16 +325,8 @@ export const PropertyFields: React.FC<{
 }> = ({ properties, nodeData, onFieldChange, propertyIssues, selfNodeId }) => {
   const provider = ((nodeData.provider as string) || '').toLowerCase();
 
-  // Filter optionDetails by the node's cloud provider
-  const filterByProvider = (prop: HighLevelProperty): HighLevelProperty => {
-    if (!prop.optionDetails || !provider) return prop;
-    const filtered = prop.optionDetails.filter((o) => !o.provider || o.provider === provider);
-    return filtered.length > 0 ? { ...prop, optionDetails: filtered } : prop;
-  };
-
-  // Show all properties (essential + detailed); advanced tier is intentionally hidden.
-  // Then apply visibleWhen gates so conditional fields stay hidden until their
-  // gating field has the right value (e.g. cron-expression input only when
+  // Apply visibleWhen gates so conditional fields stay hidden until their gating
+  // field has the right value (e.g. cron-expression input only when
   // frequency === 'Custom').
   const matchesVisibleWhen = (p: HighLevelProperty): boolean => {
     if (!p.visibleWhen) return true;
@@ -345,27 +338,69 @@ export const PropertyFields: React.FC<{
   const visible = properties
     .filter((p) => !p.tier || p.tier === 'essential' || p.tier === 'detailed')
     .filter(matchesVisibleWhen);
+  // PE5 — advanced-tier props used to be dropped with no escape hatch. Keep the
+  // default view clean but make them reachable via a collapsed disclosure.
+  const advanced = properties.filter((p) => p.tier === 'advanced').filter(matchesVisibleWhen);
+
+  const renderRow = (prop: HighLevelProperty) => (
+    <div key={prop.name} data-prop-key={prop.name}>
+      {renderPropertyField(
+        filterOptionDetailsByProvider(prop, provider),
+        nodeData[prop.name],
+        onFieldChange,
+        nodeData,
+        selfNodeId,
+      )}
+      {propertyIssues?.has(prop.name) && (
+        <div
+          className={`px-3 pb-1 text-ice-2xs ${
+            propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
+          }`}
+        >
+          {propertyIssues.get(prop.name)!.message}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
-      {visible.length > 0 && (
-        <Section title={t('properties.config.title')}>
-          {visible.map((prop) => (
-            <div key={prop.name} data-prop-key={prop.name}>
-              {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData, selfNodeId)}
-              {propertyIssues?.has(prop.name) && (
-                <div
-                  className={`px-3 pb-1 text-ice-2xs ${
-                    propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
-                  }`}
-                >
-                  {propertyIssues.get(prop.name)!.message}
-                </div>
-              )}
-            </div>
-          ))}
-        </Section>
-      )}
+      {visible.length > 0 && <Section title={t('properties.config.title')}>{visible.map(renderRow)}</Section>}
+      {advanced.length > 0 && <AdvancedDisclosure advanced={advanced} renderRow={renderRow} />}
     </>
+  );
+};
+
+/** Filter a prop's `optionDetails` down to the node's cloud provider. */
+function filterOptionDetailsByProvider(prop: HighLevelProperty, provider: string): HighLevelProperty {
+  if (!prop.optionDetails || !provider) return prop;
+  const filtered = prop.optionDetails.filter((o) => !o.provider || o.provider === provider);
+  return filtered.length > 0 ? { ...prop, optionDetails: filtered } : prop;
+}
+
+/**
+ * PE5 — collapsed "Advanced" disclosure. Holds its own open/closed state (so the
+ * orchestrator stays hook-free) and renders the advanced rows lazily, only when
+ * expanded, via the parent's `renderRow`.
+ */
+export const AdvancedDisclosure: React.FC<{
+  advanced: HighLevelProperty[];
+  renderRow: (prop: HighLevelProperty) => React.ReactNode;
+}> = ({ advanced, renderRow }) => {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="border-t border-ice-border">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-1 px-3 py-2 text-ice-xs text-ice-text-3 hover:text-ice-text-2 transition-colors"
+      >
+        <ChevronRight className={`w-3 h-3 transition-transform ${open ? 'rotate-90' : ''}`} />
+        <span>{t('canvas.properties.fields.advanced')}</span>
+        <span className="text-ice-2xs text-ice-text-3/60">{advanced.length}</span>
+      </button>
+      {open && <div>{advanced.map(renderRow)}</div>}
+    </div>
   );
 };

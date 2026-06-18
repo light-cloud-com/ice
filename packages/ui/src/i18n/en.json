@@ -146,7 +146,8 @@
       "pickTemplate": "Pick a template...",
       "quickStart": "Quick start",
       "more": "More...",
-      "hint": "Press Shift+A or drag a block from the left to begin"
+      "hint": "Press Shift+A or drag a block from the left to begin",
+      "dismiss": "Dismiss quick start"
     },
     "tooltip": {
       "connections": "connections",

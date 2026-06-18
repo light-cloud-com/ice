@@ -146,7 +146,8 @@
       "pickTemplate": "选择模板...",
       "quickStart": "快速开始",
       "more": "更多...",
-      "hint": "按 Shift+A 或从左侧拖入一个区块即可开始"
+      "hint": "按 Shift+A 或从左侧拖入一个区块即可开始",
+      "dismiss": "关闭快速开始"
     },
     "tooltip": {
       "connections": "个连接",

@@ -114,6 +114,19 @@ describe('ControlsHelpModal', () => {
     expect((trigger.props as { title: string }).title).toBe('canvas.controls.shortcutsTitle');
   });
 
+  // AX8/AX6 — the icon-only "?" trigger needs an accessible name (the "?" glyph
+  // alone announces as "question mark") and an aria-expanded reflecting state.
+  it('trigger carries an aria-label and aria-expanded reflecting open state', () => {
+    stateMocks.openValue = false;
+    const closed = findByType(ControlsHelpModal({}), 'button')[0];
+    expect((closed.props as { 'aria-label': string })['aria-label']).toBe('canvas.controls.shortcutsTitle');
+    expect((closed.props as { 'aria-expanded': boolean })['aria-expanded']).toBe(false);
+
+    stateMocks.openValue = true;
+    const open = findByType(ControlsHelpModal({}), 'button')[0];
+    expect((open.props as { 'aria-expanded': boolean })['aria-expanded']).toBe(true);
+  });
+
   it('renders the backdrop + panel when open=true', () => {
     stateMocks.openValue = true;
     const tree = ControlsHelpModal({});

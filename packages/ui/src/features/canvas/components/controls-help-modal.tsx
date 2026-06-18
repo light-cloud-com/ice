@@ -80,6 +80,8 @@ export const ControlsHelpModal: React.FC = () => {
           border: '1px solid var(--ice-border-strong)',
         }}
         title={t('canvas.controls.shortcutsTitle')}
+        aria-label={t('canvas.controls.shortcutsTitle')}
+        aria-expanded={open}
       >
         ?
       </button>

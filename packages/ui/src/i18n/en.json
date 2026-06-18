@@ -554,6 +554,7 @@
         "required": "Required",
         "advanced": "Advanced"
       },
+      "validating": "Checking…",
       "log": {
         "sectionTitle": "Logs",
         "modePolling": "Polling",

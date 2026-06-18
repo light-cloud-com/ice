@@ -321,6 +321,7 @@ interface RenderProps {
   propsTab?: string;
   setPropsTab?: (id: string) => void;
   validationIssues?: ReadonlyArray<CanvasIssue>;
+  isValidating?: boolean;
   activeEnvName?: string;
 }
 
@@ -333,6 +334,7 @@ const renderSection = (props: RenderProps): React.ReactElement => {
     propsTab: props.propsTab ?? 'config',
     setPropsTab: props.setPropsTab ?? vi.fn(),
     validationIssues: props.validationIssues ?? [],
+    isValidating: props.isValidating ?? false,
     activeEnvName: props.activeEnvName ?? 'production',
   }) as React.ReactElement;
 };
@@ -389,6 +391,21 @@ describe('NodePropertiesSection', () => {
     props.onClose();
     expect(mocks.toggleProperties).toHaveBeenCalledTimes(1);
     expect(mocks.dispatchSpy).toHaveBeenCalledWith({ type: 'ui/toggleProperties' });
+  });
+
+  // PE8 — a "checking…" cue shows in the Config tab while validation debounces.
+  it('shows a validating cue in the Config tab when isValidating is true', () => {
+    const node = makeNode('node-1', { iceType: 'Compute.Service', label: 'svc' });
+    const card = makeCard({ nodes: [node] });
+    const validating = renderSection({ selectedNode: node, activeCard: card, propsTab: 'config', isValidating: true });
+    expect(collectText(validating)).toContain('t:canvas.properties.validating');
+  });
+
+  it('hides the validating cue when isValidating is false', () => {
+    const node = makeNode('node-1', { iceType: 'Compute.Service', label: 'svc' });
+    const card = makeCard({ nodes: [node] });
+    const idle = renderSection({ selectedNode: node, activeCard: card, propsTab: 'config', isValidating: false });
+    expect(collectText(idle)).not.toContain('t:canvas.properties.validating');
   });
 
   it('renders the node label as the input defaultValue (name field on identity card)', () => {

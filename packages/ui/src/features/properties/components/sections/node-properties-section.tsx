@@ -51,6 +51,7 @@
  * byte-identical.
  */
 
+import { Loader2 } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from '../../../../i18n';
@@ -172,6 +173,10 @@ export const NodePropertiesSection: React.FC<{
   propsTab: string;
   setPropsTab: (id: string) => void;
   validationIssues: ReadonlyArray<CanvasIssue>;
+  /** PE8 — true while the debounced validation run is in flight, so the panel
+   *  can show a "checking…" cue instead of the inline feedback silently lagging
+   *  an edit by ~500ms. */
+  isValidating?: boolean;
   activeEnvName: string;
 }> = ({
   selectedNode,
@@ -181,6 +186,7 @@ export const NodePropertiesSection: React.FC<{
   propsTab,
   setPropsTab,
   validationIssues,
+  isValidating = false,
   activeEnvName,
 }) => {
   const { t } = useTranslation();
@@ -404,6 +410,19 @@ export const NodePropertiesSection: React.FC<{
             {/* ════ CONFIG TAB ════ */}
             {activeTab === 'config' && (
               <>
+                {/* PE8 — a "checking…" cue while the debounced validation run is
+                    in flight, so the inline feedback doesn't appear to silently
+                    lag the user's edit. */}
+                {isValidating && (
+                  <div
+                    className="mx-2 mt-1 flex items-center gap-1.5 text-ice-2xs text-ice-text-3"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>{t('canvas.properties.validating')}</span>
+                  </div>
+                )}
                 {/* Validation issues banner */}
                 {selectedNodeId &&
                   (() => {

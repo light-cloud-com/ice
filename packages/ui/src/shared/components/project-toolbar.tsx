@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from '../../i18n';
 import { IceSelect } from './ui/ice-select';
 import {
@@ -104,6 +104,7 @@ const TSep: React.FC = () => <div className="w-px h-4 bg-ice-border mx-1" />;
 export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, activeSubpage }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
 
   const isCanvasView = activeSubpage === 'canvas';
@@ -151,6 +152,15 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
       const env = environments.find((e) => e.id === envId);
       if (!env) return;
       dispatch(setActiveEnvironment({ projectId, envId }));
+      // IA6 — keep the env in the URL (shareable / survives reload).
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('env', envId);
+          return next;
+        },
+        { replace: true },
+      );
       try {
         const { store } = await import('../../store');
         const state = store.getState();
@@ -175,7 +185,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
         console.error('Failed to load environment card:', err);
       }
     },
-    [projectId, environments, dispatch],
+    [projectId, environments, dispatch, setSearchParams],
   );
 
   // ── Navigation ───────────────────────────────────────────────────────────

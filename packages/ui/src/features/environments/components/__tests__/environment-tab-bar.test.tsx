@@ -42,6 +42,9 @@ const mocks = vi.hoisted(() => ({
   // Mock the api adapter.
   apiGetDeployments: vi.fn(),
   apiGraphLoad: vi.fn(),
+  // IA6 — react-router useSearchParams (read ?env / write on switch).
+  searchParams: new URLSearchParams(),
+  setSearchParams: vi.fn(),
   // Sub-components.
   EnvironmentTabItem: vi.fn(() => null),
   EnvironmentContextMenu: vi.fn(() => null),
@@ -114,6 +117,10 @@ vi.mock('react', async (orig) => {
 vi.mock('react-redux', () => ({
   useSelector: (sel: (s: unknown) => unknown) => sel(mocks.state),
   useDispatch: () => mocks.dispatch,
+}));
+
+vi.mock('react-router-dom', () => ({
+  useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
 }));
 
 vi.mock('../../../../i18n', () => ({
@@ -253,6 +260,9 @@ beforeEach(() => {
   }
   mocks.apiGetDeployments.mockResolvedValue([]);
   mocks.apiGraphLoad.mockResolvedValue(null);
+  // IA6 — reset the URL search-params mock between tests.
+  mocks.searchParams = new URLSearchParams();
+  mocks.setSearchParams.mockReset();
   __resetUseState();
   vi.stubGlobal('window', {
     addEventListener: vi.fn(),
@@ -487,6 +497,16 @@ describe('EnvironmentTabBar — onSwitch (handleSwitchEnv) flow', () => {
       projectId: 'proj-1',
       envId: 'env-2',
     });
+  });
+
+  // IA6 — switching also writes ?env= so the env is shareable/bookmarkable.
+  it('writes the chosen env to the URL (?env=) on switch', async () => {
+    const tree = callRender({ projectId: 'proj-1' });
+    const item = findAll(tree, (el) => el.type === mocks.EnvironmentTabItem)[0];
+    await (item.props.onSwitch as (e: unknown) => Promise<void>)(makeEnv({ id: 'env-2', card_id: 'card-1' }));
+    expect(mocks.setSearchParams).toHaveBeenCalled();
+    const updater = mocks.setSearchParams.mock.calls[0][0] as (p: URLSearchParams) => URLSearchParams;
+    expect(updater(new URLSearchParams()).get('env')).toBe('env-2');
   });
 
   it('falls through to api.graph.load when card is not present in Redux', async () => {
@@ -726,6 +746,27 @@ describe('EnvironmentTabBar — auto-switch to production on first load', () => 
       projectId: 'proj-1',
       envId: 'env-3',
     });
+  });
+
+  // IA6 — a ?env= deep-link wins over the production default on first load.
+  it('honours a ?env= deep-link over the production default', () => {
+    mocks.searchParams = new URLSearchParams('env=env-2');
+    mocks.state.environments.byProject['proj-1'] = [
+      makeEnv({ id: 'env-2', name: 'staging', type: 'staging', card_id: 'card-stg' }),
+      makeEnv({ id: 'env-3', name: 'prod', type: 'production', card_id: 'card-prod' }),
+    ];
+    callRender({ projectId: 'proj-1' });
+    expect(mocks.setActiveEnvironment).toHaveBeenCalledWith({ projectId: 'proj-1', envId: 'env-2' });
+    expect(mocks.setActiveEnvironment).not.toHaveBeenCalledWith({ projectId: 'proj-1', envId: 'env-3' });
+  });
+
+  it('falls back to production when ?env= points at a missing env', () => {
+    mocks.searchParams = new URLSearchParams('env=ghost');
+    mocks.state.environments.byProject['proj-1'] = [
+      makeEnv({ id: 'env-3', name: 'prod', type: 'production', card_id: 'card-prod' }),
+    ];
+    callRender({ projectId: 'proj-1' });
+    expect(mocks.setActiveEnvironment).toHaveBeenCalledWith({ projectId: 'proj-1', envId: 'env-3' });
   });
 
   it('does not auto-switch when there is already an active env', () => {

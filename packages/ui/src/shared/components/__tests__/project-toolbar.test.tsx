@@ -45,6 +45,7 @@ const mocks = vi.hoisted(() => ({
   selectCanRedoValue: false,
   dispatch: vi.fn(),
   navigate: vi.fn(),
+  setSearchParams: vi.fn(),
   // Action-creator identity spies — return action objects we can assert on.
   setEdgeStyle: vi.fn((s: unknown) => ({ type: 'ui/setEdgeStyle', payload: s })),
   setAutoOrganizeStyle: vi.fn((s: unknown) => ({ type: 'ui/setAutoOrganizeStyle', payload: s })),
@@ -90,6 +91,7 @@ vi.mock('react-redux', () => ({
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mocks.navigate,
+  useSearchParams: () => [new URLSearchParams(), mocks.setSearchParams],
 }));
 
 vi.mock('../../../i18n', () => ({
@@ -217,6 +219,7 @@ beforeEach(() => {
   mocks.createCard.mockClear();
   mocks.fetchEnvironments.mockClear();
   mocks.setActiveEnvironment.mockClear();
+  mocks.setSearchParams.mockClear();
   vi.stubGlobal('window', { innerWidth: 1280, innerHeight: 720, open: vi.fn() });
 });
 
@@ -570,6 +573,10 @@ describe('ProjectToolbar — environment selector', () => {
     await (select.props.onChange as (id: string) => Promise<void>)('env-1');
     expect(mocks.setActiveEnvironment).toHaveBeenCalledWith({ projectId: 'proj-1', envId: 'env-1' });
     expect(mocks.setActiveCard).toHaveBeenCalledWith('c-1');
+    // IA6 — the switch also writes ?env= so the env is shareable.
+    expect(mocks.setSearchParams).toHaveBeenCalled();
+    const updater = mocks.setSearchParams.mock.calls[0][0] as (p: URLSearchParams) => URLSearchParams;
+    expect(updater(new URLSearchParams()).get('env')).toBe('env-1');
   });
 
   it('falls back to API graph.load when the card has no nodes yet', async () => {

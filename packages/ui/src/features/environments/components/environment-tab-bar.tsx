@@ -9,6 +9,7 @@
 import { Plus, Loader2, ArrowUpRight, Rocket } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { CreateEnvironmentModal } from './create-environment-modal';
 import { EnvironmentContextMenu } from './environment-context-menu';
 import { EnvironmentTabItem } from './environment-tab-item';
@@ -34,6 +35,9 @@ interface EnvironmentTabBarProps {
 export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId, basePath: _basePath }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  // IA6 — the active env lives only in Redux; mirror it in the URL (?env=) so a
+  // deploy/env view is bookmarkable + shareable and survives a hard reload.
+  const [searchParams, setSearchParams] = useSearchParams();
   const environments = useSelector((s: RootState) => s.environments.byProject[projectId] || []);
   const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[projectId]);
   const loading = useSelector((s: RootState) => s.environments.loading);
@@ -98,6 +102,16 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
   const handleSwitchEnv = useCallback(
     async (env: Environment) => {
       dispatch(setActiveEnvironment({ projectId, envId: env.id }));
+      // IA6 — reflect the chosen env in the URL (replace, so switching doesn't
+      // spam the history stack).
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('env', env.id);
+          return next;
+        },
+        { replace: true },
+      );
 
       try {
         // Check if card already loaded in Redux
@@ -135,17 +149,20 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
         console.error('Failed to load environment card:', err);
       }
     },
-    [projectId, dispatch],
+    [projectId, dispatch, setSearchParams],
   );
 
-  // Auto-switch to production on first load
+  // First-load default: IA6 — honour a `?env=` deep-link when it points at a
+  // real env, otherwise fall back to production (the prior behaviour).
   useEffect(() => {
     if (environments.length > 0 && !activeEnvId) {
-      const prod = environments.find((e) => e.type === 'production');
-      if (prod) handleSwitchEnv(prod);
+      const urlEnvId = searchParams.get('env');
+      const fromUrl = urlEnvId ? environments.find((e) => e.id === urlEnvId) : undefined;
+      const target = fromUrl ?? environments.find((e) => e.type === 'production');
+      if (target) handleSwitchEnv(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use .length to avoid re-firing on array reference changes
-  }, [environments.length, activeEnvId, handleSwitchEnv]);
+  }, [environments.length, activeEnvId, handleSwitchEnv, searchParams]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, envId: string) => {
     e.preventDefault();

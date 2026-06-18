@@ -31,6 +31,7 @@ import { CATEGORY_COLORS, type ConnectionCategory } from '@ice/constants';
 import { ROLE_CATEGORY, type PortDef } from '@ice/types';
 import React from 'react';
 import { CATEGORY_STYLE } from '../../../../../config/canvas-constants';
+import { prefersReducedMotion } from '../../../../../shared/hooks/use-reduced-motion';
 
 export type DotState = 'idle' | 'compatible' | 'snapped' | 'incompatible' | 'source-active';
 
@@ -95,6 +96,9 @@ export const SocketDot: React.FC<SocketDotProps> = ({
 }) => {
   const category: ConnectionCategory = ROLE_CATEGORY[role];
   const color = socketColor(role, peerStyle);
+  // AX4 — SMIL `<animate>` ignores the CSS `prefers-reduced-motion` net, so the
+  // pulsing halo is gated here. One-shot read (no hook) keeps SocketDot pure.
+  const reducedMotion = prefersReducedMotion();
 
   // Drag-aware sizing — compatible ports grow to invite, snapped grows
   // most + pulses, incompatible shrinks slightly.
@@ -153,7 +157,7 @@ export const SocketDot: React.FC<SocketDotProps> = ({
         opacity={haloOpacity}
         pointerEvents="none"
       >
-        {(state === 'snapped' || state === 'source-active') && (
+        {(state === 'snapped' || state === 'source-active') && !reducedMotion && (
           <animate
             attributeName="r"
             values={`${haloRadius};${haloRadius + 2};${haloRadius}`}

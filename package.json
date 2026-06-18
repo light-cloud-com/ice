@@ -1,7 +1,7 @@
 {
   "name": "ice",
   "license": "Apache-2.0",
-  "version": "0.1.899",
+  "version": "0.1.900",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -25,6 +25,7 @@
     "dist:desktop:mac": "pnpm --filter @ice/desktop dist:mac",
     "dist:desktop:win": "pnpm --filter @ice/desktop dist:win",
     "dist:desktop:linux": "pnpm --filter @ice/desktop dist:linux",
+    "release": "node scripts/release.mjs",
     "test:unit": "vitest run --root .",
     "test:coverage": "vitest run --root . --coverage",
     "test:int": "vitest run --root . --include '**/*.int.test.{ts,tsx}'",

@@ -105,6 +105,8 @@ function unsupported(
 
 export interface OCIDeployOptions extends DeployOptions {
   oci_credentials?: OCICredentials;
+  /** Single deploy region. Falls back to OCI_REGION, then the default. */
+  region?: string;
 }
 
 export class OCIDeployer implements ProviderDeployer {

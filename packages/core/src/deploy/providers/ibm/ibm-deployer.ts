@@ -102,6 +102,8 @@ function unsupported(
 
 export interface IBMDeployOptions extends DeployOptions {
   ibm_credentials?: IBMCredentials;
+  /** Single deploy region. Falls back to IBMCLOUD_REGION, then the default. */
+  region?: string;
 }
 
 export class IBMDeployer implements ProviderDeployer {

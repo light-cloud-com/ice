@@ -82,7 +82,9 @@ export async function initialize_oci_clients(
   const clients = new Map<string, unknown>();
   const provider = await build_auth_provider(credentials);
   for (const svc of Object.keys(SERVICE_PACKAGES)) {
-    const { pkg, clientName } = SERVICE_PACKAGES[svc];
+    const entry = SERVICE_PACKAGES[svc];
+    if (!entry) continue;
+    const { pkg, clientName } = entry;
     let client: unknown = undefined;
     const lazyClient = {
       async resolve() {

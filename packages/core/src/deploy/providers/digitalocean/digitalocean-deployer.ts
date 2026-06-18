@@ -78,6 +78,8 @@ function unsupported(
 
 export interface DODeployOptions extends DeployOptions {
   digitalocean_credentials?: DOCredentials;
+  /** Single deploy region. Falls back to DIGITALOCEAN_REGION, then the default. */
+  region?: string;
 }
 
 export class DigitalOceanDeployer implements ProviderDeployer {

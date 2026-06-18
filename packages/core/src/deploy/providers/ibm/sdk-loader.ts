@@ -53,7 +53,9 @@ export async function initialize_ibm_clients(
   const authenticator = await build_authenticator(credentials);
   const clients = new Map<string, unknown>();
   for (const svc of Object.keys(SERVICE_PACKAGES)) {
-    const { pkg, clientName } = SERVICE_PACKAGES[svc];
+    const entry = SERVICE_PACKAGES[svc];
+    if (!entry) continue;
+    const { pkg, clientName } = entry;
     let client: unknown = undefined;
     const lazyClient = {
       async resolve() {

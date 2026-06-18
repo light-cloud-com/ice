@@ -17,7 +17,7 @@ import type { IBMResourceHandler } from '../types';
 
 const SDK = '@ibm-cloud/platform-services';
 
-const PLAN_IDS: Record<string, { service_name: string; plan_id: string }> = {
+const PLAN_IDS: Record<'postgresql' | 'mysql' | 'mongodb' | 'redis', { service_name: string; plan_id: string }> = {
   postgresql: { service_name: 'databases-for-postgresql', plan_id: '38774ff2-9eef-4ee5-bef5-d8d2d0671c2c' },
   mysql: { service_name: 'databases-for-mysql', plan_id: 'standard' },
   mongodb: { service_name: 'databases-for-mongodb', plan_id: '4929e7bb-25e9-4ce0-a4f1-c8a87ff39b32' },

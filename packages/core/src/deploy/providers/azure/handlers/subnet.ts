@@ -18,7 +18,7 @@ const SDK = '@azure/arm-network';
 
 function extract_vnet_name_from_id(provider_id: string, fallback: string): string {
   const match = provider_id.match(/\/virtualNetworks\/([^/]+)\/subnets\//);
-  return match ? match[1] : fallback;
+  return match?.[1] ?? fallback;
 }
 
 export const subnet_handler: AzureResourceHandler = {

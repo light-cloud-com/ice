@@ -48,7 +48,7 @@ export async function ensure_namespace(ctx: KubernetesHandlerContext): Promise<s
 export function extract_namespace_from_provider_id(provider_id: string, fallback: string): string {
   const parts = provider_id.split('/');
   // shape: <group>/<kind>/<namespace>/<name>
-  if (parts.length === 4) return parts[2];
+  if (parts.length === 4) return parts[2] ?? fallback;
   return fallback;
 }
 

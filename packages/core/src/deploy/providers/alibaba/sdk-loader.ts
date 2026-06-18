@@ -99,7 +99,9 @@ export async function initialize_alibaba_clients(
   // Attach a thunk per service rather than instantiating up-front: the
   // sdk-loader resolves on first `clients.get(<svc>)`.
   for (const svc of Object.keys(SERVICE_PACKAGES)) {
-    const { pkg, endpoint_prefix } = SERVICE_PACKAGES[svc];
+    const entry = SERVICE_PACKAGES[svc];
+    if (!entry) continue;
+    const { pkg, endpoint_prefix } = entry;
     let client: unknown = undefined;
     const lazyClient = {
       async resolve() {

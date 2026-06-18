@@ -67,6 +67,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { logCanvasRender } from '../../../shared/utils/debug-logger';
 import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import { autoOrganizeCard, type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
+import { setEdgeStyle } from '../../../store/slices/ui-slice';
 import type { ViewLevel } from '../../../config/visualization-config';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
@@ -155,6 +156,10 @@ export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): UseCanvasS
     if (currentCount > 0 && (prevCount === 0 || currentCount - prevCount > 10)) {
       const timer = setTimeout(() => {
         dispatch(autoOrganizeCard({ zoom: viewport.zoom }));
+        // CCL1 — the import-time organize is directional (master branch), so it
+        // computes orthogonal dagre routes; render them via the rectangular edge
+        // style instead of letting bezier discard them.
+        dispatch(setEdgeStyle('rectangular'));
       }, 100);
       prevNodeCountRef.current = currentCount;
       return () => clearTimeout(timer);

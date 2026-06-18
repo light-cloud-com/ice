@@ -27,6 +27,7 @@ import {
   autoOrganizeCard,
   selectActiveCard,
 } from '../../../store/slices/cards-slice';
+import { setEdgeStyle } from '../../../store/slices/ui-slice';
 import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 import type { AppDispatch } from '../../../store';
 import type { Card } from '../../../store/slices/cards-slice';
@@ -280,6 +281,7 @@ export function executeAiOperations(
 
         case 'autoOrganize': {
           dispatch(autoOrganizeCard({ direction: 'vertical' }));
+          dispatch(setEdgeStyle('rectangular')); // CCL1 — render the computed dagre routes
           executedOps++;
           break;
         }
@@ -316,6 +318,7 @@ export function executeAiOperations(
   const hasExplicitOrganize = ops.some((o) => o.op === 'autoOrganize');
   if (hasStructuralOps && !hasExplicitOrganize && executedOps > 0) {
     dispatch(autoOrganizeCard({ direction: 'vertical' }));
+    dispatch(setEdgeStyle('rectangular')); // CCL1 — render the computed dagre routes
   }
 
   return {

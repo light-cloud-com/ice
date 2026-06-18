@@ -297,26 +297,33 @@ describe('CanvasMenu — auto-organize submenu', () => {
     const item = findSubItem(tree, 'canvas.contextMenu.layoutVertical')!;
     (item.props.onClick as () => void)();
     expect(mocks.autoOrganizeCard).toHaveBeenCalledWith({ direction: 'vertical', zoom: 1.5 });
+    // CCL1 — a directional organize switches to the rectangular edge style so
+    // the computed dagre routes render.
+    expect(mocks.setEdgeStyle).toHaveBeenCalledWith('rectangular');
     expect(close).toHaveBeenCalled();
     expect(dispatch).toHaveBeenCalled();
   });
 
-  it('horizontal layout dispatches autoOrganizeCard with direction=horizontal', () => {
+  it('horizontal layout dispatches autoOrganizeCard with direction=horizontal + rectangular edges', () => {
     mocks.useStateOverrides = { 0: 'organize' };
     const dispatch = vi.fn();
     const tree = render(baseProps({ dispatch }));
     const item = findSubItem(tree, 'canvas.contextMenu.layoutHorizontal')!;
     (item.props.onClick as () => void)();
     expect(mocks.autoOrganizeCard).toHaveBeenCalledWith({ direction: 'horizontal', zoom: 1 });
+    expect(mocks.setEdgeStyle).toHaveBeenCalledWith('rectangular'); // CCL1
   });
 
-  it('circular layout dispatches autoOrganizeCard with layout=circular', () => {
+  it('circular layout dispatches autoOrganizeCard with layout=circular and does NOT force rectangular edges', () => {
     mocks.useStateOverrides = { 0: 'organize' };
     const dispatch = vi.fn();
     const tree = render(baseProps({ dispatch }));
     const item = findSubItem(tree, 'canvas.contextMenu.layoutCircular')!;
     (item.props.onClick as () => void)();
     expect(mocks.autoOrganizeCard).toHaveBeenCalledWith({ layout: 'circular', zoom: 1 });
+    // CCL1 — circular is a radial layout; orthogonal rectangular routes don't
+    // apply, so it must NOT switch the edge style (matches the toolbar button).
+    expect(mocks.setEdgeStyle).not.toHaveBeenCalledWith('rectangular');
   });
 });
 

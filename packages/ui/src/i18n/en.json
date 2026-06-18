@@ -680,7 +680,8 @@
       "connected": "{{provider}} connected",
       "connectedViaOAuth": "via Google OAuth",
       "connectedViaServiceAccount": "via Service Account",
-      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings"
+      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings",
+      "reauthNeeded": "{{provider}} sign-in expired — reconnect to deploy"
     },
     "config": {
       "gcpProjectLabel": "GCP Project",

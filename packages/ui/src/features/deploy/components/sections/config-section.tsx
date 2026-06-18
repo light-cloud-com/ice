@@ -44,6 +44,10 @@ export const ConfigSection: React.FC<{
   region: string;
   environment: string;
   disabled: boolean;
+  /** DE7 — an active RAPT/reauth deploy failure means the cached session is no
+   *  longer usable; suppress the green "Connected" pill so it doesn't contradict
+   *  the error banner. */
+  authError?: boolean;
   projectId?: string;
   onProviderChange: (v: string) => void;
   onProjectChange: (v: string) => void;
@@ -55,6 +59,7 @@ export const ConfigSection: React.FC<{
   region,
   environment,
   disabled,
+  authError = false,
   projectId: _projectId,
   onProviderChange: _onProviderChange,
   onProjectChange,
@@ -99,8 +104,10 @@ export const ConfigSection: React.FC<{
 
   return (
     <div className="space-y-3">
-      {/* Connection status */}
-      {providerConnected && (
+      {/* Connection status — DE7: an active reauth/RAPT failure suppresses the
+          green pill (the cached session is stale), showing a reconnect warning
+          so the pill never contradicts the error banner. */}
+      {providerConnected && !authError && (
         <div className="flex items-center gap-2 text-xs">
           <CheckCircle className="w-3 h-3 text-emerald-500" />
           <span className="text-emerald-600 dark:text-emerald-400 font-medium">
@@ -109,11 +116,13 @@ export const ConfigSection: React.FC<{
           </span>
         </div>
       )}
-      {!providerConnected && (
+      {(!providerConnected || authError) && (
         <div className="flex items-center gap-2 text-xs">
           <AlertCircle className="w-3 h-3 text-amber-500" />
           <span className="text-amber-600 dark:text-amber-400">
-            {t('deploy.status.notConnected', { provider: PROVIDER_LABELS[provider] || provider })}
+            {authError
+              ? t('deploy.status.reauthNeeded', { provider: PROVIDER_LABELS[provider] || provider })
+              : t('deploy.status.notConnected', { provider: PROVIDER_LABELS[provider] || provider })}
           </span>
         </div>
       )}

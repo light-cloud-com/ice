@@ -239,6 +239,7 @@ type SectionProps = {
   region: string;
   environment: string;
   disabled: boolean;
+  authError?: boolean;
   projectId?: string;
   onProviderChange: (v: string) => void;
   onProjectChange: (v: string) => void;
@@ -488,6 +489,33 @@ describe('ConfigSection — connection-status banner', () => {
     const text = collectText(tree);
     expect(text).not.toContain(' via Google OAuth');
     expect(text).not.toContain(' via Service Account');
+  });
+
+  // DE7 — an active reauth/RAPT failure suppresses the green pill even though
+  // the cached connection still reads as "connected".
+  it('authError=true suppresses the green pill and shows the reconnect warning', () => {
+    mocks.providerConnectedRef.current = true;
+    mocks.authTypeRef.current = 'oauth';
+    const tree = renderSection(makeProps({ provider: 'gcp', authError: true }));
+
+    // No green connected pill…
+    const emerald = findByPredicate(
+      tree,
+      (el) =>
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('text-emerald-500'),
+    );
+    expect(emerald.length).toBe(0);
+    // …an amber warning instead, with the reauth-needed copy.
+    const amber = findByPredicate(
+      tree,
+      (el) =>
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('text-amber-500'),
+    );
+    expect(amber.length).toBe(1);
+    expect(mocks.tSpy).toHaveBeenCalledWith('deploy.status.reauthNeeded', { provider: 'Google Cloud' });
+    expect(mocks.tSpy).not.toHaveBeenCalledWith('deploy.status.connected', { provider: 'Google Cloud' });
   });
 
   it('providerConnected=false → renders AlertCircle, not-connected text; no green banner', () => {

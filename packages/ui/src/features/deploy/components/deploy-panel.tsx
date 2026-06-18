@@ -35,6 +35,7 @@ import {
   appendLog,
 } from '../../../store/slices/deploy-slice';
 import { parseCostRange } from '../../cost/utils/cost-calculator';
+import { classifyDeployError } from '../utils/error-classification';
 import { useDeployActions } from '../hooks/use-deploy-actions';
 import { useDeployEffects } from '../hooks/use-deploy-effects';
 import { useDestroyAction } from '../hooks/use-destroy-action';
@@ -121,6 +122,12 @@ export const DeployPanel: React.FC = () => {
       ? `${failedResults.length} resource(s) failed: ${failedResults.map((r) => `${r.type}/${r.name}`).join(', ')}`
       : '');
 
+  // DE7 — a RAPT/reauth failure means the cached OAuth session is no longer
+  // usable, but the ConfigSection's connection pill (which only re-checks on a
+  // provider change) keeps showing green "Connected". Flag it so the pill can
+  // downgrade to a reconnect warning instead of contradicting the error banner.
+  const authErrorActive = hasFailure && classifyDeployError(effectiveError, deploy.results) === 'rapt';
+
   // DF3 — surface an estimated monthly cost at the commit moment. Reuses the
   // same per-node estimate + parser the status bar/cost panel use, so the
   // number matches. Labeled "est." (see Phase 1 OS5) — it's a design-time
@@ -151,6 +158,7 @@ export const DeployPanel: React.FC = () => {
           region={deploy.region}
           environment={deploy.environment}
           disabled={deploy.status === 'deploying'}
+          authError={authErrorActive}
           projectId={activeCard?.projectId}
           onProviderChange={(v) => {
             dispatch(setProvider(v));

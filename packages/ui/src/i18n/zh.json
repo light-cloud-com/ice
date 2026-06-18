@@ -680,7 +680,8 @@
       "connected": "已连接 {{provider}}",
       "connectedViaOAuth": "通过 Google OAuth",
       "connectedViaServiceAccount": "通过服务账号",
-      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置"
+      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置",
+      "reauthNeeded": "{{provider}} 登录已过期——请重新连接以部署"
     },
     "config": {
       "gcpProjectLabel": "GCP 项目",

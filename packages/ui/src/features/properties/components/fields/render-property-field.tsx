@@ -335,12 +335,21 @@ export const PropertyFields: React.FC<{
     if (Array.isArray(target)) return target.some((v) => v === current);
     return current === target;
   };
-  const visible = properties
-    .filter((p) => !p.tier || p.tier === 'essential' || p.tier === 'detailed')
-    .filter(matchesVisibleWhen);
-  // PE5 — advanced-tier props used to be dropped with no escape hatch. Keep the
-  // default view clean but make them reachable via a collapsed disclosure.
-  const advanced = properties.filter((p) => p.tier === 'advanced').filter(matchesVisibleWhen);
+  const isVisibleTier = (p: HighLevelProperty): boolean => !p.tier || p.tier === 'essential' || p.tier === 'detailed';
+  const hasIssue = (p: HighLevelProperty): boolean => propertyIssues?.has(p.name) ?? false;
+
+  // PE7 — the identity card is the dedicated `name` editor; drop the duplicate
+  // schema `name` field so Name isn't editable twice in the same panel.
+  const editable = properties.filter((p) => p.name !== 'name');
+
+  // PE9 — a prop that currently has a validation issue is ALWAYS shown in the
+  // main Section, so its inline message has a visible anchor even if it's
+  // advanced-tier or hidden by a `visibleWhen` gate (otherwise the issue only
+  // appears in the node banner with no field to point at).
+  const visible = editable.filter((p) => (isVisibleTier(p) && matchesVisibleWhen(p)) || hasIssue(p));
+  // PE5 — advanced-tier props (without a live issue) stay reachable via a
+  // collapsed disclosure instead of being dropped entirely.
+  const advanced = editable.filter((p) => p.tier === 'advanced' && matchesVisibleWhen(p) && !hasIssue(p));
 
   const renderRow = (prop: HighLevelProperty) => (
     <div key={prop.name} data-prop-key={prop.name}>

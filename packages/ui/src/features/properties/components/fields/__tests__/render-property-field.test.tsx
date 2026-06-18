@@ -468,6 +468,56 @@ describe('PropertyFields', () => {
     expect(findByDisplayName(tree, 'AdvancedDisclosure')).toHaveLength(0);
   });
 
+  const propKeys = (tree: React.ReactNode) =>
+    findByPredicate(
+      tree,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    ).map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+
+  // PE7 — the schema `name` field is dropped (the identity card owns it).
+  it('drops the duplicate schema "name" field from the Config tab', () => {
+    const properties = [mkProp({ name: 'name', tier: 'essential' }), mkProp({ name: 'size', tier: 'essential' })];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    expect(propKeys(tree)).toEqual(['size']);
+  });
+
+  // PE9 — a prop with a live validation issue is always shown so its inline
+  // message has an anchor, even if it's advanced-tier or visibleWhen-hidden.
+  it('promotes an advanced prop WITH a validation issue into the main Section', () => {
+    const properties = [mkProp({ name: 'shown', tier: 'essential' }), mkProp({ name: 'adv', tier: 'advanced' })];
+    const propertyIssues = new Map([['adv', { severity: 'error', message: 'bad' }]]);
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+      propertyIssues,
+    }) as React.ReactElement;
+    // 'adv' is now a directly-rendered row (its inline message has an anchor)…
+    expect(propKeys(tree)).toContain('adv');
+    // …and the disclosure is gone since its only advanced prop was promoted.
+    expect(findByDisplayName(tree, 'AdvancedDisclosure')).toHaveLength(0);
+  });
+
+  it('anchors a visibleWhen-hidden prop that has a validation issue', () => {
+    const properties = [
+      mkProp({ name: 'frequency', type: 'select', options: ['Hourly', 'Custom'] }),
+      mkProp({ name: 'schedule', visibleWhen: { field: 'frequency', equals: 'Custom' } }),
+    ];
+    const propertyIssues = new Map([['schedule', { severity: 'error', message: 'bad cron' }]]);
+    // frequency != 'Custom' → 'schedule' is gated-hidden, but its issue forces it visible.
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { frequency: 'Hourly' },
+      onFieldChange: vi.fn(),
+      propertyIssues,
+    }) as React.ReactElement;
+    expect(propKeys(tree)).toContain('schedule');
+  });
+
   it('treats no-tier properties as visible (essential default)', () => {
     const properties = [mkProp({ name: 'untiered' })];
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({

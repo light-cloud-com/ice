@@ -421,6 +421,54 @@ describe('useConnectionDrawing — connectionDragTargets memo', () => {
     const result = captureHook(store, { effectiveNodes: nodes });
     expect(result.connectionDragTargets).toBeNull();
   });
+
+  // CCL7 — a role/category-compatible target that already violates a cardinality
+  // rule reads as invalid-target DURING the drag (was only rejected at drop).
+  it('downgrades a compatible target to invalid-target on a log-source cardinality conflict', () => {
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+    mocks.canConnectSpy.mockReturnValue(true); // both compatible by role
+    // n1 already has a log source wired → conflict; n2 is free.
+    mocks.findExistingLogSourceSpy.mockImplementation((_src: unknown, tgt: { id: string }) => ({
+      conflict: tgt.id === 'n1',
+    }));
+    const nodes: CanvasNode[] = [makeNode({ id: 'svc' }), makeNode({ id: 'n1' }), makeNode({ id: 'n2' })];
+    const result = captureHook(store, {
+      effectiveNodes: nodes,
+      card: { id: 'c', name: 'c', nodes, edges: [] } as unknown as Card,
+    });
+    const targets = result.connectionDragTargets!;
+    expect(targets.get('n1')).toBe('invalid-target'); // cardinality conflict
+    expect(targets.get('n2')).toBe('valid-target'); // free
+  });
+
+  it('downgrades a compatible target to invalid-target on a special-connection cardinality conflict', () => {
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+    mocks.canConnectSpy.mockReturnValue(true);
+    mocks.findExistingSpecialConnectionSpy.mockImplementation((_src: unknown, tgt: { id: string }) =>
+      tgt.id === 'n1' ? { specialType: 'source', conflict: true } : { specialType: null, conflict: false },
+    );
+    const nodes: CanvasNode[] = [makeNode({ id: 'svc' }), makeNode({ id: 'n1' }), makeNode({ id: 'n2' })];
+    const result = captureHook(store, {
+      effectiveNodes: nodes,
+      card: { id: 'c', name: 'c', nodes, edges: [] } as unknown as Card,
+    });
+    const targets = result.connectionDragTargets!;
+    expect(targets.get('n1')).toBe('invalid-target');
+    expect(targets.get('n2')).toBe('valid-target');
+  });
+
+  it('does not apply cardinality dimming when no card is provided', () => {
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+    mocks.canConnectSpy.mockReturnValue(true);
+    mocks.findExistingLogSourceSpy.mockReturnValue({ conflict: true });
+    const nodes: CanvasNode[] = [makeNode({ id: 'svc' }), makeNode({ id: 'n1' })];
+    // No `card` → the conflict check is skipped (can't read edges); stays valid.
+    const result = captureHook(store, { effectiveNodes: nodes });
+    expect(result.connectionDragTargets!.get('n1')).toBe('valid-target');
+  });
 });
 
 describe('useConnectionDrawing — handleConnectionMove', () => {

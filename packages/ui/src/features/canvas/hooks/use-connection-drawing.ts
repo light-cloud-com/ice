@@ -314,6 +314,18 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
 
     const srcKindForTargets = getBlockKind(srcIceType);
 
+    // CCL7 — a target that's otherwise role/category-compatible but already
+    // violates a cardinality rule (one Source/EnvVars per service; one source
+    // per log terminal) should read as `invalid-target` DURING the drag, not
+    // only get rejected at drop. Reuses the same pure conflict checks the drop
+    // handler runs, so drag-time dimming and drop-time rejection never disagree.
+    const violatesCardinality = (node: CanvasNode): boolean => {
+      if (!card) return false;
+      const special = findExistingSpecialConnection(sourceNode, node, card.edges as CardEdge[], effectiveNodes);
+      if (special.specialType && special.conflict) return true;
+      return findExistingLogSource(sourceNode, node, card.edges as CardEdge[]).conflict;
+    };
+
     for (const node of effectiveNodes) {
       if (node.id === drawingConnection.sourceId) continue;
       const tgtIceType = (node.data?.iceType as string) || '';
@@ -328,7 +340,8 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
         const tgtPorts = getPortsForNode({ id: node.id, type: node.type, data: node.data });
         const tgtKind = getBlockKind(tgtIceType);
         const matching = findMatchingPorts(sourcePort, tgtPorts, srcKindForTargets, tgtKind);
-        targets.set(node.id, matching.length > 0 ? 'valid-target' : 'invalid-target');
+        const ok = matching.length > 0 && !violatesCardinality(node);
+        targets.set(node.id, ok ? 'valid-target' : 'invalid-target');
         continue;
       }
       // Legacy body drag (no typed source port) — fall back to the
@@ -339,10 +352,10 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
         tgtNode: node,
         allNodes: effectiveNodes,
       });
-      targets.set(node.id, categoryAllowed ? 'valid-target' : 'invalid-target');
+      targets.set(node.id, categoryAllowed && !violatesCardinality(node) ? 'valid-target' : 'invalid-target');
     }
     return targets;
-  }, [drawingConnection, effectiveNodes]);
+  }, [drawingConnection, effectiveNodes, card]);
 
   /** Start drawing a connection from a port */
   const handleConnectionPortDown = useCallback(

@@ -63,18 +63,27 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     let cancelled = false;
     const fetchStatuses = async () => {
       const api = getApi();
-      const results = await Promise.allSettled(
+      // EI9 — catch INSIDE the map so a failed fetch keeps its env id (a bare
+      // allSettled reject drops it), letting us mark that env's status as a
+      // distinct "fetch-error" instead of an ambiguous grey "never deployed" dot.
+      const results = await Promise.all(
         environments.map(async (env) => {
-          const res = await api.deploy.getDeployments(env.card_id);
-          const deploys = Array.isArray(res) ? res : res?.deployments || [];
-          return { envId: env.id, deploy: deploys[0] };
+          try {
+            const res = await api.deploy.getDeployments(env.card_id);
+            const deploys = Array.isArray(res) ? res : res?.deployments || [];
+            return { envId: env.id, deploy: deploys[0], fetchError: false };
+          } catch {
+            return { envId: env.id, deploy: undefined, fetchError: true };
+          }
         }),
       );
       if (cancelled) return;
       const statuses: Record<string, { status: string; url?: string }> = {};
       for (const r of results) {
-        if (r.status === 'fulfilled' && r.value.deploy) {
-          statuses[r.value.envId] = { status: r.value.deploy.status, url: r.value.deploy.deployed_url };
+        if (r.deploy) {
+          statuses[r.envId] = { status: r.deploy.status, url: r.deploy.deployed_url };
+        } else if (r.fetchError) {
+          statuses[r.envId] = { status: 'fetch-error' };
         }
       }
       setEnvDeployStatus(statuses);

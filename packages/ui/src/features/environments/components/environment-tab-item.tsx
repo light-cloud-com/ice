@@ -9,8 +9,9 @@
 
 import { GitPullRequest, Lock } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
-import { getDeployStatusDotColor } from '../utils/deploy-status-color';
+import { getDeployStatusDotColor, getDeployStatusLabelKey } from '../utils/deploy-status-color';
 import type { Environment } from '../../../store/slices/environments-slice';
 
 export interface EnvironmentDeployStatus {
@@ -34,6 +35,9 @@ export const EnvironmentTabItem: React.FC<EnvironmentTabItemProps> = ({
   onContextMenu,
 }) => {
   const dotColor = getDeployStatusDotColor(deployStatus);
+  // EI9 — pair the dot colour with an AT-reachable name (also disambiguates
+  // "Status unavailable" from "Not deployed", which both used a grey dot).
+  const dotLabel = t(getDeployStatusLabelKey(deployStatus));
 
   return (
     <button
@@ -46,7 +50,12 @@ export const EnvironmentTabItem: React.FC<EnvironmentTabItemProps> = ({
       )}
     >
       {/* Status dot — reflects real deploy status */}
-      <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
+      <span
+        role="img"
+        aria-label={dotLabel}
+        title={dotLabel}
+        className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)}
+      />
 
       {/* Name */}
       {env.name}

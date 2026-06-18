@@ -685,6 +685,26 @@ describe('EnvironmentTabBar — deploy-status fetch effect', () => {
     await new Promise<void>((r) => setTimeout(r, 0));
     expect(mocks.apiGetDeployments).toHaveBeenCalled();
   });
+
+  // EI9 — a rejected status fetch is recorded as a distinct 'fetch-error' (not
+  // silently dropped), so its env dot differs from "never deployed".
+  it('records a fetch-error for an env whose getDeployments rejects', async () => {
+    mocks.state.environments.byProject['proj-1'] = [
+      makeEnv({ id: 'env-1', card_id: 'c1' }),
+      makeEnv({ id: 'env-2', card_id: 'c2' }),
+    ];
+    mocks.apiGetDeployments.mockImplementation((cardId: string) =>
+      cardId === 'c1'
+        ? Promise.resolve([{ status: 'success', deployed_url: 'https://e1' }])
+        : Promise.reject(new Error('network')),
+    );
+    callRender({ projectId: 'proj-1' });
+    await new Promise<void>((r) => setTimeout(r, 0));
+    // slot 3 = envDeployStatus setter
+    const lastArg = stateMocks.setters[3].mock.calls.at(-1)?.[0] as Record<string, { status: string; url?: string }>;
+    expect(lastArg['env-1']).toEqual({ status: 'success', url: 'https://e1' });
+    expect(lastArg['env-2']).toEqual({ status: 'fetch-error' });
+  });
 });
 
 describe('EnvironmentTabBar — auto-switch to production on first load', () => {

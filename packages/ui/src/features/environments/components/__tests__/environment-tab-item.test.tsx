@@ -76,6 +76,34 @@ describe('EnvironmentTabItem — rendering', () => {
     expect(text).toContain('preview-1');
   });
 
+  // EI9 — the status dot carries an accessible name and a distinct hollow dot
+  // for a failed status fetch (so it's not mistaken for "never deployed").
+  it('gives the status dot a role=img + aria-label', () => {
+    const tree = callRender({
+      env: makeEnv(),
+      isActive: false,
+      deployStatus: { status: 'success' },
+      onSwitch: vi.fn(),
+      onContextMenu: vi.fn(),
+    });
+    const dot = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { role?: string }).role === 'img');
+    expect(dot).toBeDefined();
+    expect((dot!.props as { 'aria-label': string })['aria-label']).toBe('Deployed');
+  });
+
+  it('renders the distinct hollow dot + "Status unavailable" label for a fetch-error', () => {
+    const tree = callRender({
+      env: makeEnv(),
+      isActive: false,
+      deployStatus: { status: 'fetch-error' },
+      onSwitch: vi.fn(),
+      onContextMenu: vi.fn(),
+    });
+    const dot = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { role?: string }).role === 'img');
+    expect((dot!.props as { 'aria-label': string })['aria-label']).toBe('Status unavailable');
+    expect(mocks.cnSpy.mock.calls.some((args) => args.includes('bg-transparent ring-1 ring-amber-500/70'))).toBe(true);
+  });
+
   it('uses the active class when isActive=true', () => {
     callRender({
       env: makeEnv(),

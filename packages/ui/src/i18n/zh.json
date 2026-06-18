@@ -135,7 +135,8 @@
     "queued": "排队中",
     "connecting": "连接中",
     "cancelled": "已取消",
-    "notDeployed": "未部署"
+    "notDeployed": "未部署",
+    "fetchError": "状态不可用"
   },
   "canvas": {
     "title": "基础设施画布",

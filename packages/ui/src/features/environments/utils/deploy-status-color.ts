@@ -15,3 +15,9 @@ export interface DeployStatusInput {
 export function getDeployStatusDotColor(deployStatus: DeployStatusInput | undefined): string {
   return deployStatusMeta(deployStatus?.status).dotClass;
 }
+
+/** Canonical i18n label key for the dot — pairs the colour with an AT-reachable
+ *  name so the status (incl. EI9's "fetch-error") isn't colour-only. */
+export function getDeployStatusLabelKey(deployStatus: DeployStatusInput | undefined): string {
+  return deployStatusMeta(deployStatus?.status).labelKey;
+}

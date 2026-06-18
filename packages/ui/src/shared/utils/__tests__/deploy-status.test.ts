@@ -33,6 +33,17 @@ describe('deployStatusMeta — canonical deploy-status vocabulary (IA4)', () => 
     expect(deployStatusMeta('cancelled').labelKey).toBe('deployStatus.cancelled');
   });
 
+  // EI9 — a failed status fetch is "unknown", visually distinct from idle.
+  it('maps fetch-error to the unknown tone with a hollow dot + dedicated label', () => {
+    expect(deployStatusMeta('fetch-error')).toMatchObject({
+      tone: 'unknown',
+      labelKey: 'deployStatus.fetchError',
+      dotClass: 'bg-transparent ring-1 ring-amber-500/70',
+    });
+    // distinct from the filled grey idle dot
+    expect(deployStatusMeta('fetch-error').dotClass).not.toBe(deployStatusMeta(undefined).dotClass);
+  });
+
   it('falls back to idle / not-deployed for unknown or missing input', () => {
     expect(deployStatusMeta(undefined)).toMatchObject({
       tone: 'idle',

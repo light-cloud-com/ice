@@ -13,7 +13,7 @@
  * sharing the label.
  */
 
-export type DeployStatusTone = 'success' | 'failed' | 'in-progress' | 'pending' | 'cancelled' | 'idle';
+export type DeployStatusTone = 'success' | 'failed' | 'in-progress' | 'pending' | 'cancelled' | 'idle' | 'unknown';
 
 export interface DeployStatusMeta {
   tone: DeployStatusTone;
@@ -30,6 +30,10 @@ const TONE_DOT: Record<DeployStatusTone, string> = {
   pending: 'bg-amber-500 animate-pulse',
   cancelled: 'bg-ice-text-3/50',
   idle: 'bg-ice-text-3/30',
+  // EI9 — a hollow outlined dot reads as "no data" — visually distinct from the
+  // *filled* grey idle dot, so "couldn't fetch the status" isn't mistaken for
+  // "never deployed".
+  unknown: 'bg-transparent ring-1 ring-amber-500/70',
 };
 
 export function deployStatusTone(raw: string | undefined | null): DeployStatusTone {
@@ -49,6 +53,9 @@ export function deployStatusTone(raw: string | undefined | null): DeployStatusTo
       return 'pending';
     case 'cancelled':
       return 'cancelled';
+    // EI9 — the env-tab status fetch failed (network/auth); distinct from idle.
+    case 'fetch-error':
+      return 'unknown';
     default:
       return 'idle';
   }
@@ -65,6 +72,7 @@ const LABEL_KEY: Record<string, string> = {
   queued: 'deployStatus.queued',
   authenticating: 'deployStatus.connecting',
   cancelled: 'deployStatus.cancelled',
+  'fetch-error': 'deployStatus.fetchError',
 };
 
 export function deployStatusMeta(raw: string | undefined | null): DeployStatusMeta {

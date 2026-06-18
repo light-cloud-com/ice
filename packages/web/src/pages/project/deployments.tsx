@@ -12,7 +12,18 @@ import { cn } from '@ui/shared/utils/cn';
 import { deployStatusMeta, deployStatusTone, type DeployStatusTone } from '@ui/shared/utils/deploy-status';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '@ui/store/slices/pipeline-slice';
-import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown, RotateCcw } from 'lucide-react';
+import {
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Rocket,
+  GitBranch,
+  Server,
+  ChevronDown,
+  RotateCcw,
+  HelpCircle,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
@@ -232,6 +243,8 @@ const InfraDeploymentList: React.FC<{
     pending: <Clock className="w-4 h-4 text-amber-500 animate-pulse" />,
     cancelled: <XCircle className="w-4 h-4 text-ice-text-3" />,
     idle: <Clock className="w-4 h-4 text-amber-500" />,
+    // EI9 — status couldn't be determined (e.g. a failed fetch).
+    unknown: <HelpCircle className="w-4 h-4 text-amber-500" />,
   };
   const statusIcon = (status: string) => TONE_ICON[deployStatusTone(status)];
 

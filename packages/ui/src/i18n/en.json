@@ -135,7 +135,8 @@
     "queued": "Queued",
     "connecting": "Connecting",
     "cancelled": "Cancelled",
-    "notDeployed": "Not deployed"
+    "notDeployed": "Not deployed",
+    "fetchError": "Status unavailable"
   },
   "canvas": {
     "title": "Infrastructure Canvas",

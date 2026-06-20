@@ -70,10 +70,15 @@ packages/ui/src/**/*.js
 packages/ui/src/**/*.js.map
 packages/ui/src/**/*.d.ts
 packages/ui/src/**/*.d.ts.map
+# assets.d.ts is a hand-written ambient shim (Vite asset + import.meta.env
+# types), not a tsc-emitted artifact — whitelist it so CI typecheck has it.
+!packages/ui/src/assets.d.ts
 packages/web/src/**/*.js
 packages/web/src/**/*.js.map
 packages/web/src/**/*.d.ts
 packages/web/src/**/*.d.ts.map
+# vite-env.d.ts is hand-written (references ui/src/assets.d.ts) — whitelist it.
+!packages/web/src/vite-env.d.ts
 # findings.md #33 — these collide with Vite's `.js`-over-`.ts`
 # resolver and shipped on a stale `tsc --emit`. ambient.d.ts is the
 # only legitimate `.d.ts` in apps/desktop/src; whitelist it back.

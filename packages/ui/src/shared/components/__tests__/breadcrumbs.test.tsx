@@ -33,8 +33,9 @@ vi.mock('react-router-dom', () => ({
   ),
 }));
 
-vi.mock('../../hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolved,
+vi.mock('../../hooks/use-resolve-path-context', () => ({
+  useResolvePathContext: () => mocks.resolved,
+  TOP_ROUTES: { settings: 'Settings', team: 'Team' },
 }));
 
 import { Breadcrumbs } from '../breadcrumbs';
@@ -225,13 +226,15 @@ describe('Breadcrumbs — URL fallback', () => {
     expect(text).not.toContain('Acme');
   });
 
-  it('does not render fallback crumbs when resolver is loading', () => {
+  // IA9 — show URL-derived fallback crumbs even while resolving, so the trail
+  // doesn't flicker down to just Home on every navigation.
+  it('renders fallback crumbs from the URL even while the resolver is loading', () => {
     mocks.pathname = '/folder';
     mocks.resolved.loading = true;
     mocks.resolved.breadcrumbs = [];
     const tree = renderBC();
     const text = collectText(tree);
-    expect(text).not.toContain('Folder');
+    expect(text).toContain('Folder');
   });
 
   it('builds path strings prefixed with /', () => {

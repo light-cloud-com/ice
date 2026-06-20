@@ -8,7 +8,7 @@
 
 import type { ResourceDeployResult } from '../../../types';
 
-export type LiveProvider = 'aws' | 'azure';
+export type LiveProvider = 'aws' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm';
 
 export interface RunStartEvent {
   kind: 'run-start';

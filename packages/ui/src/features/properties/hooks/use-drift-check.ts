@@ -20,7 +20,7 @@ import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
-import { setDriftCheckLoading, setDriftResults } from '../../../store/slices/deploy-slice';
+import { setDriftCheckLoading, setDriftMeta, setDriftResults } from '../../../store/slices/deploy-slice';
 import type { AppDispatch, RootState } from '../../../store';
 
 /**
@@ -63,6 +63,15 @@ export function useDriftCheck(cardId: string, nodes: any[]): { isLoading: boolea
       const res = await axiosInstance.post('/canvas/deploy/drift-check', { cardId, nodes });
       if (res.data?.driftResults) {
         dispatch(setDriftResults(res.data.driftResults));
+        // OS3/OS4: carry the check's authority (`unsupported` = cloud was never
+        // queried) + timestamp so the indicator can't show a green "in sync"
+        // for a stored-state guess. Both ride on the same response.
+        dispatch(
+          setDriftMeta({
+            checkedAt: typeof res.data.checkedAt === 'string' ? res.data.checkedAt : null,
+            unsupported: res.data.unsupported === true,
+          }),
+        );
         // Update canvas node statuses to reflect drift
         applyDriftStatus(res.data.driftResults, dispatch);
       }

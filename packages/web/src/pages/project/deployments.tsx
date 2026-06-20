@@ -9,9 +9,21 @@
 import { useTranslation } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { cn } from '@ui/shared/utils/cn';
+import { deployStatusMeta, deployStatusTone, type DeployStatusTone } from '@ui/shared/utils/deploy-status';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '@ui/store/slices/pipeline-slice';
-import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown, RotateCcw } from 'lucide-react';
+import {
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Rocket,
+  GitBranch,
+  Server,
+  ChevronDown,
+  RotateCcw,
+  HelpCircle,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
@@ -221,21 +233,27 @@ const InfraDeploymentList: React.FC<{
     }
   };
 
-  const statusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-      case 'failed':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'deploying':
-        return <Rocket className="w-4 h-4 text-blue-500 animate-pulse" />;
-      case 'planning':
-        return <Clock className="w-4 h-4 text-amber-500 animate-pulse" />;
-      case 'cancelled':
-        return <XCircle className="w-4 h-4 text-ice-text-3" />;
-      default:
-        return <Clock className="w-4 h-4 text-amber-500" />;
-    }
+  // IA4 — icon keyed off the canonical tone (not the raw status), so this list
+  // agrees with the status bar + Environments page and an `error` status no
+  // longer slips through to the neutral default.
+  const TONE_ICON: Record<DeployStatusTone, React.ReactNode> = {
+    success: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+    failed: <XCircle className="w-4 h-4 text-red-500" />,
+    'in-progress': <Rocket className="w-4 h-4 text-blue-500 animate-pulse" />,
+    pending: <Clock className="w-4 h-4 text-amber-500 animate-pulse" />,
+    cancelled: <XCircle className="w-4 h-4 text-ice-text-3" />,
+    idle: <Clock className="w-4 h-4 text-amber-500" />,
+    // EI9 — status couldn't be determined (e.g. a failed fetch).
+    unknown: <HelpCircle className="w-4 h-4 text-amber-500" />,
+  };
+  const statusIcon = (status: string) => TONE_ICON[deployStatusTone(status)];
+
+  // Canonical human label, shared with the other deploy surfaces. Unknown
+  // backend statuses fall back to the raw value rather than mislabel a historical
+  // record as "Not deployed".
+  const statusLabel = (status: string) => {
+    const meta = deployStatusMeta(status);
+    return meta.labelKey === 'deployStatus.notDeployed' ? status : t(meta.labelKey);
   };
 
   // The latest successful deployment (index 0 since sorted desc) — can't roll back to current
@@ -262,7 +280,7 @@ const InfraDeploymentList: React.FC<{
           <div key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-ice-hover transition-colors">
             {statusIcon(d.status)}
             <div className="flex-1 min-w-0">
-              <span className="text-sm text-ice-text-1 font-medium capitalize">{d.status}</span>
+              <span className="text-sm text-ice-text-1 font-medium capitalize">{statusLabel(d.status)}</span>
               <span className="text-xs text-ice-text-3 ml-2">
                 {d.provider} · {d.region} · {d.environment}
               </span>

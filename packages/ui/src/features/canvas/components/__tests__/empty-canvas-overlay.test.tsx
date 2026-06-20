@@ -174,6 +174,15 @@ describe('EmptyCanvasOverlay', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
+  // AX8 — the icon-only dismiss button must carry an accessible name (it renders
+  // only an <X/> glyph, so screen readers would otherwise announce just "button").
+  it('the dismiss "X" button has an accessible name (aria-label)', () => {
+    mocks.templates = [];
+    const tree = EmptyCanvasOverlay({});
+    const buttons = findByType(tree, 'button');
+    expect((buttons[0].props as { 'aria-label'?: string })['aria-label']).toBe('canvas.emptyState.dismiss');
+  });
+
   it('renders the quickStart label key', () => {
     mocks.templates = [];
     const tree = EmptyCanvasOverlay({});

@@ -27,11 +27,11 @@ import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { TooltipProvider } from '../../../shared/components/ui/tooltip';
-import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { useResolvePathContext } from '../../../shared/hooks/use-resolve-path-context';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
 import { getCategoryMap, CATEGORY_ORDER } from '../data/categories';
-import { getComponents } from '../data/components';
+import { getComponents, componentMatchesQuery } from '../data/components';
 import { PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
 import { BlocksSection } from '../sections/blocks-section';
 import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps } from '../types';
@@ -54,9 +54,8 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   // Localized concept blocks — same locale-reactivity contract.
   const components = useMemo(() => getComponents(t), [t]);
 
-  // Get the current project's locked provider (if set)
-  const segments = pathname.split('/').filter(Boolean);
-  const resolved = useResolvePath(segments);
+  // Get the current project's locked provider (if set) — IA7: shared resolution.
+  const resolved = useResolvePathContext();
   const [projectProvider, setProjectProvider] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,14 +114,14 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
         );
         if (effectiveProviders.length === 0) return false;
 
-        const matchesSearch =
-          !localSearch.trim() ||
-          c.name.toLowerCase().includes(localSearch.toLowerCase()) ||
-          c.description.toLowerCase().includes(localSearch.toLowerCase());
+        // CD3 — match name/description/tooltip + the localized category label +
+        // goal/synonym keywords, mirroring the richer template search. Lets
+        // "database", "api", "cron", "cache" etc. resolve to the right block.
+        const matchesSearch = componentMatchesQuery(c, localSearch, categoryMap.get(c.category)?.label ?? '');
         const matchesProvider = selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
         return matchesSearch && matchesProvider;
       }),
-    [components, localSearch, selectedProvider],
+    [components, localSearch, selectedProvider, categoryMap],
   );
 
   // Providers with at least one concept whose (category × provider) gate

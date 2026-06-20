@@ -32,10 +32,14 @@ import { getPortsForNode } from '@ice/types';
 import React, { useCallback, useState, type ReactNode } from 'react';
 import { getNodeDragState } from './connection-drag-context';
 import { ConnectionDragGlow } from './connection-drag-glow';
+import { NodeDeployOverlay } from './node-deploy-overlay';
+import { useNodeValidation } from './node-validation-context';
 import { useIsNodeOrphan } from './orphan-context';
+import { posterStatusGlyph } from './poster-status';
 import { ProviderPill } from './provider-pill';
 import { StatusDot } from './status-dot';
 import { TypedSockets } from './typed-sockets';
+import { ValidationBadge } from './validation-badge';
 import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { getServiceName } from '../../../../../assets/icons/service-names';
 import { CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
@@ -153,6 +157,12 @@ export const CardShell: React.FC<CardShellProps> = ({
   const provider = (data?.provider as string) || '';
   const region = (data?.region as string) || '';
   const deployStatus = (data?.deploy_status as string) || '';
+  // CNV1 — in-flight step + failure reason, surfaced on the node (not just the
+  // deploy panel). Same data the deploy panel writes onto every node.
+  const deployProgress = data?.deploy_progress as
+    | { step_label?: string; step_index?: number; step_total?: number }
+    | undefined;
+  const deployError = (data?.deploy_error as string) || '';
 
   // brandOverride wins (e.g. frontend blocks pass `framework` so React /
   // Next.js / Vue render in the header). Fall through to the iceType
@@ -171,6 +181,8 @@ export const CardShell: React.FC<CardShellProps> = ({
 
   const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
+  // CNV7/AX5 — non-colour, AT-reachable status cue for the poster view.
+  const posterStatus = posterStatusGlyph(deployStatus);
 
   const rawIsSource = connectionDragState === 'source';
   const rawIsValidTarget = connectionDragState === 'valid-target';
@@ -199,6 +211,12 @@ export const CardShell: React.FC<CardShellProps> = ({
   // the indicator while no drag is active, so the orphan warning
   // doesn't compete with the valid/invalid border during a connect.
   const isOrphan = useIsNodeOrphan(node.id) && connectionDragState === null;
+  // CNV2 — config/validation issues, surfaced on the node (read via context so
+  // they needn't thread through every concept-node component). 'info' is not
+  // badge-worthy; only error/warning render a corner dot.
+  const validation = useNodeValidation(node.id);
+  const validationSeverity = validation && validation.severity !== 'info' ? validation.severity : null;
+  const validationCount = validation?.count ?? 0;
   // Ports are always rendered (so users can SEE the connection
   // affordance on a fresh block instead of having to discover it via
   // hover). Opacity carries the state: faint at idle, full on
@@ -363,16 +381,28 @@ export const CardShell: React.FC<CardShellProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ProviderPill provider={provider} />
               {deployStatus && (
+                // CNV7/AX5 — pair the hue with a shape glyph + an `aria-label`
+                // (not a mouse-only `title`), so deploying / done / failed are
+                // distinguishable without colour and reachable by AT.
                 <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: statusColor,
-                    opacity: 0.9,
-                  }}
+                  role="img"
+                  aria-label={statusLabel}
                   title={statusLabel}
-                />
+                  className={posterStatus.pulse ? 'motion-safe:animate-pulse' : undefined}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 12,
+                    height: 12,
+                    fontSize: 11,
+                    lineHeight: 1,
+                    fontWeight: 700,
+                    color: statusColor,
+                  }}
+                >
+                  {posterStatus.glyph}
+                </span>
               )}
             </div>
           </div>
@@ -616,7 +646,32 @@ export const CardShell: React.FC<CardShellProps> = ({
               >
                 {liveConfig || ''}
               </span>
-              {deployStatus && <StatusDot color={statusColor} label={statusLabel.toLowerCase()} />}
+              {deployStatus && (
+                <StatusDot
+                  color={statusColor}
+                  label={statusLabel.toLowerCase()}
+                  pulse={deployStatus === 'deploying' || deployStatus === 'queued'}
+                />
+              )}
+            </div>
+          )}
+
+          {/* CNV1 — live deploy progress / error overlay, raised above the
+              status footer when one is shown. */}
+          <NodeDeployOverlay
+            deployStatus={deployStatus}
+            deployProgress={deployProgress}
+            deployError={deployError}
+            bottom={showFooter ? CARD_FOOTER_HEIGHT + 6 : 6}
+          />
+
+          {/* CNV2 — validation badge (config errors/warnings) in the top-right corner. */}
+          {validationSeverity && (
+            <div
+              data-testid="card-shell-validation-badge"
+              style={{ position: 'absolute', top: -2, right: -2, zIndex: 2 }}
+            >
+              <ValidationBadge severity={validationSeverity} count={validationCount} />
             </div>
           )}
         </div>

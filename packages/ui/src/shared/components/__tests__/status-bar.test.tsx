@@ -565,12 +565,13 @@ describe('StatusBar — IntegrationStatusDots is rendered', () => {
 describe('StatusBar — DeployStatusIndicator', () => {
   it('returns null when deploy.status === idle (no deploy section text)', () => {
     const tree = callRender();
-    expect(collectText(tree)).not.toContain('statusBar.connecting');
-    expect(collectText(tree)).not.toContain('statusBar.deploying');
-    expect(collectText(tree)).not.toContain('statusBar.planning');
-    expect(collectText(tree)).not.toContain('statusBar.deployed');
-    expect(collectText(tree)).not.toContain('statusBar.deployFailed');
-    expect(collectText(tree)).not.toContain('statusBar.planReady');
+    // IA4 — labels now come from the canonical deployStatus.* vocabulary.
+    expect(collectText(tree)).not.toContain('deployStatus.connecting');
+    expect(collectText(tree)).not.toContain('deployStatus.deploying');
+    expect(collectText(tree)).not.toContain('deployStatus.planning');
+    expect(collectText(tree)).not.toContain('deployStatus.deployed');
+    expect(collectText(tree)).not.toContain('deployStatus.failed');
+    expect(collectText(tree)).not.toContain('deployStatus.planReady');
   });
 
   it('renders the authenticating banner', () => {
@@ -579,7 +580,7 @@ describe('StatusBar — DeployStatusIndicator', () => {
       nodesById: {},
     };
     const tree = callRender();
-    expect(collectText(tree)).toContain('statusBar.connecting');
+    expect(collectText(tree)).toContain('deployStatus.connecting');
   });
 
   it('renders the deploying banner with rollup percentage', () => {
@@ -591,32 +592,32 @@ describe('StatusBar — DeployStatusIndicator', () => {
     mocks.deriveRollupPercentage.mockReturnValue(25);
     const tree = callRender();
     const text = collectText(tree);
-    expect(text).toContain('statusBar.deploying');
-    expect(text).toContain('"pct":25');
+    expect(text).toContain('deployStatus.deploying');
+    expect(text).toContain('25%');
     expect(mocks.deriveRollup).toHaveBeenCalledWith({ a: {} });
   });
 
   it('renders the planning banner', () => {
     (mocks.state as Record<string, unknown>).deploy = { status: 'planning', nodesById: {} };
     const tree = callRender();
-    expect(collectText(tree)).toContain('statusBar.planning');
+    expect(collectText(tree)).toContain('deployStatus.planning');
   });
 
   it('renders the success banner', () => {
     (mocks.state as Record<string, unknown>).deploy = { status: 'success', nodesById: {} };
     const tree = callRender();
-    expect(collectText(tree)).toContain('statusBar.deployed');
+    expect(collectText(tree)).toContain('deployStatus.deployed');
   });
 
-  it('renders the error banner', () => {
+  it('renders the error banner with the canonical "failed" label (IA4)', () => {
     (mocks.state as Record<string, unknown>).deploy = { status: 'error', nodesById: {} };
     const tree = callRender();
-    expect(collectText(tree)).toContain('statusBar.deployFailed');
+    expect(collectText(tree)).toContain('deployStatus.failed');
   });
 
   it('renders the planned banner', () => {
     (mocks.state as Record<string, unknown>).deploy = { status: 'planned', nodesById: {} };
     const tree = callRender();
-    expect(collectText(tree)).toContain('statusBar.planReady');
+    expect(collectText(tree)).toContain('deployStatus.planReady');
   });
 });

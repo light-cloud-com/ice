@@ -11,10 +11,12 @@ interface LogHeaderProps {
   status: LogStreamStatus;
   onToggleFold: (e: React.MouseEvent) => void;
   onCopyAll: (e: React.MouseEvent) => void;
+  /** OL7 — true briefly after a successful copy-all, so the button confirms. */
+  copiedAll?: boolean;
 }
 
 export const LogHeader: React.FC<LogHeaderProps> = memo(
-  ({ label, folded, isHovered, status, onToggleFold, onCopyAll }) => (
+  ({ label, folded, isHovered, status, onToggleFold, onCopyAll, copiedAll }) => (
     <div
       style={{
         display: 'flex',
@@ -52,8 +54,9 @@ export const LogHeader: React.FC<LogHeaderProps> = memo(
           canvas header and the properties pill never disagree. */}
       {!folded && <LiveIndicator status={status} />}
 
-      {/* Copy all button */}
-      {!folded && isHovered && <CopyButton onClick={onCopyAll} />}
+      {/* Copy all button — stays visible briefly after a copy to show the
+          confirmation even if the pointer has left the header. */}
+      {!folded && (isHovered || copiedAll) && <CopyButton onClick={onCopyAll} copied={copiedAll} />}
 
       {/* Fold button */}
       <FoldButton folded={folded} onClick={onToggleFold} opacity={isHovered ? 0.8 : 0.5} />

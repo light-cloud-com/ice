@@ -117,6 +117,26 @@ describe('resolveSource — candidateSources path', () => {
     }
   });
 
+  it('returns provider-unsupported for a non-GCP deployed resource, without a GCP creds check (OL2)', async () => {
+    prismaMock.environment.findUnique.mockResolvedValue({ type: 'production', region: 'us-east-1' });
+    prismaMock.deployedResourceMapping.findFirst.mockResolvedValue({
+      resource_name: 'api-server',
+      resource_type: 'aws.ecs.service',
+      provider_id: 'arn:aws:ecs:...',
+    });
+    const result = await resolveSource({
+      ...baseArgs,
+      candidateSources: [{ nodeId: 'src-1', iceType: 'Compute.Container' }],
+    });
+    expect(result.state).toBe('provider-unsupported');
+    if (result.state === 'provider-unsupported') {
+      expect(result.provider).toBe('aws');
+      expect(result.sourceNodeId).toBe('src-1');
+    }
+    // Must NOT fall through to the GCP credentials path (the misleading IAM error).
+    expect(credentialsMock.getDecryptedCredentials).not.toHaveBeenCalled();
+  });
+
   it('returns permission-denied when no credentials are available', async () => {
     prismaMock.environment.findUnique.mockResolvedValue({ type: 'production', region: 'us-central1' });
     prismaMock.deployedResourceMapping.findFirst.mockResolvedValue({

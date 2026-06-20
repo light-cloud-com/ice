@@ -112,6 +112,32 @@
       "continueWithGithub": "使用 GitHub 继续"
     }
   },
+  "a11y": {
+    "announce": {
+      "connecting": "正在连接云服务提供商…",
+      "planning": "正在规划部署…",
+      "planReady": "部署计划已就绪，可供查看。",
+      "deploying": "正在部署…",
+      "deployingCount": "正在部署 {{total}} 个资源…",
+      "destroying": "正在销毁资源…",
+      "deploySucceeded": "部署成功。",
+      "deployFailed": "部署失败。",
+      "deployFailedCount": "部署失败 — {{failed}} 个资源失败。"
+    }
+  },
+  "deployStatus": {
+    "deployed": "已部署",
+    "failed": "失败",
+    "deploying": "部署中",
+    "destroying": "销毁中",
+    "planning": "规划中",
+    "planReady": "计划就绪",
+    "queued": "排队中",
+    "connecting": "连接中",
+    "cancelled": "已取消",
+    "notDeployed": "未部署",
+    "fetchError": "状态不可用"
+  },
   "canvas": {
     "title": "基础设施画布",
     "emptyState": {
@@ -120,7 +146,20 @@
       "blankCanvas": "空白画布",
       "pickTemplate": "选择模板...",
       "quickStart": "快速开始",
-      "more": "更多..."
+      "more": "更多...",
+      "hint": "按 Shift+A 或从左侧拖入一个区块即可开始",
+      "dismiss": "关闭快速开始"
+    },
+    "spotlight": {
+      "recent": "最近使用",
+      "catalog": "所有区块"
+    },
+    "socketLegend": {
+      "title": "连接端口",
+      "traffic": "数据与流量",
+      "config": "配置（环境变量、密钥）",
+      "repository": "源代码仓库",
+      "domain": "域名 / DNS"
     },
     "tooltip": {
       "connections": "个连接",
@@ -215,6 +254,7 @@
       "noSource": "连接一个计算或数据库块以开始流式传输日志。",
       "ambiguous": "存在多个入站连接 — 请在属性面板中选择一个源。",
       "unsupported": "此源类型不输出 Cloud Logging 日志。",
+      "providerUnsupported": "暂不支持 {{provider}} 的实时日志。",
       "permissionDenied": "Cloud Logging 访问被拒绝。请向部署服务账户授予 roles/logging.viewer 权限。",
       "error": "连接错误。正在重试。",
       "connecting": "连接中…",
@@ -225,6 +265,11 @@
       "connecting": "连接中",
       "error": "错误",
       "idle": "空闲",
+      "preDeploy": "待部署",
+      "noSource": "无来源",
+      "ambiguous": "选择来源",
+      "unsupported": "不支持",
+      "providerUnsupported": "不可用",
       "pipelineLive": "运行中",
       "pipelineFailed": "失败",
       "pipelineBuilding": "构建中",
@@ -516,8 +561,11 @@
         "actionTypeBlockDescription": "调用画布上的一个块",
         "actionTypeHttpLabel": "发送 HTTP 请求",
         "actionTypeHttpDescription": "访问外部 URL",
-        "customValuePrefix": "自定义:{{value}} {{unit}}"
+        "customValuePrefix": "自定义:{{value}} {{unit}}",
+        "required": "必填",
+        "advanced": "高级"
       },
+      "validating": "检查中…",
       "log": {
         "sectionTitle": "日志",
         "modePolling": "轮询",
@@ -525,6 +573,9 @@
         "modeTail": "追踪",
         "modeTailHint": "通过 gRPC 进行亚秒级流式传输。",
         "sourceOverride": "源覆盖",
+        "retry": "重试",
+        "clear": "清除",
+        "dropped": "已丢弃 {{count}} 条较早的日志 — 缓冲区上限为 200 行。",
         "noSupportedSource": "未连接受支持的源。请将计算或数据库块连接到此日志终端。",
         "clearOverride": "清除覆盖",
         "selectSource": "— 选择源 —",
@@ -534,6 +585,7 @@
         "pillNoSource": "无源",
         "pillAmbiguous": "源不明确",
         "pillUnsupported": "不支持的源",
+        "pillProviderUnsupported": "不可用",
         "pillAccessDenied": "访问被拒绝",
         "pillError": "错误",
         "pillIdle": "空闲"
@@ -640,7 +692,8 @@
       "connected": "已连接 {{provider}}",
       "connectedViaOAuth": "通过 Google OAuth",
       "connectedViaServiceAccount": "通过服务账号",
-      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置"
+      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置",
+      "reauthNeeded": "{{provider}} 登录已过期——请重新连接以部署"
     },
     "config": {
       "gcpProjectLabel": "GCP 项目",
@@ -671,11 +724,14 @@
     },
     "auth": {
       "connecting": "正在连接 GCP...",
-      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。"
+      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。",
+      "noWindow": "没有看到窗口？它可能被拦截或已关闭。",
+      "reopen": "重新打开登录窗口"
     },
     "plan": {
       "noChanges": "未检测到更改。基础设施已是最新状态。",
       "changes": "计划：{{total}} 项更改",
+      "destination": "部署目标：{{target}}",
       "skip": "跳过",
       "actionCreate": "创建",
       "actionUpdate": "更新",
@@ -1015,6 +1071,9 @@
       "contextPromote": "提升到生产环境",
       "contextRename": "重命名",
       "contextDelete": "删除环境",
+      "contextDeleteConfirm": "再次点击以删除",
+      "loadError": "无法加载环境",
+      "retry": "重试",
       "envNamePlaceholder": "环境名称"
     },
     "renameModal": {
@@ -1047,7 +1106,8 @@
       "promote": "提升",
       "to": "到",
       "identicalMessage": "两个环境完全一致，无需提升。",
-      "changesWillBeApplied": "将应用到",
+      "changesWillBeApplied": "将更新其设计：",
+      "designOnlyNote": "提升仅更新设计——您仍需部署 {{target}} 才能将这些更改应用到实际基础设施。",
       "change": "项更改",
       "changes": "项更改",
       "inSync": "环境已同步",
@@ -1223,6 +1283,7 @@
     "deploy": {
       "current": "当前",
       "live": "运行中",
+      "deployed": "已部署",
       "urlLabel": "URL",
       "imageLabel": "镜像",
       "resourceIdLabel": "资源 ID",
@@ -1281,7 +1342,13 @@
       "change": "项更改",
       "changes": "项更改",
       "checkButton": "检查偏差",
-      "checkingButton": "检查中..."
+      "checkingButton": "检查中...",
+      "unverified": "无法与云端核对 — 显示本地存储状态",
+      "unknown": "状态未知",
+      "extra": "已跟踪，但不在您的设计中",
+      "justNow": "刚刚检查",
+      "checkedAgo": "{{ago}}前检查",
+      "stale": "已过期"
     },
     "network": {
       "title": "网络",
@@ -1384,6 +1451,7 @@
     "contextRename": "重命名",
     "contextMoveTo": "移动到",
     "contextMoveRoot": "根目录",
+    "contextOpen": "打开",
     "contextDelete": "删除",
     "subCanvas": "架构",
     "subTable": "表格",
@@ -1964,6 +2032,8 @@
   },
   "cost": {
     "title": "成本估算",
+    "estQualifier": "预估",
+    "estProvenance": "根据公开标价估算（2026 年初）— 非实际账单金额",
     "empty": "将资源添加到画布以查看成本估算。从左侧边栏拖动组件开始。",
     "categoryBreakdown": "成本明细",
     "timeProjections": "时间预测",

@@ -127,6 +127,15 @@ describe('LogHeader', () => {
     expect((btn.props as { onClick: () => void }).onClick).toBe(cp);
   });
 
+  // OL7 — keep the button mounted (and forward `copied`) right after a copy,
+  // even once the pointer has left, so the confirmation is visible.
+  it('renders CopyButton when copiedAll even if not hovered, and forwards copied', () => {
+    const tree = renderLH({ folded: false, isHovered: false, copiedAll: true });
+    const btn = findByType(tree, MockCopyButton)[0];
+    expect(btn).toBeDefined();
+    expect((btn.props as { copied: boolean }).copied).toBe(true);
+  });
+
   it('always renders FoldButton', () => {
     expect(findByType(renderLH({ folded: false }), MockFoldButton)).toHaveLength(1);
     expect(findByType(renderLH({ folded: true }), MockFoldButton)).toHaveLength(1);

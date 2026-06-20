@@ -38,11 +38,12 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getApi } from '../../../shared/api/api-adapter';
 import {
   hydrateDeployFromHistory,
   setDeployedResources,
+  setEnvironment,
   setGcpProject,
   setProvider,
   setRegion,
@@ -50,8 +51,16 @@ import {
   type DeployState,
 } from '../../../store/slices/deploy-slice';
 import { PROVIDER_REGIONS, detectDominantProvider } from '../utils/provider-regions';
-import type { AppDispatch } from '../../../store';
+import type { AppDispatch, RootState } from '../../../store';
 import type { Card } from '../../../store/slices/cards-slice';
+
+// DF1/EI1 — map an Environment.type (production|staging|development|pr) onto the
+// deploy slice's narrower enum. 'pr' (ephemeral preview) deploys as development.
+function mapEnvTypeToDeployEnv(type: string | undefined): 'development' | 'staging' | 'production' {
+  if (type === 'production') return 'production';
+  if (type === 'staging') return 'staging';
+  return 'development';
+}
 
 export interface UseDeployEffectsArgs {
   isOpen: boolean;
@@ -68,6 +77,16 @@ export function useDeployEffects(args: UseDeployEffectsArgs): UseDeployEffectsRe
   const { isOpen, activeCard, deploy, fetchRequirements } = args;
   const dispatch = useDispatch<AppDispatch>();
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  // DF1/EI1 — the env the user has selected (env tab bar) for the active
+  // project. Read here so we can sync it into the deploy slice on panel open.
+  const projectId = activeCard?.projectId;
+  const activeEnvType = useSelector((s: RootState) => {
+    if (!projectId) return undefined;
+    const envId = s.environments.activeEnvId[projectId];
+    if (!envId) return undefined;
+    return s.environments.byProject[projectId]?.find((e) => e.id === envId)?.type;
+  });
 
   // Auto-scroll logs
   useEffect(() => {
@@ -221,6 +240,18 @@ export function useDeployEffects(args: UseDeployEffectsArgs): UseDeployEffectsRe
     // flipping to 'deploying' inside this effect would re-fetch unnecessarily.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCard?.id, dispatch]);
+
+  // DF1/EI1 — sync the deploy target environment to the selected env tab so the
+  // panel plans/applies against (and visibly displays) the env the user picked,
+  // not the slice default ('development'). Covers every panel-open entry point.
+  // No-op once synced; re-syncs if the user switches env while the panel is open
+  // (which also invalidates a stale plan via setEnvironment → DF4). Ordered last
+  // so it doesn't shift the four original effects' positions.
+  useEffect(() => {
+    if (!isOpen || !activeEnvType) return;
+    const mapped = mapEnvTypeToDeployEnv(activeEnvType);
+    if (mapped !== deploy.environment) dispatch(setEnvironment(mapped));
+  }, [isOpen, activeEnvType, deploy.environment, dispatch]);
 
   return { logEndRef };
 }

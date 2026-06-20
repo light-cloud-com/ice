@@ -9,13 +9,8 @@ import { ChevronRight, Home } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
-import { useResolvePath } from '../hooks/use-resolve-path';
+import { useResolvePathContext, TOP_ROUTES } from '../hooks/use-resolve-path-context';
 import type { RootState } from '../../store';
-
-const TOP_ROUTES: Record<string, string> = {
-  settings: 'Settings',
-  team: 'Team',
-};
 
 export const Breadcrumbs: React.FC = () => {
   const { pathname } = useLocation();
@@ -23,7 +18,9 @@ export const Breadcrumbs: React.FC = () => {
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
 
   const isTopRoute = segments.length === 1 && TOP_ROUTES[segments[0]];
-  const resolved = useResolvePath(isTopRoute ? [] : segments);
+  // IA7 — the resolution (with the same top-route gate) is now shared at the
+  // shell; read it instead of firing a duplicate set of resolution POSTs.
+  const resolved = useResolvePathContext();
 
   // Build crumbs from resolved data, or fall back to URL segments
   const crumbs: { label: string; path: string }[] = [];
@@ -32,7 +29,12 @@ export const Breadcrumbs: React.FC = () => {
     crumbs.push({ label: TOP_ROUTES[segments[0]], path: pathname });
   } else if (resolved.breadcrumbs.length > 0) {
     crumbs.push(...resolved.breadcrumbs);
-  } else if (!resolved.loading && segments.length > 0) {
+  } else if (segments.length > 0) {
+    // IA9 — fall back to URL-derived crumbs even WHILE the resolver is loading.
+    // Gating this on `!resolved.loading` collapsed the trail to just Home on
+    // every navigation, flickering the user's sense of location; the URL
+    // segments already reflect where they are, so show a best-guess trail until
+    // the resolved labels arrive.
     // Fallback: build crumbs from URL segments (skip org slug)
     const start = selectedOrg ? 1 : 0;
     for (let i = start; i < segments.length; i++) {

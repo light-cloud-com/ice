@@ -28,6 +28,9 @@ export const PropertiesPanel: React.FC = () => {
   const activeCard = useSelector(selectActiveCard);
   const { selectedNodes, selectedEdges } = useSelector((state: RootState) => state.selection);
   const validationIssues = useSelector((state: RootState) => state.validation?.issues ?? []);
+  // PE8 — surface the debounced validation's in-flight state so the panel can
+  // show a "checking…" cue instead of the inline feedback silently lagging.
+  const isValidating = useSelector((state: RootState) => state.validation?.isValidating ?? false);
 
   // ─── Properties tab state ──────────────────────────────────────────────────
   // The `propsTab` state lives at the orchestrator level (lifted from the
@@ -79,6 +82,7 @@ export const PropertiesPanel: React.FC = () => {
         propsTab={propsTab}
         setPropsTab={setPropsTab}
         validationIssues={validationIssues}
+        isValidating={isValidating}
         activeEnvName={activeEnvName}
       />
     );

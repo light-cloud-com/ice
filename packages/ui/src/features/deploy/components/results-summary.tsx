@@ -27,6 +27,7 @@ import React from 'react';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
+import { classifyError } from '../error-remediation';
 import { primaryOutput } from '../output-extractors';
 import { openExternalUrl } from '../utils/open-external-url';
 import { buildResultsSummaryText, summaryCounts } from '../utils/results-summary-text';
@@ -43,7 +44,14 @@ export const ResultsSummary: React.FC<{
     outputs?: Record<string, unknown>;
     duration_ms?: number;
   }>;
-}> = ({ results }) => {
+  /**
+   * Active deploy provider. The remediation table's wording + links are
+   * GCP-shaped, so plain-language guidance is only surfaced when this is
+   * `'gcp'`. Other providers keep the raw-error rendering until the table
+   * is made provider-aware (ux-fix-plan Phase 3.3 / DE2).
+   */
+  provider?: string;
+}> = ({ results, provider }) => {
   const { t } = useTranslation();
   const { succeeded, failed, totalMs, allOk } = summaryCounts(results);
 
@@ -243,16 +251,45 @@ export const ResultsSummary: React.FC<{
                     </div>
                   );
                 }
+                // Plain-language remediation (title + explanation + any
+                // external links). GCP-gated — see the `provider` prop note.
+                // onClick actions (retry/authenticate) are intentionally not
+                // rendered here: they need deploy-action callbacks wired in
+                // Phase 2.4. The raw error + [copy] is always kept below.
+                const remediation = provider === 'gcp' ? classifyError(r.error) : null;
+                const remediationLinks = remediation?.actions.filter((a) => a.href) ?? [];
                 return (
-                  <div className="pl-6 text-xs text-red-500 break-words" title={r.error}>
-                    <span>{r.error}</span>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(r.error!)}
-                      className="ml-2 text-muted-foreground hover:text-foreground"
-                      title="Copy error"
-                    >
-                      [copy]
-                    </button>
+                  <div className="pl-6 space-y-1">
+                    {remediation && (
+                      <div className="rounded border border-border bg-muted/30 px-2 py-1.5 space-y-1">
+                        <div className="text-xs font-medium text-foreground">{remediation.title}</div>
+                        <div className="text-ice-xs text-muted-foreground">{remediation.explanation}</div>
+                        {remediationLinks.length > 0 && (
+                          <div className="flex items-center gap-3 flex-wrap pt-0.5">
+                            {remediationLinks.map((a, ai) => (
+                              <button
+                                key={ai}
+                                onClick={() => openExternalUrl(a.href!)}
+                                className="text-ice-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                {a.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="text-xs text-red-500 break-words" title={r.error}>
+                      <span>{r.error}</span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(r.error!)}
+                        className="ml-2 text-muted-foreground hover:text-foreground"
+                        title="Copy error"
+                      >
+                        [copy]
+                      </button>
+                    </div>
                   </div>
                 );
               })()}

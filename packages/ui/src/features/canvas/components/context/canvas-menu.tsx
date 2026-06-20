@@ -122,6 +122,11 @@ export const CanvasMenu: React.FC<CanvasMenuProps> = ({
             label: t('canvas.contextMenu.layoutVertical'),
             onClick: () => {
               dispatch(autoOrganizeCard({ direction: 'vertical', zoom: currentZoom }));
+              // CCL1 — a directional organize computes orthogonal dagre routes;
+              // switch to the rectangular edge style so they actually render
+              // (otherwise bezier ignores the routePoints and cuts through
+              // blocks). Matches the toolbar's vertical/horizontal buttons.
+              dispatch(setEdgeStyle('rectangular'));
               close();
             },
           },
@@ -129,6 +134,7 @@ export const CanvasMenu: React.FC<CanvasMenuProps> = ({
             label: t('canvas.contextMenu.layoutHorizontal'),
             onClick: () => {
               dispatch(autoOrganizeCard({ direction: 'horizontal', zoom: currentZoom }));
+              dispatch(setEdgeStyle('rectangular')); // CCL1 — render the computed routes
               close();
             },
           },

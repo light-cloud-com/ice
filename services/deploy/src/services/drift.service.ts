@@ -37,10 +37,22 @@ export async function checkDrift(cardId: string, nodes: any[], options?: { envir
     return { driftResults: [], checkedAt: new Date().toISOString(), unsupported: false };
   }
 
-  // If we have an org id, spin up a real deployer so describe calls can hit GCP.
-  // Without one, we fall back to stored-state comparison which is still better
-  // than nothing for sanity checking canvas consistency.
-  const canQueryGcp = Boolean(options?.orgId);
+  // OS6 — real drift only has a GCP `describe` path for v1. Detect which clouds
+  // were actually deployed (the `resource_type` prefix ICE writes, e.g.
+  // 'aws.ecs.service' → 'aws'). Only build the GCP deployer when GCP resources
+  // are present: otherwise a GCP deployer would `describe`-miss every non-GCP
+  // resource yet report `unsupported:false`, masquerading as a verified check.
+  // With no GCP resources we leave the deployer null → `unsupported:true`, which
+  // the UI surfaces honestly as "couldn't verify against cloud" rather than a
+  // false green "in sync" (OS3/Phase 1). Mixed GCP+other deployments still query
+  // GCP for the GCP resources; non-GCP ones fall through to 'unknown'.
+  const deployedProviders = new Set(mapping.map((m) => String(m.resource_type || '').split('.')[0]).filter(Boolean));
+  const hasGcpResources = deployedProviders.has('gcp');
+
+  // If we have an org id AND GCP resources, spin up a real deployer so describe
+  // calls can hit GCP. Without one, we fall back to stored-state comparison
+  // which is still better than nothing for sanity checking canvas consistency.
+  const canQueryGcp = Boolean(options?.orgId) && hasGcpResources;
   let deployer: any = null;
   let driftScopedAuth: any = null;
   if (canQueryGcp) {

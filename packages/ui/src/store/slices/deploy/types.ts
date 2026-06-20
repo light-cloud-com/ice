@@ -89,6 +89,20 @@ export interface NodeDriftInfo {
   changes: DriftChange[];
 }
 
+/**
+ * Check-level drift metadata (NOT per-node). `unsupported` is true when the
+ * drift service could not actually query the cloud (no credentials, or the
+ * provider has no describe path) and therefore fell back to a non-authoritative
+ * stored-state comparison — see `services/deploy/src/services/drift.service.ts`.
+ * `checkedAt` is the ISO timestamp the check ran. Both come back on the
+ * drift-check response alongside `driftResults`; the UI must surface them so a
+ * green "in sync" can't masquerade as a verified cloud query (OS3/OS4).
+ */
+export interface DriftMeta {
+  checkedAt: string | null;
+  unsupported: boolean;
+}
+
 export type DeployStatus =
   | 'idle'
   | 'authenticating'
@@ -210,6 +224,8 @@ export interface DeployState {
   // Drift detection
   driftByNode: Record<string, NodeDriftInfo>;
   driftCheckLoading: boolean;
+  /** Check-level authority/staleness metadata for the last drift check. */
+  driftMeta: DriftMeta;
 
   // Phase 8 — block requirements (DNS, domain verification, cert issuance, etc.)
   requirements: ResolvedRequirementState[];

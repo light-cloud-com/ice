@@ -51,6 +51,7 @@
  * byte-identical.
  */
 
+import { Loader2 } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from '../../../../i18n';
@@ -172,6 +173,10 @@ export const NodePropertiesSection: React.FC<{
   propsTab: string;
   setPropsTab: (id: string) => void;
   validationIssues: ReadonlyArray<CanvasIssue>;
+  /** PE8 — true while the debounced validation run is in flight, so the panel
+   *  can show a "checking…" cue instead of the inline feedback silently lagging
+   *  an edit by ~500ms. */
+  isValidating?: boolean;
   activeEnvName: string;
 }> = ({
   selectedNode,
@@ -181,6 +186,7 @@ export const NodePropertiesSection: React.FC<{
   propsTab,
   setPropsTab,
   validationIssues,
+  isValidating = false,
   activeEnvName,
 }) => {
   const { t } = useTranslation();
@@ -259,7 +265,12 @@ export const NodePropertiesSection: React.FC<{
           Surfaces missing connections, missing required props, and
           implicit handler choices BEFORE the user clicks deploy. Pure
           client-side; no network calls. */}
-      <DesignRequirements node={selectedNode} allNodes={activeCard.nodes} edges={activeCard.edges} />
+      <DesignRequirements
+        node={selectedNode}
+        allNodes={activeCard.nodes}
+        edges={activeCard.edges}
+        nodeIssues={validationIssues.filter((i) => i.nodeId === selectedNode.id && i.severity !== 'info')}
+      />
 
       {/* ── Group color picker — ONLY for synthetic decoration groups,
           i.e. nodes whose `iceType` follows the `Group.*` convention
@@ -304,9 +315,28 @@ export const NodePropertiesSection: React.FC<{
           setPropsTab(visibleTabs[0].id);
         }
 
+        // PE2 — the per-field config validation lives in propertyIssuesMap;
+        // surface its error/warning counts as a badge on the Config tab so the
+        // signal isn't trapped there when the user is on another tab.
+        let configErrors = 0;
+        let configWarnings = 0;
+        propertyIssuesMap?.forEach((issue) => {
+          if (issue.severity === 'error') configErrors += 1;
+          else if (issue.severity === 'warning') configWarnings += 1;
+        });
+        const issueCounts =
+          configErrors > 0 || configWarnings > 0
+            ? { config: { errors: configErrors, warnings: configWarnings } }
+            : undefined;
+
         return (
           <>
-            <PropertiesTabBar visibleTabs={visibleTabs} activeTab={activeTab} onSelect={setPropsTab} />
+            <PropertiesTabBar
+              visibleTabs={visibleTabs}
+              activeTab={activeTab}
+              onSelect={setPropsTab}
+              issueCounts={issueCounts}
+            />
 
             {/* ════ DEPLOY TAB ════ */}
             {activeTab === 'deploy' && hasDeployment && (
@@ -385,6 +415,19 @@ export const NodePropertiesSection: React.FC<{
             {/* ════ CONFIG TAB ════ */}
             {activeTab === 'config' && (
               <>
+                {/* PE8 — a "checking…" cue while the debounced validation run is
+                    in flight, so the inline feedback doesn't appear to silently
+                    lag the user's edit. */}
+                {isValidating && (
+                  <div
+                    className="mx-2 mt-1 flex items-center gap-1.5 text-ice-2xs text-ice-text-3"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>{t('canvas.properties.validating')}</span>
+                  </div>
+                )}
                 {/* Validation issues banner */}
                 {selectedNodeId &&
                   (() => {

@@ -42,18 +42,25 @@ export interface EnvironmentsState {
   byProject: Record<string, Environment[]>;
   activeEnvId: Record<string, string>; // projectId → envId
   loading: boolean;
+  /** EI6 — last environments-list fetch failure, so the env bar can show a
+   *  retry affordance instead of vanishing entirely. */
+  fetchError: string | null;
   pendingDiff: EnvironmentDiff | null;
   pendingPromote: { sourceEnvId: string; targetEnvId: string } | null;
   promoting: boolean;
+  /** EI3 — last promotion failure message, surfaced in the promote modal. */
+  promoteError: string | null;
 }
 
 const initialState: EnvironmentsState = {
   byProject: {},
   activeEnvId: {},
   loading: false,
+  fetchError: null,
   pendingDiff: null,
   pendingPromote: null,
   promoting: false,
+  promoteError: null,
 };
 
 // ─── Thunks ─────────────────────────────────────────────────────────────────
@@ -165,15 +172,18 @@ const environmentsSlice = createSlice({
     clearPendingDiff(state) {
       state.pendingDiff = null;
       state.pendingPromote = null;
+      state.promoteError = null;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchEnvironments.pending, (state) => {
         state.loading = true;
+        state.fetchError = null;
       })
       .addCase(fetchEnvironments.fulfilled, (state, action) => {
         state.loading = false;
+        state.fetchError = null;
         const { projectId, environments } = action.payload;
         state.byProject[projectId] = environments;
         // Auto-select production if no active env
@@ -182,8 +192,9 @@ const environmentsSlice = createSlice({
           if (prod) state.activeEnvId[projectId] = prod.id;
         }
       })
-      .addCase(fetchEnvironments.rejected, (state) => {
+      .addCase(fetchEnvironments.rejected, (state, action) => {
         state.loading = false;
+        state.fetchError = (action.payload as string) || 'Failed to load environments';
       })
 
       .addCase(createEnvironment.fulfilled, (state, action) => {
@@ -219,14 +230,18 @@ const environmentsSlice = createSlice({
 
       .addCase(promoteEnvironment.pending, (state) => {
         state.promoting = true;
+        state.promoteError = null;
       })
       .addCase(promoteEnvironment.fulfilled, (state) => {
         state.promoting = false;
+        state.promoteError = null;
         state.pendingDiff = null;
         state.pendingPromote = null;
       })
-      .addCase(promoteEnvironment.rejected, (state) => {
+      .addCase(promoteEnvironment.rejected, (state, action) => {
         state.promoting = false;
+        // Keep the modal open (pendingDiff/pendingPromote intact) and surface why.
+        state.promoteError = (action.payload as string) || 'Promotion failed';
       });
   },
 });

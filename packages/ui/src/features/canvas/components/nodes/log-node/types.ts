@@ -12,7 +12,11 @@ export interface SvgLogNodeProps {
 
 export interface LogEntry {
   id: string;
+  /** Truncated HH:MM:SS for the fixed-width display column. */
   timestamp: string;
+  /** OL7 — the full source timestamp, used for copy fidelity (the display
+   *  `timestamp` drops the date so a pasted line can't be correlated). */
+  tsFull?: string;
   level: 'info' | 'warn' | 'error' | 'debug';
   service: string;
   message: string;

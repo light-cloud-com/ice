@@ -31,6 +31,16 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import { useTranslation } from '../../../i18n';
 import type { ProjectNode } from '../types/project-node';
 
+// IA5 — project subpages, mirroring the toolbar's SUB_PAGES, so they're reachable
+// from the tree context menu (the onNavigateSubpage handler existed but was never
+// bound to a clickable affordance).
+const PROJECT_SUBPAGES: { id: string; i18nKey: string }[] = [
+  { id: 'canvas', i18nKey: 'projectBrowser.subCanvas' },
+  { id: 'table', i18nKey: 'projectBrowser.subTable' },
+  { id: 'deployments', i18nKey: 'projectBrowser.subDeployments' },
+  { id: 'activity', i18nKey: 'projectBrowser.subActivity' },
+];
+
 export interface TreeItemProps {
   node: ProjectNode;
   level: number;
@@ -268,6 +278,33 @@ export const TreeItem = memo(
                             >
                               <Folder className="w-3 h-3 text-amber-500/50" />
                               {f.name}
+                            </DropdownMenu.Item>
+                          ))}
+                        </DropdownMenu.SubContent>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Sub>
+                  )}
+                  {/* IA5 — open a specific project subpage (Canvas / Table /
+                      Deployments / Activity) from the tree, not just the toolbar. */}
+                  {!isFolder && (
+                    <DropdownMenu.Sub>
+                      <DropdownMenu.SubTrigger className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active">
+                        <Layers aria-hidden="true" className="w-3.5 h-3.5 text-ice-text-3" />
+                        {t('projectBrowser.contextOpen')}
+                        <ChevronRight className="w-3 h-3 ml-auto text-ice-text-3" />
+                      </DropdownMenu.SubTrigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.SubContent
+                          sideOffset={4}
+                          className="z-[99999] min-w-[140px] rounded-md border border-ice-border bg-ice-overlay p-1 shadow-xl"
+                        >
+                          {PROJECT_SUBPAGES.map((page) => (
+                            <DropdownMenu.Item
+                              key={page.id}
+                              onClick={() => onNavigateSubpage(node, page.id)}
+                              className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
+                            >
+                              {t(page.i18nKey)}
                             </DropdownMenu.Item>
                           ))}
                         </DropdownMenu.SubContent>

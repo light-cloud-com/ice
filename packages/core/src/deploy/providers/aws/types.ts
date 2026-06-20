@@ -49,6 +49,11 @@ export interface AWSHandlerContext {
    * etc.) honour this so a cancel actually stops the remote work.
    */
   abort_signal?: AbortSignal;
+  /**
+   * Optional IAM role ARN/name for the Lambda CodeBuild fallback path.
+   * When unset, the builder uses the `codebuild-service-role` default.
+   */
+  codebuild_service_role?: string;
 }
 
 /**

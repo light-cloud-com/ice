@@ -25,7 +25,13 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { t } from '../../../../i18n';
 import { selectActiveCard, updateCardNodeData, type CardNode } from '../../../../store/slices/cards-slice';
-import { selectLogStream, type LogStreamMode, type LogStreamStatus } from '../../../../store/slices/logs-slice';
+import {
+  clearEntries,
+  retryStream,
+  selectLogStream,
+  type LogStreamMode,
+  type LogStreamStatus,
+} from '../../../../store/slices/logs-slice';
 import type { AppDispatch, RootState } from '../../../../store';
 
 // ─── LT-2 supported source iceTypes ─────────────────────────────────────────
@@ -79,6 +85,8 @@ function pillFor(status: LogStreamStatus | undefined): PillSpec {
       return { tone: 'grey', label: t('canvas.properties.log.pillAmbiguous') };
     case 'unsupported':
       return { tone: 'grey', label: t('canvas.properties.log.pillUnsupported') };
+    case 'provider-unsupported':
+      return { tone: 'grey', label: t('canvas.properties.log.pillProviderUnsupported') };
     case 'permission-denied':
       return { tone: 'red', label: t('canvas.properties.log.pillAccessDenied') };
     case 'error':
@@ -210,7 +218,27 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
           />
           {pill.label}
         </span>
+
+        {/* OL3 — clear the buffer (the clearEntries reducer existed but was
+            wired to nothing). Shown only when there are entries to clear. */}
+        {(streamState?.entries?.length ?? 0) > 0 && (
+          <button
+            data-testid="monitoring-log-clear"
+            onClick={() => dispatch(clearEntries({ terminalNodeId: nodeId }))}
+            className="ml-auto rounded border border-ice-border px-1.5 py-0.5 text-ice-2xs font-medium text-ice-text-2 hover:bg-ice-hover transition-colors"
+          >
+            {t('canvas.properties.log.clear')}
+          </button>
+        )}
       </div>
+
+      {/* OL4 — the 200-line buffer drops the oldest entries; say so instead of
+          silently losing them. */}
+      {(streamState?.droppedCount ?? 0) > 0 && (
+        <p data-testid="monitoring-log-dropped" className="mb-2 text-ice-2xs text-ice-text-3 leading-snug">
+          {t('canvas.properties.log.dropped', { count: streamState!.droppedCount })}
+        </p>
+      )}
 
       {/* Caveats — rendered verbatim from the resolver. */}
       {caveats.length > 0 && (
@@ -228,6 +256,18 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
         <p data-testid="monitoring-log-error" className="mb-2 text-ice-2xs text-red-300 leading-snug">
           {errorMessage}
         </p>
+      )}
+
+      {/* OL5 — recover in-product: re-subscribe after the user fixes the cause
+          (e.g. grants the IAM role) without reloading the app. */}
+      {(streamState?.status === 'error' || streamState?.status === 'permission-denied') && (
+        <button
+          data-testid="monitoring-log-retry"
+          onClick={() => dispatch(retryStream({ terminalNodeId: nodeId }))}
+          className="mb-2 inline-flex items-center gap-1 rounded border border-ice-border px-1.5 py-0.5 text-ice-2xs font-medium text-ice-text-2 hover:bg-ice-hover transition-colors"
+        >
+          {t('canvas.properties.log.retry')}
+        </button>
       )}
 
       {/* Streaming mode radio */}

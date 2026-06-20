@@ -134,6 +134,12 @@ export const CostPanel: React.FC = () => {
         {/* ── Total monthly cost hero ──────────────────────────────── */}
         <div className="px-3 py-3 border-b border-ice-border">
           <div className="flex items-baseline gap-2">
+            <span
+              className="text-ice-2xs font-semibold text-ice-text-3 uppercase tracking-wide cursor-help"
+              title={t('cost.estProvenance')}
+            >
+              {t('cost.estQualifier')}
+            </span>
             <span className="text-2xl font-bold text-emerald-400 font-mono tabular-nums">
               {formatCostRaw(totalMonthlyCost)}
             </span>

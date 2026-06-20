@@ -51,6 +51,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
           <span className="text-ice-xs font-medium text-ice-text-2">{t('canvas.emptyState.quickStart')}</span>
           <button
             onClick={onDismiss}
+            aria-label={t('canvas.emptyState.dismiss')}
             className="p-0.5 rounded hover:bg-ice-hover text-ice-text-3 hover:text-ice-text-2 transition-colors"
           >
             <X className="w-3 h-3" />
@@ -79,6 +80,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
             <span className="text-ice-2xs text-ice-text-2 leading-tight">{t('canvas.emptyState.more')}</span>
           </button>
         </div>
+        <div className="mt-2 text-ice-2xs text-ice-text-3 text-center">{t('canvas.emptyState.hint')}</div>
       </div>
     </div>
   );

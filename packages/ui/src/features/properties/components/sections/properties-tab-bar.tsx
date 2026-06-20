@@ -9,16 +9,30 @@
  */
 
 import React from 'react';
+import { t } from '../../../../i18n';
 import { cn } from '../../../../shared/utils/cn';
 import type { VisibleTab } from '../../utils/build-visible-tabs';
+
+export interface TabIssueCount {
+  errors: number;
+  warnings: number;
+}
 
 export interface PropertiesTabBarProps {
   visibleTabs: VisibleTab[];
   activeTab: string;
   onSelect: (id: string) => void;
+  /** PE2 — per-tab error/warning counts, so a tab's problems are visible even
+   *  when the user is on a different tab. Keyed by tab id. */
+  issueCounts?: Record<string, TabIssueCount>;
 }
 
-export const PropertiesTabBar: React.FC<PropertiesTabBarProps> = ({ visibleTabs, activeTab, onSelect }) => {
+export const PropertiesTabBar: React.FC<PropertiesTabBarProps> = ({
+  visibleTabs,
+  activeTab,
+  onSelect,
+  issueCounts,
+}) => {
   if (visibleTabs.length <= 1) return null;
   return (
     <div className="flex border-b border-ice-border shrink-0">
@@ -37,8 +51,43 @@ export const PropertiesTabBar: React.FC<PropertiesTabBarProps> = ({ visibleTabs,
         >
           {tab.dot && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
           {tab.label}
+          <TabIssueBadge badge={issueCounts?.[tab.id]} />
         </button>
       ))}
     </div>
   );
+};
+
+// PE2 — errors take precedence over warnings; only one pill shows to keep the
+// tab compact. The visible number is paired with an AT-reachable label.
+export const TabIssueBadge: React.FC<{ badge?: TabIssueCount }> = ({ badge }) => {
+  if (!badge) return null;
+  if (badge.errors > 0) {
+    const label = t('canvas.properties.requirements.blocking', { count: badge.errors });
+    return (
+      <span
+        className="inline-flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-red-500/15 text-red-400 text-ice-2xs font-semibold"
+        aria-label={label}
+        title={label}
+      >
+        {badge.errors}
+      </span>
+    );
+  }
+  if (badge.warnings > 0) {
+    const label = t(
+      badge.warnings === 1 ? 'canvas.properties.requirements.warning' : 'canvas.properties.requirements.warnings',
+      { count: badge.warnings },
+    );
+    return (
+      <span
+        className="inline-flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-amber-500/15 text-amber-400 text-ice-2xs font-semibold"
+        aria-label={label}
+        title={label}
+      >
+        {badge.warnings}
+      </span>
+    );
+  }
+  return null;
 };

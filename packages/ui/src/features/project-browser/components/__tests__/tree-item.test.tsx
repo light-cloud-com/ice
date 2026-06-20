@@ -377,6 +377,23 @@ describe('TreeItem — click handlers', () => {
     expect(onDelete).toHaveBeenCalledWith('p');
   });
 
+  // IA5 — the Open submenu lets the user jump to a project subpage from the tree.
+  it('calls onNavigateSubpage with the chosen subpage on a project node', () => {
+    const onNavigateSubpage = vi.fn();
+    const node = makeNode({ id: 'p', type: 'project' });
+    const tree = callTreeItem(makeProps({ node, onNavigateSubpage }));
+    const item = findByPredicate(tree, (el) => collectText(el) === 't:projectBrowser.subDeployments');
+    expect(item).toBeDefined();
+    (item?.props.onClick as () => void)?.();
+    expect(onNavigateSubpage).toHaveBeenCalledWith(node, 'deployments');
+  });
+
+  it('does not render the subpage Open submenu for a folder node', () => {
+    const tree = callTreeItem(makeProps({ node: makeNode({ id: 'f', type: 'folder' }) }));
+    const item = findByPredicate(tree, (el) => collectText(el) === 't:projectBrowser.subDeployments');
+    expect(item).toBeUndefined();
+  });
+
   it('rename menu item flips renameValue + isRenaming state', () => {
     const tree = callTreeItem(makeProps({ node: makeNode({ name: 'Original Name' }) }));
     const item = findByPredicate(tree, (el) => collectText(el) === 't:projectBrowser.contextRename');

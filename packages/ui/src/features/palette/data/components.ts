@@ -59,6 +59,59 @@ export function blockKey(type: string): string {
 }
 
 /** Helper: builds a ComponentDef from i18n keys with inline fallbacks for newly-added concept iceTypes. */
+/**
+ * CD3 — goal/synonym keywords per iceType, ORed into palette search so the
+ * "I know the outcome, not the block name" terms resolve. Keyed by iceType,
+ * looked up in `def()` so the 25 call sites stay untouched. Provider-agnostic
+ * and intentionally NOT localized (these are mostly technical English terms a
+ * developer types regardless of UI language; the localized name/description/
+ * category label already participate in the match).
+ */
+export const GOAL_KEYWORDS: Record<string, string[]> = {
+  'AI.LLMGateway': ['ai', 'llm', 'gpt', 'openai', 'model', 'inference', 'chat', 'completion'],
+  'AI.PrivateAIService': ['ai', 'ml', 'private', 'model', 'inference', 'serving'],
+  'AI.VectorDB': ['vector', 'embedding', 'embeddings', 'rag', 'similarity', 'ai', 'semantic'],
+  'Compute.Container': ['container', 'docker', 'service', 'api', 'backend', 'microservice', 'pod', 'app'],
+  'Compute.CronJob': ['cron', 'schedule', 'scheduled', 'job', 'task', 'timer', 'batch', 'recurring'],
+  'Compute.ServerlessFunction': ['serverless', 'lambda', 'function', 'faas', 'api', 'endpoint', 'handler'],
+  'Compute.SSRSite': ['ssr', 'frontend', 'website', 'web', 'nextjs', 'react', 'app'],
+  'Compute.StaticSite': ['static', 'cdn', 'website', 'web', 'frontend', 'spa', 'jamstack', 'html'],
+  'Compute.Worker': ['worker', 'background', 'job', 'consumer', 'processor', 'async'],
+  'Config.Environment': ['env', 'environment', 'config', 'variables', 'settings'],
+  'Database.MongoDB': ['database', 'db', 'nosql', 'document', 'mongo'],
+  'Database.MySQL': ['database', 'db', 'sql', 'relational', 'mysql', 'mariadb'],
+  'Database.PostgreSQL': ['database', 'db', 'sql', 'relational', 'postgres', 'postgresql', 'rds'],
+  'Database.Redis': ['cache', 'redis', 'in-memory', 'kv', 'key-value', 'database'],
+  'Messaging.Email': ['email', 'mail', 'smtp', 'notification', 'ses', 'sendgrid'],
+  'Messaging.EventStream': ['event', 'events', 'stream', 'streaming', 'kafka', 'pubsub', 'kinesis'],
+  'Messaging.Queue': ['queue', 'pubsub', 'message', 'sqs', 'topic', 'async', 'job'],
+  'Monitoring.Log': ['log', 'logs', 'logging', 'observability', 'monitoring', 'metrics', 'trace'],
+  'Network.CustomDomain': ['domain', 'dns', 'url', 'hostname', 'tls', 'ssl', 'cert', 'certificate'],
+  'Network.Gateway': ['api', 'gateway', 'rest', 'endpoint', 'ingress', 'proxy', 'load balancer', 'loadbalancer', 'lb'],
+  'Network.PrivateNetwork': ['network', 'vpc', 'subnet', 'private', 'vnet'],
+  'Security.Secret': ['secret', 'secrets', 'auth', 'credential', 'credentials', 'key', 'vault', 'password'],
+  'Source.Repository': ['repo', 'repository', 'git', 'github', 'source', 'code'],
+  'Storage.Bucket': ['storage', 'bucket', 's3', 'object', 'blob', 'file', 'files'],
+};
+
+/**
+ * CD3 — does a component match a palette search query? ORs the localized
+ * name/description/tooltip, the (caller-supplied, localized) category label, and
+ * the goal keywords — mirroring the richer template search. An empty/blank query
+ * matches everything.
+ */
+export function componentMatchesQuery(c: ComponentDef, query: string, categoryLabel = ''): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    c.name.toLowerCase().includes(q) ||
+    c.description.toLowerCase().includes(q) ||
+    c.tooltip.toLowerCase().includes(q) ||
+    categoryLabel.toLowerCase().includes(q) ||
+    (c.keywords?.some((kw) => kw.toLowerCase().includes(q)) ?? false)
+  );
+}
+
 export function def(
   t: Translator,
   type: string,
@@ -73,6 +126,7 @@ export function def(
   // If the i18n key is missing, `t()` returns the key string verbatim —
   // detect that and use the fallback.
   const missing = i18nName === `blocks.${k}.name`;
+  const keywords = GOAL_KEYWORDS[type];
   return {
     type,
     name: missing && fallback ? fallback.name : i18nName,
@@ -82,6 +136,7 @@ export function def(
     providers,
     category,
     ...(runtimes ? { runtimes } : {}),
+    ...(keywords ? { keywords } : {}),
   };
 }
 

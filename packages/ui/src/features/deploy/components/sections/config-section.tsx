@@ -12,12 +12,14 @@
  *
  * Extracted in rf-pdpl-18 from `deploy-panel.tsx` lines 829–954.
  *
- * Public-API contract — preserved verbatim:
- * - The four underscore-prefixed parameter names (`_environment`,
- *   `_projectId`, `_onProviderChange`, `_onEnvironmentChange`) reflect
- *   props that the parent passes through but this component does NOT
- *   consume; renaming them would break the call site or future parents
- *   that expect to wire those callbacks.
+ * Public-API contract:
+ * - `environment` IS now consumed — rendered as a read-only chip (DF1/EI1) so
+ *   the user can see which environment a deploy targets. It is display-only
+ *   here; the environment is chosen via the env tab bar and synced into the
+ *   deploy slice on panel open (see `useDeployEffects`).
+ * - The remaining underscore-prefixed params (`_projectId`, `_onProviderChange`,
+ *   `_onEnvironmentChange`) are passed through but NOT consumed; renaming them
+ *   would break the call site or future parents that expect to wire them.
  * - The `'Not set'` literal fallback in the provider read-only chip is a
  *   visible UI string that test fixtures and E2E specs match on.
  * - The `id="ice-deploy-input-project"` on the text-input fallback is an
@@ -42,6 +44,10 @@ export const ConfigSection: React.FC<{
   region: string;
   environment: string;
   disabled: boolean;
+  /** DE7 — an active RAPT/reauth deploy failure means the cached session is no
+   *  longer usable; suppress the green "Connected" pill so it doesn't contradict
+   *  the error banner. */
+  authError?: boolean;
   projectId?: string;
   onProviderChange: (v: string) => void;
   onProjectChange: (v: string) => void;
@@ -51,8 +57,9 @@ export const ConfigSection: React.FC<{
   provider,
   gcpProject,
   region,
-  environment: _environment,
+  environment,
   disabled,
+  authError = false,
   projectId: _projectId,
   onProviderChange: _onProviderChange,
   onProjectChange,
@@ -62,6 +69,12 @@ export const ConfigSection: React.FC<{
   const { t } = useTranslation();
   const regions = PROVIDER_REGIONS[provider] || PROVIDER_REGIONS.gcp!;
   const projectMeta = PROVIDER_PROJECT_LABELS[provider] || PROVIDER_PROJECT_LABELS.gcp!;
+  const envLabel =
+    environment === 'production'
+      ? t('deploy.config.envProduction')
+      : environment === 'staging'
+        ? t('deploy.config.envStaging')
+        : t('deploy.config.envDevelopment');
   const [providerConnected, setProviderConnected] = React.useState(false);
   const [connectedProjects, setConnectedProjects] = React.useState<Array<{ id: string; name: string }>>([]);
   const [authType, setAuthType] = React.useState<string | null>(null);
@@ -91,8 +104,10 @@ export const ConfigSection: React.FC<{
 
   return (
     <div className="space-y-3">
-      {/* Connection status */}
-      {providerConnected && (
+      {/* Connection status — DE7: an active reauth/RAPT failure suppresses the
+          green pill (the cached session is stale), showing a reconnect warning
+          so the pill never contradicts the error banner. */}
+      {providerConnected && !authError && (
         <div className="flex items-center gap-2 text-xs">
           <CheckCircle className="w-3 h-3 text-emerald-500" />
           <span className="text-emerald-600 dark:text-emerald-400 font-medium">
@@ -101,21 +116,34 @@ export const ConfigSection: React.FC<{
           </span>
         </div>
       )}
-      {!providerConnected && (
+      {(!providerConnected || authError) && (
         <div className="flex items-center gap-2 text-xs">
           <AlertCircle className="w-3 h-3 text-amber-500" />
           <span className="text-amber-600 dark:text-amber-400">
-            {t('deploy.status.notConnected', { provider: PROVIDER_LABELS[provider] || provider })}
+            {authError
+              ? t('deploy.status.reauthNeeded', { provider: PROVIDER_LABELS[provider] || provider })
+              : t('deploy.status.notConnected', { provider: PROVIDER_LABELS[provider] || provider })}
           </span>
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {/* Provider — read-only, set in project settings */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.providerLabel')}</label>
           <div className="px-2 py-1.5 text-ice-sm text-ice-text-1 bg-ice-hover/50 rounded border border-ice-border/30">
             {PROVIDER_LABELS[provider] || provider || 'Not set'}
+          </div>
+        </div>
+
+        {/* Environment — read-only, chosen via the env tab bar (DF1/EI1) */}
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.environmentLabel')}</label>
+          <div
+            data-testid="ice-deploy-environment"
+            className="px-2 py-1.5 text-ice-sm text-ice-text-1 bg-ice-hover/50 rounded border border-ice-border/30"
+          >
+            {envLabel}
           </div>
         </div>
 

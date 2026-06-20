@@ -43,6 +43,33 @@ function formatTs(ts: string): string {
   return dotIdx > 0 ? after.slice(0, dotIdx) : after.slice(0, 8);
 }
 
+// OL7 — full date+time for COPY (the display column only shows HH:MM:SS, which
+// loses the date so a pasted line can't be correlated to the cloud console).
+// '2025-04-27T12:34:56.000Z' → '2025-04-27 12:34:56'.
+export function formatCopyTimestamp(ts: string | undefined): string {
+  if (!ts || typeof ts !== 'string') return '';
+  return ts.replace('T', ' ').replace(/\.\d+/, '').replace('Z', '').trim();
+}
+
+// One copy line: full timestamp + level + message (falls back to the display
+// timestamp when the full one isn't available, e.g. the placeholder row).
+export function formatLogCopyLine(entry: Pick<LogEntry, 'timestamp' | 'tsFull' | 'level' | 'message'>): string {
+  const ts = entry.tsFull ? formatCopyTimestamp(entry.tsFull) : entry.timestamp;
+  return `${ts} [${entry.level.toUpperCase()}] ${entry.message}`;
+}
+
+// OL8 — write to the clipboard, resolving to whether it actually succeeded
+// (false when the API is unavailable or the write rejects), so callers only
+// show "copied" feedback on a real success instead of a false positive.
+function writeClipboard(text: string): Promise<boolean> {
+  const clip = (globalThis.navigator as Navigator | undefined)?.clipboard;
+  if (!clip?.writeText) return Promise.resolve(false);
+  return clip
+    .writeText(text)
+    .then(() => true)
+    .catch(() => false);
+}
+
 function placeholderText(status: LogStreamStatus, lastError: string | null): string {
   switch (status) {
     case 'pre-deploy':
@@ -53,6 +80,9 @@ function placeholderText(status: LogStreamStatus, lastError: string | null): str
       return t('canvas.logNode.ambiguous');
     case 'unsupported':
       return t('canvas.logNode.unsupported');
+    case 'provider-unsupported':
+      // `lastError` carries the provider id (set by logs-slice on this state).
+      return t('canvas.logNode.providerUnsupported', { provider: lastError || 'this provider' });
     case 'permission-denied':
       return lastError || t('canvas.logNode.permissionDenied');
     case 'error':
@@ -107,6 +137,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(
         entries.map((e) => ({
           id: e.insertId,
           timestamp: formatTs(e.ts),
+          tsFull: e.ts,
           level: mapLevel(e.level),
           service: serviceName,
           message: e.message,
@@ -166,21 +197,28 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(
       [logs.length, maxVisibleLogs],
     );
 
+    // OL7/OL8 — copy the FULL timestamp (not the truncated display value), and
+    // only flash the "copied" confirmation once the write actually succeeds.
     const handleCopyAll = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        const text = logs.map((l) => `${l.timestamp} [${l.level.toUpperCase()}] ${l.message}`).join('\n');
-        navigator.clipboard.writeText(text).catch(() => {});
+        const text = logs.map(formatLogCopyLine).join('\n');
+        writeClipboard(text).then((ok) => {
+          if (!ok) return;
+          setCopiedLine('all');
+          setTimeout(() => setCopiedLine(null), 1000);
+        });
       },
       [logs],
     );
 
     const handleCopyLine = useCallback((log: LogEntry, e: React.MouseEvent) => {
       e.stopPropagation();
-      const text = `${log.timestamp} [${log.level.toUpperCase()}] ${log.message}`;
-      navigator.clipboard.writeText(text).catch(() => {});
-      setCopiedLine(log.id);
-      setTimeout(() => setCopiedLine(null), 1000);
+      writeClipboard(formatLogCopyLine(log)).then((ok) => {
+        if (!ok) return;
+        setCopiedLine(log.id);
+        setTimeout(() => setCopiedLine(null), 1000);
+      });
     }, []);
 
     // Visible logs (or single placeholder row when there's nothing live yet)
@@ -230,6 +268,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(
               status={status}
               onToggleFold={handleToggleFold}
               onCopyAll={handleCopyAll}
+              copiedAll={copiedLine === 'all'}
             />
 
             {!folded && (

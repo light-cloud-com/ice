@@ -24,8 +24,38 @@ import { t } from '../../../../i18n';
 import { useDriftCheck } from '../../hooks/use-drift-check';
 import type { RootState } from '../../../../store';
 
+// OS4 — a drift result is only as trustworthy as how recently it ran. Render
+// the check timestamp under the indicator and flag it stale past the window so
+// a green dot can't quietly age into a lie.
+const STALE_AFTER_MS = 10 * 60 * 1000;
+
+function formatChecked(checkedAt: string | null): { label: string; stale: boolean } | null {
+  if (!checkedAt) return null;
+  const then = new Date(checkedAt).getTime();
+  if (Number.isNaN(then)) return null;
+  const diffMs = Math.max(0, Date.now() - then);
+  const stale = diffMs > STALE_AFTER_MS;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return { label: t('properties.drift.justNow'), stale };
+  if (mins < 60) return { label: t('properties.drift.checkedAgo', { ago: `${mins}m` }), stale };
+  const hrs = Math.floor(mins / 60);
+  return { label: t('properties.drift.checkedAgo', { ago: `${hrs}h` }), stale };
+}
+
+const CheckedFooter: React.FC<{ checkedAt: string | null }> = ({ checkedAt }) => {
+  const info = formatChecked(checkedAt);
+  if (!info) return null;
+  return (
+    <div className={`text-ice-2xs mt-1 ${info.stale ? 'text-amber-500/80' : 'text-ice-text-3/60'}`}>
+      {info.label}
+      {info.stale ? ` · ${t('properties.drift.stale')}` : ''}
+    </div>
+  );
+};
+
 export const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   const driftInfo = useSelector((s: RootState) => s.deploy.driftByNode[nodeId]);
+  const driftMeta = useSelector((s: RootState) => s.deploy.driftMeta);
   const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
 
   if (isLoading) {
@@ -39,20 +69,43 @@ export const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
 
   if (!driftInfo) return null;
 
+  const checkedAt = driftMeta?.checkedAt ?? null;
+
+  // OS3 — the cloud was never actually queried (no creds / provider has no
+  // describe path). NEVER present this as a verified "in sync"; show a
+  // stored-state caveat regardless of the per-node status the fallback produced.
+  if (driftMeta?.unsupported) {
+    return (
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-ice-text-3/60" />
+          <span className="text-ice-xs text-ice-text-3 font-medium">{t('properties.drift.unverified')}</span>
+        </div>
+        <CheckedFooter checkedAt={checkedAt} />
+      </div>
+    );
+  }
+
   if (driftInfo.status === 'in_sync') {
     return (
-      <div className="px-3 py-2 flex items-center gap-1.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.drift.inSync')}</span>
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.drift.inSync')}</span>
+        </div>
+        <CheckedFooter checkedAt={checkedAt} />
       </div>
     );
   }
 
   if (driftInfo.status === 'missing') {
     return (
-      <div className="px-3 py-2 flex items-center gap-1.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        <span className="text-ice-xs text-amber-500 font-medium">{t('properties.drift.notInDeployment')}</span>
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          <span className="text-ice-xs text-amber-500 font-medium">{t('properties.drift.notInDeployment')}</span>
+        </div>
+        <CheckedFooter checkedAt={checkedAt} />
       </div>
     );
   }
@@ -79,6 +132,23 @@ export const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
             </div>
           ))}
         </div>
+        <CheckedFooter checkedAt={checkedAt} />
+      </div>
+    );
+  }
+
+  // OS7 — 'unknown' / 'extra' used to render as nothing (silent dead-ends).
+  // Surface them honestly so the user knows the check ran but couldn't classify.
+  if (driftInfo.status === 'unknown' || driftInfo.status === 'extra') {
+    return (
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-ice-text-3/60" />
+          <span className="text-ice-xs text-ice-text-3 font-medium">
+            {driftInfo.status === 'extra' ? t('properties.drift.extra') : t('properties.drift.unknown')}
+          </span>
+        </div>
+        <CheckedFooter checkedAt={checkedAt} />
       </div>
     );
   }

@@ -46,6 +46,10 @@ export interface ComponentDef {
   providers: ('aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'ibm')[];
   category: string;
   runtimes?: RuntimeOption[];
+  /** CD3 — goal/synonym terms ORed into palette search so "api", "cron",
+   *  "cdn", "pubsub", "cache", "auth" etc. find the right block even though the
+   *  word isn't in its name/description. Provider-agnostic; not localized. */
+  keywords?: string[];
 }
 
 /** Public props for the `ResourcePalette` orchestrator. Each section is

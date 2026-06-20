@@ -10,14 +10,14 @@
  *    `currentCount - prevCount > 10`. The bulk-import branch must NOT
  *    trip on small blueprint drops (container + 1-3 children = 2-4
  *    nodes). Do NOT change the threshold.
- *  - **Risk #8**: `setOverlayDismissed(false)` is the empty-canvas
- *    overlay's reset setter — the getter is destructured-discarded
- *    (`const [, setOverlayDismissed] = useState(false)`) because the
- *    orchestrator currently has no consumer for the boolean. Both
- *    setter writes (the per-card-id reset and the per-AI-intent
- *    dismiss) are kept verbatim because a future unit will surface
- *    the value to a child overlay component. Don't "clean up" by
- *    dropping the setter or by rewriting it as a non-state value.
+ *  - **Risk #8**: `overlayDismissed` gates the empty-canvas overlay
+ *    (`EmptyCanvasOverlay`, mounted by `svg-canvas.tsx`). It resets to
+ *    `false` on card change and is set `true` on AI intent (the user is
+ *    driving the AI command bar, so the hint would be noise) or when the
+ *    overlay's own dismiss button fires `dismissOverlay`. The hook now
+ *    surfaces `{ overlayDismissed, dismissOverlay }` — the "future unit"
+ *    the prior blueprint anticipated. Keep the per-card-id reset and the
+ *    per-AI-intent dismiss writes verbatim.
  *
  * Six effects, in source order:
  *
@@ -63,10 +63,11 @@
  * rf-canv-22.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { logCanvasRender } from '../../../shared/utils/debug-logger';
 import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import { autoOrganizeCard, type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
+import { setEdgeStyle } from '../../../store/slices/ui-slice';
 import type { ViewLevel } from '../../../config/visualization-config';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
@@ -94,7 +95,14 @@ export interface UseCanvasSideEffectsArgs {
   dispatch: AppDispatch;
 }
 
-export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): void {
+export interface UseCanvasSideEffectsResult {
+  /** True when the empty-canvas overlay should be hidden (dismissed or AI-driven). */
+  overlayDismissed: boolean;
+  /** Marks the empty-canvas overlay dismissed (wired to its close button). */
+  dismissOverlay: () => void;
+}
+
+export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): UseCanvasSideEffectsResult {
   const { card, nodes, edges, canvasNodes, effectiveNodes, viewport, lod, viewLevel, aiCurrentIntent, dispatch } = args;
 
   // ── Effect 1: install inspector once on mount ──────────────────────────
@@ -148,6 +156,10 @@ export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): void {
     if (currentCount > 0 && (prevCount === 0 || currentCount - prevCount > 10)) {
       const timer = setTimeout(() => {
         dispatch(autoOrganizeCard({ zoom: viewport.zoom }));
+        // CCL1 — the import-time organize is directional (master branch), so it
+        // computes orthogonal dagre routes; render them via the rectangular edge
+        // style instead of letting bezier discard them.
+        dispatch(setEdgeStyle('rectangular'));
       }, 100);
       prevNodeCountRef.current = currentCount;
       return () => clearTimeout(timer);
@@ -169,9 +181,10 @@ export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): void {
     });
   }, [canvasNodes.length, edges.length, effectiveNodes.length, viewLevel]);
 
-  // ── Overlay-dismiss state (rf-canv risk #8: read-but-never-read-back) ──
+  // ── Overlay-dismiss state (rf-canv risk #8: now surfaced to the overlay) ──
   // Dismiss state for the empty canvas overlay
-  const [, setOverlayDismissed] = useState(false);
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const dismissOverlay = useCallback(() => setOverlayDismissed(true), []);
 
   // ── Effect 5: reset overlay-dismiss when card changes ──────────────────
   // Reset when card changes
@@ -190,4 +203,6 @@ export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): void {
       setOverlayDismissed(true);
     }
   }, [aiCurrentIntent]);
+
+  return { overlayDismissed, dismissOverlay };
 }

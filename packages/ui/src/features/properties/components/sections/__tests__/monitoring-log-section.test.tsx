@@ -70,6 +70,8 @@ vi.mock('../../../../../store/slices/cards-slice', () => ({
 // `selectLogStream` looks up by terminalNodeId on the byTerminalNodeId map.
 vi.mock('../../../../../store/slices/logs-slice', () => ({
   selectLogStream: (state: typeof mocks.state, terminalNodeId: string) => state.logs.byTerminalNodeId[terminalNodeId],
+  retryStream: (payload: { terminalNodeId: string }) => ({ type: 'logs/retryStream', payload }),
+  clearEntries: (payload: { terminalNodeId: string }) => ({ type: 'logs/clearEntries', payload }),
 }));
 
 import { MonitoringLogSection } from '../monitoring-log-section';
@@ -481,6 +483,104 @@ describe('MonitoringLogSection', () => {
       };
       const tree = renderSection('log-1');
       expect(findByTestid(tree, 'monitoring-log-error')).toBeUndefined();
+    });
+
+    it('renders a Retry button on permission-denied that dispatches retryStream (OL5)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'permission-denied',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: 'denied',
+      };
+      const tree = renderSection('log-1');
+      const retry = findByTestid(tree, 'monitoring-log-retry');
+      expect(retry).toBeDefined();
+      (retry!.props as { onClick: () => void }).onClick();
+      const dispatched = mocks.dispatchSpy.mock.calls.map((c: unknown[]) => c[0]) as Array<{
+        type?: string;
+        payload?: { terminalNodeId?: string };
+      }>;
+      expect(dispatched.some((a) => a?.type === 'logs/retryStream' && a?.payload?.terminalNodeId === 'log-1')).toBe(
+        true,
+      );
+    });
+
+    it('does NOT render the Retry button when streaming', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+      };
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-retry')).toBeUndefined();
+    });
+
+    it('renders a Clear button that dispatches clearEntries when entries exist (OL3)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [{ insertId: 'e1' }],
+        lastError: null,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      const clear = findByTestid(tree, 'monitoring-log-clear');
+      expect(clear).toBeDefined();
+      (clear!.props as { onClick: () => void }).onClick();
+      const dispatched = mocks.dispatchSpy.mock.calls.map((c: unknown[]) => c[0]) as Array<{
+        type?: string;
+        payload?: { terminalNodeId?: string };
+      }>;
+      expect(dispatched.some((a) => a?.type === 'logs/clearEntries' && a?.payload?.terminalNodeId === 'log-1')).toBe(
+        true,
+      );
+    });
+
+    it('hides the Clear button when there are no entries', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+      };
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-clear')).toBeUndefined();
+    });
+
+    it('shows the dropped-lines note when droppedCount > 0 (OL4)', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+        droppedCount: 42,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-dropped')).toBeDefined();
+    });
+
+    it('hides the dropped-lines note when nothing has dropped', () => {
+      seedLogNode();
+      mocks.state.logs.byTerminalNodeId['log-1'] = {
+        status: 'streaming',
+        mode: 'polling',
+        source: null,
+        entries: [],
+        lastError: null,
+        droppedCount: 0,
+      } as unknown as (typeof mocks.state.logs.byTerminalNodeId)['log-1'];
+      const tree = renderSection('log-1');
+      expect(findByTestid(tree, 'monitoring-log-dropped')).toBeUndefined();
     });
 
     it('does NOT render the error message when lastError is null', () => {

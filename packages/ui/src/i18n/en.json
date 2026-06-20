@@ -112,6 +112,32 @@
       "continueWithGithub": "Continue with GitHub"
     }
   },
+  "a11y": {
+    "announce": {
+      "connecting": "Connecting to cloud provider…",
+      "planning": "Planning deployment…",
+      "planReady": "Deployment plan ready for review.",
+      "deploying": "Deploying…",
+      "deployingCount": "Deploying {{total}} resources…",
+      "destroying": "Destroying resources…",
+      "deploySucceeded": "Deployment succeeded.",
+      "deployFailed": "Deployment failed.",
+      "deployFailedCount": "Deployment failed — {{failed}} resource(s) failed."
+    }
+  },
+  "deployStatus": {
+    "deployed": "Deployed",
+    "failed": "Failed",
+    "deploying": "Deploying",
+    "destroying": "Destroying",
+    "planning": "Planning",
+    "planReady": "Plan ready",
+    "queued": "Queued",
+    "connecting": "Connecting",
+    "cancelled": "Cancelled",
+    "notDeployed": "Not deployed",
+    "fetchError": "Status unavailable"
+  },
   "canvas": {
     "title": "Infrastructure Canvas",
     "emptyState": {
@@ -120,7 +146,20 @@
       "blankCanvas": "Blank Canvas",
       "pickTemplate": "Pick a template...",
       "quickStart": "Quick start",
-      "more": "More..."
+      "more": "More...",
+      "hint": "Press Shift+A or drag a block from the left to begin",
+      "dismiss": "Dismiss quick start"
+    },
+    "spotlight": {
+      "recent": "Recent",
+      "catalog": "All blocks"
+    },
+    "socketLegend": {
+      "title": "Connection sockets",
+      "traffic": "Data & traffic",
+      "config": "Config (env, secrets)",
+      "repository": "Source repository",
+      "domain": "Domain / DNS"
     },
     "tooltip": {
       "connections": "connections",
@@ -215,6 +254,7 @@
       "noSource": "Connect a compute or database block to start streaming logs.",
       "ambiguous": "Multiple inbound connections — choose a source in the properties panel.",
       "unsupported": "This source type doesn't emit Cloud Logging output.",
+      "providerUnsupported": "Live logs aren't available for {{provider}} yet.",
       "permissionDenied": "Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.",
       "error": "Connection error. Retrying.",
       "connecting": "Connecting…",
@@ -225,6 +265,11 @@
       "connecting": "CONNECTING",
       "error": "ERROR",
       "idle": "IDLE",
+      "preDeploy": "WAITING",
+      "noSource": "NO SOURCE",
+      "ambiguous": "CHOOSE SRC",
+      "unsupported": "UNSUPPORTED",
+      "providerUnsupported": "UNAVAILABLE",
       "pipelineLive": "Live",
       "pipelineFailed": "Failed",
       "pipelineBuilding": "Building",
@@ -516,8 +561,11 @@
         "actionTypeBlockDescription": "invoke a block on the canvas",
         "actionTypeHttpLabel": "Send HTTP request",
         "actionTypeHttpDescription": "hit an external URL",
-        "customValuePrefix": "Custom: {{value}} {{unit}}"
+        "customValuePrefix": "Custom: {{value}} {{unit}}",
+        "required": "Required",
+        "advanced": "Advanced"
       },
+      "validating": "Checking…",
       "log": {
         "sectionTitle": "Logs",
         "modePolling": "Polling",
@@ -525,6 +573,9 @@
         "modeTail": "Tail",
         "modeTailHint": "Sub-second streaming via gRPC.",
         "sourceOverride": "Source override",
+        "retry": "Retry",
+        "clear": "Clear",
+        "dropped": "{{count}} older line(s) dropped — buffer is capped at 200.",
         "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
         "clearOverride": "Clear override",
         "selectSource": "— Select a source —",
@@ -534,6 +585,7 @@
         "pillNoSource": "No source",
         "pillAmbiguous": "Ambiguous source",
         "pillUnsupported": "Unsupported source",
+        "pillProviderUnsupported": "Unavailable",
         "pillAccessDenied": "Access denied",
         "pillError": "Error",
         "pillIdle": "Idle"
@@ -640,7 +692,8 @@
       "connected": "{{provider}} connected",
       "connectedViaOAuth": "via Google OAuth",
       "connectedViaServiceAccount": "via Service Account",
-      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings"
+      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings",
+      "reauthNeeded": "{{provider}} sign-in expired — reconnect to deploy"
     },
     "config": {
       "gcpProjectLabel": "GCP Project",
@@ -671,11 +724,14 @@
     },
     "auth": {
       "connecting": "Connecting to GCP...",
-      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
+      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue.",
+      "noWindow": "Didn't see the window? It may have been blocked or closed.",
+      "reopen": "Reopen sign-in window"
     },
     "plan": {
       "noChanges": "No changes detected. Infrastructure is up to date.",
       "changes": "Plan: {{total}} change(s)",
+      "destination": "Deploying to {{target}}",
       "skip": "skip",
       "actionCreate": "create",
       "actionUpdate": "update",
@@ -1016,6 +1072,9 @@
       "contextPromote": "Promote to production",
       "contextRename": "Rename",
       "contextDelete": "Delete environment",
+      "contextDeleteConfirm": "Click again to delete",
+      "loadError": "Couldn't load environments",
+      "retry": "Retry",
       "envNamePlaceholder": "Environment name"
     },
     "renameModal": {
@@ -1048,7 +1107,8 @@
       "promote": "Promote",
       "to": "to",
       "identicalMessage": "Both environments are identical. Nothing to promote.",
-      "changesWillBeApplied": "will be applied to",
+      "changesWillBeApplied": "will update the design of",
+      "designOnlyNote": "Promotion updates the design only — you'll still need to deploy {{target}} to apply these changes to live infrastructure.",
       "change": "change",
       "changes": "changes",
       "inSync": "Environments are in sync",
@@ -1224,6 +1284,7 @@
     "deploy": {
       "current": "Current",
       "live": "Live",
+      "deployed": "Deployed",
       "urlLabel": "URL",
       "imageLabel": "Image",
       "resourceIdLabel": "Resource ID",
@@ -1282,7 +1343,13 @@
       "change": "change",
       "changes": "changes",
       "checkButton": "Check for Drift",
-      "checkingButton": "Checking..."
+      "checkingButton": "Checking...",
+      "unverified": "Couldn't verify against cloud — showing stored state",
+      "unknown": "Status unknown",
+      "extra": "Tracked, but not in your design",
+      "justNow": "Checked just now",
+      "checkedAgo": "Checked {{ago}} ago",
+      "stale": "stale"
     },
     "network": {
       "title": "Network",
@@ -1385,6 +1452,7 @@
     "contextRename": "Rename",
     "contextMoveTo": "Move to",
     "contextMoveRoot": "Root",
+    "contextOpen": "Open",
     "contextDelete": "Delete",
     "subCanvas": "Architecture",
     "subTable": "Table",
@@ -1965,6 +2033,8 @@
   },
   "cost": {
     "title": "Cost Estimation",
+    "estQualifier": "Est.",
+    "estProvenance": "Estimated from public list prices (early 2026) — not actual billed spend",
     "empty": "Add resources to your canvas to see cost estimates. Drag blocks from the left sidebar to get started.",
     "categoryBreakdown": "Cost Breakdown",
     "timeProjections": "Time Projections",

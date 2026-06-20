@@ -52,7 +52,7 @@ const hooks = vi.hoisted(() => ({
     handleRenameCommit: vi.fn(),
     handleRenameCancel: vi.fn(),
   })),
-  useCanvasSideEffects: vi.fn(),
+  useCanvasSideEffects: vi.fn(() => ({ overlayDismissed: false, dismissOverlay: vi.fn() })),
   useGhostMode: vi.fn(() => ({
     ghosts: [],
     handleAcceptGhost: vi.fn(),
@@ -142,6 +142,7 @@ const components = vi.hoisted(() => ({
   CanvasDeployBanner: vi.fn(() => null),
   CanvasContent: vi.fn(() => null),
   SocketHoverTooltip: vi.fn(() => null),
+  EmptyCanvasOverlay: vi.fn(() => null),
 }));
 
 const dispatchSpy = vi.fn();
@@ -184,6 +185,9 @@ vi.mock('../nodes/_shared/socket-hover-tooltip', () => ({
 }));
 vi.mock('../deploy-banner', () => ({
   CanvasDeployBanner: components.CanvasDeployBanner,
+}));
+vi.mock('../empty-canvas-overlay', () => ({
+  EmptyCanvasOverlay: components.EmptyCanvasOverlay,
 }));
 vi.mock('../canvas-renderer/canvas-content', () => ({
   CanvasContent: components.CanvasContent,

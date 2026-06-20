@@ -35,6 +35,7 @@ function makeState(overrides: Partial<DeployState> = {}): DeployState {
     history: [],
     deployedResources: [],
     driftByNode: {},
+    driftMeta: { checkedAt: null, unsupported: false },
     driftCheckLoading: false,
     requirements: [],
     requirementsLoading: false,
@@ -412,5 +413,18 @@ describe('applyDeployCompleteEvent', () => {
       } as PayloadAction<DeployCompleteEvent>);
     });
     expect(next.status).toBe('error');
+  });
+
+  // DF8 — the complete wire event carries no duration; don't fabricate one.
+  it('does NOT push a fabricated-duration completion log line', () => {
+    const next = produce(makeState({ status: 'deploying', logs: ['Deploying...'] }), (draft) => {
+      wireEventsReducers.applyDeployCompleteEvent(draft, {
+        type: 'deploy/applyDeployCompleteEvent',
+        payload: completeEvent('success'),
+      } as PayloadAction<DeployCompleteEvent>);
+    });
+    // No "0.0s" (or any) wire-driven completion line — hydrate owns the real one.
+    expect(next.logs.some((l) => l.includes('0.0'))).toBe(false);
+    expect(next.logs).toEqual(['Deploying...']);
   });
 });

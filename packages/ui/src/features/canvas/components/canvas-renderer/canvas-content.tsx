@@ -193,7 +193,7 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
       {/* Floating rejection tooltip — shown for ~2.5s after a failed
           drop (invalid pair, special-rule conflict, or hard validation
           error). State lives in `useConnectionDrawing`. */}
-      {connectionRejection && <ConnectionRejectionOverlay rejection={connectionRejection} />}
+      {connectionRejection && <ConnectionRejectionOverlay rejection={connectionRejection} zoom={viewport.zoom} />}
 
       {/* User traffic icon + outbound connections to exposed services —
           extracted to UserTrafficOverlay (rf-canv-15). Both render only

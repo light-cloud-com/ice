@@ -36,7 +36,8 @@ import {
 import { describe, it, expect } from 'vitest';
 void Folder;
 
-import { getComponents, blockKey, def } from '../data/components';
+import { getComponents, blockKey, def, GOAL_KEYWORDS, componentMatchesQuery } from '../data/components';
+import type { ComponentDef } from '../types';
 
 const t = (k: string) => k;
 const COMPONENTS = getComponents(t);
@@ -334,5 +335,82 @@ describe('COMPONENTS — fallback names', () => {
     expect(container?.name).toBe('blocks.computeContainer.name');
     expect(container?.description).toBe('blocks.computeContainer.description');
     expect(container?.tooltip).toBe('blocks.computeContainer.tooltip');
+  });
+});
+
+// ─── CD3 — goal keywords + search matching ────────────────────────────────────
+
+describe('GOAL_KEYWORDS wiring', () => {
+  it('def() attaches keywords from GOAL_KEYWORDS for a known iceType', () => {
+    const cron = def(t, 'Compute.CronJob', Server, ['aws'], 'Scheduler');
+    expect(cron.keywords).toEqual(GOAL_KEYWORDS['Compute.CronJob']);
+    expect(cron.keywords).toContain('cron');
+    expect(cron.keywords).toContain('schedule');
+  });
+
+  it('def() omits keywords entirely for an iceType with no entry', () => {
+    const unknown = def(t, 'Compute.X', Server, ['aws'], 'Compute');
+    expect(unknown.keywords).toBeUndefined();
+  });
+
+  it('getComponents() surfaces the keywords on real blocks', () => {
+    const redis = COMPONENTS.find((c) => c.type === 'Database.Redis');
+    expect(redis?.keywords).toContain('cache');
+    const fn = COMPONENTS.find((c) => c.type === 'Compute.ServerlessFunction');
+    expect(fn?.keywords).toContain('api');
+  });
+
+  it('every GOAL_KEYWORDS key is a real iceType in the inventory', () => {
+    const realTypes = new Set(COMPONENTS.map((c) => c.type));
+    for (const type of Object.keys(GOAL_KEYWORDS)) {
+      expect(realTypes.has(type)).toBe(true);
+    }
+  });
+});
+
+describe('componentMatchesQuery (CD3)', () => {
+  const mk = (over: Partial<ComponentDef>): ComponentDef => ({
+    type: 'Compute.X',
+    name: 'Widget',
+    description: 'does things',
+    tooltip: 'a widget',
+    icon: () => null,
+    providers: ['aws'],
+    category: 'Compute',
+    ...over,
+  });
+
+  it('matches everything for an empty / whitespace query', () => {
+    expect(componentMatchesQuery(mk({}), '')).toBe(true);
+    expect(componentMatchesQuery(mk({}), '   ')).toBe(true);
+  });
+
+  it('matches on name and description (the original behaviour)', () => {
+    expect(componentMatchesQuery(mk({ name: 'PostgreSQL' }), 'postgres')).toBe(true);
+    expect(componentMatchesQuery(mk({ description: 'relational store' }), 'relational')).toBe(true);
+  });
+
+  it('matches on the tooltip', () => {
+    expect(componentMatchesQuery(mk({ tooltip: 'managed cache' }), 'cache')).toBe(true);
+  });
+
+  it('matches on the supplied category label', () => {
+    expect(componentMatchesQuery(mk({ name: 'Postgres' }), 'database', 'Database')).toBe(true);
+  });
+
+  it('matches on goal keywords', () => {
+    expect(componentMatchesQuery(mk({ keywords: ['cron', 'schedule'] }), 'cron')).toBe(true);
+    expect(componentMatchesQuery(mk({ keywords: ['api', 'gateway'] }), 'api')).toBe(true);
+  });
+
+  it('returns false when nothing matches', () => {
+    expect(componentMatchesQuery(mk({ name: 'Widget', description: 'does things' }), 'zzz')).toBe(false);
+  });
+
+  it('"cron" finds the CronJob block in the real inventory but not Postgres', () => {
+    const cron = COMPONENTS.find((c) => c.type === 'Compute.CronJob')!;
+    const pg = COMPONENTS.find((c) => c.type === 'Database.PostgreSQL')!;
+    expect(componentMatchesQuery(cron, 'cron')).toBe(true);
+    expect(componentMatchesQuery(pg, 'cron')).toBe(false);
   });
 });

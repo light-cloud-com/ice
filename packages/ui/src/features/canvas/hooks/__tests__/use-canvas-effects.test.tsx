@@ -261,6 +261,36 @@ describe('useCanvasEffects — wheel listener effect', () => {
     expect(onWheel.mock.calls[0][0]).toBe(fakeEvent);
   });
 
+  it('skips canvas zoom (OL1) when the wheel target is inside a log node', () => {
+    const addEventListener = vi.fn();
+    const fakeSvg = {
+      addEventListener,
+      removeEventListener: vi.fn(),
+    } as unknown as SVGSVGElement;
+    const svgRef = { current: fakeSvg } as React.RefObject<SVGSVGElement>;
+    const onWheel = vi.fn();
+    const setConnTooltip = vi.fn();
+
+    renderHook(makeStore(), {
+      cardId: 'c',
+      svgRef,
+      bindCanvas: { onWheel },
+      setConnTooltip: setConnTooltip as any,
+    });
+
+    const handler = addEventListener.mock.calls[0][1] as (e: WheelEvent) => void;
+    const preventDefault = vi.fn();
+    // target.closest('.svg-log-node') truthy → the log node owns this wheel.
+    const target = { closest: vi.fn((sel: string) => (sel === '.svg-log-node' ? {} : null)) };
+    const fakeEvent = { preventDefault, target } as unknown as WheelEvent;
+    handler(fakeEvent);
+
+    expect(target.closest).toHaveBeenCalledWith('.svg-log-node');
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(onWheel).not.toHaveBeenCalled();
+    expect(setConnTooltip).not.toHaveBeenCalled();
+  });
+
   it('cleanup removes the wheel listener', () => {
     const removeEventListener = vi.fn();
     const fakeSvg = {

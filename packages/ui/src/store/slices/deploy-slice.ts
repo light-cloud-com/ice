@@ -71,6 +71,7 @@ const initialState: DeployState = {
   deployedResources: [],
   driftByNode: {},
   driftCheckLoading: false,
+  driftMeta: { checkedAt: null, unsupported: false },
   requirements: [],
   requirementsLoading: false,
   diagnosis: { status: 'idle', result: null, error: null },
@@ -127,6 +128,7 @@ const deploySlice = createSlice({
       state.deployedResources = [];
       state.driftByNode = {};
       state.driftCheckLoading = false;
+      state.driftMeta = { checkedAt: null, unsupported: false };
       state.requirements = [];
       state.requirementsLoading = false;
       state.requirementsFetchedAt = undefined;
@@ -169,6 +171,7 @@ export const {
   setDeployedResources,
   setDriftCheckLoading,
   setDriftResults,
+  setDriftMeta,
   clearDrift,
   startRequirementsFetch,
   setRequirements,

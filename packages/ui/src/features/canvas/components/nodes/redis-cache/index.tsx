@@ -20,7 +20,10 @@ export function computeRedisCacheHeight(): number {
   return DB_HEADER_HEIGHT + DB_PADDING + DB_BODY_HEIGHT + DB_PADDING + CARD_FOOTER_HEIGHT;
 }
 
-const REDIS_ACCENT = '#ef4444';
+// CNV6 — Redis's brand red, deliberately NOT the system error red (#ef4444,
+// used by the validation/deploy-error treatments) so an idle Redis block doesn't
+// read as "errored". Brand colour keeps it recognisable without the collision.
+const REDIS_ACCENT = '#d82c20';
 
 function formatMemory(raw: unknown): string | null {
   if (raw == null || raw === '') return null;

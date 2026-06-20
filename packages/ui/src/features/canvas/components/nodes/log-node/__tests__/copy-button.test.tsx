@@ -8,13 +8,13 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { CopyButton } from '../copy-button';
 
-const renderCB = (onClick: (e: React.MouseEvent) => void = () => {}): React.ReactElement => {
+const renderCB = (onClick: (e: React.MouseEvent) => void = () => {}, copied?: boolean): React.ReactElement => {
   const Inner = (
     CopyButton as unknown as {
-      type: (p: { onClick: (e: React.MouseEvent) => void }) => React.ReactElement;
+      type: (p: { onClick: (e: React.MouseEvent) => void; copied?: boolean }) => React.ReactElement;
     }
   ).type;
-  return Inner({ onClick });
+  return Inner({ onClick, copied });
 };
 
 describe('CopyButton', () => {
@@ -48,5 +48,18 @@ describe('CopyButton', () => {
   it('button has type="button" (not submit)', () => {
     const tree = renderCB();
     expect((tree.props as { type: string }).type).toBe('button');
+  });
+
+  // OL7 — confirmation state after a successful copy.
+  it('shows "COPIED" with a green tint when copied=true', () => {
+    const tree = renderCB(() => {}, true);
+    expect((tree.props as { children: string }).children).toBe('COPIED');
+    expect((tree.props as { style: { color: string } }).style.color).toBe('#22c55e');
+  });
+
+  it('shows "COPY" in the default tint when copied is falsy', () => {
+    const tree = renderCB(() => {}, false);
+    expect((tree.props as { children: string }).children).toBe('COPY');
+    expect((tree.props as { style: { color: string } }).style.color).toBe('var(--ice-text-tertiary)');
   });
 });

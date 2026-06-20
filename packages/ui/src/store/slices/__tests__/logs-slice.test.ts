@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 import logsReducer, {
   appendEntry,
   resumed,
+  retryStream,
   setError,
   setSource,
   setStatus,
@@ -94,6 +95,23 @@ describe('logs-slice', () => {
     });
   });
 
+  describe('retryStream — OL5 re-subscribe trigger', () => {
+    it('bumps retryNonce, flips status to connecting, and clears lastError', () => {
+      let state = init();
+      state = logsReducer(state, setError({ terminalNodeId: TID, message: 'Access denied' }));
+      expect(state.byTerminalNodeId[TID].status).toBe('error');
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(0);
+
+      state = logsReducer(state, retryStream({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(1);
+      expect(state.byTerminalNodeId[TID].status).toBe('connecting');
+      expect(state.byTerminalNodeId[TID].lastError).toBeNull();
+
+      state = logsReducer(state, retryStream({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID].retryNonce).toBe(2);
+    });
+  });
+
   describe('appendEntry — connecting → streaming promotion', () => {
     it('promotes status from connecting to streaming on the first entry, and stays streaming on subsequent entries', () => {
       let state = init();
@@ -129,6 +147,20 @@ describe('logs-slice', () => {
       // Oldest dropped: ids 0..49 should be gone, ids 50..249 kept.
       expect(entries[0].insertId).toBe('id-50');
       expect(entries[entries.length - 1].insertId).toBe('id-249');
+      // OL4 — the 50 dropped entries are counted (not silently lost).
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(50);
+    });
+
+    it('clearEntries resets droppedCount (OL4)', () => {
+      let state = init();
+      state = logsReducer(state, setSubscription({ terminalNodeId: TID, subscriptionId: 'sub-1', mode: 'polling' }));
+      for (let i = 0; i < 205; i++) {
+        state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry(`x-${i}`) }));
+      }
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(5);
+      state = logsReducer(state, { type: 'logs/clearEntries', payload: { terminalNodeId: TID } });
+      expect(state.byTerminalNodeId[TID]!.entries.length).toBe(0);
+      expect(state.byTerminalNodeId[TID]!.droppedCount).toBe(0);
     });
   });
 

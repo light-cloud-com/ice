@@ -32,7 +32,7 @@ vi.mock('react', async (orig) => {
 
 // ─── Imports after mocks ────────────────────────────────────────────────────
 
-import { useReducedMotion } from '../use-reduced-motion';
+import { useReducedMotion, prefersReducedMotion } from '../use-reduced-motion';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -176,5 +176,33 @@ describe('useReducedMotion', () => {
       for (const h of mql.handlers) h({ matches: true });
       for (const h of mql.handlers) h({ matches: false });
     }).not.toThrow();
+  });
+});
+
+// One-shot, non-hook read used to gate SVG SMIL (AX4) from render-pure code.
+describe('prefersReducedMotion', () => {
+  it('returns true when matchMedia reports the reduce preference', () => {
+    vi.stubGlobal('window', { matchMedia: () => makeMQL(true) });
+    expect(prefersReducedMotion()).toBe(true);
+  });
+
+  it('returns false when the user has not opted in', () => {
+    vi.stubGlobal('window', { matchMedia: () => makeMQL(false) });
+    expect(prefersReducedMotion()).toBe(false);
+  });
+
+  it('falls back to false when matchMedia is missing (the ?? guard)', () => {
+    vi.stubGlobal('window', { matchMedia: undefined });
+    expect(prefersReducedMotion()).toBe(false);
+  });
+
+  it('returns false when window is undefined (SSR-safe)', () => {
+    const original = (globalThis as any).window;
+    delete (globalThis as any).window;
+    try {
+      expect(prefersReducedMotion()).toBe(false);
+    } finally {
+      (globalThis as any).window = original;
+    }
   });
 });

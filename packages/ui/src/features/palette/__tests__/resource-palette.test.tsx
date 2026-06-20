@@ -120,8 +120,8 @@ vi.mock('react-router-dom', () => ({
   useLocation: () => ({ pathname: mocks.pathname }),
 }));
 
-vi.mock('../../../shared/hooks/use-resolve-path', () => ({
-  useResolvePath: () => mocks.resolved,
+vi.mock('../../../shared/hooks/use-resolve-path-context', () => ({
+  useResolvePathContext: () => mocks.resolved,
 }));
 
 vi.mock('../../../shared/api/axios-instance', () => ({
@@ -231,7 +231,9 @@ vi.mock('../data/categories', () => ({
     ]),
 }));
 
-vi.mock('../data/components', () => ({
+vi.mock('../data/components', async (importOriginal) => ({
+  // Keep the real `componentMatchesQuery` (CD3) — only the inventory is stubbed.
+  ...(await importOriginal<typeof import('../data/components')>()),
   getComponents: () => [
     {
       type: 'Compute.A',

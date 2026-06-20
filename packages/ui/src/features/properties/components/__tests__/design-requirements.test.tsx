@@ -182,6 +182,49 @@ describe('collectDesignRequirements — non-iceType nodes', () => {
   });
 });
 
+// ─── PE3 — generalized validation-issue fallback ──────────────────────────────
+
+describe('collectDesignRequirements — validation fallback (PE3)', () => {
+  const node = makeNode({ id: 'n', data: { iceType: 'Compute.WebServer' } });
+
+  it('surfaces the node validation issues when no bespoke rule applies', () => {
+    const out = collectDesignRequirements(
+      node,
+      [node],
+      [],
+      [
+        { id: 'i1', severity: 'error', message: '"Name" is required', suggestion: 'Set a name' },
+        { id: 'i2', severity: 'warning', message: 'No region set' },
+      ],
+    );
+    expect(out).toHaveLength(2);
+    expect(out[0]).toMatchObject({
+      id: 'validation-i1',
+      level: 'error',
+      title: '"Name" is required',
+      hint: 'Set a name',
+    });
+    expect(out[1]).toMatchObject({ id: 'validation-i2', level: 'warning', title: 'No region set' });
+  });
+
+  it('does NOT apply the fallback when a bespoke rule already produced guidance', () => {
+    const pg = makeNode({ id: 'pg', data: { iceType: 'Database.PostgreSQL' } });
+    // Postgres with no service connection → bespoke rule fires; fallback suppressed.
+    const out = collectDesignRequirements(pg, [pg], [], [{ id: 'x', severity: 'error', message: 'should not appear' }]);
+    expect(out.some((r) => r.id === 'validation-x')).toBe(false);
+    expect(out.some((r) => r.id === 'pg-no-service')).toBe(true);
+  });
+
+  it('emits nothing for a valid non-bespoke block (no issues, no rule)', () => {
+    expect(collectDesignRequirements(node, [node], [], [])).toEqual([]);
+  });
+
+  it('maps a non-warning severity to the error level', () => {
+    const out = collectDesignRequirements(node, [node], [], [{ id: 'i', severity: 'error', message: 'boom' }]);
+    expect(out[0].level).toBe('error');
+  });
+});
+
 // ─── Component coverage ───────────────────────────────────────────────────
 
 interface ReactElementLike {

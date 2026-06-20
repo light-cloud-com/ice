@@ -184,6 +184,28 @@ describe('renderPropertyField', () => {
     expect((textInputs[0].props as { placeholder?: string }).placeholder).toBe('enter name');
   });
 
+  // PE1 — required props were indistinguishable from optional ones. Each render
+  // branch must thread prop.required into PropertyLabel (which draws the asterisk).
+  it('threads prop.required=true into PropertyLabel (text branch)', () => {
+    const tree = renderPropertyField(mkProp({ type: 'string', required: true }), 'v', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect(labels.length).toBeGreaterThanOrEqual(1);
+    expect((labels[0].props as { required?: boolean }).required).toBe(true);
+  });
+
+  it('threads prop.required=false into PropertyLabel for an optional field', () => {
+    const tree = renderPropertyField(mkProp({ type: 'string', required: false }), 'v', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect((labels[0].props as { required?: boolean }).required).toBe(false);
+  });
+
+  it('threads required through the IceSelect (optionDetails) branch', () => {
+    const prop = mkProp({ type: 'select', required: true, optionDetails: [{ value: 'a', label: 'A' }] });
+    const tree = renderPropertyField(prop, 'a', vi.fn()) as React.ReactElement;
+    const labels = findByDisplayName(tree, 'PropertyLabel');
+    expect((labels[0].props as { required?: boolean }).required).toBe(true);
+  });
+
   it('renders CustomValueInput underneath the IceSelect when value === "custom" AND prop.customInput is set', () => {
     const onChange = vi.fn();
     const prop = mkProp({
@@ -397,7 +419,7 @@ describe('PropertyFields', () => {
     expect(sections).toHaveLength(0);
   });
 
-  it('filters out tier === "advanced" properties from visible list', () => {
+  it('keeps tier === "advanced" properties out of the main visible Section', () => {
     const properties = [
       mkProp({ name: 'shown1', tier: 'essential' }),
       mkProp({ name: 'hidden', tier: 'advanced' }),
@@ -408,12 +430,92 @@ describe('PropertyFields', () => {
       nodeData: {},
       onFieldChange: vi.fn(),
     }) as React.ReactElement;
+    // The advanced row lives inside the (unexecuted) AdvancedDisclosure child,
+    // so the directly-rendered rows are still only the visible ones.
     const wrappers = findByPredicate(
       tree,
       (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
     );
     const keys = wrappers.map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
     expect(keys).toEqual(['shown1', 'shown2']);
+  });
+
+  // PE5 — advanced props are no longer dropped; they get a collapsed disclosure.
+  it('routes advanced-tier props into an AdvancedDisclosure', () => {
+    const properties = [
+      mkProp({ name: 'shown', tier: 'essential' }),
+      mkProp({ name: 'adv1', tier: 'advanced' }),
+      mkProp({ name: 'adv2', tier: 'advanced' }),
+    ];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const disclosure = findByDisplayName(tree, 'AdvancedDisclosure');
+    expect(disclosure).toHaveLength(1);
+    const advancedNames = (disclosure[0].props as { advanced: HighLevelProperty[] }).advanced.map((p) => p.name);
+    expect(advancedNames).toEqual(['adv1', 'adv2']);
+  });
+
+  it('renders no AdvancedDisclosure when there are no advanced props', () => {
+    const properties = [mkProp({ name: 'shown', tier: 'essential' })];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    expect(findByDisplayName(tree, 'AdvancedDisclosure')).toHaveLength(0);
+  });
+
+  const propKeys = (tree: React.ReactNode) =>
+    findByPredicate(
+      tree,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    ).map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+
+  // PE7 — the schema `name` field is dropped (the identity card owns it).
+  it('drops the duplicate schema "name" field from the Config tab', () => {
+    const properties = [mkProp({ name: 'name', tier: 'essential' }), mkProp({ name: 'size', tier: 'essential' })];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    expect(propKeys(tree)).toEqual(['size']);
+  });
+
+  // PE9 — a prop with a live validation issue is always shown so its inline
+  // message has an anchor, even if it's advanced-tier or visibleWhen-hidden.
+  it('promotes an advanced prop WITH a validation issue into the main Section', () => {
+    const properties = [mkProp({ name: 'shown', tier: 'essential' }), mkProp({ name: 'adv', tier: 'advanced' })];
+    const propertyIssues = new Map([['adv', { severity: 'error', message: 'bad' }]]);
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+      propertyIssues,
+    }) as React.ReactElement;
+    // 'adv' is now a directly-rendered row (its inline message has an anchor)…
+    expect(propKeys(tree)).toContain('adv');
+    // …and the disclosure is gone since its only advanced prop was promoted.
+    expect(findByDisplayName(tree, 'AdvancedDisclosure')).toHaveLength(0);
+  });
+
+  it('anchors a visibleWhen-hidden prop that has a validation issue', () => {
+    const properties = [
+      mkProp({ name: 'frequency', type: 'select', options: ['Hourly', 'Custom'] }),
+      mkProp({ name: 'schedule', visibleWhen: { field: 'frequency', equals: 'Custom' } }),
+    ];
+    const propertyIssues = new Map([['schedule', { severity: 'error', message: 'bad cron' }]]);
+    // frequency != 'Custom' → 'schedule' is gated-hidden, but its issue forces it visible.
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { frequency: 'Hourly' },
+      onFieldChange: vi.fn(),
+      propertyIssues,
+    }) as React.ReactElement;
+    expect(propKeys(tree)).toContain('schedule');
   });
 
   it('treats no-tier properties as visible (essential default)', () => {

@@ -101,6 +101,8 @@ pnpm dist:desktop:linux              # AppImage + .deb
 
 The `prebuild` script runs `@ice/gateway build` and `@ice/web build` and copies the Prisma client - all three are required because the distributable has to carry the gateway source, the web bundle, and the native Prisma bindings.
 
+To cut a release (build all three platforms, publish to GitHub Releases), use the one-command flow: `pnpm release patch`. See [docs/build/releasing.md](../build/releasing.md).
+
 ## Packaging configuration
 
 `apps/desktop/electron-builder.yml` controls what ships:
@@ -150,4 +152,5 @@ Delete the file to reset the app to first-run state.
 
 - [README.md](README.md) - how the embedded gateway fits.
 - [database.md](database.md) - the SQLite schema the desktop uses.
+- [docs/build/releasing.md](../build/releasing.md) - cutting a release.
 - [ROADMAP.md](../../ROADMAP.md) - signing + notarization status.

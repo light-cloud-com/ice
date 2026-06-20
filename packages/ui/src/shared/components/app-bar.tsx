@@ -32,7 +32,12 @@ import { GitHubConnectModal } from '../../features/integrations/components/githu
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
 import { useTour } from '../../features/tour';
 import { useTranslation } from '../../i18n';
-import { checkAnthropicConnection, checkGitHubConnection } from '../../store/slices/integrations-slice';
+import {
+  checkAllProviderConnections,
+  checkAnthropicConnection,
+  checkGitHubConnection,
+} from '../../store/slices/integrations-slice';
+import { LiveAnnouncer } from './live-announcer';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -61,8 +66,10 @@ export const AppBar: React.FC = memo(() => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github?.status);
-  const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp?.status);
   const anthropicStatus = useSelector((s: RootState) => s.integrations.integrations.anthropic?.status);
+  // EI2 — per-provider connection map drives the app-bar rings for every cloud.
+  const integrations = useSelector((s: RootState) => s.integrations.integrations);
+  const isProviderConnected = (id: string) => integrations[id]?.status === 'connected';
   const [showGitHub, setShowGitHub] = useState(false);
   const [showGcp, setShowGcp] = useState(false);
   const [showAws, setShowAws] = useState(false);
@@ -77,10 +84,13 @@ export const AppBar: React.FC = memo(() => {
   useEffect(() => {
     dispatch(checkGitHubConnection());
     dispatch(checkAnthropicConnection());
+    dispatch(checkAllProviderConnections());
   }, [dispatch]);
 
   return (
     <>
+      {/* AX2 — one polite live region for deploy lifecycle announcements. */}
+      <LiveAnnouncer />
       <TooltipProvider delayDuration={300}>
         <header
           data-testid="toolbar"
@@ -112,7 +122,7 @@ export const AppBar: React.FC = memo(() => {
                 src={gcpIcon}
                 onClick={() => setShowGcp(true)}
                 tip={t('common.providers.gcp')}
-                connected={gcpStatus === 'connected'}
+                connected={isProviderConnected('gcp')}
               />
             )}
             {isProviderEnabled('aws') && (
@@ -121,6 +131,7 @@ export const AppBar: React.FC = memo(() => {
                 src={awsIcon}
                 onClick={() => setShowAws(true)}
                 tip={t('common.providers.aws')}
+                connected={isProviderConnected('aws')}
               />
             )}
             {isProviderEnabled('azure') && (
@@ -129,6 +140,7 @@ export const AppBar: React.FC = memo(() => {
                 src={azureIcon}
                 onClick={() => setShowAzure(true)}
                 tip={t('common.providers.azure')}
+                connected={isProviderConnected('azure')}
               />
             )}
             {isProviderEnabled('alibaba') && (
@@ -137,6 +149,7 @@ export const AppBar: React.FC = memo(() => {
                 src={alibabaIcon}
                 onClick={() => setShowAlibaba(true)}
                 tip={t('common.providers.alibaba')}
+                connected={isProviderConnected('alibaba')}
               />
             )}
             {isProviderEnabled('oci') && (
@@ -145,6 +158,7 @@ export const AppBar: React.FC = memo(() => {
                 src={ociIcon}
                 onClick={() => setShowOci(true)}
                 tip={t('common.providers.oci')}
+                connected={isProviderConnected('oci')}
               />
             )}
             {isProviderEnabled('digitalocean') && (
@@ -153,6 +167,7 @@ export const AppBar: React.FC = memo(() => {
                 src={digitaloceanIcon}
                 onClick={() => setShowDigitalocean(true)}
                 tip={t('common.providers.digitalocean')}
+                connected={isProviderConnected('digitalocean')}
               />
             )}
             {isProviderEnabled('ibm') && (
@@ -161,6 +176,7 @@ export const AppBar: React.FC = memo(() => {
                 src={ibmIcon}
                 onClick={() => setShowIbm(true)}
                 tip={t('common.providers.ibm')}
+                connected={isProviderConnected('ibm')}
               />
             )}
             {isProviderEnabled('kubernetes') && (
@@ -169,6 +185,7 @@ export const AppBar: React.FC = memo(() => {
                 src={kubernetesIcon}
                 onClick={() => setShowKubernetes(true)}
                 tip={t('common.providers.kubernetes')}
+                connected={isProviderConnected('kubernetes')}
               />
             )}
             <BarSep />

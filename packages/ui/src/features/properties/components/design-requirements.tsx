@@ -37,14 +37,28 @@ export interface DesignRequirement {
 
 // ─── Rule set (Postgres + PrivateNetwork) ───────────────────────────────────
 
+/** Minimal validator-issue shape the generalized fallback consumes (PE3). */
+export interface DesignFallbackIssue {
+  id: string;
+  severity: string;
+  message: string;
+  suggestion?: string;
+}
+
 /**
  * Compute pure list of requirement findings for a node. Pure function —
  * easy to unit-test and to extend per iceType.
+ *
+ * PE3 — bespoke rules exist for only a couple of block types; for every other
+ * block, fall back to surfacing the validator's own node issues so the
+ * top-of-panel "what's missing" guidance is never empty for an INVALID block
+ * (the bespoke rules still win when they apply).
  */
 export function collectDesignRequirements(
   node: CardNode,
   allNodes: readonly CardNode[],
   edges: readonly CardEdge[],
+  nodeIssues: readonly DesignFallbackIssue[] = [],
 ): DesignRequirement[] {
   const iceType = (node.data?.iceType as string) || '';
   const out: DesignRequirement[] = [];
@@ -111,6 +125,20 @@ export function collectDesignRequirements(
     }
   }
 
+  // PE3 — generalized fallback: when no bespoke rule produced guidance, surface
+  // the validator's node issues so an invalid block still gets a "what's
+  // missing" summary at the top of the panel (regardless of which tab is open).
+  if (out.length === 0 && nodeIssues.length > 0) {
+    for (const issue of nodeIssues) {
+      out.push({
+        id: `validation-${issue.id}`,
+        level: issue.severity === 'warning' ? 'warning' : 'error',
+        title: issue.message,
+        hint: issue.suggestion,
+      });
+    }
+  }
+
   return out;
 }
 
@@ -146,8 +174,14 @@ export const DesignRequirements: React.FC<{
   node: CardNode;
   allNodes: readonly CardNode[];
   edges: readonly CardEdge[];
-}> = ({ node, allNodes, edges }) => {
-  const requirements = React.useMemo(() => collectDesignRequirements(node, allNodes, edges), [node, allNodes, edges]);
+  /** PE3 — this node's non-info validator issues, used as a fallback when no
+   *  bespoke design rule applies to the block. */
+  nodeIssues?: readonly DesignFallbackIssue[];
+}> = ({ node, allNodes, edges, nodeIssues }) => {
+  const requirements = React.useMemo(
+    () => collectDesignRequirements(node, allNodes, edges, nodeIssues ?? []),
+    [node, allNodes, edges, nodeIssues],
+  );
 
   // Auto-collapse when all-green so power users aren't bothered. Errors
   // expand by default (they block deploy); warnings + info collapse.

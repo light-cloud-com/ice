@@ -4,12 +4,24 @@
  * Bottom-right "?" button that opens a popover showing all canvas controls.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { SocketLegend } from './socket-legend';
 import { useTranslation } from '../../../i18n';
 
 export const ControlsHelpModal: React.FC = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  // AX3 — a real Escape handler (the header "ESC" affordance implied one but was
+  // only a click button). Matches the canvas context menu's pattern.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   const CONTROL_SECTIONS = [
     {
@@ -32,6 +44,8 @@ export const ControlsHelpModal: React.FC = () => {
     {
       title: t('canvas.controls.sectionEditing'),
       items: [
+        // CD2 — the headline add affordance was undocumented here.
+        { keys: 'Shift + A', action: t('canvas.controls.addBlock') },
         { keys: 'Delete / Backspace', action: t('canvas.controls.deleteSelected') },
         { keys: 'Cmd + C / X / V', action: t('canvas.controls.copyPaste') },
         { keys: 'Double-click label', action: t('canvas.controls.renameGroup') },
@@ -47,8 +61,9 @@ export const ControlsHelpModal: React.FC = () => {
     {
       title: t('canvas.controls.sectionView'),
       items: [
-        { keys: '1', action: t('canvas.controls.architectureView') },
-        { keys: '2', action: t('canvas.controls.infrastructureView') },
+        // The 1/2 view-level keys were removed with the view-level toggle
+        // ("always Level 2"); altitude is zoom-driven now, so don't advertise
+        // dead keys (IA3).
         { keys: 'Ctrl + Shift + D', action: t('canvas.controls.toggleDebug') },
       ],
     },
@@ -66,6 +81,8 @@ export const ControlsHelpModal: React.FC = () => {
           border: '1px solid var(--ice-border-strong)',
         }}
         title={t('canvas.controls.shortcutsTitle')}
+        aria-label={t('canvas.controls.shortcutsTitle')}
+        aria-expanded={open}
       >
         ?
       </button>
@@ -78,6 +95,9 @@ export const ControlsHelpModal: React.FC = () => {
 
           {/* Panel */}
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('canvas.controls.title')}
             className="absolute bottom-12 right-3 z-30 rounded-lg overflow-hidden"
             style={{
               background: 'var(--ice-bg-base)',
@@ -125,6 +145,11 @@ export const ControlsHelpModal: React.FC = () => {
                   </div>
                 </div>
               ))}
+
+              {/* CCL6 — decode the socket shape/colour language for the user. */}
+              <div className="pt-2" style={{ borderTop: '1px solid var(--ice-border)' }}>
+                <SocketLegend />
+              </div>
             </div>
           </div>
         </>

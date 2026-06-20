@@ -337,10 +337,15 @@ describe('useCanvasSideEffects — auto-organize threshold', () => {
     expect(dispatch).not.toHaveBeenCalled();
     vi.advanceTimersByTime(100);
 
-    expect(dispatch).toHaveBeenCalledTimes(1);
+    // CCL1 — import-organize now also switches to the rectangular edge style so
+    // the computed dagre routes actually render.
+    expect(dispatch).toHaveBeenCalledTimes(2);
     const action = dispatch.mock.calls[0][0] as { type: string; payload: unknown };
     expect(action.type).toBe('cards/autoOrganizeCard');
     expect(action.payload).toEqual({ zoom: 0.8 });
+    const edgeAction = dispatch.mock.calls[1][0] as { type: string; payload: unknown };
+    expect(edgeAction.type).toBe('ui/setEdgeStyle');
+    expect(edgeAction.payload).toBe('rectangular');
   });
 
   it('does NOT dispatch when delta is below the > 10 threshold (5 → 8)', () => {
@@ -374,7 +379,7 @@ describe('useCanvasSideEffects — auto-organize threshold', () => {
     renderHook(baseArgs({ nodes, dispatch: dispatch as unknown as UseCanvasSideEffectsArgs['dispatch'] }));
 
     vi.advanceTimersByTime(100);
-    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch).toHaveBeenCalledTimes(2); // CCL1 — organize + setEdgeStyle
     const action = dispatch.mock.calls[0][0] as { type: string };
     expect(action.type).toBe('cards/autoOrganizeCard');
   });
@@ -407,7 +412,7 @@ describe('useCanvasSideEffects — auto-organize threshold', () => {
     expect(mocks.refSlots[0].current).toBe(12);
     expect(dispatch).not.toHaveBeenCalled();
     vi.advanceTimersByTime(100);
-    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch).toHaveBeenCalledTimes(2); // CCL1 — organize + setEdgeStyle
   });
 
   it('clears the auto-organize timer on cleanup (no double-dispatch on rapid re-render)', () => {
@@ -560,13 +565,13 @@ describe('useCanvasSideEffects — overlay-dismiss on AI intent', () => {
 });
 
 describe('useCanvasSideEffects — return shape', () => {
-  it('returns void', () => {
+  it('returns the overlay-dismiss state + dismiss callback', () => {
     let result: unknown = 'not-set';
     const Probe: React.FC = () => {
       result = useCanvasSideEffects(baseArgs());
       return React.createElement('div');
     };
     renderToString(React.createElement(Probe));
-    expect(result).toBeUndefined();
+    expect(result).toEqual({ overlayDismissed: false, dismissOverlay: expect.any(Function) });
   });
 });

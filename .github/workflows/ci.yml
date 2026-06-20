@@ -30,8 +30,14 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @ice/db exec prisma generate
 
+      - name: Lint (ESLint)
+        run: pnpm lint:check
+
       - name: Format check (Prettier)
         run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
 
       - name: Unit tests
         run: pnpm test:unit

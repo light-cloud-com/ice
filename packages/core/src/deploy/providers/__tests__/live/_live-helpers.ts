@@ -32,7 +32,7 @@ import { randomBytes } from 'node:crypto';
 import { describe } from 'vitest';
 import { AWSDeployer, create_aws_deployer } from '../../aws-deployer';
 import { AzureDeployer, create_azure_deployer } from '../../azure-deployer';
-import { AlibabaDeployer, create_alibaba_deployer } from '../../alibaba/alibaba-deployer';
+import { AlibabaDeployer, type AlibabaDeployOptions, create_alibaba_deployer } from '../../alibaba/alibaba-deployer';
 import { DigitalOceanDeployer, create_digitalocean_deployer } from '../../digitalocean/digitalocean-deployer';
 import { IBMDeployer, create_ibm_deployer } from '../../ibm/ibm-deployer';
 import { KubernetesDeployer, create_kubernetes_deployer } from '../../kubernetes/kubernetes-deployer';
@@ -293,7 +293,7 @@ export function uniqueIbmName(service: string, maxLen = 63): string {
 export async function createAwsDeployer(): Promise<AWSDeployer> {
   const region = process.env.AWS_REGION!;
   const deployer = create_aws_deployer();
-  await deployer.initialize({ regions: [region] });
+  await deployer.initialize({ provider: 'aws', regions: [region] });
   return deployer;
 }
 
@@ -323,6 +323,7 @@ export async function createAzureDeployer(): Promise<AzureLiveContext> {
   const resourceGroup = azureTestResourceGroup();
   const deployer = create_azure_deployer();
   await deployer.initialize({
+    provider: 'azure',
     subscriptions: [subscription],
     resource_groups: [resourceGroup],
     regions: [location],
@@ -358,7 +359,7 @@ export interface AlibabaLiveContext {
 export async function createAlibabaDeployer(): Promise<AlibabaLiveContext> {
   const region = process.env.ALIBABA_CLOUD_REGION!;
   const deployer = create_alibaba_deployer();
-  await deployer.initialize({ provider: 'alibaba', region });
+  await deployer.initialize({ provider: 'alibaba', region } as AlibabaDeployOptions);
   return { deployer, region };
 }
 

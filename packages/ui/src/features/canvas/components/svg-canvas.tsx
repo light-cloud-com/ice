@@ -21,6 +21,7 @@ import { ConnectionTooltip } from './connection-tooltip';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 import { CanvasDeployBanner } from './deploy-banner';
+import { EmptyCanvasOverlay } from './empty-canvas-overlay';
 // Bespoke-from-day-one nodes with inline editing
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
@@ -51,6 +52,7 @@ import { useRenameState } from '../hooks/use-rename-state';
 import { useRenderCtx } from '../hooks/use-render-ctx';
 import { isContainerNode } from '../utils/node-classification';
 import { ConnectionDragProvider } from './nodes/_shared/connection-drag-context';
+import { NodeValidationProvider } from './nodes/_shared/node-validation-context';
 import { OrphanNodesProvider } from './nodes/_shared/orphan-context';
 import { SocketHoverTooltip } from './nodes/_shared/socket-hover-tooltip';
 import type { AppDispatch } from '../../../store';
@@ -194,7 +196,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // reset on card change + AI intent. Per blueprint risk #8 the
   // setOverlayDismissed setter is preserved verbatim despite no
   // current reader — a future unit will surface the boolean.
-  useCanvasSideEffects({
+  const { overlayDismissed, dismissOverlay } = useCanvasSideEffects({
     card,
     nodes,
     edges,
@@ -439,43 +441,45 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             `./canvas-renderer/canvas-content`. Visual draw order, prop
             flow, and dep arrays are preserved verbatim. */}
         <OrphanNodesProvider value={orphanNodeIds}>
-          <ConnectionDragProvider value={connectionDragInfo}>
-            <CanvasContent
-              viewport={viewport}
-              dimensions={dimensions}
-              canvasConnections={canvasConnections}
-              effectiveNodes={effectiveNodes}
-              portMap={portMap}
-              animatingEdges={animatingEdges}
-              pipelineNodeStatus={pipelineNodeStatus}
-              selectedNodes={selectedNodes}
-              selectedEdges={selectedEdges}
-              hoveredNodeId={hoveredNodeId}
-              lod={lod}
-              edgeStyle={edgeStyle}
-              handleConnectionHover={handleConnectionHover}
-              handleEdgeDelete={handleEdgeDelete}
-              handleEdgeSelect={handleEdgeSelect}
-              handleContextMenu={handleContextMenu}
-              sortedNodes={sortedNodes}
-              animatingNodes={animatingNodes}
-              shiftDraggingNodeIds={shiftDraggingNodeIds}
-              dragOverGroupId={dragOverGroupId}
-              renderCtx={renderCtx}
-              drawingConnection={drawingConnection}
-              connectionDragTargets={connectionDragTargets}
-              connectionRejection={connectionRejection}
-              showVirtualUserNode={showVirtualUserNode}
-              userConnections={userConnections}
-              nodesWithUserNode={nodesWithUserNode}
-              pinnedUserPos={pinnedUserPos}
-              setUserNodePos={setUserNodePos}
-              ghosts={ghosts}
-              nodes={nodes}
-              onAcceptGhost={handleAcceptGhost}
-              onDismissGhost={handleDismissGhost}
-            />
-          </ConnectionDragProvider>
+          <NodeValidationProvider value={nodeValidationMap}>
+            <ConnectionDragProvider value={connectionDragInfo}>
+              <CanvasContent
+                viewport={viewport}
+                dimensions={dimensions}
+                canvasConnections={canvasConnections}
+                effectiveNodes={effectiveNodes}
+                portMap={portMap}
+                animatingEdges={animatingEdges}
+                pipelineNodeStatus={pipelineNodeStatus}
+                selectedNodes={selectedNodes}
+                selectedEdges={selectedEdges}
+                hoveredNodeId={hoveredNodeId}
+                lod={lod}
+                edgeStyle={edgeStyle}
+                handleConnectionHover={handleConnectionHover}
+                handleEdgeDelete={handleEdgeDelete}
+                handleEdgeSelect={handleEdgeSelect}
+                handleContextMenu={handleContextMenu}
+                sortedNodes={sortedNodes}
+                animatingNodes={animatingNodes}
+                shiftDraggingNodeIds={shiftDraggingNodeIds}
+                dragOverGroupId={dragOverGroupId}
+                renderCtx={renderCtx}
+                drawingConnection={drawingConnection}
+                connectionDragTargets={connectionDragTargets}
+                connectionRejection={connectionRejection}
+                showVirtualUserNode={showVirtualUserNode}
+                userConnections={userConnections}
+                nodesWithUserNode={nodesWithUserNode}
+                pinnedUserPos={pinnedUserPos}
+                setUserNodePos={setUserNodePos}
+                ghosts={ghosts}
+                nodes={nodes}
+                onAcceptGhost={handleAcceptGhost}
+                onDismissGhost={handleDismissGhost}
+              />
+            </ConnectionDragProvider>
+          </NodeValidationProvider>
         </OrphanNodesProvider>
       </svg>
 
@@ -485,6 +489,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       {/* Socket hover chip — instant styled tooltip on socket dot hover. */}
       <SocketHoverTooltip />
 
+      {/* Empty-canvas quick-start hint — only on a card with zero nodes,
+          until dismissed (resets per card / on AI intent). */}
+      {card && nodes.length === 0 && !overlayDismissed && <EmptyCanvasOverlay onDismiss={dismissOverlay} />}
+
       {/* Controls help button — bottom-right */}
       <ControlsHelpModal />
 
@@ -492,15 +500,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       <CanvasContextMenu />
 
       {/* Shift+A spotlight add-block menu + the key listener that opens it. */}
-      <SpotlightMount screenToCanvas={screenToCanvas} />
+      <SpotlightMount screenToCanvas={screenToCanvas} canvasLocked={canvasLocked} />
     </div>
   );
 };
 
-const SpotlightMount: React.FC<{ screenToCanvas: (cx: number, cy: number) => { x: number; y: number } }> = ({
-  screenToCanvas,
-}) => {
-  useSpotlightShortcut({ screenToCanvas });
+const SpotlightMount: React.FC<{
+  screenToCanvas: (cx: number, cy: number) => { x: number; y: number };
+  canvasLocked: boolean;
+}> = ({ screenToCanvas, canvasLocked }) => {
+  // CD6 — a locked canvas disables the right-click "Add Block" path; gate the
+  // Shift+A shortcut the same way so the lock isn't silently defeated.
+  useSpotlightShortcut({ screenToCanvas, enabled: !canvasLocked });
   useGroupShortcut();
   return <Spotlight />;
 };

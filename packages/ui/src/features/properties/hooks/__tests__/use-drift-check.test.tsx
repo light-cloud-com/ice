@@ -196,6 +196,7 @@ describe('useDriftCheck (smoke + capture, renderToString)', () => {
     expect(dispatchedTypes).toEqual([
       'deploy/setDriftCheckLoading',
       'deploy/setDriftResults',
+      'deploy/setDriftMeta', // OS3/OS4 — carries checkedAt + unsupported
       'cards/updateCardNodeData', // n1 -> drifted
       'cards/updateCardNodeData', // n2 -> active (in_sync)
       // n3 is skipped because 'unknown' is not a recognized status

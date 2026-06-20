@@ -510,23 +510,23 @@ describe('ProjectEnvironments — status indicators', () => {
     expect(dots.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders the status label "Not deployed" when no status', () => {
+  it('renders the canonical "not deployed" label when no status (IA4)', () => {
     mocks.environments = [{ id: 'e1', name: 'Env', type: 'staging', card_id: 'c1', is_protected: false }];
     const tree = render();
     const label = findByPredicate(
       tree,
-      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Not deployed',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'deployStatus.notDeployed',
     );
     expect(label.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('capitalises the status label', () => {
+  it('uses the canonical deploy-status label (success → deployed, IA4)', () => {
     mocks.environments = [{ id: 'e1', name: 'Env', type: 'staging', card_id: 'c1', is_protected: false }];
     mocks.stateSlots.push({ e1: { status: 'success', url: '', date: '' } }, false, '', 'staging', false);
     const tree = render();
     const label = findByPredicate(
       tree,
-      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Success',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'deployStatus.deployed',
     );
     expect(label.length).toBeGreaterThanOrEqual(1);
   });

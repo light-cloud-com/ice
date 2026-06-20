@@ -13,7 +13,7 @@ vi.mock('../../../../../shared/utils/cn', () => ({
   cn: mocks.cnSpy,
 }));
 
-import { PropertiesTabBar } from '../properties-tab-bar';
+import { PropertiesTabBar, TabIssueBadge } from '../properties-tab-bar';
 import type { VisibleTab } from '../../../utils/build-visible-tabs';
 
 interface ReactElementLike {
@@ -126,5 +126,67 @@ describe('PropertiesTabBar', () => {
         (el.props.className as string).includes('rounded-full bg-emerald-500'),
     );
     expect(dots.length).toBe(1);
+  });
+});
+
+// PE2 — a tab's error/warning counts are shown as a badge so they're visible
+// from any tab (not trapped in Config).
+describe('PropertiesTabBar — issue badges (PE2)', () => {
+  const tabs: VisibleTab[] = [
+    { id: 'config', label: 'Config', show: true },
+    { id: 'scaling', label: 'Scaling', show: true },
+  ];
+
+  it('passes the config issue counts to that tab’s badge', () => {
+    const tree = callRender({
+      visibleTabs: tabs,
+      activeTab: 'scaling',
+      onSelect: vi.fn(),
+      issueCounts: { config: { errors: 2, warnings: 1 } },
+    });
+    // Every tab renders a TabIssueBadge; the config one carries the counts.
+    const badges = findAllByPredicate(tree, (el) => el.type === TabIssueBadge).map(
+      (el) => (el.props as { badge?: unknown }).badge,
+    );
+    expect(badges).toContainEqual({ errors: 2, warnings: 1 });
+    // the scaling tab has no entry → undefined badge
+    expect(badges).toContain(undefined);
+  });
+
+  it('renders no badge content when issueCounts is omitted', () => {
+    const tree = callRender({ visibleTabs: tabs, activeTab: 'config', onSelect: vi.fn() });
+    const badges = findAllByPredicate(tree, (el) => el.type === TabIssueBadge).map(
+      (el) => (el.props as { badge?: unknown }).badge,
+    );
+    expect(badges.every((b) => b === undefined)).toBe(true);
+  });
+});
+
+describe('TabIssueBadge (PE2)', () => {
+  const render = (badge?: { errors: number; warnings: number }) =>
+    (TabIssueBadge as (p: { badge?: { errors: number; warnings: number } }) => unknown)({ badge });
+
+  it('renders a red error pill with the count + accessible label when errors > 0', () => {
+    const el = render({ errors: 2, warnings: 3 }) as ReactElementLike;
+    expect(el.type).toBe('span');
+    expect(el.props.children).toBe(2);
+    expect(el.props.className as string).toContain('text-red-400');
+    expect(el.props['aria-label']).toBe('2 blocking');
+  });
+
+  it('renders an amber warning pill when there are warnings but no errors', () => {
+    const el = render({ errors: 0, warnings: 1 }) as ReactElementLike;
+    expect(el.type).toBe('span');
+    expect(el.props.children).toBe(1);
+    expect(el.props.className as string).toContain('text-amber-400');
+    expect(el.props['aria-label']).toBe('1 warning');
+  });
+
+  it('renders nothing when there are no errors or warnings', () => {
+    expect(render({ errors: 0, warnings: 0 })).toBeNull();
+  });
+
+  it('renders nothing when no badge is supplied', () => {
+    expect(render(undefined)).toBeNull();
   });
 });

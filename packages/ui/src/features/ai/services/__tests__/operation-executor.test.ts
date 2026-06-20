@@ -589,6 +589,16 @@ describe('executeAiOperations — autoOrganize', () => {
     const action = calls.find((c) => c.type === 'cards/autoOrganizeCard');
     expect(action.payload.direction).toBe('vertical');
   });
+
+  // CCL1 — a directional organize must switch to the rectangular edge style so
+  // the computed dagre routes actually render (else bezier discards them).
+  it('also switches to the rectangular edge style after organizing', () => {
+    setCard(makeCard());
+    const { dispatch, calls } = makeDispatch();
+    executeAiOperations(dispatch as any, [{ op: 'autoOrganize' }]);
+    const edge = calls.find((c) => c.type === 'ui/setEdgeStyle');
+    expect(edge?.payload).toBe('rectangular');
+  });
 });
 
 describe('executeAiOperations — unknown op', () => {

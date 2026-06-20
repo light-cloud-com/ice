@@ -81,6 +81,6 @@ export function parseCrdProviderId(
   fallbackNamespace: string,
 ): { namespace: string; name: string } {
   const parts = provider_id.split('/');
-  if (parts.length === 5) return { namespace: parts[3], name: parts[4] };
+  if (parts.length === 5) return { namespace: parts[3] ?? fallbackNamespace, name: parts[4] ?? '' };
   return { namespace: fallbackNamespace, name: parts.pop() ?? '' };
 }

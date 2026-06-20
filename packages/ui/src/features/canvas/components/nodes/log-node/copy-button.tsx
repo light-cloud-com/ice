@@ -2,9 +2,11 @@ import React, { memo } from 'react';
 
 interface CopyButtonProps {
   onClick: (e: React.MouseEvent) => void;
+  /** OL7 — show a transient "COPIED" confirmation after a successful copy. */
+  copied?: boolean;
 }
 
-export const CopyButton: React.FC<CopyButtonProps> = memo(({ onClick }) => (
+export const CopyButton: React.FC<CopyButtonProps> = memo(({ onClick, copied = false }) => (
   <button
     type="button"
     onClick={onClick}
@@ -14,8 +16,8 @@ export const CopyButton: React.FC<CopyButtonProps> = memo(({ onClick }) => (
       height: 18,
       borderRadius: 4,
       border: 'none',
-      background: 'var(--ice-border-strong)',
-      color: 'var(--ice-text-tertiary)',
+      background: copied ? 'rgba(34, 197, 94, 0.18)' : 'var(--ice-border-strong)',
+      color: copied ? '#22c55e' : 'var(--ice-text-tertiary)',
       fontSize: 9,
       fontWeight: 600,
       fontFamily: 'ui-monospace, monospace',
@@ -25,7 +27,7 @@ export const CopyButton: React.FC<CopyButtonProps> = memo(({ onClick }) => (
       lineHeight: 1,
     }}
   >
-    COPY
+    {copied ? 'COPIED' : 'COPY'}
   </button>
 ));
 

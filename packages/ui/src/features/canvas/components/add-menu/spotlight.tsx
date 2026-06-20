@@ -19,11 +19,13 @@ import { isIceTypeEnabledForProvider } from '@ice/constants';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { rank, type RankableItem } from './fuzzy-match';
+import { resolveSpotlightProvider, buildSpotlightFallbackData } from './spotlight-spawn';
 import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
 import { useTranslation } from '../../../../i18n';
 import { addNodeToCard, expandBlueprintToCard, type CardNode } from '../../../../store/slices/cards-slice';
 import { closeSpotlight, pushSpotlightRecent } from '../../../../store/slices/ui-slice';
 import { getComponents } from '../../../palette/data/components';
+import { getCategoryMap } from '../../../palette/data/categories';
 import type { AppDispatch, RootState } from '../../../../store';
 import type { ComponentDef } from '../../../palette/types';
 
@@ -63,18 +65,25 @@ export const Spotlight: React.FC = () => {
     }));
   }, [t]);
 
+  // CD8 — show the same localized, palette category labels (not the raw
+  // iceType category id) so the spotlight reads like the palette.
+  const categoryMap = useMemo(() => getCategoryMap(t), [t]);
+
   // Order: when no query, surface recently-used at the top, then
   // everything else in palette order; with a query, fuzzy-rank.
-  const ranked = useMemo<SpotlightCommand[]>(() => {
+  // `recentCount` marks the recent/catalog boundary so the list can show
+  // lightweight section headers (CD8) without affecting keyboard nav (which
+  // indexes `ranked`, a flat command list with no header rows).
+  const { ranked, recentCount } = useMemo<{ ranked: SpotlightCommand[]; recentCount: number }>(() => {
     if (!query.trim()) {
       const recentSet = new Set(recent);
       const fromRecent = recent
         .map((iceType) => commands.find((c) => c.iceType === iceType))
         .filter((c): c is SpotlightCommand => !!c);
       const rest = commands.filter((c) => !recentSet.has(c.iceType));
-      return [...fromRecent, ...rest];
+      return { ranked: [...fromRecent, ...rest], recentCount: fromRecent.length };
     }
-    return rank(commands, query);
+    return { ranked: rank(commands, query), recentCount: 0 };
   }, [commands, query, recent]);
 
   // Reset state when the modal opens.
@@ -96,9 +105,14 @@ export const Spotlight: React.FC = () => {
 
   const spawn = (cmd: SpotlightCommand): void => {
     const blockType = cmd.iceType;
-    const paletteProvider: Provider | undefined = cmd.origin.providers[0];
-    const effectiveProvider = paletteProvider ?? deployProvider;
-    const gateBlocked = !!effectiveProvider && !isIceTypeEnabledForProvider(blockType, effectiveProvider);
+    // CD1 — prefer the active deploy provider when this block supports it, so
+    // Shift+A spawns the same blueprint the drag path would (was: always [0]).
+    const { effectiveProvider, gateBlocked } = resolveSpotlightProvider(
+      blockType,
+      cmd.origin.providers,
+      deployProvider,
+      isIceTypeEnabledForProvider,
+    );
     const blueprint = gateBlocked ? undefined : getBlueprint(blockType, effectiveProvider);
 
     if (blueprint) {
@@ -127,20 +141,15 @@ export const Spotlight: React.FC = () => {
     } else {
       // Fall through to a bare resource node so the user still gets a
       // visible placeholder when the blueprint is missing for the active
-      // provider. Mirrors the palette drop fallback.
+      // provider. Mirrors the palette drop fallback — CD5: carries
+      // `providerUnsupported` so the warning badge + deploy validator flag it.
       const newNode: CardNode = {
         id: `node-${Date.now()}`,
         type: 'resource',
         position: { x: canvasPos.x, y: canvasPos.y },
         width: 200,
         height: 120,
-        data: {
-          label: cmd.name,
-          iceType: blockType,
-          behavior: 'singleton',
-          folded: false,
-          provider: deployProvider,
-        },
+        data: buildSpotlightFallbackData({ name: cmd.name, iceType: blockType }, effectiveProvider, gateBlocked),
       };
       dispatch(addNodeToCard(newNode));
     }
@@ -248,29 +257,59 @@ export const Spotlight: React.FC = () => {
               No matches.
             </li>
           )}
-          {ranked.map((cmd, i) => (
-            <SpotlightRow
-              key={cmd.iceType}
-              cmd={cmd}
-              highlighted={i === highlightIdx}
-              onSelect={() => spawn(cmd)}
-              onHover={() => setHighlightIdx(i)}
-            />
-          ))}
+          {ranked.map((cmd, i) => {
+            // CD8 — lightweight section headers split recently-used from the
+            // full catalog (only when not searching). Header <li>s are not in
+            // `ranked`, so they don't affect arrow-key navigation.
+            const showHeaders = !query.trim() && recentCount > 0;
+            return (
+              <React.Fragment key={cmd.iceType}>
+                {showHeaders && i === 0 && <SpotlightHeader label={t('canvas.spotlight.recent')} />}
+                {showHeaders && i === recentCount && <SpotlightHeader label={t('canvas.spotlight.catalog')} />}
+                <SpotlightRow
+                  cmd={cmd}
+                  categoryLabel={(cmd.category && categoryMap.get(cmd.category)?.label) || cmd.category || ''}
+                  highlighted={i === highlightIdx}
+                  onSelect={() => spawn(cmd)}
+                  onHover={() => setHighlightIdx(i)}
+                />
+              </React.Fragment>
+            );
+          })}
         </ul>
       </div>
     </div>
   );
 };
 
+// CD8 — non-interactive group label (Recent / All blocks).
+export const SpotlightHeader: React.FC<{ label: string }> = ({ label }) => (
+  <li
+    aria-hidden="true"
+    style={{
+      padding: '8px 14px 4px',
+      fontSize: 10,
+      fontWeight: 600,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+      color: 'var(--ice-text-tertiary)',
+      pointerEvents: 'none',
+    }}
+  >
+    {label}
+  </li>
+);
+
 interface SpotlightRowProps {
   cmd: SpotlightCommand;
+  /** CD8 — localized palette category label (not the raw iceType category id). */
+  categoryLabel: string;
   highlighted: boolean;
   onSelect: () => void;
   onHover: () => void;
 }
 
-const SpotlightRow: React.FC<SpotlightRowProps> = ({ cmd, highlighted, onSelect, onHover }) => {
+export const SpotlightRow: React.FC<SpotlightRowProps> = ({ cmd, categoryLabel, highlighted, onSelect, onHover }) => {
   const Icon = cmd.origin.icon;
   return (
     <li
@@ -316,7 +355,7 @@ const SpotlightRow: React.FC<SpotlightRowProps> = ({ cmd, highlighted, onSelect,
         )}
       </div>
       <span style={{ fontSize: 10, color: 'var(--ice-text-tertiary)', fontVariant: 'all-small-caps' }}>
-        {cmd.category}
+        {categoryLabel}
       </span>
     </li>
   );

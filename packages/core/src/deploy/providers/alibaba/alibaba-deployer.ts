@@ -119,6 +119,8 @@ function unsupported(
 
 export interface AlibabaDeployOptions extends DeployOptions {
   alibaba_credentials?: AlibabaCredentials;
+  /** Single deploy region. Falls back to ALIBABA_CLOUD_REGION, then the default. */
+  region?: string;
 }
 
 export class AlibabaDeployer implements ProviderDeployer {

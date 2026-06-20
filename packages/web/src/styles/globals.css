@@ -389,3 +389,24 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ice-border-strong); }
 }
 
+/* ── Reduced motion (AX4) ─────────────────────────────────────────────────────
+ * Global safety net: when the OS asks for reduced motion, neutralise every CSS
+ * animation/transition — including inline-style ones that don't individually
+ * thread `useReducedMotion` (e.g. the deploy-banner `iceDeployPulse` pulse and
+ * the `ice-node-entrance` / `ice-edge-entrance` keyframes above). Left
+ * unlayered + `!important` so it beats inline `style={{ animation: … }}`.
+ *
+ * NOTE: SVG SMIL (`<animate>`) is NOT affected by this media query — those are
+ * gated in JS at their call sites via `prefersReducedMotion()` (see socket-dot).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

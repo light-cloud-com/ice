@@ -936,9 +936,11 @@ describe('useDeployEffects — return shape', () => {
     expect((result.logEndRef as { current: unknown }).current).toBeNull();
   });
 
-  it('registers exactly four effects per render', () => {
+  it('registers exactly five effects per render', () => {
     const store = makeStore();
     captureHook({ activeCard: ACTIVE_CARD, store });
-    expect(mocks.effects).toHaveLength(4);
+    // 4 original (auto-scroll, auto-detect, requirement-listener, hydrate) + the
+    // DF1/EI1 env-sync effect appended last.
+    expect(mocks.effects).toHaveLength(5);
   });
 });

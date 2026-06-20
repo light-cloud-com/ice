@@ -11,11 +11,37 @@
  */
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from '../../../../i18n';
 import { Section } from '../fields';
 import { DeployHistory } from './deploy-history';
 import { DriftIndicator, DriftCheckButton } from './drift';
+import type { RootState } from '../../../../store';
 import type { Card, CardNode } from '../../../../store/slices/cards-slice';
+
+/**
+ * OS2 — the current-state dot must reflect evidence, not just the existence of
+ * a deploy row. Reconciled with the node's drift status: a confirmed-missing
+ * resource shows amber "Not in deployment" instead of a green claim; otherwise
+ * it reads "Deployed" (a deploy record exists) rather than a pulsing "Live"
+ * (which implied a verified-running state ICE never actually checks).
+ *
+ * Kept as its own Redux-aware component so `DeployTabBody` stays a pure tree —
+ * its unit test renders it as a plain function call with no store.
+ */
+const CurrentStatusRow: React.FC<{ nodeId: string }> = ({ nodeId }) => {
+  const { t } = useTranslation();
+  const driftStatus = useSelector((s: RootState) => s.deploy.driftByNode[nodeId]?.status);
+  const isMissing = driftStatus === 'missing';
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-1.5 h-1.5 rounded-full ${isMissing ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+      <span className={`text-ice-xs font-medium ${isMissing ? 'text-amber-500' : 'text-emerald-500'}`}>
+        {isMissing ? t('properties.drift.notInDeployment') : t('properties.deploy.deployed')}
+      </span>
+    </div>
+  );
+};
 
 export const DeployTabBody: React.FC<{
   selectedNode: CardNode;
@@ -27,10 +53,7 @@ export const DeployTabBody: React.FC<{
       <DriftIndicator nodeId={selectedNode.id} />
       <Section title={t('properties.deploy.current')}>
         <div className="space-y-2.5">
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.deploy.live')}</span>
-          </div>
+          <CurrentStatusRow nodeId={selectedNode.id} />
           {!!selectedNode.data?.url && (
             <div>
               <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.urlLabel')}</div>

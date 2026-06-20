@@ -330,14 +330,13 @@ describe('DestroyConfirmModal — heading branches', () => {
     expect(collectText(findHeading(tree))).toBe('Destroy all infrastructure?');
   });
 
-  it('seeds destroyEverything from useState initial value (resources.length === 0) when resources empty', () => {
-    // Simulate the first-render path: the source's useState call uses
-    // `useState(resources.length === 0)`. The mock should observe the
-    // initial-value argument when seeded; the helper here flips the seed flag.
+  it('defaults to the safe single-deploy scope even when no resources are tracked (DE3)', () => {
+    // The source now uses `useState(false)` — "destroy everything" is an
+    // explicit opt-in, never the default, even with an empty tracked list.
     (mocks as unknown as { __seedFromInitial: boolean }).__seedFromInitial = true;
     const tree = renderModal(makeProps({ resources: [] }));
-    // Initial value is `true` → heading reflects the destroyEverything branch.
-    expect(collectText(findHeading(tree))).toBe('Destroy all infrastructure?');
+    // Initial value is `false` → heading reflects the safe single-deploy branch.
+    expect(collectText(findHeading(tree))).toBe('Destroy deployment?');
   });
 
   it('seeds destroyEverything to false when resources is non-empty (initial value false)', () => {

@@ -35,14 +35,46 @@ extraResources:
 
 mac:
   category: public.app-category.developer-tools
-  icon: resources/icons/512x512.png
-  x64ArchFiles: 'Contents/Resources/app.asar.unpacked/node_modules/**/*.node'
+  icon: resources/icons/icon.icns
+  # Developer ID code-signing. The cert is supplied in CI via CSC_LINK /
+  # CSC_KEY_PASSWORD (gated to the macOS runners in release.yml) and locally via
+  # the matching identity in the login keychain.
+  identity: Julia Kafarska (8Y2UTZ2NBZ)
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  # Entitlements live in resources/ (the buildResources dir, git-tracked) — NOT
+  # in build/, which is gitignored: the file would be absent in a fresh CI
+  # checkout and the custom entitlements (network.server,
+  # disable-library-validation, …) silently dropped during signing.
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  # Notarization is done locally (Pattern C) by scripts/notarize-release.mjs
+  # after CI, so CI never blocks on Apple's notary queue. Keep this false.
+  notarize: false
+  # No arch pinned on purpose: each native runner picks its own slice via the
+  # CLI flag (dist:mac:arm64 → --arm64, dist:mac:x64 → --x64). Pinning arch here
+  # overrides the CLI flag and cross-builds the broken off-arch slice (better-
+  # sqlite3 / Prisma engine come out wrong-arch on a non-native runner).
   target:
-    - target: dmg
-      arch: [arm64]
-    - target: zip
-      arch: [arm64]
-  hardenedRuntime: false
+    - dmg
+    - zip
+
+# Branded install window (background + drag-to-Applications layout). ${arch} in
+# the name keeps the arm64 and x64 DMGs (built on separate runners) distinct.
+dmg:
+  background: resources/dmg-background.png
+  iconSize: 80
+  window:
+    width: 500
+    height: 320
+  contents:
+    - x: 145
+      y: 75
+    - x: 350
+      y: 75
+      type: link
+      path: /Applications
+  artifactName: ${productName}-${version}-${arch}.${ext}
 
 win:
   icon: resources/icons/icon.ico
@@ -53,14 +85,19 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  installerIcon: resources/icons/icon.ico
+  uninstallerIcon: resources/icons/icon.ico
   artifactName: ICE-Setup-${version}.${ext}
 
 linux:
   icon: resources/icons
   category: Development
+  # x64 only: ubuntu-latest is x64-only (no QEMU), so an arm64 target would fail
+  # the native rebuild and drop the whole Linux job. Add a native arm64 runner if
+  # arm64 Linux is ever required.
   target:
     - target: AppImage
-      arch: [x64, arm64]
+      arch: [x64]
     - target: deb
       arch: [x64]
 

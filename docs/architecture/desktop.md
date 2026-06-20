@@ -5,18 +5,18 @@ The Electron desktop app is a fully self-contained ICE: no separate server, no D
 ## Status
 
 - Works for daily dev.
-- Build pipeline is wired (`pnpm dist:desktop`, `dist:desktop:mac`, `:win`, `:linux`).
-- **v0.1 binaries are not yet code-signed or notarized.** First-run on macOS shows the standard "unidentified developer" prompt; Windows shows SmartScreen. See "First-run instructions" below.
-- Auto-update is wired through `electron-updater` against GitHub Releases - will activate once signed binaries are published.
+- Build pipeline is wired (`pnpm dist:desktop`, `dist:desktop:mac:arm64`/`:x64`, `:win`, `:linux`).
+- macOS ships **Apple Silicon (arm64) and Intel (x64)** builds, each built on a native runner; Linux ships **x64** AppImage + `.deb`; Windows ships an x64 NSIS installer.
+- **macOS binaries are Developer ID code-signed and notarized** — signed in CI (`CSC_LINK`/`CSC_KEY_PASSWORD`) and notarized after CI via `scripts/notarize-release.mjs` ("Pattern C"). First-run is clean, no "unidentified developer" prompt. **Windows is still unsigned** (SmartScreen prompt) until an EV cert is wired up.
+- Auto-update is wired through `electron-updater` against GitHub Releases. Because the two macOS arches are built on separate runners, publishing a single merged `latest-mac.yml` (so both arches get an update channel) is a pending follow-up.
 
-## First-run instructions for v0.1 (unsigned)
+## First-run instructions
 
 ### macOS
 
-1. Download the `.dmg` from the GitHub release.
-2. Drag ICE to Applications.
-3. The first time you double-click, macOS will refuse and say it can't verify the developer. **Right-click → Open** → confirm the dialog. After the first run macOS remembers the choice.
-4. Alternative: System Settings → Privacy & Security → scroll to the "ICE was blocked" message → **Open Anyway**.
+Signed + notarized: download the `.dmg` (arm64 for Apple Silicon, x64 for Intel), drag ICE to Applications, and double-click — it opens with no Gatekeeper dialog.
+
+> If a release was ever published before notarization completed, macOS may show "cannot verify the developer." Fallback: **Right-click → Open** → confirm, or System Settings → Privacy & Security → **Open Anyway**.
 
 ### Windows
 
@@ -28,17 +28,13 @@ The Electron desktop app is a fully self-contained ICE: no separate server, no D
 
 `.AppImage` and `.deb` builds are unsigned but Linux distros generally don't gate on that. If the AppImage refuses to launch, install `libfuse2` (`sudo apt install libfuse2` on Debian/Ubuntu).
 
-## v0.2 code-signing plan
+## Code-signing status
 
-Targets for v0.2:
-
-- **macOS**: Apple Developer ID Application certificate + notarytool submission. Removes the "unidentified developer" prompt and activates Gatekeeper trust on first launch.
-- **Windows**: EV (Extended Validation) certificate from a recognized CA, signing both `.exe` and `.msi`. EV is what gets SmartScreen to trust the binary without the "more info" prompt.
+- **macOS — done.** Apple Developer ID Application certificate + `notarytool` submission. Signing runs in CI; notarization runs locally after CI (`scripts/notarize-release.mjs`, "Pattern C") so the build never blocks on Apple's notary queue. Removes the "unidentified developer" prompt. See [releasing.md](#) / `scripts/notarize-release.mjs` for the keychain-profile setup (`ice-notary`).
+- **Windows — pending.** EV (Extended Validation) certificate from a recognized CA to sign the `.exe`. EV is what gets SmartScreen to trust the binary without the "more info" prompt. Wire via `WIN_CSC_LINK`/`WIN_CSC_KEY_PASSWORD`.
 - **Linux**: keep `.AppImage` + `.deb` as the primary distribution; explore `flathub` and Snap once usage justifies it.
 
-Once those certs are in place, `electron-updater` activates and the in-app updater takes over - no more "go to GitHub Releases" step for end users.
-
-Code-signing cost is part of the project's operational budget; the ROADMAP entry tracks the procurement timeline.
+Windows code-signing cost is part of the project's operational budget; the ROADMAP entry tracks the procurement timeline.
 
 ## Package layout
 

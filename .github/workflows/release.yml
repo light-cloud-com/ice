@@ -1,13 +1,15 @@
 name: Release desktop
 
-# Builds the Electron desktop app for macOS, Windows, and Linux and
-# publishes the artifacts to a GitHub draft release. Trigger by pushing
-# a `v*` tag (e.g. `git tag v0.1.50 && git push origin v0.1.50`) or
-# manually from the Actions tab.
+# Builds the Electron desktop app for macOS (arm64 + Intel x64), Windows, and
+# Linux and publishes the artifacts to a GitHub draft release. Trigger by pushing
+# a `v*` tag (e.g. `git tag v0.1.50 && git push origin v0.1.50`) or manually from
+# the Actions tab.
 #
-# Binaries are **not code-signed** (see docs/architecture/desktop.md). First-run on
-# macOS/Windows will show an "unidentified developer" / SmartScreen
-# warning until signing certs are wired up — tracked on ROADMAP.md.
+# macOS builds are **Developer ID code-signed** here (CSC_LINK / CSC_KEY_PASSWORD
+# secrets, gated to the macOS runners). Notarization is done AFTER CI by
+# scripts/notarize-release.mjs (Pattern C) so the build never blocks on Apple's
+# notary queue. Windows ships unsigned (SmartScreen prompt) until an EV cert is
+# wired up — tracked on ROADMAP.md.
 
 on:
   push:
@@ -38,12 +40,18 @@ jobs:
         include:
           - os: macos-latest
             name: macOS (arm64)
-            dist_script: dist:desktop:mac
+            dist_script: dist:desktop:mac:arm64
+          # Native Intel runner — building x64 here means better-sqlite3 + the
+          # Prisma engine are compiled as x64 natively (no broken cross-build).
+          # macos-15-intel is GitHub's Intel image (available until ~Fall 2027).
+          - os: macos-15-intel
+            name: macOS (x64)
+            dist_script: dist:desktop:mac:x64
           - os: windows-latest
             name: Windows (x64)
             dist_script: dist:desktop:win
           - os: ubuntu-latest
-            name: Linux (x64 + arm64)
+            name: Linux (x64)
             dist_script: dist:desktop:linux
 
     steps:
@@ -69,6 +77,11 @@ jobs:
           # We only set it on tag pushes so manual workflow_dispatch runs with
           # dry_run=true leave no trace.
           GH_TOKEN: ${{ (github.event_name == 'push' && !inputs.dry_run) && secrets.GITHUB_TOKEN || '' }}
+          # macOS Developer ID signing. Gated to the macOS runners so the Windows
+          # job never tries to load a mac .p12 from CSC_LINK. Notarization is NOT
+          # done here (mac.notarize: false) — see scripts/notarize-release.mjs.
+          CSC_LINK: ${{ startsWith(matrix.os, 'macos') && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ startsWith(matrix.os, 'macos') && secrets.CSC_KEY_PASSWORD || '' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -15,16 +15,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @ice/db exec prisma generate
-      - name: patch collector — spawn pnpm with a SANITIZED env (strip npm_* + NODE_OPTIONS)
+      - name: patch pnpm collector — use a SHALLOW depth so the dump isn't 105 MB
         run: |
-          F=$(find node_modules/.pnpm -path "*app-builder-lib@26*/out/node-module-collector/nodeModulesCollector.js" | head -1)
+          F=$(find node_modules/.pnpm -path "*app-builder-lib@26*/out/node-module-collector/pnpmNodeModulesCollector.js" | head -1)
           echo "patching: $F"
           node -e '
             const fs=require("fs"); const f=process.argv[1]; let s=fs.readFileSync(f,"utf8");
-            const marker = "env: { COREPACK_ENABLE_STRICT: \"0\", ...process.env }";
-            const repl = "env: { COREPACK_ENABLE_STRICT: \"0\", ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^npm_/i.test(k) && !/^pnpm_/i.test(k) && k !== \"NODE_OPTIONS\" && k !== \"INIT_CWD\")) }";
+            const marker = "\"--depth\", \"6\"";
+            const repl = "\"--depth\", \"0\"";
             if(!s.includes(marker)){console.error("MARKER NOT FOUND"); process.exit(1);}
-            s=s.replace(marker, repl); fs.writeFileSync(f,s); console.log("patched env-sanitize:", s.includes("filter(([k])"));
+            s=s.replace(marker, repl); fs.writeFileSync(f,s); console.log("patched depth 6->0:", s.includes(repl));
           ' "$F"
       - name: build — does the collector pass with a clean spawn env?
         env:

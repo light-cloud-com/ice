@@ -1,0 +1,39 @@
+name: debug-env
+on:
+  push:
+    branches: [fix/desktop-bundle]
+  workflow_dispatch: {}
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ice/db exec prisma generate
+      - name: patch collector — spawn pnpm with a SANITIZED env (strip npm_* + NODE_OPTIONS)
+        run: |
+          F=$(find node_modules/.pnpm -path "*app-builder-lib@26*/out/node-module-collector/nodeModulesCollector.js" | head -1)
+          echo "patching: $F"
+          node -e '
+            const fs=require("fs"); const f=process.argv[1]; let s=fs.readFileSync(f,"utf8");
+            const marker = "env: { COREPACK_ENABLE_STRICT: \"0\", ...process.env }";
+            const repl = "env: { COREPACK_ENABLE_STRICT: \"0\", ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^npm_/i.test(k) && !/^pnpm_/i.test(k) && k !== \"NODE_OPTIONS\" && k !== \"INIT_CWD\")) }";
+            if(!s.includes(marker)){console.error("MARKER NOT FOUND"); process.exit(1);}
+            s=s.replace(marker, repl); fs.writeFileSync(f,s); console.log("patched env-sanitize:", s.includes("filter(([k])"));
+          ' "$F"
+      - name: build — does the collector pass with a clean spawn env?
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: |
+          set +e
+          pnpm --filter @ice/desktop run prebuild
+          pnpm --filter @ice/desktop exec electron-vite build
+          pnpm --filter @ice/desktop exec electron-builder --linux --dir --publish never 2>&1 \
+            | grep -E "error parsing|Node module collector|packaging|linux-unpacked|completed|installing native|⨯|file=" \
+            | head -25
+          echo "EB_EXIT=${PIPESTATUS[0]}"

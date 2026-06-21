@@ -33,3 +33,13 @@ jobs:
             | grep -E "error parsing|Node module collector|packaging|linux-unpacked|completed|installing native|⨯|file=" \
             | head -25
           echo "EB_EXIT=${PIPESTATUS[0]}"
+          echo "=== COMPLETENESS: are deep transitive deps packaged? ==="
+          ASAR=apps/desktop/release/linux-unpacked/resources/app.asar
+          if [ -f "$ASAR" ]; then
+            echo "deep-dep file count in app.asar:"
+            npx @electron/asar list "$ASAR" 2>/dev/null | grep -cE "node_modules/(better-sqlite3|@ibm-cloud|@google-cloud|@prisma/client|ioredis|bullmq|@aws-sdk|@azure)" || echo 0
+            echo "--- samples ---"
+            npx @electron/asar list "$ASAR" 2>/dev/null | grep -oE "node_modules/(@[a-z-]+/)?[a-z][a-z0-9.-]*" | sort -u | grep -E "better-sqlite3|ibm-cloud|google-cloud|prisma|ioredis|bullmq|aws-sdk|azure|@ice" | head -20
+          else
+            echo "no app.asar at $ASAR"; ls apps/desktop/release/linux-unpacked/resources 2>/dev/null
+          fi

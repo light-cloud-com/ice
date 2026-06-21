@@ -1,0 +1,45 @@
+name: debug-deploy
+on:
+  push:
+    branches: [fix/desktop-bundle]
+  workflow_dispatch: {}
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ice/db exec prisma generate
+      - name: build dist (prebuild + electron-vite)
+        run: |
+          set -e
+          pnpm --filter @ice/desktop run prebuild
+          pnpm --filter @ice/desktop exec electron-vite build
+          ls apps/desktop/dist
+      - name: pnpm deploy → flat self-contained dir
+        run: |
+          set +e
+          pnpm --filter @ice/desktop deploy --prod --legacy /tmp/deploy 2>&1 | tail -4
+          echo "--- deploy dir ---"
+          ls /tmp/deploy 2>/dev/null
+          echo "--- @ice/core in deploy (symlink target inside deploy?) ---"
+          ls -ld /tmp/deploy/node_modules/@ice/core 2>/dev/null
+          readlink /tmp/deploy/node_modules/@ice/core 2>/dev/null
+          echo "--- size ---"; du -sh /tmp/deploy 2>/dev/null
+          echo "--- dist present in deploy? ---"; ls /tmp/deploy/dist 2>/dev/null
+      - name: electron-builder against the deploy dir (DOES THE COLLECTOR PASS?)
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: |
+          set +e
+          pnpm --filter @ice/desktop exec electron-builder --linux --dir --publish never \
+            -c.directories.app=/tmp/deploy \
+            -c.electronVersion=41.0.3 2>&1 \
+            | grep -E "error parsing|Node module collector|must be under|ENOENT|packaging|linux-unpacked|completed|rebuilding|installing native|⨯|file=" \
+            | head -40
+          echo "EB_EXIT=${PIPESTATUS[0]}"

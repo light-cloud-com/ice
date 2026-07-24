@@ -1,7 +1,7 @@
 {
   "name": "ice",
-  "license": "Apache-2.0",
-  "version": "0.1.902",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "version": "0.1.903",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -95,6 +95,9 @@
       "effect": ">=3.20.0",
       "@tootallnate/once": ">=3.0.1",
       "electron-builder-squirrel-windows": ">=26.0.0"
+    },
+    "patchedDependencies": {
+      "app-builder-lib@26.8.1": "patches/app-builder-lib@26.8.1.patch"
     }
   }
 }

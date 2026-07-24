@@ -1,0 +1,13 @@
+diff --git a/out/node-module-collector/pnpmNodeModulesCollector.js b/out/node-module-collector/pnpmNodeModulesCollector.js
+index 602599280ab621d078748187bb6b4ae9431c1739..d9fc15a55dd0e4d26cd044c52159db4039ed23b0 100644
+--- a/out/node-module-collector/pnpmNodeModulesCollector.js
++++ b/out/node-module-collector/pnpmNodeModulesCollector.js
+@@ -13,7 +13,7 @@ class PnpmNodeModulesCollector extends nodeModulesCollector_1.NodeModulesCollect
+         };
+     }
+     getArgs() {
+-        return ["list", "--prod", "--json", "--depth", "Infinity", "--silent", "--loglevel=error"];
++        return ["list", "--prod", "--json", "--depth", "6", "--silent", "--loglevel=error"];
+     }
+     async extractProductionDependencyGraph(tree, dependencyId) {
+         if (this.productionGraph[dependencyId]) {

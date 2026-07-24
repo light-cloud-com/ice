@@ -1,6 +1,6 @@
 {
   "name": "@ice/provider-gcp",
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "version": "0.1.0",
   "description": "GCP deployer + resource handlers",
   "private": true,

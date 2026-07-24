@@ -48,7 +48,7 @@ Bigger projects (multi-week) live in [ROADMAP.md](../ROADMAP.md) - please open a
 | Commit messages, PR shape, what-we-wont-merge | [`../CONTRIBUTING.md`](../CONTRIBUTING.md)                                                          |
 | How to run the test suites                    | [testing.md](testing.md)                                                                            |
 | Reporting a security vulnerability            | [`../SECURITY.md`](../SECURITY.md)                                                                  |
-| Licensing of contributions                    | Apache 2.0, section 5 - no CLA                                                                      |
+| Licensing of contributions                    | PolyForm Noncommercial 1.0.0 - no CLA                                                               |
 | Conduct                                       | [`../CONTRIBUTING.md#conduct`](../CONTRIBUTING.md#conduct) - be kind, call out behaviour not people |
 
 ## Writing docs

@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/light-cloud-com/ice/actions/workflows/ci.yml"><img src="https://github.com/light-cloud-com/ice/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
   <a href="https://github.com/light-cloud-com/ice/releases/latest"><img src="https://img.shields.io/github/v/release/light-cloud-com/ice?include_prereleases&label=release" alt="Latest release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg" alt="License: PolyForm Noncommercial 1.0.0" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" /></a>
   <a href="package.json"><img src="https://img.shields.io/github/package-json/v/light-cloud-com/ice?label=version&color=5b21b6" alt="Version" /></a>
 </p>
@@ -135,4 +135,4 @@ All eight providers ship a working deployer behind feature flags. Real-cloud rou
 - 💬 **Question** - [GitHub Discussions](https://github.com/light-cloud-com/ice/discussions).
 - 🔐 **Security** - [SECURITY.md](SECURITY.md); please don't open a public issue.
 - 🤝 **Contributing** - [CONTRIBUTING.md](CONTRIBUTING.md).
-- 📜 **License** - [Apache 2.0](LICENSE) · [NOTICE](NOTICE).
+- 📜 **License** - [PolyForm Noncommercial 1.0.0](LICENSE) · [NOTICE](NOTICE). Free for noncommercial use; commercial use requires a separate license.

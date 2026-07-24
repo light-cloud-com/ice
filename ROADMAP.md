@@ -1,6 +1,6 @@
 # ICE Roadmap
 
-Direction, not a ticket tracker. v0.1.50, Apache 2.0. Open an issue or PR to change anything. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Direction, not a ticket tracker. v0.1.50, PolyForm Noncommercial 1.0.0. Open an issue or PR to change anything. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 > **Editions.** Community (this repo - single-user). Team (planned - self-hosted, multi-user). Cloud (planned - managed). Multi-user features ship in Team + Cloud.
 

@@ -1,6 +1,6 @@
 {
   "name": "@ice/constants",
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "version": "0.1.0",
   "description": "Single source of truth for all shared constants — iceTypes, providers, grid layout, colors, validation rules",
   "private": true,

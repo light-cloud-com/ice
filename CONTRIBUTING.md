@@ -90,7 +90,7 @@ Open an issue using the [feature template](.github/ISSUE_TEMPLATE/feature.yml) b
 
 ## Licensing
 
-ICE is released under the [PolyForm Noncommercial License 1.0.0](LICENSE) — free for personal, research, educational, and other noncommercial use; commercial use is not permitted. By contributing, you agree that your contribution will be licensed under the same terms. No separate CLA is required.
+ICE is released under the [MIT License](LICENSE) — free and open source, for any use including commercial. By contributing, you agree that your contribution will be licensed under the same terms. No separate CLA is required.
 
 ## Conduct
 

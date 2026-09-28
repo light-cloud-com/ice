@@ -1,6 +1,6 @@
 {
   "name": "@ice/shared",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "Shared auth middleware, crypto, and socket helpers",
   "private": true,

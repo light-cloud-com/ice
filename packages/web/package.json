@@ -1,6 +1,6 @@
 {
   "name": "@ice/web",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "ICE - Integrated Cloud Environment (Web SaaS)",
   "private": true,

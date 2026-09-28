@@ -1,6 +1,6 @@
 {
   "name": "@ice/service-iam",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "IAM service - auth, oauth, profile, orgs, users, onboarding",
   "private": true,

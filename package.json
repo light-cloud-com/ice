@@ -1,6 +1,6 @@
 {
   "name": "ice",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.903",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,

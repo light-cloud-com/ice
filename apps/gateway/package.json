@@ -1,6 +1,6 @@
 {
   "name": "@ice/gateway",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "API Gateway - composes all services into a single Express app",
   "private": true,

@@ -1,6 +1,6 @@
 {
   "name": "@ice/ai",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "private": true,
   "description": "AI provider abstraction layer for ICE — supports Anthropic (cloud) and OpenAI-compatible endpoints",

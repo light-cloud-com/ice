@@ -1,6 +1,6 @@
 {
   "name": "@ice/service-deploy",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "Deploy service - deploy engine, pipeline, webhooks, queue, cron",
   "private": true,

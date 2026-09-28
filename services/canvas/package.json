@@ -1,6 +1,6 @@
 {
   "name": "@ice/service-canvas",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "Canvas service - canvas CRUD, environments, project-members",
   "private": true,

@@ -1,6 +1,6 @@
 {
   "name": "@ice/templates",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "Infrastructure template compositions using defineTemplate pattern",
   "private": true,
